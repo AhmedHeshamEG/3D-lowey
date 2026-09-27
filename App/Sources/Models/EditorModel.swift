@@ -19,7 +19,17 @@ final class EditorModel {
     var document: Document { session.document }
     var scene: CoreScene { session.document.scene }
 
-    private(set) var selection: [ObjectID] = []
+    private(set) var selection: [ObjectID] = [] {
+        didSet {
+            if AppModel.isUITesting, selection != oldValue {
+                let names = selection.compactMap { scene.objects[$0]?.name }.joined(separator: ",")
+                debugTrail = Array((debugTrail + ["sel=[\(names)]"]).suffix(12))
+            }
+        }
+    }
+
+    /// UI-test only: recent selection/command history, exposed as an accessibility value.
+    private(set) var debugTrail: [String] = []
     var mode: EditorMode = .build {
         didSet { if mode != oldValue { modeChanged() } }
     }
@@ -125,6 +135,7 @@ final class EditorModel {
         guard let command else { return false }
         do {
             let changes = try session.perform(command, coalesceKey: coalesceKey)
+            if AppModel.isUITesting { debugTrail = Array((debugTrail + ["cmd=\(command.label)"]).suffix(12)) }
             renderer.sync(session.document, changes: changes)
             afterChange()
             return true
@@ -383,6 +394,7 @@ final class EditorModel {
         var object = factory.primitive(shape, color: currentColor)
         object.name = ObjectFactory.uniqueName(shape.displayName, in: scene)
         object = operations.placeOnGround(object, at: dropPoint(at: screenPoint))
+        if screenPoint == nil { object = operations.nudgedToFreeSpot(object, in: scene) }
         if perform(operations.add(object)) { select(object.id) }
     }
 
@@ -415,12 +427,14 @@ final class EditorModel {
                 var object = factory.asset(asset)
                 object.name = ObjectFactory.uniqueName(asset.name, in: scene)
                 object = operations.placeOnGround(object, at: dropPoint(at: screenPoint))
+                if screenPoint == nil { object = operations.nudgedToFreeSpot(object, in: scene) }
                 if perform(operations.add(object)) { select(object.id) }
             }
         case let .prefab(prefab):
             var object = factory.prefabInstance(prefab)
             object.name = ObjectFactory.uniqueName(prefab.name, in: scene)
             object = operations.placeOnGround(object, at: dropPoint(at: screenPoint))
+            if screenPoint == nil { object = operations.nudgedToFreeSpot(object, in: scene) }
             if perform(operations.add(object)) { select(object.id) }
         case let .look(preset):
             applyLook(preset.look, sceneOnly: document.scene.look != nil)

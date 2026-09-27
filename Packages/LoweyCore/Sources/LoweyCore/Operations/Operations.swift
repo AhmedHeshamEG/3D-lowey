@@ -134,6 +134,40 @@ public struct Operations: Sendable {
         return placed
     }
 
+    /// Moves a new object sideways until its footprint doesn't overlap anything already standing
+    /// there, so adding twice in a row never hides the second object inside the first.
+    public func nudgedToFreeSpot(_ object: SceneObject, in scene: Scene) -> SceneObject {
+        guard let local = bounds.localBounds(of: object) else { return object }
+        let others = scene.roots.compactMap { bounds.worldBounds(of: $0, in: scene) }
+        guard !others.isEmpty else { return object }
+        let start = object.transform
+        let footprint = local.transformed(by: start)
+        let step = max(footprint.size.x, footprint.size.z, 0.25) * 1.1
+        func overlaps(_ box: Bounds) -> Bool {
+            others.contains { other in
+                box.min.x < other.max.x - 1e-6 && box.max.x > other.min.x + 1e-6
+                    && box.min.z < other.max.z - 1e-6 && box.max.z > other.min.z + 1e-6
+                    && box.min.y < other.max.y && box.max.y > other.min.y
+            }
+        }
+        if !overlaps(footprint) { return object }
+        // Rings of candidate offsets, nearest first: right, left, front, back, diagonals…
+        for ring in 1 ... 6 {
+            let r = Double(ring) * step
+            let candidates = [Vec3(r, 0, 0), Vec3(-r, 0, 0), Vec3(0, 0, r), Vec3(0, 0, -r),
+                              Vec3(r, 0, r), Vec3(-r, 0, r), Vec3(r, 0, -r), Vec3(-r, 0, -r)]
+            for offset in candidates {
+                let moved = Bounds(min: footprint.min + offset, max: footprint.max + offset)
+                if !overlaps(moved) {
+                    var result = object
+                    result.transform.position = start.position + offset
+                    return result
+                }
+            }
+        }
+        return object
+    }
+
     // MARK: Duplicate / delete
 
     /// Duplicates objects (with their children), offset so the copy is visible.

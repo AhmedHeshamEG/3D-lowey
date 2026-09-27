@@ -98,6 +98,15 @@ struct EditorView: View {
         .animation(.spring(duration: 0.25), value: editor.railPanel)
         .animation(.spring(duration: 0.25), value: editor.selection.isEmpty)
         .background(KeyboardShortcuts(editor: editor))
+        .overlay(alignment: .bottomLeading) {
+            if AppModel.isUITesting {
+                Text(editor.debugTrail.joined(separator: " | "))
+                    .font(.system(size: 8))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .accessibilityIdentifier("debug-trail")
+                    .allowsHitTesting(false)
+            }
+        }
         .dropDestination(for: URL.self) { urls, _ in
             Task { await app.library.importFiles(urls) }
             return true

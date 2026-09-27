@@ -61,8 +61,10 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(button(app, "add-sphere").waitForExistence(timeout: 5))
         button(app, "add-sphere").tap()
         XCTAssertTrue(inspectorName.waitForExistence(timeout: 5))
+        XCTAssertEqual(inspectorName.value as? String, "Sphere")
         button(app, "Delete").tap()
-        XCTAssertFalse(inspectorName.waitForExistence(timeout: 1))
+        let stillSelected = inspectorName.waitForExistence(timeout: 1)
+        XCTAssertFalse(stillSelected, "after delete: \(app.staticTexts["debug-trail"].label)")
         button(app, "Undo").tap()
 
         // Modes.

@@ -28,6 +28,23 @@ final class OperationsTests: XCTestCase {
         XCTAssertEqual(lifted.transform.position.y, 0.5)
     }
 
+    func testNewObjectsDoNotSpawnInsideEachOther() {
+        let document = makeDocument()
+        var factory = ObjectFactory(ids: .sequential("n"))
+        // Exactly where cube "a" stands.
+        let sphere = factory.primitive(.sphere, at: Vec3(1, 0, 0))
+        let placed = ops.nudgedToFreeSpot(sphere, in: document.scene)
+        XCTAssertNotEqual(placed.transform.position, sphere.transform.position)
+        XCTAssertEqual(placed.transform.position.y, 0)
+        // A free spot stays put.
+        let free = factory.primitive(.cube, at: Vec3(20, 0, 20))
+        XCTAssertEqual(ops.nudgedToFreeSpot(free, in: document.scene), free)
+        // Empty scene: unchanged.
+        let empty = CoreSceneForTests.empty
+        XCTAssertEqual(ops.nudgedToFreeSpot(sphere, in: empty), sphere)
+        XCTAssertEqual(ops.nudgedToFreeSpot(SceneObject(id: "g", name: "g", kind: .group), in: document.scene).kind, .group)
+    }
+
     func testFactoryDefaults() {
         var factory = ObjectFactory(ids: .sequential("f"))
         XCTAssertEqual(factory.primitive(.cone).color, .rgba(.blockout))
@@ -285,4 +302,8 @@ final class OperationsTests: XCTestCase {
         XCTAssertEqual(drawn.max.y, 2.0, accuracy: 0.01, "flat caps end at the last point")
         XCTAssertNil(bounds.worldBounds(of: [], in: makeDocument().scene))
     }
+}
+
+private enum CoreSceneForTests {
+    static let empty = Scene(id: "empty", name: "Empty")
 }
