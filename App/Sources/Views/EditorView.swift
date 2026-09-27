@@ -33,6 +33,19 @@ struct EditorView: View {
                     ToolRail(editor: editor)
                         .padding(.leading, 16)
                         .transition(.move(edge: .leading).combined(with: .opacity))
+                    // Slide-out panels next to the rail (popovers from the screen edge open off-screen).
+                    switch editor.railPanel {
+                    case .add:
+                        AddMenu(editor: editor) { editor.railPanel = nil }
+                            .padding(.leading, 12)
+                            .transition(.move(edge: .leading).combined(with: .opacity))
+                    case .color:
+                        ColorPickerPanel(editor: editor)
+                            .padding(.leading, 12)
+                            .transition(.move(edge: .leading).combined(with: .opacity))
+                    case nil:
+                        EmptyView()
+                    }
                 }
                 Spacer(minLength: 0)
                 rightPanel
@@ -82,6 +95,7 @@ struct EditorView: View {
         .animation(.spring(duration: 0.3), value: editor.mode)
         .animation(.spring(duration: 0.3), value: editor.tool)
         .animation(.spring(duration: 0.3), value: editor.showLibrary)
+        .animation(.spring(duration: 0.25), value: editor.railPanel)
         .animation(.spring(duration: 0.25), value: editor.selection.isEmpty)
         .background(KeyboardShortcuts(editor: editor))
         .dropDestination(for: URL.self) { urls, _ in

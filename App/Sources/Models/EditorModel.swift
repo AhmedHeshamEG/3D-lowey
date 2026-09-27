@@ -41,6 +41,8 @@ final class EditorModel {
     /// The rail colour: new blockout, strokes and "paint" use it.
     var currentColor: ColorValue = .palette(0)
     var showLibrary = false
+    /// Slide-out panel next to the tool rail.
+    var railPanel: RailPanel?
     var showOutliner = false
     var libraryPurpose: LibraryPurpose = .place
     var showStatistics = false {
@@ -61,6 +63,10 @@ final class EditorModel {
     /// Screen-space overlay shapes (lasso polygon, scatter circle).
     var lassoPoints: [CGPoint] = []
     var scatterPreview: (center: CGPoint, radius: CGFloat)?
+
+    enum RailPanel: Equatable {
+        case add, color
+    }
 
     enum LibraryPurpose: Equatable {
         case place

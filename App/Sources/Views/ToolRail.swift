@@ -5,15 +5,12 @@ import SwiftUI
 /// Feather-style floating rail: tools, add, library, colour, gizmo mode, undo/redo.
 struct ToolRail: View {
     @Bindable var editor: EditorModel
-    @State private var showAdd = false
-    @State private var showColors = false
 
     var body: some View {
         VStack(spacing: 10) {
-            IconButton(systemName: "plus", label: "Add", isOn: showAdd) { showAdd.toggle() }
-                .popover(isPresented: $showAdd, arrowEdge: .trailing) {
-                    AddMenu(editor: editor) { showAdd = false }
-                }
+            IconButton(systemName: "plus", label: "Add", isOn: editor.railPanel == .add) {
+                editor.railPanel = editor.railPanel == .add ? nil : .add
+            }
             IconButton(systemName: "books.vertical.fill", label: "Library", isOn: editor.showLibrary) {
                 editor.libraryPurpose = .place
                 editor.showLibrary.toggle()
@@ -34,7 +31,7 @@ struct ToolRail: View {
                 Divider().frame(width: 30).overlay(Theme.panelStroke)
             }
             Button {
-                showColors.toggle()
+                editor.railPanel = editor.railPanel == .color ? nil : .color
             } label: {
                 Circle()
                     .fill(editor.currentColor.resolved(in: editor.look.palette).color)
@@ -44,9 +41,6 @@ struct ToolRail: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Colour")
-            .popover(isPresented: $showColors, arrowEdge: .trailing) {
-                ColorPickerPanel(editor: editor)
-            }
             IconButton(systemName: "list.bullet.indent", label: "Outliner", isOn: editor.showOutliner) {
                 editor.showOutliner.toggle()
             }
@@ -93,7 +87,7 @@ struct AddMenu: View {
         }
         .padding(18)
         .frame(width: 340)
-        .background(Theme.background)
+        .panelStyle()
     }
 
     private func tile(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
@@ -148,7 +142,7 @@ struct ColorPickerPanel: View {
         }
         .padding(18)
         .frame(width: 320)
-        .background(Theme.background)
+        .panelStyle()
     }
 }
 
