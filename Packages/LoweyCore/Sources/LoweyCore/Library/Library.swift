@@ -110,21 +110,56 @@ public struct LookPreset: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
+/// A saved script (JavaScript that drives the command API: generators, simulations, crowds).
+public struct ScriptAsset: Codable, Hashable, Sendable, Identifiable {
+    public var id: ScriptID
+    public var name: String
+    public var source: String
+    public var tags: [String]
+    public var favorite: Bool
+    public var added: Date
+    public var lastUsed: Date?
+
+    public init(id: ScriptID, name: String, source: String, tags: [String] = ["script"], favorite: Bool = false, added: Date = Date(),
+                lastUsed: Date? = nil) {
+        self.id = id
+        self.name = name
+        self.source = source
+        self.tags = tags
+        self.favorite = favorite
+        self.added = added
+        self.lastUsed = lastUsed
+    }
+}
+
 /// `library.json`: everything in the global library ("build once, reuse forever").
 public struct LibraryManifest: Codable, Hashable, Sendable {
     public var assets: [LibraryAsset]
     public var prefabs: [Prefab]
     public var looks: [LookPreset]
+    public var scripts: [ScriptAsset]
 
-    public init(assets: [LibraryAsset] = [], prefabs: [Prefab] = [], looks: [LookPreset] = []) {
+    public init(assets: [LibraryAsset] = [], prefabs: [Prefab] = [], looks: [LookPreset] = [], scripts: [ScriptAsset] = []) {
         self.assets = assets
         self.prefabs = prefabs
         self.looks = looks
+        self.scripts = scripts
+    }
+
+    private enum CodingKeys: String, CodingKey { case assets, prefabs, looks, scripts }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        assets = try c.decodeIfPresent([LibraryAsset].self, forKey: .assets) ?? []
+        prefabs = try c.decodeIfPresent([Prefab].self, forKey: .prefabs) ?? []
+        looks = try c.decodeIfPresent([LookPreset].self, forKey: .looks) ?? []
+        scripts = try c.decodeIfPresent([ScriptAsset].self, forKey: .scripts) ?? []
     }
 
     public func asset(_ id: AssetID) -> LibraryAsset? { assets.first { $0.id == id } }
     public func prefab(_ id: PrefabID) -> Prefab? { prefabs.first { $0.id == id } }
     public func look(_ id: LookPresetID) -> LookPreset? { looks.first { $0.id == id } }
+    public func script(_ id: ScriptID) -> ScriptAsset? { scripts.first { $0.id == id } }
 }
 
 /// One row in the library panel.
@@ -132,12 +167,14 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
     case asset(LibraryAsset)
     case prefab(Prefab)
     case look(LookPreset)
+    case script(ScriptAsset)
 
     public var id: String {
         switch self {
         case let .asset(asset): "asset:\(asset.id.raw)"
         case let .prefab(prefab): "prefab:\(prefab.id.raw)"
         case let .look(look): "look:\(look.id.raw)"
+        case let .script(script): "script:\(script.id.raw)"
         }
     }
 
@@ -146,6 +183,7 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
         case let .asset(asset): asset.name
         case let .prefab(prefab): prefab.name
         case let .look(look): look.name
+        case let .script(script): script.name
         }
     }
 
@@ -154,6 +192,7 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
         case let .asset(asset): asset.tags
         case let .prefab(prefab): prefab.tags
         case .look: ["look", "environment"]
+        case let .script(script): script.tags
         }
     }
 
@@ -162,6 +201,7 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
         case let .asset(asset): asset.favorite
         case let .prefab(prefab): prefab.favorite
         case let .look(look): look.favorite
+        case let .script(script): script.favorite
         }
     }
 
@@ -170,6 +210,7 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
         case let .asset(asset): asset.lastUsed
         case let .prefab(prefab): prefab.lastUsed
         case let .look(look): look.lastUsed
+        case let .script(script): script.lastUsed
         }
     }
 
@@ -178,6 +219,7 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
         case let .asset(asset): asset.added
         case let .prefab(prefab): prefab.added
         case let .look(look): look.added
+        case let .script(script): script.added
         }
     }
 
@@ -187,12 +229,13 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
         case let .asset(asset): "\(asset.id.raw).png"
         case let .prefab(prefab): "\(prefab.id.raw).png"
         case let .look(look): "\(look.id.raw).png"
+        case let .script(script): "\(script.id.raw).png"
         }
     }
 }
 
 public enum LibraryFilter: String, Sendable, CaseIterable {
-    case all, favorites, recent, models, prefabs, looks
+    case all, favorites, recent, models, prefabs, looks, scripts
 
     public var displayName: String {
         switch self {
@@ -202,6 +245,7 @@ public enum LibraryFilter: String, Sendable, CaseIterable {
         case .models: "Models"
         case .prefabs: "Built"
         case .looks: "Looks"
+        case .scripts: "Scripts"
         }
     }
 }
@@ -212,6 +256,7 @@ public enum LibrarySearch {
         let all: [LibraryItem] = manifest.assets.map(LibraryItem.asset)
             + manifest.prefabs.map(LibraryItem.prefab)
             + manifest.looks.map(LibraryItem.look)
+            + manifest.scripts.map(LibraryItem.script)
         switch filter {
         case .all: return all.sorted { $0.added > $1.added }
         case .favorites: return all.filter(\.favorite).sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -222,6 +267,7 @@ public enum LibrarySearch {
         case .models: return manifest.assets.map(LibraryItem.asset).sorted { $0.added > $1.added }
         case .prefabs: return manifest.prefabs.map(LibraryItem.prefab).sorted { $0.added > $1.added }
         case .looks: return manifest.looks.map(LibraryItem.look).sorted { $0.added > $1.added }
+        case .scripts: return manifest.scripts.map(LibraryItem.script).sorted { $0.added > $1.added }
         }
     }
 
@@ -290,7 +336,11 @@ public enum RigClassifier {
         let legs = has("leg", "thigh", "knee", "foot", "shin", "calf")
         let spine = has("spine", "hips", "pelvis", "root", "body")
         let head = has("head", "neck")
-        let frontBack = has("front", "back_leg", "backleg", "rear", "hind", "_fl", "_fr", "_bl", "_br", "paw")
+        // "rear" only as a word ("forearm" contains r-e-a-r: a Mixamo arm is not a hind leg).
+        let rear = names.contains { name in
+            name.hasPrefix("rear") || ["_rear", ".rear", " rear", "-rear", ":rear", "rearleg", "rear_leg"].contains { name.contains($0) }
+        }
+        let frontBack = rear || has("front", "back_leg", "backleg", "hind", "_fl", "_fr", "_bl", "_br", "paw")
         let tail = has("tail")
 
         if wings || beak { return .bird }

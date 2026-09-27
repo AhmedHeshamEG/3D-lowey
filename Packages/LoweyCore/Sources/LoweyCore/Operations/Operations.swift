@@ -104,6 +104,63 @@ public enum Snapping {
     }
 }
 
+/// Timeline bookkeeping shared by operations.
+public enum TimelineTools {
+    /// The timeline without anything that targets `objects`.
+    public static func removingReferences(to objects: Set<ObjectID>, from timeline: Timeline) -> Timeline {
+        var result = timeline
+        result.tracks.removeAll { objects.contains($0.target) }
+        result.behaviors.removeAll { objects.contains($0.target) }
+        result.clipTracks.removeAll { objects.contains($0.target) }
+        result.cuts.removeAll { objects.contains($0.camera) }
+        return result
+    }
+
+    /// Copies of the tracks / behaviours / clip tracks of mapped objects, retargeted to their copies.
+    /// `offsets` shifts the position keys of (top-level) copies so they move next to the original.
+    public static func copyAnimation(
+        from timeline: Timeline, mapping: [ObjectID: ObjectID], offsets: [ObjectID: Vec3] = [:], ids: inout IDFactory
+    ) -> EditCommand? {
+        var tracks: [TrackEdit] = []
+        for track in timeline.tracks {
+            guard let target = mapping[track.target] else { continue }
+            var keys = track.keyframes
+            if track.property == .position, let offset = offsets[track.target] {
+                keys = keys.map { key in
+                    var moved = key
+                    if let position = key.value.vec3Value { moved.value = .vec3(position + offset) }
+                    return moved
+                }
+            }
+            tracks.append(TrackEdit(Track(id: ids.next(), target: target, property: track.property, keyframes: keys)))
+        }
+        var behaviors: [Behavior] = []
+        for behavior in timeline.behaviors {
+            guard let target = mapping[behavior.target] else { continue }
+            var copy = behavior
+            copy.id = (ids.next() as TrackID).raw
+            copy.target = target
+            behaviors.append(copy)
+        }
+        var clipTracks: [ClipTrack] = []
+        for clipTrack in timeline.clipTracks {
+            guard let target = mapping[clipTrack.target] else { continue }
+            var copy = clipTrack
+            copy.id = (ids.next() as TrackID).raw
+            copy.target = target
+            clipTracks.append(copy)
+        }
+        if behaviors.isEmpty, clipTracks.isEmpty {
+            return tracks.isEmpty ? nil : .setTracks(tracks)
+        }
+        var updated = timeline
+        updated.tracks += tracks.compactMap(\.track)
+        updated.behaviors += behaviors
+        updated.clipTracks += clipTracks
+        return .setTimeline(updated)
+    }
+}
+
 /// High-level editing actions. Each returns a single `EditCommand` (one undo step)
 /// built from the primitive commands, so the UI, scripts and AI share them.
 public struct Operations: Sendable {
@@ -185,12 +242,36 @@ public struct Operations: Sendable {
             if copy.roots.contains(object.id) { renamed.name = ObjectFactory.uniqueName(object.name, in: scene) }
             return renamed
         }
-        return (.insert(copy, parent: nil, index: nil), copy.roots)
+        let insert = EditCommand.insert(copy, parent: nil, index: nil)
+        // Duplicating animated objects duplicates their animation.
+        var idMap: [ObjectID: ObjectID] = [:]
+        for (original, duplicate) in zip(fragment.objects.map(\.id), copy.objects.map(\.id)) {
+            idMap[original] = duplicate
+        }
+        var offsets: [ObjectID: Vec3] = [:]
+        for root in fragment.roots where scene.objects[root]?.parent == nil {
+            offsets[root] = offset
+        }
+        if let animation = TimelineTools.copyAnimation(from: scene.timeline, mapping: idMap, offsets: offsets, ids: &self.ids) {
+            return (.batch("Duplicate", [insert, animation]), copy.roots)
+        }
+        return (insert, copy.roots)
     }
 
+    /// Deletes objects (and their children). Their animation (tracks, behaviours, clips, cuts)
+    /// goes with them in the same undo step.
     public func delete(_ ids: [ObjectID], in scene: Scene) -> EditCommand? {
         let existing = ids.filter { scene.objects[$0] != nil && !scene.isEffectivelyLocked($0) }
-        return existing.isEmpty ? nil : .delete(existing)
+        guard !existing.isEmpty else { return nil }
+        var removed = Set<ObjectID>()
+        for id in existing {
+            removed.formUnion(scene.subtree(of: id))
+        }
+        let cleaned = TimelineTools.removingReferences(to: removed, from: scene.timeline)
+        if cleaned != scene.timeline {
+            return .batch(existing.count == 1 ? "Delete" : "Delete \(existing.count) objects", [.setTimeline(cleaned), .delete(existing)])
+        }
+        return .delete(existing)
     }
 
     // MARK: Transform

@@ -186,8 +186,21 @@ public struct PropertyKey: RawRepresentable, Hashable, Sendable, Codable, Compar
     public static let lightRange: PropertyKey = "lightRange"
     public static let spotAngle: PropertyKey = "spotAngle"
     public static let lightShadows: PropertyKey = "lightShadows"
+    public static let opacity: PropertyKey = "opacity"
+    // Animation
+    /// Per-object stepping ("inherit", "ones", "twos", "threes") — characters on twos, camera smooth.
+    public static let stepping: PropertyKey = "stepping"
     // Camera
     public static let fieldOfView: PropertyKey = "fieldOfView"
+    /// Distance (m) from the camera to the sharp plane.
+    public static let focusDistance: PropertyKey = "focusDistance"
+    /// f-number; 0 or missing = everything sharp (depth of field off).
+    public static let aperture: PropertyKey = "aperture"
+    /// 9:16 framing of the same camera: vertical field of view multiplier …
+    public static let portraitZoom: PropertyKey = "portraitZoom"
+    /// … and horizontal pan as a fraction of the 16:9 half-width (-1…1), so a subject off-centre
+    /// in 16:9 can be centred in 9:16.
+    public static let portraitShift: PropertyKey = "portraitShift"
     // Generators
     public static let seed: PropertyKey = "seed"
 
@@ -218,7 +231,13 @@ public struct PropertySpec: Sendable, Hashable {
         .lightRange: PropertySpec(type: .float, animatable: true, label: "Range"),
         .spotAngle: PropertySpec(type: .float, animatable: true, label: "Spot angle"),
         .lightShadows: PropertySpec(type: .bool, animatable: false, label: "Shadows"),
+        .opacity: PropertySpec(type: .float, animatable: true, label: "Opacity"),
+        .stepping: PropertySpec(type: .enumeration, animatable: false, label: "Stepping"),
         .fieldOfView: PropertySpec(type: .float, animatable: true, label: "Field of view"),
+        .focusDistance: PropertySpec(type: .float, animatable: true, label: "Focus distance"),
+        .aperture: PropertySpec(type: .float, animatable: true, label: "Aperture"),
+        .portraitZoom: PropertySpec(type: .float, animatable: true, label: "9:16 zoom"),
+        .portraitShift: PropertySpec(type: .float, animatable: true, label: "9:16 pan"),
         .seed: PropertySpec(type: .int, animatable: false, label: "Seed")
     ]
 }

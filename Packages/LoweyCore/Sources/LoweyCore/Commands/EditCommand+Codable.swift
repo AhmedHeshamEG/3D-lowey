@@ -4,12 +4,12 @@ import Foundation
 /// vocabulary (see `/schemas/scene-script.schema.json`).
 extension EditCommand: Codable {
     private enum Key: String, CodingKey {
-        case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands
+        case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands, tracks
     }
 
     private enum Op: String, Codable {
         case insert, delete, restore, setProperties, rename, setKind, reparent, setLook, renameScene
-        case setActiveCamera, setTimeline, batch
+        case setActiveCamera, setTimeline, setTracks, batch
     }
 
     public init(from decoder: Decoder) throws {
@@ -42,6 +42,8 @@ extension EditCommand: Codable {
             self = try .setActiveCamera(c.decodeIfPresent(ObjectID.self, forKey: .camera))
         case .setTimeline:
             self = try .setTimeline(c.decode(Timeline.self, forKey: .timeline))
+        case .setTracks:
+            self = try .setTracks(c.decode([TrackEdit].self, forKey: .tracks))
         case .batch:
             self = try .batch(c.decode(String.self, forKey: .label), c.decode([EditCommand].self, forKey: .commands))
         }
@@ -88,6 +90,9 @@ extension EditCommand: Codable {
         case let .setTimeline(timeline):
             try c.encode(Op.setTimeline, forKey: .op)
             try c.encode(timeline, forKey: .timeline)
+        case let .setTracks(edits):
+            try c.encode(Op.setTracks, forKey: .op)
+            try c.encode(edits, forKey: .tracks)
         case let .batch(label, commands):
             try c.encode(Op.batch, forKey: .op)
             try c.encode(label, forKey: .label)

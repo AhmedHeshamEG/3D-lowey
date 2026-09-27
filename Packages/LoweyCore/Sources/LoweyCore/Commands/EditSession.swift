@@ -112,6 +112,15 @@ public struct EditSession: Sendable {
             }
             return .setProperties(order.compactMap { latest[$0] })
         }
+        if case let .setTracks(a) = first, case let .setTracks(b) = second {
+            var order: [TrackID] = []
+            var latest: [TrackID: TrackEdit] = [:]
+            for edit in a + b {
+                if latest[edit.id] == nil { order.append(edit.id) }
+                latest[edit.id] = edit
+            }
+            return .setTracks(order.compactMap { latest[$0] })
+        }
         if case let .batch(label, commands) = first {
             return .batch(label, commands + [second])
         }
@@ -128,6 +137,16 @@ public struct EditSession: Sendable {
                 merged.append(change)
             }
             return .setProperties(merged)
+        }
+        if case let .setTracks(a) = earlier, case let .setTracks(b) = later {
+            // Earlier inverses restore the pre-gesture tracks; later ones only matter for tracks
+            // the gesture created after it started.
+            var seen = Set(a.map(\.id))
+            var merged: [TrackEdit] = []
+            for edit in b where seen.insert(edit.id).inserted {
+                merged.append(edit)
+            }
+            return .setTracks(merged + a)
         }
         return .batch(earlier.label, [later, earlier])
     }
