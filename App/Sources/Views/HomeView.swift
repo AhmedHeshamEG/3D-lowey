@@ -111,7 +111,7 @@ private struct NewProjectCard: View {
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Theme.text)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 170)
             .aspectRatio(16 / 11, contentMode: .fit)
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -120,6 +120,7 @@ private struct NewProjectCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
         .accessibilityIdentifier("new-project")
         .hoverEffect(.lift)
     }
