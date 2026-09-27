@@ -17,9 +17,9 @@ public struct LoweyHelperComponent: Component, Sendable {
 
 /// Collision groups used for picking.
 public enum PickGroup {
-    public static let objects = CollisionGroup(rawValue: 1 << 0)
-    public static let gizmo = CollisionGroup(rawValue: 1 << 1)
-    public static let guide = CollisionGroup(rawValue: 1 << 2)
+    public static var objects: CollisionGroup { CollisionGroup(rawValue: 1 << 0) }
+    public static var gizmo: CollisionGroup { CollisionGroup(rawValue: 1 << 1) }
+    public static var guide: CollisionGroup { CollisionGroup(rawValue: 1 << 2) }
 }
 
 /// Provides library data to the renderer (manifest + where files live).
