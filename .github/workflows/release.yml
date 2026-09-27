@@ -32,6 +32,8 @@ jobs:
           fetch-depth: 0
       - name: Install XcodeGen
         run: brew install xcodegen
+      - name: Install the Metal toolchain (needed for the RealityKit surface shader)
+        run: xcodebuild -downloadComponent MetalToolchain
       - uses: actions/cache@v4
         with:
           path: |
