@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/hesham/3d-lowey/schemas/scene-script.schema.json",
   "title": "3D-lowey Scene Script",
-  "description": "A list of editing commands applied as one undoable step. The same commands the app's UI uses. Phase 1 draft; finalized in Phase 3.",
+  "description": "A list of editing commands applied as one undoable step. The same commands the app's UI uses. Phase 2: adds keyframe tracks (setTracks) and the full timeline (markers, loop, camera cuts, behaviours, clip tracks). Finalized in Phase 3.",
   "type": "object",
   "required": ["version", "title", "commands"],
   "properties": {
@@ -75,9 +75,34 @@
         "children": { "type": "array", "items": { "$ref": "#/$defs/id" } },
         "properties": {
           "type": "object",
-          "description": "Known keys: position, rotation, scale, visible, locked, color, emissive, emissiveIntensity, roughness, metallic, shading, castsShadow, lightColor, lightIntensity, lightRange, spotAngle, lightShadows, fieldOfView, seed",
+          "description": "Known keys: position, rotation, scale, visible, locked, opacity, stepping (inherit|ones|twos|threes), color, emissive, emissiveIntensity, roughness, metallic, shading, castsShadow, lightColor, lightIntensity, lightRange, spotAngle, lightShadows, fieldOfView, focusDistance, aperture, portraitZoom, portraitShift, seed",
           "additionalProperties": { "$ref": "#/$defs/propertyValue" }
         }
+      }
+    },
+    "easing": {
+      "oneOf": [
+        { "enum": ["linear", "easeIn", "easeOut", "easeInOut", "backOut", "bounce", "elastic", "step"] },
+        { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4, "description": "cubic bezier x1, y1, x2, y2" }
+      ]
+    },
+    "keyframe": {
+      "type": "object",
+      "required": ["time", "value", "easing"],
+      "properties": {
+        "time": { "type": "number", "minimum": 0 },
+        "value": { "$ref": "#/$defs/propertyValue" },
+        "easing": { "$ref": "#/$defs/easing", "description": "Shapes the segment leaving this key." }
+      }
+    },
+    "track": {
+      "type": "object",
+      "required": ["id", "target", "property", "keyframes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "target": { "$ref": "#/$defs/id" },
+        "property": { "type": "string" },
+        "keyframes": { "type": "array", "items": { "$ref": "#/$defs/keyframe" } }
       }
     },
     "fragment": {
@@ -120,7 +145,41 @@
         { "properties": { "op": { "const": "setLook" }, "look": { "type": "object" }, "scope": { "enum": ["project", "scene"] } }, "required": ["op", "scope"] },
         { "properties": { "op": { "const": "renameScene" }, "name": { "type": "string" } }, "required": ["op", "name"] },
         { "properties": { "op": { "const": "setActiveCamera" }, "camera": { "$ref": "#/$defs/id" } }, "required": ["op"] },
-        { "properties": { "op": { "const": "setTimeline" }, "timeline": { "type": "object" } }, "required": ["op", "timeline"] },
+        {
+          "properties": {
+            "op": { "const": "setTimeline" },
+            "timeline": {
+              "type": "object",
+              "properties": {
+                "fps": { "enum": [24, 25, 30, 60] },
+                "duration": { "type": "number" },
+                "stepping": { "enum": [1, 2, 3] },
+                "tracks": { "type": "array", "items": { "$ref": "#/$defs/track" } },
+                "markers": { "type": "array", "items": { "type": "object", "required": ["id", "time", "name"] } },
+                "loop": { "type": "object", "required": ["start", "end"] },
+                "cuts": { "type": "array", "items": { "type": "object", "required": ["time", "camera"] } },
+                "behaviors": { "type": "array", "items": { "type": "object", "required": ["id", "target", "kind"], "description": "kind.type: followPath | lookAt | follow | orbit | noise | windSway | bob | spin" } },
+                "clipTracks": { "type": "array", "items": { "type": "object", "required": ["id", "target", "segments"] } }
+              }
+            }
+          },
+          "required": ["op", "timeline"]
+        },
+        {
+          "properties": {
+            "op": { "const": "setTracks" },
+            "tracks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id"],
+                "properties": { "id": { "$ref": "#/$defs/id" }, "track": { "$ref": "#/$defs/track" }, "index": { "type": "integer" } },
+                "description": "Insert or replace a track; omit `track` to remove it."
+              }
+            }
+          },
+          "required": ["op", "tracks"]
+        },
         { "properties": { "op": { "const": "batch" }, "label": { "type": "string" }, "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } } }, "required": ["op", "label", "commands"] },
         { "properties": { "op": { "const": "restore" }, "entries": { "type": "array" } }, "required": ["op", "entries"] }
       ]
