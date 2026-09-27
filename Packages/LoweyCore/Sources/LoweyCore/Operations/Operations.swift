@@ -365,11 +365,12 @@ public struct Operations: Sendable {
     // MARK: Groups & hierarchy
 
     /// Groups objects under a new group at their combined base center. World transforms are kept.
-    public mutating func group(_ ids: [ObjectID], in scene: Scene, name: String = "Group") -> (EditCommand, ObjectID)? {
+    /// With a `pivot`, the group turns around that point: a puppet joint (an arm pivoting at the shoulder).
+    public mutating func group(_ ids: [ObjectID], in scene: Scene, name: String = "Group", pivot custom: Vec3? = nil) -> (EditCommand, ObjectID)? {
         let members = topLevel(ids, in: scene)
         guard !members.isEmpty else { return nil }
         let box = bounds.worldBounds(of: members, in: scene)
-        let pivot = box.map { Vec3($0.center.x, $0.min.y, $0.center.z) } ?? .zero
+        let pivot = custom ?? box.map { Vec3($0.center.x, $0.min.y, $0.center.z) } ?? .zero
         // New group goes where the first member was.
         let firstParent = scene.objects[members[0]]?.parent
         let firstIndex = scene.childIDs(of: firstParent).firstIndex(of: members[0])

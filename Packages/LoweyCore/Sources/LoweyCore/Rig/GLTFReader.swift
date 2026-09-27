@@ -136,17 +136,13 @@ public enum GLTFReader {
                     let offset = base + element * stride + component * componentSize
                     let value: Double = switch componentType {
                     case 5120:
-                        normalized ? max(Double(raw.loadUnaligned(fromByteOffset: offset, as: Int8.self)) / 127, -1)
-                            : Double(raw.loadUnaligned(fromByteOffset: offset, as: Int8.self))
+                        scaled(Double(raw.loadUnaligned(fromByteOffset: offset, as: Int8.self)), by: 127, normalized, signed: true)
                     case 5121:
-                        normalized ? Double(raw.loadUnaligned(fromByteOffset: offset, as: UInt8.self)) / 255
-                            : Double(raw.loadUnaligned(fromByteOffset: offset, as: UInt8.self))
+                        scaled(Double(raw.loadUnaligned(fromByteOffset: offset, as: UInt8.self)), by: 255, normalized, signed: false)
                     case 5122:
-                        normalized ? max(Double(Int16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: Int16.self))) / 32767, -1)
-                            : Double(Int16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: Int16.self)))
+                        scaled(Double(Int16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: Int16.self))), by: 32767, normalized, signed: true)
                     case 5123:
-                        normalized ? Double(UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt16.self))) / 65535
-                            : Double(UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt16.self)))
+                        scaled(Double(UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt16.self))), by: 65535, normalized, signed: false)
                     case 5125:
                         Double(UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt32.self)))
                     default:
@@ -157,6 +153,12 @@ public enum GLTFReader {
             }
         }
         return (values, components, count)
+    }
+
+    /// Normalised integer components map to 0…1 (unsigned) or -1…1 (signed).
+    static func scaled(_ value: Double, by maximum: Double, _ normalized: Bool, signed: Bool) -> Double {
+        guard normalized else { return value }
+        return signed ? max(value / maximum, -1) : value / maximum
     }
 
     // MARK: Nodes

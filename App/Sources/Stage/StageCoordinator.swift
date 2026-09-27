@@ -1,6 +1,7 @@
 import LoweyCore
 import LoweyRender
 import UIKit
+import UIKit.UIGestureRecognizerSubclass
 
 /// Turns touches on the stage into camera moves and editor actions.
 ///
@@ -20,6 +21,11 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     private let pinch = UIPinchGestureRecognizer()
     private let longPress = UILongPressGestureRecognizer()
     private let stroke = StrokeGestureRecognizer()
+    private let twist = UIRotationGestureRecognizer()
+    private let pencilRoll = PencilRollRecognizer()
+    private var twistKey = UUID().uuidString
+    private var pinchKey = UUID().uuidString
+    private var panKey = UUID().uuidString
 
     /// What the current one-finger drag is doing.
     private enum DragKind {
@@ -28,6 +34,10 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         case gizmo(GizmoHandle, pivot: Vec3, lastPoint: CGPoint, accumulated: Double)
         case lasso
         case scatter(center: Vec3)
+        /// Perform mode: moving the selection while the timeline records.
+        case perform(planeY: Double, last: Vec3)
+        /// Camera mode: aiming the shot camera (pan / tilt).
+        case aimCamera
         case none
     }
 
@@ -67,10 +77,15 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         longPress.addTarget(self, action: #selector(handleLongPress(_:)))
         stroke.addTarget(self, action: #selector(handleStroke(_:)))
         stroke.delegate = self
+        twist.addTarget(self, action: #selector(handleTwist(_:)))
+        twist.delegate = self
+        pencilRoll.configure()
+        pencilRoll.onRoll = { [weak self] delta in self?.handlePencilRoll(delta) }
+        pencilRoll.delegate = self
         for recognizer in [tap, doubleTap, undoTap, redoTap, oneFingerPan, twoFingerPan, pinch, longPress] as [UIGestureRecognizer] {
             recognizer.delegate = self
         }
-        let all: [UIGestureRecognizer] = [tap, doubleTap, undoTap, redoTap, oneFingerPan, twoFingerPan, pinch, longPress, stroke]
+        let all: [UIGestureRecognizer] = [tap, doubleTap, undoTap, redoTap, oneFingerPan, twoFingerPan, pinch, longPress, stroke, twist, pencilRoll]
         for recognizer in all {
             stage.addGestureRecognizer(recognizer)
         }
@@ -97,7 +112,21 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     // MARK: Delegate
 
     func gestureRecognizer(_ first: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith second: UIGestureRecognizer) -> Bool {
-        (first === twoFingerPan && second === pinch) || (first === pinch && second === twoFingerPan)
+        if first === pencilRoll || second === pencilRoll { return true }
+        let pair: Set<ObjectIdentifier> = [ObjectIdentifier(first), ObjectIdentifier(second)]
+        let twoFinger: Set<ObjectIdentifier> = [ObjectIdentifier(twoFingerPan), ObjectIdentifier(pinch), ObjectIdentifier(twist)]
+        return pair.isSubset(of: twoFinger)
+    }
+
+    private var isRecordingPerform: Bool {
+        guard let editor else { return false }
+        return editor.performPhase == .recording && !editor.performTargets.isEmpty
+    }
+
+    /// Camera mode, looking through the shot camera: gestures operate that camera.
+    private var operatesCamera: Bool {
+        guard let editor else { return false }
+        return editor.mode == .camera && editor.lookThrough && editor.editedCamera != nil && editor.stage?.lookThrough != nil
     }
 
     // MARK: Taps
@@ -167,7 +196,15 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     }
 
     private func beginDrag(at point: CGPoint, editor: EditorModel, stage: StageView) -> DragKind {
-        guard editor.mode == .build || editor.mode == .look else { return .orbit }
+        if isRecordingPerform {
+            let planeY = editor.selectionPivot?.y ?? 0
+            let start = GuideSurface.plane(origin: Vec3(0, planeY, 0), normal: .unitY)
+                .intersect(stage.worldRay(at: point) ?? Ray(origin: .zero, direction: .unitY))?.point ?? .zero
+            editor.performTouchBegan([.position])
+            return .perform(planeY: planeY, last: start)
+        }
+        if operatesCamera { return .aimCamera }
+        guard editor.mode == .build || editor.mode == .look || editor.mode == .animate else { return .orbit }
         switch editor.tool {
         case .lasso:
             editor.lassoPoints = [point]
@@ -255,6 +292,18 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             editor.scatterPreview = (centerScreen, hypot(edgeScreen.x - centerScreen.x, edgeScreen.y - centerScreen.y))
             scatterRadius = radius
 
+        case let .perform(planeY, last):
+            guard let ray = stage.worldRay(at: point),
+                  let hit = GuideSurface.plane(origin: Vec3(0, planeY, 0), normal: .unitY).intersect(ray) else { return }
+            var delta = hit.point - last
+            delta.y = 0
+            if delta.length > 20 { return }
+            editor.performMove(by: delta)
+            drag = .perform(planeY: planeY, last: hit.point)
+
+        case .aimCamera:
+            editor.aimCamera(pan: -Double(translation.x) * 0.15, tilt: -Double(translation.y) * 0.15, gesture: gestureKey)
+
         case .none:
             break
         }
@@ -279,7 +328,9 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             editor.scatterPreview = nil
             if !cancelled, scatterRadius > 0.2 { editor.scatterSelection(center: center, radius: scatterRadius) }
             scatterRadius = 0
-        case .orbit, .none:
+        case .perform:
+            editor.performTouchEnded()
+        case .orbit, .aimCamera, .none:
             break
         }
         editor.endGesture()
@@ -353,7 +404,17 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     // MARK: Two fingers
 
     @objc private func handleTwoFingerPan(_ recognizer: UIPanGestureRecognizer) {
-        guard let stage, recognizer.state == .changed || recognizer.state == .began else { return }
+        guard let stage else { return }
+        if operatesCamera, let editor {
+            if recognizer.state == .began { panKey = UUID().uuidString }
+            if recognizer.state == .ended || recognizer.state == .cancelled { editor.endGesture() }
+            let translation = recognizer.translation(in: stage)
+            recognizer.setTranslation(.zero, in: stage)
+            // Truck / pedestal: move the camera sideways and up in its own frame.
+            editor.moveCamera(local: Vec3(-Double(translation.x) * 0.01, Double(translation.y) * 0.01, 0), gesture: panKey)
+            return
+        }
+        guard recognizer.state == .changed || recognizer.state == .began else { return }
         let translation = recognizer.translation(in: stage)
         recognizer.setTranslation(.zero, in: stage)
         var viewpoint = stage.viewpoint
@@ -367,11 +428,64 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     }
 
     @objc private func handlePinch(_ recognizer: UIPinchGestureRecognizer) {
+        if isRecordingPerform, let editor {
+            switch recognizer.state {
+            case .began: editor.performTouchBegan([.scale])
+            case .changed: editor.performScale(by: Double(recognizer.scale))
+            default: editor.performTouchEnded()
+            }
+            recognizer.scale = 1
+            return
+        }
+        if operatesCamera, let editor {
+            if recognizer.state == .began { pinchKey = UUID().uuidString }
+            if recognizer.state == .ended || recognizer.state == .cancelled {
+                editor.endGesture()
+                return
+            }
+            // Dolly: pinch out moves the camera forward.
+            editor.moveCamera(local: Vec3(0, 0, -Double(recognizer.scale - 1) * 3), gesture: pinchKey)
+            recognizer.scale = 1
+            return
+        }
         guard let stage, recognizer.state == .changed || recognizer.state == .began else { return }
         var viewpoint = stage.viewpoint
         viewpoint.distance /= Double(max(recognizer.scale, 0.01))
         recognizer.scale = 1
         stage.setViewpoint(viewpoint)
+    }
+
+    // MARK: Twist & Pencil roll (Perform)
+
+    @objc private func handleTwist(_ recognizer: UIRotationGestureRecognizer) {
+        guard let editor else { return }
+        if isRecordingPerform {
+            switch recognizer.state {
+            case .began: editor.performTouchBegan([.rotation])
+            case .changed: editor.performRotate(by: -Double(recognizer.rotation))
+            default: editor.performTouchEnded()
+            }
+            recognizer.rotation = 0
+            return
+        }
+        if operatesCamera {
+            if recognizer.state == .began { twistKey = UUID().uuidString }
+            if recognizer.state == .ended || recognizer.state == .cancelled {
+                editor.endGesture()
+                return
+            }
+            editor.rollCamera(by: Double(recognizer.rotation), gesture: twistKey)
+            recognizer.rotation = 0
+        }
+    }
+
+    /// Apple Pencil Pro barrel roll turns the performed object while it moves.
+    private func handlePencilRoll(_ delta: Double) {
+        guard let editor, isRecordingPerform, editor.performSettings.barrelRoll else { return }
+        if !editor.performChannels.contains(where: { $0.property == .rotation }) {
+            editor.performTouchBegan([.rotation])
+        }
+        editor.performRotate(by: -delta)
     }
 
     // MARK: Drawing
@@ -442,5 +556,51 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         }
         let color = editor.currentColor.resolved(in: editor.look.palette).uiColor
         stage.showStrokePreview(mesh, color: color)
+    }
+}
+
+/// Watches Pencil touches for barrel roll (Apple Pencil Pro) without claiming them: other gestures
+/// keep working, this one just reports how much the barrel turned.
+final class PencilRollRecognizer: UIGestureRecognizer {
+    var onRoll: ((Double) -> Void)?
+    private var lastRoll: CGFloat?
+
+    /// Never blocks or delays other gestures; Pencil only.
+    func configure() {
+        cancelsTouchesInView = false
+        delaysTouchesBegan = false
+        delaysTouchesEnded = false
+        allowedTouchTypes = [NSNumber(value: UITouch.TouchType.pencil.rawValue)]
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with _: UIEvent) {
+        lastRoll = touches.first?.rollAngle
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with _: UIEvent) {
+        guard let touch = touches.first else { return }
+        let roll = touch.rollAngle
+        if let lastRoll {
+            var delta = Double(roll - lastRoll)
+            if delta > .pi { delta -= 2 * .pi }
+            if delta < -.pi { delta += 2 * .pi }
+            if abs(delta) > 0.0005 { onRoll?(delta) }
+        }
+        lastRoll = roll
+    }
+
+    override func touchesEnded(_: Set<UITouch>, with _: UIEvent) {
+        lastRoll = nil
+        state = .failed
+    }
+
+    override func touchesCancelled(_: Set<UITouch>, with _: UIEvent) {
+        lastRoll = nil
+        state = .failed
+    }
+
+    override func reset() {
+        super.reset()
+        lastRoll = nil
     }
 }

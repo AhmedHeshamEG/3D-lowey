@@ -54,6 +54,26 @@ public final class SceneRenderer {
     /// Fired after asynchronous content (a model finishing loading) appears, so overlays can refresh.
     public var onContentChanged: (() -> Void)?
 
+    /// Editor helpers (light bulbs, camera boxes). Off for export renderers.
+    public var showsHelpers = true
+    /// Hides one object (the camera you are looking through).
+    public var hiddenObject: ObjectID? {
+        didSet {
+            if let oldValue, let node = nodes[oldValue], let object = document?.scene.objects[oldValue] { node.isEnabled = object.isVisible }
+            if let hiddenObject { nodes[hiddenObject]?.isEnabled = false }
+        }
+    }
+
+    private var jointMaps: [ObjectID: JointMap] = [:]
+    private var posed = Set<ObjectID>()
+    private var clipControllers: [ObjectID: (name: String, controller: AnimationPlaybackController)] = [:]
+
+    /// How one skinned model's RealityKit joints map to a Core skeleton.
+    private struct JointMap {
+        var entity: ObjectIdentifier
+        var models: [(ModelEntity, [Int?], [RealityKit.Transform])]
+    }
+
     public static func registerComponents() {
         LoweyObjectComponent.registerComponent()
         LoweyHelperComponent.registerComponent()
@@ -126,10 +146,21 @@ public final class SceneRenderer {
             node.setParent(parentEntity, preservingWorldTransform: false)
         }
         node.transform = object.transform.realityKit
-        node.isEnabled = object.isVisible
+        node.isEnabled = object.isVisible && hiddenObject != id
+        let opacity = object.opacity
+        if opacity < 0.999 {
+            node.components.set(OpacityComponent(opacity: Float(max(opacity, 0))))
+        } else if node.components.has(OpacityComponent.self) {
+            node.components.remove(OpacityComponent.self)
+        }
         // Content.
         let key = contentKey(for: object, document: document)
-        if contentKeys[id] != key || contents[id] == nil {
+        if let old = contentKeys[id], old != key, old.differsOnlyInSurface(from: key), let model = contents[id] as? ModelEntity,
+           let surface = key.surface {
+            // Animated colour / glow: swap the material, keep the entity.
+            model.model?.materials = [MaterialFactory.shared.material(for: surface)]
+            contentKeys[id] = key
+        } else if contentKeys[id] != key || contents[id] == nil {
             contents[id]?.removeFromParent()
             let content = buildContent(for: object, key: key, document: document, depth: 0)
             content.name = "content"
@@ -155,6 +186,12 @@ public final class SceneRenderer {
         var light: [PropertyKey: PropertyValue]
         var prefabVersion: Int
         var assetState: Int
+
+        func differsOnlyInSurface(from other: ContentKey) -> Bool {
+            var copy = self
+            copy.surface = other.surface
+            return copy == other && surface != nil && other.surface != nil
+        }
     }
 
     private func effectiveShading(_ object: SceneObject, look: Look) -> ShadingStyle {
@@ -173,7 +210,8 @@ public final class SceneRenderer {
         return SurfaceKey(
             color: color ?? .blockout,
             emissive: emissive ?? (object.emissiveIntensity > 0 ? color : nil),
-            emissiveIntensity: object.emissiveIntensity,
+            // Quantised so animated glow reuses a bounded set of materials.
+            emissiveIntensity: (object.emissiveIntensity * 20).rounded() / 20,
             roughness: object[.roughness]?.floatValue ?? 0.85,
             metallic: object[.metallic]?.floatValue ?? 0,
             fog: fog
@@ -259,6 +297,7 @@ public final class SceneRenderer {
                                    materials: [MaterialFactory.shared.helper(color: .systemTeal)])
             icon.components.set(LoweyHelperComponent())
             icon.generateCollisionShapes(recursive: false)
+            icon.isEnabled = showsHelpers
             return icon
         }
     }
@@ -354,6 +393,14 @@ public final class SceneRenderer {
         }
     }
 
+    /// Waits until every model that started loading is in (exports never render placeholders).
+    public func waitForAssets(timeout: TimeInterval = 30) async {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !loadingAssets.isEmpty, Date() < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
     /// Rebuilds content for objects matching `predicate` (after an asset loads or a prefab changes).
     public func refreshObjects(where predicate: (SceneObject) -> Bool) {
         guard let document else { return }
@@ -417,8 +464,94 @@ public final class SceneRenderer {
         let icon = ModelEntity(mesh: .generateSphere(radius: 0.06), materials: [MaterialFactory.shared.helper(color: color)])
         icon.components.set(LoweyHelperComponent())
         icon.collision = CollisionComponent(shapes: [.generateSphere(radius: 0.12)])
+        icon.isEnabled = showsHelpers
         container.addChild(icon)
         return container
+    }
+
+    // MARK: Characters
+
+    /// Applies skeletal poses (from `Animator`) to skinned models. Objects that were posed before but
+    /// have no pose now go back to their rest pose.
+    public func applyPoses(_ poses: [ObjectID: [CoreTransform]], rigs: [AssetID: RigAsset]) {
+        guard let document else { return }
+        for id in posed.subtracting(poses.keys) {
+            if let map = jointMaps[id] {
+                for (model, _, rest) in map.models {
+                    model.jointTransforms = rest
+                }
+            }
+        }
+        posed = Set(poses.keys)
+        for (id, pose) in poses {
+            guard let assetID = document.scene.objects[id]?.kind.assetID, let rig = rigs[assetID],
+                  let content = contents[id] else { continue }
+            let map = jointMap(for: id, content: content, skeleton: rig.skeleton)
+            for (model, indices, rest) in map.models {
+                var transforms = model.jointTransforms
+                guard transforms.count == indices.count, rest.count == indices.count else { continue }
+                for (index, core) in indices.enumerated() {
+                    guard let core, core < pose.count, core < rig.skeleton.joints.count else { continue }
+                    // Relative to the model's own rest pose, so armature conventions don't matter.
+                    let delta = CoreTransform.relative(world: pose[core], toParent: rig.skeleton.joints[core].rest)
+                    let restCore = CoreTransform(rest[index])
+                    transforms[index] = (restCore * delta).realityKit
+                }
+                model.jointTransforms = transforms
+            }
+        }
+    }
+
+    private func jointMap(for id: ObjectID, content: Entity, skeleton: Skeleton) -> JointMap {
+        if let existing = jointMaps[id], existing.entity == ObjectIdentifier(content) { return existing }
+        var lookup: [String: Int] = [:]
+        for (index, joint) in skeleton.joints.enumerated() {
+            lookup[Self.jointKey(joint.name)] = index
+        }
+        var models: [(ModelEntity, [Int?], [RealityKit.Transform])] = []
+        AssetLoader.visitModels(content) { entity in
+            guard let model = entity as? ModelEntity, !model.jointNames.isEmpty else { return }
+            var indices = model.jointNames.map { lookup[Self.jointKey($0)] }
+            if indices.allSatisfy({ $0 == nil }), model.jointNames.count == skeleton.joints.count {
+                // Unnamed joints: same count, same order.
+                indices = Array(skeleton.joints.indices)
+            }
+            models.append((model, indices, model.jointTransforms))
+        }
+        let map = JointMap(entity: ObjectIdentifier(content), models: models)
+        jointMaps[id] = map
+        return map
+    }
+
+    /// "Armature/Hips/Spine.001" becomes "spine001": last path component, letters and digits only.
+    static func jointKey(_ name: String) -> String {
+        let last = name.split(separator: "/").last.map(String.init) ?? name
+        return String(last.lowercased().filter { $0.isLetter || $0.isNumber })
+    }
+
+    /// Clips on models without Core rig data (USDZ): RealityKit's own animation, paused and scrubbed.
+    public func applyClipFallback(_ timeline: Timeline, at time: Double, skipping handled: Set<ObjectID>) {
+        guard let document else { return }
+        for track in timeline.clipTracks where !handled.contains(track.target) {
+            guard let content = contents[track.target], document.scene.objects[track.target] != nil,
+                  let best = track.weights(at: time).max(by: { $0.weight < $1.weight }) else { continue }
+            let segment = best.segment
+            var animation: AnimationResource?
+            AssetLoader.visit(content) { entity in
+                if animation == nil { animation = entity.availableAnimations.first { $0.name == segment.clip.name } }
+            }
+            guard let animation else { continue }
+            let controller: AnimationPlaybackController
+            if let existing = clipControllers[track.target], existing.name == segment.clip.name, existing.controller.isValid {
+                controller = existing.controller
+            } else {
+                clipControllers[track.target]?.controller.stop()
+                // Paused and scrubbed: the segment's own looping maps timeline time to clip time.
+                controller = content.playAnimation(animation, transitionDuration: 0, startsPaused: true)
+                clipControllers[track.target] = (segment.clip.name, controller)
+            }
+            controller.time = segment.clipTime(at: time, clipDuration: controller.duration)
+        }
     }
 
     // MARK: Queries

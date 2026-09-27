@@ -76,7 +76,30 @@ final class SmokeTests: XCTestCase {
         button(app, "mode-export").tap()
         XCTAssertTrue(button(app, "take-snapshot").waitForExistence(timeout: 5))
         screenshot(app, "05-export-framing")
+        // Animate: a one-tap preset on a new cone, play and pause.
+        button(app, "mode-build").tap()
+        button(app, "Add").tap()
+        XCTAssertTrue(button(app, "add-cone").waitForExistence(timeout: 5))
+        button(app, "add-cone").tap()
         button(app, "mode-animate").tap()
+        let bounce = button(app, "preset-bounce")
+        XCTAssertTrue(bounce.waitForExistence(timeout: 5), "the Animate panel shows presets")
+        bounce.tap()
+        XCTAssertTrue(app.otherElements["timeline-ruler"].waitForExistence(timeout: 5) || app.staticTexts["timeline-time"].exists)
+        button(app, "Play").tap()
+        sleep(1)
+        button(app, "Pause").tap()
+        screenshot(app, "08-animate-timeline")
+        // Camera: save a camera, look through it.
+        button(app, "mode-camera").tap()
+        let saveCamera = button(app, "Save camera from view")
+        XCTAssertTrue(saveCamera.waitForExistence(timeout: 5))
+        saveCamera.tap()
+        sleep(1)
+        screenshot(app, "09-camera-look-through")
+        button(app, "mode-export").tap()
+        XCTAssertTrue(button(app, "export-video").waitForExistence(timeout: 5))
+        screenshot(app, "10-export-video")
         button(app, "mode-build").tap()
 
         // Home and back: the project is there and reopens.
@@ -102,7 +125,7 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(stage.waitForExistence(timeout: 20))
         sleep(3)
         screenshot(app, "sample-scene-1")
-        for index in 2 ... 3 {
+        for index in 2 ... 4 {
             button(app, "scene-menu").tap()
             let item = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(index) ·")).firstMatch
             XCTAssertTrue(item.waitForExistence(timeout: 5))
@@ -110,5 +133,13 @@ final class SmokeTests: XCTestCase {
             sleep(3)
             screenshot(app, "sample-scene-\(index)")
         }
+        // The animated opening, seen through its cameras.
+        button(app, "mode-camera").tap()
+        sleep(2)
+        screenshot(app, "sample-opening-camera")
+        button(app, "Play").tap()
+        sleep(4)
+        button(app, "Pause").tap()
+        screenshot(app, "sample-opening-playing")
     }
 }

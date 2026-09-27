@@ -77,6 +77,8 @@ public final class MaterialFactory {
 
     public func material(for key: SurfaceKey) -> any RealityKit.Material {
         if let cached = cache[key] { return cached }
+        // Animated colours and glow create many surfaces; entities keep the ones they use.
+        if cache.count > 4000 { cache.removeAll() }
         let material = makeMaterial(for: key)
         cache[key] = material
         return material

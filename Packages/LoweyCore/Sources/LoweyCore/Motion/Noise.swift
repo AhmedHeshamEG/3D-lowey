@@ -25,7 +25,7 @@ public enum Noise {
 
     /// Two octaves: organic wobble without looking random-jittery.
     public static func fractal(_ x: Double, seed: UInt64) -> Double {
-        (value(x, seed: seed) * 0.7 + value(x * 2.13 + 17.3, seed: seed &+ 101) * 0.3)
+        value(x, seed: seed) * 0.7 + value(x * 2.13 + 17.3, seed: seed &+ 101) * 0.3
     }
 
     /// Stable seed derived from a string (object ids, behaviour ids).

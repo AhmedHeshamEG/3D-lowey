@@ -79,11 +79,29 @@ public final class StageView: ARView {
         return (far.eye, viewpoint.rotation, orthographicFieldOfView)
     }
 
+    /// When set, the stage shows the scene through a scene camera (Camera mode) instead of the orbit view.
+    public private(set) var lookThrough: OffscreenRenderer.Camera?
+
+    public func setLookThrough(_ camera: OffscreenRenderer.Camera?) {
+        lookThrough = camera
+        if let camera {
+            cameraEntity.transform = RealityKit.Transform(scale: .one, rotation: camera.orientation, translation: camera.position)
+            cameraEntity.components.set(PerspectiveCameraComponent(near: 0.02, far: 3000, fieldOfViewInDegrees: camera.fieldOfView))
+            renderer.environment.follow(camera: Vec3(camera.position))
+        } else {
+            setViewpoint(viewpoint, notify: false)
+        }
+    }
+
     public func setViewpoint(_ newValue: Viewpoint, notify: Bool = true) {
         var value = newValue
         value.pitch = min(max(value.pitch, -89.9), 89.9)
         value.distance = min(max(value.distance, 0.2), 400)
         viewpoint = value
+        if lookThrough != nil {
+            if notify { onCameraChanged?(value) }
+            return
+        }
         let pose = Self.cameraPose(for: value)
         cameraEntity.transform = RealityKit.Transform(scale: .one, rotation: pose.rotation.simd, translation: pose.eye.simd)
         let far: Float = value.projection == .orthographic ? 60000 : 3000

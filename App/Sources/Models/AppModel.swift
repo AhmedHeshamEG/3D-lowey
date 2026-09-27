@@ -71,7 +71,7 @@ final class AppModel {
 
     func createSampleProject(open shouldOpen: Bool) {
         do {
-            let (info, scenes) = try EnigmaSample.build(ids: .random)
+            let (info, scenes) = try EnigmaSample.buildWithOpening(ids: .random)
             var fresh = info
             fresh.id = .make()
             fresh.created = Date()

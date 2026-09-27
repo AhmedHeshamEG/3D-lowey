@@ -139,7 +139,7 @@ public enum Simulation {
                 let damping = max(0, 1 - settings.friction * 6 * dt)
                 bodies[index].velocity.x *= damping
                 bodies[index].velocity.z *= damping
-                bodies[index].spin = bodies[index].spin * max(0, 1 - settings.friction * 8 * dt)
+                bodies[index].spin *= max(0, 1 - settings.friction * 8 * dt)
             }
         }
         // Body–body (spheres): push apart and exchange velocity along the normal.

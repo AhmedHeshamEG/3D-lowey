@@ -116,7 +116,8 @@ public enum BoneMapper {
     /// Lowercase, strip rig prefixes, unify separators.
     static func normalize(_ name: String) -> String {
         var n = name.lowercased()
-        for prefix in ["mixamorig:", "mixamorig_", "mixamorig", "armature|", "armature/", "def-", "def_", "bip01 ", "bip01_", "j_bip_c_", "j_bip_"] where n.hasPrefix(prefix) {
+        for prefix in ["mixamorig:", "mixamorig_", "mixamorig", "armature|", "armature/", "def-", "def_", "bip01 ", "bip01_", "j_bip_c_", "j_bip_"]
+            where n.hasPrefix(prefix) {
             n.removeFirst(prefix.count)
         }
         if let slash = n.lastIndex(of: "/") { n = String(n[n.index(after: slash)...]) }

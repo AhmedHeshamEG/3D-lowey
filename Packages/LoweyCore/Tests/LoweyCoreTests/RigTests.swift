@@ -31,7 +31,9 @@ struct TestRig {
         var views: [[String: Any]] = []
         var accessors: [[String: Any]] = []
         func add(_ floats: [Float], type: String, count: Int, minMax: Bool = false) -> Int {
-            while blob.count % 4 != 0 { blob.append(0) }
+            while blob.count % 4 != 0 {
+                blob.append(0)
+            }
             let offset = blob.count
             for value in floats {
                 withUnsafeBytes(of: value.bitPattern.littleEndian) { blob.append(contentsOf: $0) }
@@ -98,8 +100,12 @@ struct TestRig {
             "animations": animations, "accessors": accessors, "bufferViews": views, "buffers": [["byteLength": blob.count]]
         ]
         var jsonData = try! JSONSerialization.data(withJSONObject: json)
-        while jsonData.count % 4 != 0 { jsonData.append(0x20) }
-        while blob.count % 4 != 0 { blob.append(0) }
+        while jsonData.count % 4 != 0 {
+            jsonData.append(0x20)
+        }
+        while blob.count % 4 != 0 {
+            blob.append(0)
+        }
         var data = Data("glTF".utf8)
         func u32(_ value: Int) { withUnsafeBytes(of: UInt32(value).littleEndian) { data.append(contentsOf: $0) } }
         u32(2)
@@ -294,7 +300,7 @@ final class RigTests: XCTestCase {
             let foot = try XCTUnwrap(target.joint("leftFoot"))
             let hips = try XCTUnwrap(target.joint("hips"))
             let restFoot = target.skeleton.modelRest[foot].position
-            let legLength = restFoot.distance(to: target.skeleton.modelRest[try XCTUnwrap(target.joint("leftUpperLeg"))].position)
+            let legLength = try restFoot.distance(to: target.skeleton.modelRest[XCTUnwrap(target.joint("leftUpperLeg"))].position)
             // The thigh swung 40° forward: the foot moves forward by leg length × sin 40° (+ hips travel).
             let hipsTravel = model[hips].position.z - target.skeleton.modelRest[hips].position.z
             XCTAssertEqual(model[foot].position.z - hipsTravel - restFoot.z, legLength * sin(40 * .pi / 180), accuracy: 1e-3)

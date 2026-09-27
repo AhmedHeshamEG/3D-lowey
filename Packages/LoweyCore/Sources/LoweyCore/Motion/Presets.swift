@@ -258,7 +258,7 @@ public struct PresetBuilder: Sendable {
     }
 
     /// Amplitude variation that stays meaningful for multiplicative presets (grow, pulse).
-    static func scaledAmplitude(_ preset: AnimationPreset, _ amplitude: Double, by factor: Double) -> Double {
+    public static func scaledAmplitude(_ preset: AnimationPreset, _ amplitude: Double, by factor: Double) -> Double {
         switch preset {
         case .grow, .shrink, .pulse: 1 + (amplitude - 1) * factor
         default: amplitude * factor

@@ -17,7 +17,7 @@ final class ExportTests: XCTestCase {
         XCTAssertTrue(meshes.contains { $0.name == "Lamp arm" }, "drawn objects export")
         XCTAssertTrue(meshes.contains { $0.name == "Bulb" && $0.emissiveStrength > 0 })
         XCTAssertGreaterThan(extraCalls, 0, "groups/lights go through the extra hook")
-        let selection = SceneExport.meshes([try XCTUnwrap(desk.objects.values.first { $0.name == "Desk" }).id], in: desk, look: info.look)
+        let selection = try SceneExport.meshes([XCTUnwrap(desk.objects.values.first { $0.name == "Desk" }).id], in: desk, look: info.look)
         XCTAssertEqual(selection.count, 6, "desk top + 4 legs + drawer")
     }
 

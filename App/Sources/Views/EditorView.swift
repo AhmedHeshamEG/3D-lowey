@@ -51,15 +51,16 @@ struct EditorView: View {
                 rightPanel
                     .padding(.trailing, 16)
                     .padding(.top, 76)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, showsTimeline ? Self.drawerHeight + 28 : 16)
             }
 
-            VStack {
+            VStack(spacing: 12) {
                 Spacer()
                 HStack(alignment: .bottom) {
-                    if editor.mode == .build, !editor.selection.isEmpty, editor.tool == .select {
+                    if editor.mode == .build || editor.mode == .animate, !editor.selection.isEmpty, editor.tool == .select,
+                       editor.performPhase == .idle {
                         JoystickPad(editor: editor)
-                            .padding(.leading, 96)
+                            .padding(.leading, editor.mode == .build ? 96 : 16)
                             .transition(.scale.combined(with: .opacity))
                     }
                     Spacer()
@@ -71,11 +72,22 @@ struct EditorView: View {
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     Spacer()
-                    ViewControls(editor: editor)
-                        .padding(.trailing, rightPanelVisible ? 360 : 16)
+                    if !(editor.mode == .camera && editor.lookThrough) {
+                        ViewControls(editor: editor)
+                            .padding(.trailing, rightPanelVisible ? 360 : 16)
+                    }
                 }
-                .padding(.bottom, 16)
+                .padding(.bottom, showsTimeline ? 0 : 16)
+                if showsTimeline {
+                    TimelineDrawer(editor: editor)
+                        .frame(height: Self.drawerHeight)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 12)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+
+            PerformOverlay(editor: editor)
 
             if editor.showLibrary {
                 HStack {
@@ -98,6 +110,10 @@ struct EditorView: View {
         .animation(.spring(duration: 0.25), value: editor.railPanel)
         .animation(.spring(duration: 0.25), value: editor.selection.isEmpty)
         .background(KeyboardShortcuts(editor: editor))
+        .sheet(isPresented: $editor.showScripts) {
+            ScriptPanel(editor: editor)
+                .presentationDetents([.large])
+        }
         .overlay(alignment: .bottomLeading) {
             if AppModel.isUITesting {
                 Text(editor.debugTrail.joined(separator: " | "))
@@ -112,6 +128,10 @@ struct EditorView: View {
             return true
         }
     }
+
+    static let drawerHeight: CGFloat = 250
+
+    private var showsTimeline: Bool { editor.mode == .animate || editor.mode == .camera }
 
     private var rightPanelVisible: Bool {
         switch editor.mode {
@@ -136,11 +156,11 @@ struct EditorView: View {
         case .look:
             LookPanel(editor: editor).frame(width: 340)
         case .export:
-            ExportPanel(editor: editor).frame(width: 330)
+            ExportPanel(editor: editor).frame(width: 340)
         case .animate:
-            ComingSoonPanel(mode: .animate).frame(width: 330)
+            AnimatePanel(editor: editor).frame(width: 340)
         case .camera:
-            CameraPanel(editor: editor).frame(width: 330)
+            CameraPanel(editor: editor).frame(width: 340)
         }
     }
 
@@ -274,6 +294,11 @@ struct KeyboardShortcuts: View {
             shortcut(.delete, modifiers: .command) { editor.deleteSelection() }
             shortcut("f", modifiers: .command) { editor.frameSelection() }
             shortcut("l", modifiers: .command) { editor.showLibrary.toggle() }
+            shortcut(.space, modifiers: []) { editor.togglePlay() }
+            shortcut("k", modifiers: .command) { editor.keySelection() }
+            shortcut(.leftArrow, modifiers: .option) { editor.step(frames: -1) }
+            shortcut(.rightArrow, modifiers: .option) { editor.step(frames: 1) }
+            shortcut("r", modifiers: [.command, .shift]) { if editor.mode == .animate { editor.armPerform() } }
         }
         .opacity(0)
         .allowsHitTesting(false)

@@ -189,7 +189,11 @@ final class MotionTests: XCTestCase {
         XCTAssertTrue(position(Animator.evaluate(document, at: 10).scene, "c").isApproximately(Vec3(10, 0, 5)), "holds at the end")
         XCTAssertTrue(position(Animator.evaluate(document, at: -1).scene, "c").isApproximately(Vec3(-2, 0, 1)), "not started yet")
         // Child objects follow in world space.
-        document.scene.timeline.behaviors = [Behavior(id: "f", target: "b", kind: .followPath(.points([.zero, Vec3(0, 0, 8)]), duration: 2, loop: true, orient: false))]
+        document.scene.timeline.behaviors = [Behavior(
+            id: "f",
+            target: "b",
+            kind: .followPath(.points([.zero, Vec3(0, 0, 8)]), duration: 2, loop: true, orient: false)
+        )]
         let child = Animator.evaluate(document, at: 2.5).scene
         XCTAssertTrue(child.worldTransform(of: "b").position.isApproximately(Vec3(0, 0, 2), tolerance: 1e-9))
         XCTAssertNil(PathCurve(points: []).sample(0.5))
