@@ -6,6 +6,11 @@ final class SmokeTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Matches by accessibility identifier only (hidden keyboard-shortcut buttons share labels).
+    private func button(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
+        app.buttons.matching(identifier: identifier).firstMatch
+    }
+
     private func screenshot(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
@@ -19,7 +24,7 @@ final class SmokeTests: XCTestCase {
         app.launchArguments = ["-ui-testing"]
         app.launch()
 
-        let newProject = app.buttons["new-project"]
+        let newProject = button(app, "new-project")
         XCTAssertTrue(newProject.waitForExistence(timeout: 20))
         screenshot(app, "01-home-empty")
         newProject.tap()
@@ -28,16 +33,16 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(name.waitForExistence(timeout: 5))
         name.tap()
         name.typeText("Smoke test")
-        app.buttons["preset-night"].tap()
-        app.buttons["Create"].tap()
+        button(app, "preset-night").tap()
+        button(app, "Create").tap()
 
         let stage = app.otherElements["stage"]
         XCTAssertTrue(stage.waitForExistence(timeout: 20))
         screenshot(app, "02-empty-stage")
 
         // Add a cube.
-        app.buttons["Add"].tap()
-        let addCube = app.buttons["add-cube"]
+        button(app, "Add").tap()
+        let addCube = button(app, "add-cube")
         XCTAssertTrue(addCube.waitForExistence(timeout: 5))
         addCube.tap()
         let inspectorName = app.textFields["inspector-name"]
@@ -46,33 +51,33 @@ final class SmokeTests: XCTestCase {
         screenshot(app, "03-cube-added")
 
         // Duplicate, then undo and redo it.
-        app.buttons["Duplicate"].tap()
-        app.buttons["Undo"].tap()
-        app.buttons["Redo"].tap()
-        app.buttons["Undo"].tap()
+        button(app, "Duplicate").tap()
+        button(app, "Undo").tap()
+        button(app, "Redo").tap()
+        button(app, "Undo").tap()
 
         // Add a sphere, delete it, undo the delete.
-        app.buttons["Add"].tap()
-        XCTAssertTrue(app.buttons["add-sphere"].waitForExistence(timeout: 5))
-        app.buttons["add-sphere"].tap()
+        button(app, "Add").tap()
+        XCTAssertTrue(button(app, "add-sphere").waitForExistence(timeout: 5))
+        button(app, "add-sphere").tap()
         XCTAssertTrue(inspectorName.waitForExistence(timeout: 5))
-        app.buttons["Delete"].tap()
+        button(app, "Delete").tap()
         XCTAssertFalse(inspectorName.waitForExistence(timeout: 1))
-        app.buttons["Undo"].tap()
+        button(app, "Undo").tap()
 
         // Modes.
-        app.buttons["mode-look"].tap()
+        button(app, "mode-look").tap()
         XCTAssertTrue(app.staticTexts["Look"].waitForExistence(timeout: 5))
-        app.buttons["preset-goldenHour"].tap()
+        button(app, "preset-goldenHour").tap()
         screenshot(app, "04-look-golden-hour")
-        app.buttons["mode-export"].tap()
-        XCTAssertTrue(app.buttons["take-snapshot"].waitForExistence(timeout: 5))
+        button(app, "mode-export").tap()
+        XCTAssertTrue(button(app, "take-snapshot").waitForExistence(timeout: 5))
         screenshot(app, "05-export-framing")
-        app.buttons["mode-animate"].tap()
-        app.buttons["mode-build"].tap()
+        button(app, "mode-animate").tap()
+        button(app, "mode-build").tap()
 
         // Home and back: the project is there and reopens.
-        app.buttons["Home"].tap()
+        button(app, "Home").tap()
         let card = app.otherElements["project-Smoke test"].firstMatch
         let cardExists = card.waitForExistence(timeout: 10) || app.staticTexts["Smoke test"].waitForExistence(timeout: 5)
         XCTAssertTrue(cardExists)
@@ -95,7 +100,7 @@ final class SmokeTests: XCTestCase {
         sleep(3)
         screenshot(app, "sample-scene-1")
         for index in 2 ... 3 {
-            app.buttons["scene-menu"].tap()
+            button(app, "scene-menu").tap()
             let item = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(index) ·")).firstMatch
             XCTAssertTrue(item.waitForExistence(timeout: 5))
             item.tap()
