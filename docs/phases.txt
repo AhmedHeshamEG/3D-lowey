@@ -1,0 +1,329 @@
+3D-LOWEY — BUILD PHASES TO v1.0
+=============================================
+
+Three phases. Each phase ends with a complete, polished, working app —
+not a demo. Phase 3 ends at v1.0: the final product.
+
+Every phase is proven on the same real test: the ENIGMA video
+(see context.md §7.1). Phase 1 builds its scenes, Phase 2 animates
+and exports them, Phase 3 turns them into the full narrated video.
+
+North star for every decision: shorten idea-to-screen time.
+
+
+----------------------------------------------------------------------
+PHASE 1 — FOUNDATION & BUILD   (v0.1 → v0.4)
+"I can build any world, save it, reopen it, and it looks great."
+----------------------------------------------------------------------
+
+1. Engineering foundation
+   - Repo layout: XcodeGen project.yml (no hand-edited .xcodeproj).
+   - Swift packages:
+       LoweyCore   — pure Swift: data model, commands, undo/redo,
+                       timeline math, easing, serialization. No
+                       RealityKit, no UIKit. Fully unit tested.
+       LoweyRender — RealityKit bridge: turns Core scenes into
+                       entities, keeps them in sync.
+       LoweyApp    — SwiftUI app, UI, gestures, tools.
+   - Swift 6, strict concurrency, SwiftLint + SwiftFormat.
+   - Docs: README, ARCHITECTURE.md, DECISIONS.md (every non-obvious
+     choice with a reason), CHANGELOG.md.
+
+2. CI/CD (GitHub Actions)
+   - On every push / PR:
+       lint → build → LoweyCore unit tests (fast) → app build for
+       iPad simulator → UI smoke test → scene-file round-trip tests.
+   - On push to main:
+       unsigned device build (CODE_SIGNING_ALLOWED=NO) → ad-hoc
+       codesign (avoids Sideloadly's "no code signature" error) →
+       package Payload/Lowey.app into Lowey.ipa → upload as
+       artifact.
+   - On tag v*: same, plus attach the .ipa to a GitHub Release with
+     auto-generated changelog.
+   - Build number = CI run number; version from tag.
+   - Install flow for Hesham: download .ipa → Sideloadly with free
+     Apple ID → trust profile on iPad → re-sign every 7 days.
+   - Branch protection: main only merges green.
+
+3. Core model (the Manim foundation)
+   - Object: id, name, type, parent, children, properties.
+   - Properties: typed (vector3, quaternion, float, color, bool,
+     asset ref, enum) and animatable by design.
+   - Command system: every change is a Command (apply / revert /
+     encode). Undo/redo stack. Commands serialize to JSON.
+   - Scene: objects + look + cameras + (empty) timeline.
+   - Project: folder with project.json, scenes/, assets/, renders/.
+   - Schema versioning + migrations from day one.
+   - Autosave + crash-safe writes.
+
+4. Viewport & navigation
+   - RealityKit viewport (non-AR), 60 fps target on iPad Air M3.
+   - Gestures: 1-finger orbit, 2-finger pan/zoom, double-tap to
+     frame selection, view cube / quick views (top, front, side,
+     perspective), orthographic toggle.
+   - Grid, ground plane, gizmos.
+
+5. Assets & the global library ("build once, reuse forever")
+   - Import: USDZ (native), glTF/GLB (GLTFKit2 → RealityKit), OBJ.
+   - Import sources: Files app, drag & drop, share sheet, laptop
+     (via simple local-network drop in Phase 3; Files/iCloud now).
+   - Global library outside projects: manifest (id, name, tags,
+     thumbnail, format, rig type, animation clips, source/license).
+   - Auto thumbnails; search-first panel; tags; favorites;
+     "Recently used". No template walls.
+   - Save anything built (selection, group, drawn object) to the
+     library as a Prefab. Instances update when the prefab updates.
+   - Projects reference library assets by id; export copies them in
+     so projects stay portable.
+
+6. Building & composition
+   - Primitives (cube, sphere, cylinder, cone, plane, torus, ramp)
+     for blockout, in a neutral blockout material.
+   - Swap: replace a blockout shape with a library asset keeping
+     transform.
+   - Joystick transform controls (Feather-style) + gizmos + numeric
+     entry in the inspector.
+   - Snapping: grid, surface/ground, other objects, rotation steps.
+   - Duplicate, array (line/grid/circle), scatter over an area with
+     random rotation/scale ranges ("20 trees here" in one gesture).
+   - Groups, hierarchy/outliner, lock/hide, align/distribute.
+   - GPU instancing for repeated objects.
+
+7. Drawing in 3D (Feather-inspired, made easier)
+   - Lock an orthographic plane (or any surface), draw with Pencil
+     (pressure), rotate the view, draw on another plane.
+   - Guide surfaces: plane, box, cylinder, sphere, and "draw on
+     existing object".
+   - Strokes become meshes (tube/ribbon), with smoothing.
+   - Simple low-poly shape tools: extrude a drawn outline,
+     lathe/revolve a profile (vases, trees trunks, towers).
+   - Mirror/symmetry.
+   - Result can be saved to the library.
+
+8. Look (per project, no house style)
+   - Shading: smooth or flat, per project and per object.
+   - Palette: project palette + eyedropper; objects can bind to
+     palette slots (change the palette, the world updates).
+   - Lighting presets: day, golden hour, dusk, night, space, studio,
+     plus custom lights (directional, point, spot) with shadows.
+   - Environment: sky color/gradient, stars, fog, ground.
+   - Emissive materials (glowing windows, lamps, screens).
+   - Environment presets saved to the library.
+
+9. UI shell
+   - Home: project grid with thumbnails.
+   - Stage + left tool rail + top-right mode switcher
+     (Build / Animate / Camera / Look / Export) + inspector.
+   - Animate/Camera/Export modes exist as shells, filled in Phase 2.
+   - Snapshot: export current view as PNG (16:9, 9:16, square).
+
+PHASE 1 DONE WHEN
+   - CI is green and every main push produces an installable .ipa.
+   - Hesham can build the Enigma scenes as static sets (desk with
+     paper and warm lamp; room full of people at PCs; robot hero in
+     a cave) using library assets + blockout + drawing, save, close,
+     reopen, and get the exact same scene.
+   - Undo/redo works across every action.
+   - A glTF animal pack imports and appears in the library with
+     thumbnails, and can be placed 50 times with no frame drop.
+   - Core test coverage ≥ 80%.
+
+
+----------------------------------------------------------------------
+PHASE 2 — MOTION, CAMERA, CHARACTERS, EXPORT   (v0.5 → v0.8)
+"I can make it move like I imagine and export a real video."
+----------------------------------------------------------------------
+
+1. Timeline
+   - Tracks per object/property, zoomable, touch-first
+     (Procreate Dreams-style drawer).
+   - Three modes: Compose (arrange), Perform (record), Keyframe
+     (edit).
+   - Playhead scrubbing, loop region, markers, frame rate per
+     project (24/25/30/60).
+
+2. Keyframes & easing
+   - Keyframe any animatable property.
+   - Easing: presets (linear, ease in/out, back/overshoot, bounce,
+     elastic, step) + editable curve (graph editor).
+   - Copy/paste/mirror keys, retime, reverse.
+   - Per-object and per-project "on twos / on threes" stepping.
+
+3. PERFORM mode — motion capture by touch
+   - Record button → "Ready" → drag/scale/rotate as the timeline
+     plays → recorded as keyframes in real time (like Procreate
+     Dreams' Performing).
+   - Pencil Pro barrel roll → rotation while moving.
+   - Motion filtering (smoothing %) control.
+   - Perform any animatable property (sliders become performable).
+   - Re-performing over an existing take replaces that range.
+
+4. Animation presets (one tap, no keyframing)
+   - Pop in/out, grow, shrink, bounce, wiggle, float, spin, shake,
+     pulse, fade, slide in from side, drop in, typewriter (text).
+   - Every preset produces real, editable keyframes.
+
+5. Mass animation & the programmatic layer
+   - Multi-select → apply a preset to all with stagger (delay per
+     object), order (selection / left→right / distance from point
+     = wave), and randomize (timing, amplitude).
+   - Behaviors: follow path, look at, orbit around, noise/wobble,
+     wind sway (for forests), bob on water.
+   - Generators from Phase 1 become animatable (animated scatter,
+     growing array).
+   - Scripting: JavaScriptCore runtime exposing the same command
+     API (create objects, set properties, add keyframes), plus a
+     small script panel and script assets in the library.
+   - Simulations: RealityKit physics (fall, collide, explode) and
+     scripted sims (flocking birds, crowds) — BAKED to keyframes so
+     they're editable and export deterministically.
+
+6. Characters & rigging ("rigging is not a problem")
+   - Import skinned/rigged models (glTF/USDZ) with their animation
+     clips (walk, run, idle, sit, type…).
+   - Skeleton standards: Humanoid, Quadruped, Bird, plus "Custom".
+     Auto-detect and map bone names to the standard.
+   - Retargeting: any clip made for a standard plays on any
+     character of that standard.
+   - Clip track on the timeline: play/blend/loop clips, speed,
+     crossfade.
+   - Root motion / move along a path while walking.
+   - Puppet rigs: characters built from separate rigid parts with
+     pivots (no skinning) — fully supported, easy to make in-app.
+   - Simple IK: feet on ground, hand reach / look-at head.
+   - Crowd tool: N instances of a character with offset clips and
+     variation (for the Enigma room and soldiers).
+
+7. Camera system
+   - Camera objects; multiple cameras per scene; cut between them
+     on a camera track.
+   - Move presets: push-in, pull-out, punch-in (fast zoom), orbit,
+     dolly, truck, crane, whip pan, shake, follow target, reveal.
+   - Lens: field of view / focal length, depth of field (focus
+     distance, aperture), focus pull animation.
+   - Virtual camera (Unreal-style): ARKit world tracking — move the
+     iPad through the air and the scene camera follows; record it
+     through Perform mode.
+   - Framing guides: 16:9, 9:16, 1:1, with safe zones; a scene can
+     have a 16:9 and a 9:16 camera framing simultaneously.
+
+8. Rendering & export
+   - Real-time preview with quality toggle.
+   - Export renders frame-by-frame at a fixed timestep (not
+     real time) → AVAssetWriter → H.264/HEVC .mp4.
+   - Outputs: full video, a range/clip, 16:9 and 9:16 in one go,
+     PNG sequence, single frames, transparent-background option.
+   - Export 3D: USDZ/glTF of objects or whole scenes.
+   - Background export with progress; iPad stays usable.
+
+PHASE 2 DONE WHEN
+   - The Enigma opening is animated end-to-end: paper under a warm
+     lamp, camera pushes in; the room of people at PCs (crowd with
+     typing clips); the paper grows huge; a big X pops; the robot
+     hero appears; a question mark pops.
+   - One motion made with Perform mode, one with keyframes, one
+     with a mass stagger, one camera move with the iPad as camera.
+   - A rigged tiger walks along a path with a real walk clip.
+   - Exports a 16:9 and a 9:16 video of the same sequence that
+     play correctly in Photos.
+
+
+----------------------------------------------------------------------
+PHASE 3 — STORY, VOICE, VFX, AI, POLISH   (v0.9 → v1.0)
+"I read my script, and the video comes to life fast. Final product."
+----------------------------------------------------------------------
+
+1. Audio & narration
+   - Tracks: voiceover, sound effects, music; waveform display;
+     volume/fade envelopes; record voiceover in-app.
+   - Word timing with Apple on-device SpeechAnalyzer +
+     SpeechTranscriber (audioTimeRange). NO Whisper.
+   - Words appear as markers on the timeline; anything snaps to a
+     word ("punch camera on 'Enigma'").
+   - Transcript view: tap a word → jump there; select a phrase →
+     "attach animation here".
+
+2. Lip sync & face
+   - Automatic visemes from word timings (word → phoneme lookup →
+     mouth shapes), with audio-amplitude jaw fallback.
+   - Mouth-shape sets: blendshapes for 3D faces, or swap-able mouth
+     textures/meshes (Toonsquid-style) for stylized characters.
+   - Face performance: Vision face landmarks from the iPad front
+     camera → brows, eyes, mouth, head rotation on the character.
+   - Optional iPhone companion (if it has Face ID): ARKit face
+     tracking streamed over local network for higher fidelity.
+
+3. Hesham's own character
+   - Character builder: pick body/head/hair/clothes parts from the
+     library, colors from palette — few decisions.
+   - Rigged on the Humanoid standard → inherits every clip.
+   - Face + lip sync ready. Saved to the library, used everywhere.
+
+4. Text & 2D overlays
+   - 2D overlays: titles, labels, arrows, highlights, the big X,
+     the question mark, shapes, images.
+   - 3D text inside the world (extruded, low-poly friendly).
+   - Subtitles/captions generated from the transcript, styleable.
+
+5. VFX & post
+   - Particles: fire, sparks, smoke, dust, magic, rain, snow,
+     confetti, embers, explosions — presets + simple controls.
+   - Glow/bloom, vignette, film grain, color grade, outlines,
+     chromatic aberration, pixelate/retro (PS1 look), lens blur.
+   - Screen effects: flash, shake, speed lines, zoom blur, glitch.
+   - Transitions: cut, fade, wipe, zoom-through, match-cut helper.
+   - Collage/grain look support (texture overlays).
+
+6. AI layer
+   - Scene Script format (JSON list of commands, documented with
+     JSON Schema). The app imports scripts → preview → apply
+     (undoable as one step). Works from any AI, any device.
+   - Local-network Bridge inside the app (HTTP/WebSocket, pairing
+     code, LAN only) exposing the command API, scene queries, asset
+     library, render snapshot.
+   - lowey-mcp (runs on the laptop, Python or Node): an MCP
+     server whose tools proxy to the Bridge.
+       Tools: create/modify objects, place asset, add keyframes,
+       apply preset, camera move, set look, add overlay, snapshot,
+       list assets, get scene.
+       Resources: current scene, project look, asset library index,
+       style notes.
+       Prompts: breakdown_script, plan_shots, build_scene,
+       direct_camera, sync_to_voiceover.
+   - Claude skills (shipped in /skills): script-breakdown,
+     shot-planner, scene-builder, camera-director — with the
+     project's look as defaults, token-efficient.
+   - Model-agnostic: anything that speaks MCP or can write a Scene
+     Script.
+   - Rule: AI proposes, Hesham decides. Composition by AI is opt-in
+     per shot.
+
+7. Laptop link
+   - Pairing over local network; send assets laptop → iPad library;
+     send renders iPad → laptop; hosts the MCP server and any
+     laptop-side generators (Blender scripts, text-to-3D).
+
+8. Project management & polish
+   - Project folders visible in Files; duplicate, rename, archive,
+     export/import as .lowey package.
+   - Scene list per project; copy scenes between projects.
+   - Performance: LOD, instancing everywhere, texture compression,
+     thermal-aware preview quality.
+   - Onboarding: a sample project (small low-poly island with a
+     camera fly-through) + 60-second interactive tour.
+   - Accessibility, keyboard shortcuts (Magic Keyboard), Pencil
+     hover previews, haptics.
+   - Crash reporting to a local log; "export diagnostics".
+
+PHASE 3 DONE — v1.0 — WHEN
+   - Hesham records or imports the Enigma voiceover, the transcript
+     appears with word markers, and every shot is synced to it.
+   - His own character narrates at least one shot with automatic
+     lip sync and face performance.
+   - Claude (via MCP on the laptop) builds one full shot from a line
+     of the script, and Hesham edits it by hand afterwards.
+   - VFX + overlays + post are in the video.
+   - The full Enigma video exports in 16:9 and 9:16, ready to upload.
+   - Idea-to-screen time for a new simple shot (world + character +
+     camera move + synced to a word) is measured and documented.
+   - No known crash; CI green; release tagged v1.0.0.

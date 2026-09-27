@@ -1,0 +1,94 @@
+# Push to main → installable Lowey.ipa artifact. Tag v* → also a GitHub Release with the .ipa.
+#
+# The build is an unsigned device build, then ad-hoc codesigned so Sideloadly doesn't fail with
+# "no code signature found". Sideloadly re-signs it with Hesham's free Apple ID (7-day expiry).
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths-ignore: ["**.md", "docs/**", "LICENSE"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
+
+jobs:
+  ipa:
+    name: Build Lowey.ipa
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            build/SourcePackages
+          key: spm-release-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(grep '^MARKETING_VERSION' Config/Branding.xcconfig | awk -F'= ' '{print $2}')
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "Building $VERSION (${{ github.run_number }})"
+      - name: Generate project
+        run: xcodegen generate
+      - name: Unsigned device build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Lowey.xcodeproj -scheme Lowey \
+            -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            -skipPackagePluginValidation \
+            MARKETING_VERSION=${{ steps.version.outputs.version }} \
+            CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            | tee build.log | grep -E "error:|\*\* BUILD" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" build.log
+      - name: Ad-hoc codesign and package
+        run: |
+          APP=build/Build/Products/Release-iphoneos/Lowey.app
+          test -d "$APP"
+          # Sign nested frameworks first, then the app (Sideloadly needs a signature to replace).
+          find "$APP/Frameworks" -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
+          codesign --force --sign - --timestamp=none "$APP"
+          codesign --verify --verbose=2 "$APP"
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry Lowey.ipa Payload
+          ls -lh Lowey.ipa
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lowey-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}
+          path: Lowey.ipa
+          retention-days: 30
+      - name: GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" Lowey.ipa \
+            --title "3D-lowey $GITHUB_REF_NAME" \
+            --generate-notes

@@ -1,0 +1,160 @@
+# XcodeGen spec. The .xcodeproj is generated from this file (`xcodegen generate`) and is
+# never committed. Hesham never opens Xcode: CI builds everything.
+name: Lowey
+options:
+  bundleIdPrefix: com.hesham
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+  groupSortPosition: top
+
+configFiles:
+  Debug: Config/Branding.xcconfig
+  Release: Config/Branding.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    TARGETED_DEVICE_FAMILY: "2" # iPad
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    DEAD_CODE_STRIPPING: YES
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+
+packages:
+  LoweyCore:
+    path: Packages/LoweyCore
+  LoweyRender:
+    path: Packages/LoweyRender
+
+targets:
+  Lowey:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Sources
+      - path: App/Resources
+    dependencies:
+      - package: LoweyCore
+      - package: LoweyRender
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        CFBundleName: $(APP_DISPLAY_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UIRequiresFullScreen: false
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIStatusBarHidden: false
+        UIUserInterfaceStyle: Dark
+        # Projects and the library are visible in the Files app.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        NSPhotoLibraryAddUsageDescription: "3D-lowey saves snapshots you export to your photo library."
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: org.khronos.gltf
+            UTTypeDescription: glTF model
+            UTTypeConformsTo: [public.data, public.3d-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [gltf]
+              public.mime-type: [model/gltf+json]
+          - UTTypeIdentifier: org.khronos.glb
+            UTTypeDescription: glTF binary model
+            UTTypeConformsTo: [public.data, public.3d-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [glb]
+              public.mime-type: [model/gltf-binary]
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.hesham.lowey.project
+            UTTypeDescription: 3D-lowey project
+            UTTypeConformsTo: [com.apple.package, public.composite-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [lowey]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: 3D model
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.pixar.universal-scene-description-mobile
+              - org.khronos.gltf
+              - org.khronos.glb
+              - public.geometry-definition-format
+          - CFBundleTypeName: 3D-lowey project
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Owner
+            LSTypeIsPackage: true
+            LSItemContentTypes:
+              - com.hesham.lowey.project
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hesham.lowey
+        PRODUCT_NAME: Lowey
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        MTL_ENABLE_DEBUG_INFO: NO
+
+  # Render-layer tests (RealityKit on the simulator): glTF import, thumbnails, offscreen
+  # rendering, scene sync, 50-instance placement. Not hosted in the app so the packages
+  # are linked exactly once.
+  LoweyTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AppTests
+        excludes:
+          - Fixtures/**
+      - path: AppTests/Fixtures
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: LoweyCore
+      - package: LoweyRender
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hesham.lowey.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  LoweyUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AppUITests
+    dependencies:
+      - target: Lowey
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hesham.lowey.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Lowey
+
+schemes:
+  Lowey:
+    build:
+      targets:
+        Lowey: all
+        LoweyTests: [test]
+        LoweyUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      coverageTargets:
+        - Lowey
+      targets:
+        - name: LoweyTests
+        - name: LoweyUITests
+    archive:
+      config: Release

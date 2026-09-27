@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hesham/3d-lowey/schemas/scene-script.schema.json",
+  "title": "3D-lowey Scene Script",
+  "description": "A list of editing commands applied as one undoable step. The same commands the app's UI uses. Phase 1 draft; finalized in Phase 3.",
+  "type": "object",
+  "required": ["version", "title", "commands"],
+  "properties": {
+    "version": { "const": 1 },
+    "title": { "type": "string" },
+    "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "vec3": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "quat": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4, "description": "[x, y, z, w]" },
+    "color": { "type": "string", "pattern": "^(#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?|palette:[0-9]+)$" },
+    "propertyValue": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "float": { "type": "number" },
+        "int": { "type": "integer" },
+        "bool": { "type": "boolean" },
+        "vec3": { "$ref": "#/$defs/vec3" },
+        "quat": { "$ref": "#/$defs/quat" },
+        "color": { "$ref": "#/$defs/color" },
+        "string": { "type": "string" },
+        "enum": { "type": "string" },
+        "asset": { "$ref": "#/$defs/id" }
+      },
+      "additionalProperties": false
+    },
+    "kind": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["group", "primitive", "asset", "prefab", "drawing", "light", "camera"] },
+        "shape": { "enum": ["cube", "sphere", "cylinder", "cone", "plane", "torus", "ramp"] },
+        "asset": { "$ref": "#/$defs/id" },
+        "prefab": { "$ref": "#/$defs/id" },
+        "light": { "enum": ["directional", "point", "spot"] },
+        "drawing": {
+          "type": "object",
+          "required": ["style", "strokes", "normal", "depth", "segments"],
+          "properties": {
+            "style": { "enum": ["tube", "ribbon", "extrude", "lathe"] },
+            "strokes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["points", "widths"],
+                "properties": {
+                  "points": { "type": "array", "items": { "$ref": "#/$defs/vec3" } },
+                  "widths": { "type": "array", "items": { "type": "number" } }
+                }
+              }
+            },
+            "normal": { "$ref": "#/$defs/vec3" },
+            "depth": { "type": "number" },
+            "segments": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "object": {
+      "type": "object",
+      "required": ["id", "name", "kind", "children", "properties"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/kind" },
+        "parent": { "$ref": "#/$defs/id" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "properties": {
+          "type": "object",
+          "description": "Known keys: position, rotation, scale, visible, locked, color, emissive, emissiveIntensity, roughness, metallic, shading, castsShadow, lightColor, lightIntensity, lightRange, spotAngle, lightShadows, fieldOfView, seed",
+          "additionalProperties": { "$ref": "#/$defs/propertyValue" }
+        }
+      }
+    },
+    "fragment": {
+      "type": "object",
+      "required": ["objects", "roots"],
+      "properties": {
+        "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } },
+        "roots": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": ["op"],
+      "oneOf": [
+        { "properties": { "op": { "const": "insert" }, "fragment": { "$ref": "#/$defs/fragment" }, "parent": { "$ref": "#/$defs/id" }, "index": { "type": "integer" } }, "required": ["op", "fragment"] },
+        { "properties": { "op": { "const": "delete" }, "ids": { "type": "array", "items": { "$ref": "#/$defs/id" } } }, "required": ["op", "ids"] },
+        {
+          "properties": {
+            "op": { "const": "setProperties" },
+            "changes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["object", "key"],
+                "properties": { "object": { "$ref": "#/$defs/id" }, "key": { "type": "string" }, "value": { "$ref": "#/$defs/propertyValue" } }
+              }
+            }
+          },
+          "required": ["op", "changes"]
+        },
+        { "properties": { "op": { "const": "rename" }, "id": { "$ref": "#/$defs/id" }, "name": { "type": "string" } }, "required": ["op", "id", "name"] },
+        { "properties": { "op": { "const": "setKind" }, "id": { "$ref": "#/$defs/id" }, "kind": { "$ref": "#/$defs/kind" } }, "required": ["op", "id", "kind"] },
+        {
+          "properties": {
+            "op": { "const": "reparent" },
+            "entries": { "type": "array", "items": { "type": "object", "required": ["object"], "properties": { "object": { "$ref": "#/$defs/id" }, "parent": { "$ref": "#/$defs/id" }, "index": { "type": "integer" } } } }
+          },
+          "required": ["op", "entries"]
+        },
+        { "properties": { "op": { "const": "setLook" }, "look": { "type": "object" }, "scope": { "enum": ["project", "scene"] } }, "required": ["op", "scope"] },
+        { "properties": { "op": { "const": "renameScene" }, "name": { "type": "string" } }, "required": ["op", "name"] },
+        { "properties": { "op": { "const": "setActiveCamera" }, "camera": { "$ref": "#/$defs/id" } }, "required": ["op"] },
+        { "properties": { "op": { "const": "setTimeline" }, "timeline": { "type": "object" } }, "required": ["op", "timeline"] },
+        { "properties": { "op": { "const": "batch" }, "label": { "type": "string" }, "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } } }, "required": ["op", "label", "commands"] },
+        { "properties": { "op": { "const": "restore" }, "entries": { "type": "array" } }, "required": ["op", "entries"] }
+      ]
+    }
+  }
+}

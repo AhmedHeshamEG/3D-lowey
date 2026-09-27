@@ -1,0 +1,115 @@
+import Foundation
+
+/// JSON form of commands: `{"op": "<name>", ...fields}`. This is the Scene Script
+/// vocabulary (see `/schemas/scene-script.schema.json`).
+extension EditCommand: Codable {
+    private enum Key: String, CodingKey {
+        case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands
+    }
+
+    private enum Op: String, Codable {
+        case insert, delete, restore, setProperties, rename, setKind, reparent, setLook, renameScene
+        case setActiveCamera, setTimeline, batch
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: Key.self)
+        let op = try c.decode(Op.self, forKey: .op)
+        switch op {
+        case .insert:
+            self = try .insert(
+                c.decode(SceneFragment.self, forKey: .fragment),
+                parent: c.decodeIfPresent(ObjectID.self, forKey: .parent),
+                index: c.decodeIfPresent(Int.self, forKey: .index)
+            )
+        case .delete:
+            self = try .delete(c.decode([ObjectID].self, forKey: .ids))
+        case .restore:
+            self = try .restore(c.decode([RestoreEntry].self, forKey: .entries))
+        case .setProperties:
+            self = try .setProperties(c.decode([PropertyChange].self, forKey: .changes))
+        case .rename:
+            self = try .rename(c.decode(ObjectID.self, forKey: .id), c.decode(String.self, forKey: .name))
+        case .setKind:
+            self = try .setKind(c.decode(ObjectID.self, forKey: .id), c.decode(ObjectKind.self, forKey: .kind))
+        case .reparent:
+            self = try .reparent(c.decode([ReparentEntry].self, forKey: .entries))
+        case .setLook:
+            self = try .setLook(c.decodeIfPresent(Look.self, forKey: .look), scope: c.decode(LookScope.self, forKey: .scope))
+        case .renameScene:
+            self = try .renameScene(c.decode(String.self, forKey: .name))
+        case .setActiveCamera:
+            self = try .setActiveCamera(c.decodeIfPresent(ObjectID.self, forKey: .camera))
+        case .setTimeline:
+            self = try .setTimeline(c.decode(Timeline.self, forKey: .timeline))
+        case .batch:
+            self = try .batch(c.decode(String.self, forKey: .label), c.decode([EditCommand].self, forKey: .commands))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: Key.self)
+        switch self {
+        case let .insert(fragment, parent, index):
+            try c.encode(Op.insert, forKey: .op)
+            try c.encode(fragment, forKey: .fragment)
+            try c.encodeIfPresent(parent, forKey: .parent)
+            try c.encodeIfPresent(index, forKey: .index)
+        case let .delete(ids):
+            try c.encode(Op.delete, forKey: .op)
+            try c.encode(ids, forKey: .ids)
+        case let .restore(entries):
+            try c.encode(Op.restore, forKey: .op)
+            try c.encode(entries, forKey: .entries)
+        case let .setProperties(changes):
+            try c.encode(Op.setProperties, forKey: .op)
+            try c.encode(changes, forKey: .changes)
+        case let .rename(id, name):
+            try c.encode(Op.rename, forKey: .op)
+            try c.encode(id, forKey: .id)
+            try c.encode(name, forKey: .name)
+        case let .setKind(id, kind):
+            try c.encode(Op.setKind, forKey: .op)
+            try c.encode(id, forKey: .id)
+            try c.encode(kind, forKey: .kind)
+        case let .reparent(entries):
+            try c.encode(Op.reparent, forKey: .op)
+            try c.encode(entries, forKey: .entries)
+        case let .setLook(look, scope):
+            try c.encode(Op.setLook, forKey: .op)
+            try c.encodeIfPresent(look, forKey: .look)
+            try c.encode(scope, forKey: .scope)
+        case let .renameScene(name):
+            try c.encode(Op.renameScene, forKey: .op)
+            try c.encode(name, forKey: .name)
+        case let .setActiveCamera(camera):
+            try c.encode(Op.setActiveCamera, forKey: .op)
+            try c.encodeIfPresent(camera, forKey: .camera)
+        case let .setTimeline(timeline):
+            try c.encode(Op.setTimeline, forKey: .op)
+            try c.encode(timeline, forKey: .timeline)
+        case let .batch(label, commands):
+            try c.encode(Op.batch, forKey: .op)
+            try c.encode(label, forKey: .label)
+            try c.encode(commands, forKey: .commands)
+        }
+    }
+}
+
+/// A Scene Script: a named list of commands applied as one undoable step.
+public struct SceneScript: Codable, Hashable, Sendable {
+    public static let currentVersion = 1
+
+    public var version: Int
+    public var title: String
+    public var commands: [EditCommand]
+
+    public init(title: String, commands: [EditCommand], version: Int = SceneScript.currentVersion) {
+        self.version = version
+        self.title = title
+        self.commands = commands
+    }
+
+    /// The single command that applies the whole script (one undo step).
+    public var asCommand: EditCommand { .batch(title, commands) }
+}
