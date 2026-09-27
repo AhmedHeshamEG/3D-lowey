@@ -123,7 +123,7 @@ public final class SceneRenderer {
         // Parent.
         let parentEntity = object.parent.flatMap { nodes[$0] } ?? objectsRoot
         if node.parent !== parentEntity {
-            node.setParent(parentEntity, preserveWorldTransform: false)
+            node.setParent(parentEntity, preservingWorldTransform: false)
         }
         node.transform = object.transform.realityKit
         node.isEnabled = object.isVisible
