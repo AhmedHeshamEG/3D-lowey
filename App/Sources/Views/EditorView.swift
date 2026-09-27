@@ -250,22 +250,30 @@ struct ModeSwitcher: View {
     }
 }
 
-/// Hidden buttons that carry Magic Keyboard shortcuts.
+/// Hidden, label-less buttons that carry Magic Keyboard shortcuts. They have no text and are
+/// hidden from accessibility so VoiceOver and UI tests only ever see the real, visible controls.
 struct KeyboardShortcuts: View {
     let editor: EditorModel
 
+    private func shortcut(_ key: KeyEquivalent, modifiers: EventModifiers, action: @escaping () -> Void) -> some View {
+        Button(action: action) { EmptyView() }
+            .keyboardShortcut(key, modifiers: modifiers)
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
+    }
+
     var body: some View {
         ZStack {
-            Button("Undo") { editor.undo() }.keyboardShortcut("z", modifiers: .command).accessibilityIdentifier("shortcut-undo")
-            Button("Redo") { editor.redo() }.keyboardShortcut("z", modifiers: [.command, .shift]).accessibilityIdentifier("shortcut-redo")
-            Button("Duplicate") { editor.duplicateSelection() }.keyboardShortcut("d", modifiers: .command).accessibilityIdentifier("shortcut-duplicate")
-            Button("Copy") { editor.copySelection() }.keyboardShortcut("c", modifiers: .command).accessibilityIdentifier("shortcut-copy")
-            Button("Paste") { editor.paste() }.keyboardShortcut("v", modifiers: .command).accessibilityIdentifier("shortcut-paste")
-            Button("Group") { editor.groupSelection() }.keyboardShortcut("g", modifiers: .command).accessibilityIdentifier("shortcut-group")
-            Button("Select all") { editor.selectAll() }.keyboardShortcut("a", modifiers: .command).accessibilityIdentifier("shortcut-select-all")
-            Button("Delete") { editor.deleteSelection() }.keyboardShortcut(.delete, modifiers: []).accessibilityIdentifier("shortcut-delete")
-            Button("Frame") { editor.frameSelection() }.keyboardShortcut("f", modifiers: []).accessibilityIdentifier("shortcut-frame")
-            Button("Library") { editor.showLibrary.toggle() }.keyboardShortcut("l", modifiers: .command).accessibilityIdentifier("shortcut-library")
+            shortcut("z", modifiers: .command) { editor.undo() }
+            shortcut("z", modifiers: [.command, .shift]) { editor.redo() }
+            shortcut("d", modifiers: .command) { editor.duplicateSelection() }
+            shortcut("c", modifiers: .command) { editor.copySelection() }
+            shortcut("v", modifiers: .command) { editor.paste() }
+            shortcut("g", modifiers: .command) { editor.groupSelection() }
+            shortcut("a", modifiers: .command) { editor.selectAll() }
+            shortcut(.delete, modifiers: .command) { editor.deleteSelection() }
+            shortcut("f", modifiers: .command) { editor.frameSelection() }
+            shortcut("l", modifiers: .command) { editor.showLibrary.toggle() }
         }
         .opacity(0)
         .allowsHitTesting(false)

@@ -43,5 +43,5 @@ All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4).
 ### UI
 - Home with project thumbnails; stage with left tool rail, top-right mode switcher (Build · Animate · Camera · Look ·
   Export), inspector, library, outliner, look panel; snapshot export as PNG in 16:9, 9:16 and 1:1 (HD / 4K).
-- Keyboard shortcuts (⌘Z, ⇧⌘Z, ⌘D, ⌘C, ⌘V, ⌘G, ⌘A, ⌫, F, ⌘L), haptics, Stage Manager friendly.
+- Keyboard shortcuts (⌘Z, ⇧⌘Z, ⌘D, ⌘C, ⌘V, ⌘G, ⌘A, ⌘⌫ delete, ⌘F frame, ⌘L library), haptics, Stage Manager friendly.
 - Sample project: the Enigma sets.

@@ -50,18 +50,9 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(inspectorName.value as? String, "Cube")
         screenshot(app, "03-cube-added")
 
-        // Diagnostics: where XCUITest thinks the controls are.
-        for id in ["Duplicate", "Delete", "Undo", "Add", "inspector-name", "stage"] {
-            let element = id == "stage" ? app.otherElements["stage"] : (id == "inspector-name" ? inspectorName : button(app, id))
-            print("FRAME \(id): \(element.frame) hittable=\(element.isHittable)")
-        }
-        print("FRAME window: \(app.windows.firstMatch.frame)")
-        // Try the tap by coordinate at the element's centre, then report what happened.
-        button(app, "Duplicate").tap()
-        print("TRAIL after duplicate: \(app.staticTexts["debug-trail"].label)")
-        screenshot(app, "03b-after-duplicate")
-
         // Duplicate, then undo and redo it.
+        button(app, "Duplicate").tap()
+        XCTAssertEqual(inspectorName.value as? String, "Cube 2", app.staticTexts["debug-trail"].label)
         button(app, "Undo").tap()
         button(app, "Redo").tap()
         button(app, "Undo").tap()
