@@ -94,7 +94,7 @@ public final class EnvironmentRig {
 
     private func rebuildEnvironment(for look: Look) {
         environmentTask?.cancel()
-        guard let image = Self.skyImage(look: look, width: 256, height: 128, stars: false) else { return }
+        guard let image = Self.skyImage(look: look, width: 256, height: 128, stars: false, forLighting: true) else { return }
         let exponent = ambientExponent
         environmentTask = Task { @MainActor [weak self] in
             do {
@@ -173,8 +173,16 @@ public final class EnvironmentRig {
     // MARK: Sky image
 
     /// Equirectangular sky: top → horizon → bottom gradient, fog-tinted horizon, optional stars.
-    public static func skyImage(look: Look, width: Int, height: Int, stars: Bool) -> CGImage? {
-        let sky = look.sky
+    public static func skyImage(look: Look, width: Int, height: Int, stars: Bool, forLighting: Bool = false) -> CGImage? {
+        var sky = look.sky
+        if forLighting {
+            // Ambient light from a near-black night sky is nothing at all; lift it toward a neutral
+            // moonlit grey so dark moods stay readable (the visible sky is unchanged).
+            let lift = RGBA(0.5, 0.53, 0.62)
+            sky.top = sky.top.lerp(to: lift, 0.3)
+            sky.horizon = sky.horizon.lerp(to: lift, 0.3)
+            sky.bottom = sky.bottom.lerp(to: lift, 0.2)
+        }
         var horizon = sky.horizon
         var bottom = sky.bottom
         if look.fog.enabled {

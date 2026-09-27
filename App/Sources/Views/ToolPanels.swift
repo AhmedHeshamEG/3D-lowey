@@ -149,7 +149,7 @@ struct ViewControls: View {
                         Text("90°").tag(90.0)
                     }
                 } label: {
-                    Image(systemName: "magnet")
+                    Image(systemName: "grid.circle")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(editor.snap.grid || editor.snap.objects ? Theme.accent : Theme.text)
                         .frame(width: 44, height: 44)

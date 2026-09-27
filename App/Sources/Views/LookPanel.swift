@@ -43,13 +43,16 @@ struct LookPanel: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         ForEach(LightingPreset.allCases, id: \.self) { preset in
-                            PresetCard(preset: preset, selected: look.lightingPreset == preset)
-                                .scaleEffect(0.85)
-                                .frame(width: 104)
-                                .onTapGesture {
-                                    Haptics.select()
-                                    editor.updateLook { $0 = $0.applying(preset) }
-                                }
+                            Button {
+                                Haptics.select()
+                                editor.updateLook { $0 = $0.applying(preset) }
+                            } label: {
+                                PresetCard(preset: preset, selected: look.lightingPreset == preset)
+                                    .scaleEffect(0.85)
+                                    .frame(width: 104)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("preset-\(preset.rawValue)")
                         }
                     }
                 }

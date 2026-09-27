@@ -100,8 +100,8 @@ public enum EnigmaSample {
     private static func deskScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
         var scene = Scene(id: ids.next(), name: "1 · Desk, paper, warm lamp")
         var look = info.look
-        look.lighting.sunIntensity = 0.08
-        look.lighting.ambientIntensity = 0.18
+        look.lighting.sunIntensity = 0.12
+        look.lighting.ambientIntensity = 0.45
         look.fog = Fog(enabled: true, color: RGBA(hex: "#0D1020")!, distance: 14)
         look.ground = Ground(visible: false, color: RGBA(hex: "#1A1D2B")!, size: 30)
         scene.look = look
@@ -122,13 +122,13 @@ public enum EnigmaSample {
         try b.box("Drawer", at: Vec3(0.45, 0.5, 0), size: Vec3(0.5, 0.2, 0.74), color: .palette(1), parent: desk)
 
         // The paper: the hero of shot 1.
-        try b.box("Army message", at: Vec3(-0.1, 0.752, 0.08), size: Vec3(0.3, 0.004, 0.42),
+        try b.box("Army message", at: Vec3(-0.1, 0.78, 0.08), size: Vec3(0.3, 0.004, 0.42),
                   color: .palette(0), rotation: Vec3(0, -12, 0))
-        try b.box("Envelope", at: Vec3(0.28, 0.752, 0.12), size: Vec3(0.24, 0.006, 0.14),
+        try b.box("Envelope", at: Vec3(0.28, 0.78, 0.12), size: Vec3(0.24, 0.006, 0.14),
                   color: .rgba(RGBA(hex: "#C9B48A")!), rotation: Vec3(0, 18, 0))
 
         // Warm desk lamp: base, drawn arm, cone shade, glowing bulb, point light.
-        let lamp = try b.group("Desk lamp", at: Vec3(0.55, 0.75, -0.22))
+        let lamp = try b.group("Desk lamp", at: Vec3(0.55, 0.78, -0.22))
         try b.box("Lamp base", .cylinder, at: Vec3(0, 0, 0), size: Vec3(0.2, 0.03, 0.2), color: .palette(4), parent: lamp)
         let arm = DrawingRecipe(style: .tube, strokes: [
             .init(points: [Vec3(0, 0.02, 0), Vec3(0, 0.3, 0.02), Vec3(-0.12, 0.48, 0.1), Vec3(-0.28, 0.52, 0.16)],
@@ -157,8 +157,8 @@ public enum EnigmaSample {
     private static func roomScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
         var scene = Scene(id: ids.next(), name: "2 · Room of people at PCs")
         var look = info.look
-        look.lighting.sunIntensity = 0.15
-        look.lighting.ambientIntensity = 0.35
+        look.lighting.sunIntensity = 0.3
+        look.lighting.ambientIntensity = 0.8
         look.fog = Fog(enabled: true, color: RGBA(hex: "#101528")!, distance: 22)
         look.ground = Ground(visible: false, color: RGBA(hex: "#1A1D2B")!, size: 40)
         scene.look = look
@@ -195,7 +195,7 @@ public enum EnigmaSample {
 
         // Cold ceiling lights.
         for x in [0.0, 2.4, 4.8] {
-            try b.light(.point, at: Vec3(x, 2.8, 1.8), color: RGBA(hex: "#BFD8FF")!, intensity: 1.2, range: 5)
+            try b.light(.point, at: Vec3(x, 2.8, 1.8), color: RGBA(hex: "#BFD8FF")!, intensity: 3, range: 7)
         }
         ids = b.ids
         return b.session.document.scene
@@ -205,8 +205,8 @@ public enum EnigmaSample {
         var scene = Scene(id: ids.next(), name: "3 · Hero robot in a cave")
         var look = info.look
         look.shading = .flat
-        look.lighting.sunIntensity = 0.1
-        look.lighting.ambientIntensity = 0.15
+        look.lighting.sunIntensity = 0.25
+        look.lighting.ambientIntensity = 0.5
         look.fog = Fog(enabled: true, color: RGBA(hex: "#0B0E18")!, distance: 16)
         look.ground = Ground(visible: true, color: RGBA(hex: "#23262F")!, size: 40)
         scene.look = look
@@ -217,7 +217,8 @@ public enum EnigmaSample {
         let cave = try b.group("Cave")
         var random = SeededRandom(seed: 85)
         for index in 0 ..< 16 {
-            let angle = Double(index) / 16 * 1.6 * .pi + 0.2 * .pi + .pi
+            // Open toward the camera (+Z): rocks cover the back and sides only.
+            let angle = Double(index) / 15 * 1.5 * .pi + 0.25 * .pi
             let radius = 4.2 + random.range(-0.4, 0.5)
             let size = random.range(1.8, 3.2)
             try b.box("Rock", .sphere, at: Vec3(sin(angle) * radius, -0.3, cos(angle) * radius),
@@ -251,7 +252,7 @@ public enum EnigmaSample {
                   parent: robot, glow: 4)
 
         // Heroic rim light from behind + cold glow from the core.
-        try b.light(.spot, at: Vec3(0, 4.5, -3.2), color: RGBA(hex: "#9CC8FF")!, intensity: 3, range: 12)
+        try b.light(.spot, at: Vec3(0, 4.5, -3.2), color: RGBA(hex: "#9CC8FF")!, intensity: 6, range: 14)
         try b.light(.point, at: Vec3(0, 1.3, 0.4), color: RGBA(hex: "#7FD4FF")!, intensity: 1.6, range: 3.5, parent: robot)
         ids = b.ids
         return b.session.document.scene

@@ -108,6 +108,8 @@ jobs:
             -derivedDataPath DerivedData \
             -resultBundlePath TestResults.xcresult \
             -skipPackagePluginValidation \
+            -collect-test-diagnostics never \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 240 -maximum-test-execution-time-allowance 480 \
             CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: .*Lowey|Test Case|Executed|\*\* " || true
           grep -q "\*\* TEST SUCCEEDED \*\*" xcodebuild.log
       - name: Export screenshots & renders

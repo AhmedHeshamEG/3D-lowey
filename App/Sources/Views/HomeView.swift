@@ -182,8 +182,14 @@ private struct NewProjectSheet: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
                     ForEach(LightingPreset.allCases, id: \.self) { item in
-                        PresetCard(preset: item, selected: item == preset)
-                            .onTapGesture { preset = item }
+                        Button {
+                            Haptics.select()
+                            preset = item
+                        } label: {
+                            PresetCard(preset: item, selected: item == preset)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("preset-\(item.rawValue)")
                     }
                 }
             }
