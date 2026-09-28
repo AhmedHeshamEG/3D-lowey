@@ -86,7 +86,8 @@ final class BridgeModel {
             BridgeRoute("GET", "/v1/renders") { [weak self] _ in await self?.renders() ?? .error(500, "gone") },
             BridgeRoute("GET", "/v1/renders/*") { [weak self] request in await self?.render(request) ?? .error(500, "gone") },
             BridgeRoute("POST", "/v1/library/import") { [weak self] request in await self?.importAsset(request) ?? .error(500, "gone") },
-            BridgeRoute("POST", "/v1/audio/import") { [weak self] request in await self?.importAudio(request) ?? .error(500, "gone") }
+            BridgeRoute("POST", "/v1/audio/import") { [weak self] request in await self?.importAudio(request) ?? .error(500, "gone") },
+            BridgeRoute("POST", "/v1/media/import") { [weak self] request in await self?.importMedia(request) ?? .error(500, "gone") }
         ]
     }
 
@@ -247,6 +248,28 @@ final class BridgeModel {
             return .json(["imported": name])
         } catch {
             return .error(500, error.localizedDescription)
+        }
+    }
+
+    /// A picture or video (a clip, a Manim render) into the open scene's frame: ?name=graph.mov&at=seconds
+    private func importMedia(_ request: HTTPRequest) async -> HTTPResponse {
+        await withEditor { editor in
+            guard let name = request.query["name"], !name.contains("/"), !name.contains(".."), !request.body.isEmpty else {
+                return .error(400, "POST the file as the body with ?name=graph.mov&at=2.5")
+            }
+            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("lowey-media-\(UUID().uuidString)")
+            let url = folder.appendingPathComponent(name)
+            do {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try request.body.write(to: url)
+            } catch {
+                return .error(500, error.localizedDescription)
+            }
+            let at = request.query["at"].flatMap(Double.init)
+            guard let id = await editor.importMedia(url, at: at) else { return .error(422, "Couldn't add \(name)") }
+            try? FileManager.default.removeItem(at: folder)
+            notify("scene")
+            return .json(["added": name, "id": id.raw, "name": editor.baseScene.objects[id]?.name ?? name])
         }
     }
 

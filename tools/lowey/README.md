@@ -26,13 +26,14 @@ Claude Desktop (`claude_desktop_config.json`):
 Then: *"Read lowey://transcript and build the 'Nobody could' shot."* The iPad shows a preview; tap **Apply** (or turn on
 auto-apply in the bridge panel). Every change is one undo step.
 
-Copy the four skills in `/skills` into your Claude skills folder (`~/.claude/skills/`) for consistent, token-cheap shots:
-`script-breakdown`, `shot-planner`, `scene-builder`, `camera-director`.
+Copy `skills/lowey` into your Claude skills folder (`~/.claude/skills/lowey`): one orchestrator (`SKILL.md`, the brain
+that routes) and short modules (script breakdown, shots, sets, camera, characters, cartoon animation, Manim & media,
+style, troubleshooting) plus the action reference. Add a module to teach it something new; edit one to change a habit.
 
 ### Tools
 `get_scene`, `list_assets`, `get_transcript`, `actions_reference`, `snapshot`, `run_script` (many actions, one approval),
 `create_object`, `place_asset`, `set_property`, `add_keyframes`, `apply_preset`, `camera_move`, `set_look`, `add_overlay`,
-`attach_to_word`, `undo`.
+`attach_to_word`, `add_media` (a picture/video into the shot), `render_manim` (a Manim scene, transparent, into the shot), `undo`.
 Resources: `lowey://scene`, `lowey://look`, `lowey://assets`, `lowey://transcript`.
 Prompts: `breakdown_script`, `plan_shots`, `build_scene`, `direct_camera`, `sync_to_voiceover`.
 

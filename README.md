@@ -144,7 +144,7 @@ App/           SwiftUI app: home, stage, tools, panels, timeline, gestures, virt
 AppTests/      render tests on the iPad simulator (import, thumbnails, offscreen, 50 instances, video export, tiger walk, scripts,
                narrated story, post, overlays, particles, character, depth pass, soundtrack, SpeechAnalyzer)
 tools/lowey/   laptop side: lowey-mcp (MCP server) and lowey-link (companion CLI), with pytest tests
-skills/        Claude skills: script-breakdown, shot-planner, scene-builder, camera-director
+skills/lowey/  The Claude skill: one orchestrator (SKILL.md) + modules (breakdown, shots, sets, camera, characters, animation, Manim & media, style)
 AppUITests/    smoke test of the critical flow (with screenshots)
 ```
 

@@ -71,6 +71,15 @@ final class EditorModel {
     }
 
     let statsMonitor = StatsMonitor()
+    /// Video overlay frames for the live stage (nearest frame, never waits).
+    @ObservationIgnored lazy var videoPreview: VideoFrames = {
+        let frames = VideoFrames(exact: false)
+        frames.onFrame = { [weak self] in self?.updateStagePost() }
+        return frames
+    }()
+
+    /// The picture / video picker (Add → Photo or video).
+    var showMediaImporter = false
     /// Focus mode: every panel hidden, only the stage (and one button to bring the interface back).
     var focusMode = false
 

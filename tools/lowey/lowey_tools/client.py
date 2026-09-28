@@ -134,6 +134,14 @@ class Bridge:
                                content_type="application/octet-stream")
         return json.loads(data)
 
+    def import_media(self, path: pathlib.Path, at: float | None = None) -> dict:
+        """A picture or video (a clip, a Manim render) into the open scene's frame, playing from `at` seconds."""
+        query: dict[str, Any] = {"name": path.name}
+        if at is not None:
+            query["at"] = at
+        data, _ = self.request("POST", "/v1/media/import", body=path.read_bytes(), query=query, content_type="application/octet-stream")
+        return json.loads(data)
+
     def import_audio(self, path: pathlib.Path, role: str = "voiceover") -> dict:
         data, _ = self.request("POST", "/v1/audio/import", body=path.read_bytes(), query={"name": path.name, "role": role},
                                content_type="application/octet-stream")

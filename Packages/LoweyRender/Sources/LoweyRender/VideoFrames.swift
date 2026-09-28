@@ -24,7 +24,8 @@ public final class VideoFrames {
     public func frame(_ key: String, url: URL) async -> CGImage? {
         guard let (_, time) = VideoFrameKey.parse(key) else { return nil }
         if let image = ready[key] { return image }
-        let generator = generator(for: url)
+        // AVAssetImageGenerator isn't Sendable; it's only ever used from here, one request at a time per video.
+        nonisolated(unsafe) let generator = generator(for: url)
         let image = try? await generator.image(at: CMTime(seconds: time, preferredTimescale: 6000)).image
         if let image { remember(image, key: key, url: url) }
         return image

@@ -7,6 +7,7 @@ Everything is one undo step on the iPad and stays hand-editable.
 from __future__ import annotations
 
 import json
+import pathlib
 from typing import Any
 
 try:  # MCP Python SDK 2.x
@@ -178,6 +179,26 @@ def attach_to_word(word: str, action: dict[str, Any], occurrence: int = 1, offse
     timed = dict(action)
     timed["at"] = {"word": word, "occurrence": occurrence, "offset": offset}
     return _script(f"On '{word}'", [timed])
+
+
+@mcp.tool()
+def add_media(path: str, at: float | None = None) -> str:
+    """Put a picture or video file from this laptop into the open shot (a screenshot, a clip, a chart).
+    Videos play from `at` seconds on the timeline (default: the playhead)."""
+    return json.dumps(bridge().import_media(pathlib.Path(path).expanduser(), at=at))
+
+
+@mcp.tool()
+def render_manim(script: str, scene: str, at: float | None = None, quality: str = "high", transparent: bool = True) -> str:
+    """Render a Manim scene on this laptop and lay it over the shot from `at` seconds (graphs, equations, diagrams).
+    Transparent by default, so it floats over the 3D world. `script` is the .py path, `scene` the Scene class name."""
+    import tempfile
+
+    from .manim_render import render
+
+    with tempfile.TemporaryDirectory() as folder:
+        video = render(pathlib.Path(script).expanduser(), scene, pathlib.Path(folder), quality=quality, transparent=transparent)
+        return json.dumps(bridge().import_media(video, at=at))
 
 
 @mcp.tool()

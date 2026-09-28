@@ -100,6 +100,11 @@ struct EditorView: View {
             Task { await app.library.importFiles(urls) }
             return true
         }
+        .fileImporter(isPresented: $editor.showMediaImporter, allowedContentTypes: [.image, .movie]) { result in
+            if case let .success(url) = result {
+                Task { await editor.importMedia(url) }
+            }
+        }
     }
 
     /// Everything around the stage: top bar, rail, panels, joystick, view controls, timeline.

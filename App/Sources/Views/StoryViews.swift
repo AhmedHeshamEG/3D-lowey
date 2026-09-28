@@ -416,6 +416,8 @@ struct AddStorySection: View {
                     .accessibilityIdentifier("add-text3d")
                 tile("Title", "textformat.size") { editor.addOverlay(.title) }
                 tile("Label", "tag") { editor.addOverlay(.label) }
+                tile("Photo or video", "photo.on.rectangle") { editor.showMediaImporter = true }
+                    .accessibilityIdentifier("add-media")
             }
             SectionHeader(title: "On the frame")
             LazyVGrid(columns: columns, spacing: 10) {

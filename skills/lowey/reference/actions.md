@@ -1,9 +1,8 @@
-import Foundation
+# Scene Script actions (the app's own reference)
 
-/// The actions vocabulary in one short page — served at GET /v1/actions, used by lowey-mcp and the Claude skills.
-/// Kept compact on purpose (it goes into AI context windows).
-public enum ScriptReference {
-    public static let text = """
+The same text `actions_reference` returns (GET /v1/actions). Read it once per session, then build from memory.
+
+```
     # 3D-lowey Scene Script (v2) — actions
 
     POST /v1/script  {"title": "...", "actions": [ {"do": ...}, ... ]}   (?dryRun=1 to preview)
@@ -56,5 +55,5 @@ public enum ScriptReference {
 
     Good shots: one idea per shot; a clear subject; light the subject warm against a cool world; move the camera on a word;
     pop things in on the word that names them; keep 4–8 objects per shot unless it's a crowd (use array/scatter).
-    """
-}
+    
+```
