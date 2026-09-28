@@ -389,9 +389,8 @@ struct FocusRestoreButton: View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Theme.text)
                 .frame(width: 40, height: 40)
-                .background(.ultraThinMaterial, in: Circle())
-                .overlay(Circle().strokeBorder(Theme.panelStroke, lineWidth: 0.5))
                 .contentShape(Circle())
+                .floatingGlass(in: Circle())
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
@@ -421,8 +420,7 @@ struct StatsPill: View {
         .font(.system(size: 11, weight: .semibold, design: .monospaced))
         .padding(.horizontal, 10)
         .frame(height: 26)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Theme.panelStroke, lineWidth: 0.5))
+        .floatingGlass(interactive: false)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("stats-pill")
     }

@@ -58,9 +58,9 @@ final class Phase4Tests: XCTestCase {
         }
         XCTAssertGreaterThan(Self.difference(sheet[0], sheet[4]), 0.005, "shocked doesn't look like neutral")
         var hit = close
-        var ids = IDFactory.sequential("h")
-        hit.scene.timeline = FaceExpression.neutral.keyed(on: root, at: 0, in: hit.scene.timeline, ids: &ids)
-        hit.scene.timeline = FaceExpression.shocked.keyed(on: root, at: 1, in: hit.scene.timeline, ids: &ids)
+        var hitIDs = IDFactory.sequential("h")
+        hit.scene.timeline = FaceExpression.neutral.keyed(on: root, at: 0, in: hit.scene.timeline, ids: &hitIDs)
+        hit.scene.timeline = FaceExpression.shocked.keyed(on: root, at: 1, in: hit.scene.timeline, ids: &hitIDs)
         let overshoot = try await VideoExporter(document: hit, library: nil, rigs: RigCache()).images(at: 1.12, framings: [.landscape], longSide: 640)
         attach(overshoot[0], name: "blob-face-shocked-overshoot")
     }

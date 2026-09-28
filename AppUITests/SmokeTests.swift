@@ -91,6 +91,64 @@ final class SmokeTests: XCTestCase {
         let code = app.staticTexts["bridge-code"].waitForExistence(timeout: 8) || pairLine.waitForExistence(timeout: 2)
         screenshot(app, "p3-04-bridge")
         XCTAssertTrue(code, "the pairing code shows")
+
+        // End to end, as Claude does it through lowey-mcp: pair with the code on screen, send a Scene Script over HTTP,
+        // approve it on the iPad, and find the result in the scene.
+        let pairing = app.staticTexts["bridge-code"].label.filter(\.isNumber)
+        let paired = request("POST", "/v1/pair", body: #"{"code": "\#(pairing)"}"#)
+        let token = try XCTUnwrap(paired.flatMap { try? JSONSerialization.jsonObject(with: $0.body) as? [String: Any] }?["token"] as? String,
+                                  "paired: \(String(describing: paired.map { String(decoding: $0.body, as: UTF8.self) }))")
+        button(app, "Done").tap()
+        let script = #"{"version": 2, "title": "Newton reacts", "actions": ["#
+            + #"{"do": "blob", "likeness": "Isaac Newton", "name": "Newton", "at": [1.6, 0, 0]}, "#
+            + #"{"do": "expression", "target": "Newton", "name": "shocked", "at": 0.5}]}"#
+        let reply = expectation(description: "the script's reply")
+        let answer = ReplyBox()
+        send("POST", "/v1/script", body: script, token: token) { result in
+            answer.value = result
+            reply.fulfill()
+        }
+        let apply = button(app, "apply-proposal")
+        XCTAssertTrue(apply.waitForExistence(timeout: 20), "the iPad asks before applying")
+        screenshot(app, "p4-mcp-proposal")
+        apply.tap()
+        wait(for: [reply], timeout: 30)
+        let json = try XCTUnwrap(answer.value.flatMap { try? JSONSerialization.jsonObject(with: $0.body) as? [String: Any] })
+        XCTAssertEqual(json["applied"] as? Bool, true, "\(json)")
+        XCTAssertNotNil((json["created"] as? [String: Any])?["Newton"], "Newton was created")
+        let scene = request("GET", "/v1/scene?depth=1", token: token).map { String(decoding: $0.body, as: UTF8.self) } ?? ""
+        XCTAssertTrue(scene.contains("Newton"), scene)
+        sleep(2)
+        screenshot(app, "p4-mcp-newton")
+    }
+
+    // MARK: The bridge over HTTP (what lowey-mcp does from the laptop)
+
+    private func send(_ method: String, _ path: String, body: String? = nil, token: String? = nil,
+                      completion: @escaping @Sendable ((status: Int, body: Data)?) -> Void) {
+        guard let url = URL(string: "http://127.0.0.1:7717\(path)") else { return completion(nil) }
+        var request = URLRequest(url: url, timeoutInterval: 60)
+        request.httpMethod = method
+        request.setValue("Claude", forHTTPHeaderField: "X-Lowey-Client")
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        if let body {
+            request.httpBody = Data(body.utf8)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            completion((response as? HTTPURLResponse).map { ($0.statusCode, data ?? Data()) })
+        }.resume()
+    }
+
+    private func request(_ method: String, _ path: String, body: String? = nil, token: String? = nil) -> (status: Int, body: Data)? {
+        let done = expectation(description: "\(method) \(path)")
+        let box = ReplyBox()
+        send(method, path, body: body, token: token) { result in
+            box.value = result
+            done.fulfill()
+        }
+        wait(for: [done], timeout: 30)
+        return box.value
     }
 
     @MainActor
@@ -248,4 +306,9 @@ final class SmokeTests: XCTestCase {
         button(app, "Pause").tap()
         screenshot(app, "sample-opening-playing")
     }
+}
+
+/// Carries an HTTP reply out of URLSession's callback.
+private final class ReplyBox: @unchecked Sendable {
+    var value: (status: Int, body: Data)?
 }

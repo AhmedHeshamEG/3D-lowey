@@ -1,6 +1,48 @@
 # Changelog
 
-All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0).
+All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
+Phase 4 = v1.1 → v1.3).
+
+## [1.3.0] — Phase 4: Characters, stability, feel
+
+### Characters: the blob house style
+- Hesham's own drawing turned into the house character (`assets/avatar`: traced from the drawing, built in Blender, GLB
+  + .blend). In the app: **Add → Me**, or **Add → Blob** with a builder (who, hat and the name on it, hair, accessories,
+  what they hold, colours).
+- Famous people as blobs by their clues (Newton's wig and apple, Einstein's white hair and mustache, Turing, Curie,
+  Darwin, Tesla, Lovelace, Edison, Sherlock…), in the app and in scripts (`{"do": "blob", "likeness": "Isaac Newton"}`).
+- A real cartoon face: eyes, brows and one morphing mouth redrawn from dials every frame (happy crescents, wide eyes,
+  curved closed lids, angry and worried brows, his smirk at rest). Springs make every pose **overshoot and settle**;
+  the head squashes and stretches on the hits; the hat follows through; eyes blink on their own.
+- **Expressions** (12) in one tap at the playhead, Character Animator-style, and `{"do": "expression"}` for Claude.
+- Rubber-hose arms that follow the hands; no legs, a soft hover glow that stays on the ground.
+
+### Stability
+- First-launch crash fixed (the tour opened a scene with post-processing into a stage that hadn't rendered yet).
+- Exports never hang: the screen stays awake, the export waits while the app is in the background and resumes, a
+  stalled frame is retried and reported. The full narrated story exports start to end in CI.
+- Playback no longer redraws the whole timeline every frame (lag while playing).
+- Glow works (it did nothing: the surface shader multiplied it by an empty emission map); glow casts a halo; imported
+  models glow in their own colours. Image overlays now reach exported videos.
+
+### Timeline, camera, drawing
+- Track groups: folders you fold; a folded group shows and moves everything inside. Drags lock to their direction,
+  only selected keys and bars move, flicks glide, pinch zooms under the fingers, a quieter header with one menu.
+- Camera Perform records the path you fly with your usual gestures. **Snap zoom** move.
+- **QuickShape**: draw, then hold, and the stroke becomes a line, arc, circle, ellipse, triangle or rectangle.
+
+### Media and Manim
+- **Add → Photo or video**; videos play from a time and export frame-exact. `lowey-link media`, `lowey-link manim`
+  (renders a Manim scene with a transparent background, ProRes 4444) and the MCP tools `add_media`, `render_manim`.
+
+### Interface
+- Liquid Glass chrome, focus mode (button, four-finger tap, ⌃⌘F), a small stats pill, Pencil hover preview off by
+  default, remove colours from the palette, a gestures & shortcuts page.
+
+### Claude
+- One skill, `skills/lowey`: an orchestrator that routes to modules (breakdown, shots, sets, camera, characters,
+  cartoon animation, Manim & media, style, troubleshooting). End-to-end test: pair over HTTP, send a script, approve
+  on the iPad, find the result.
 
 ## [1.0.0] — Phase 3: Story, voice, VFX, AI, polish
 
