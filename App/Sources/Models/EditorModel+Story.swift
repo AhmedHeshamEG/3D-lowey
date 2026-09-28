@@ -317,10 +317,12 @@ extension EditorModel {
             }
         }
         let reduced = ProcessInfo.processInfo.thermalState == .serious || ProcessInfo.processInfo.thermalState == .critical
-        let post = StagePost(look: FrameLook(post: previewPost ? look.post : PostSettings(), lens: lens, screen: screen, frame: timeline.frame(for: time)),
-                             frameRect: frameRect, overlays: stageOverlayPlacements(), caption: caption, reduced: reduced) { [weak self] name in
-            self?.overlayImage(name)
+        let overlays = stageOverlayPlacements()
+        var images: [String: CGImage] = [:]
+        for placement in overlays {
+            if let name = placement.recipe.image, let image = overlayImage(name) { images[name] = image }
         }
-        stage.post = post
+        stage.post = StagePost(look: FrameLook(post: previewPost ? look.post : PostSettings(), lens: lens, screen: screen, frame: timeline.frame(for: time)),
+                               frameRect: frameRect, overlays: overlays, caption: caption, reduced: reduced, images: images)
     }
 }

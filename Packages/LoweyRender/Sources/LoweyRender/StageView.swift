@@ -22,33 +22,29 @@ public final class StageView: ARView {
     /// Called whenever the camera moves (to refresh screen-space overlays, save the viewpoint…).
     public var onCameraChanged: ((Viewpoint) -> Void)?
 
-    private let postProcessor = StagePostProcessor()
+    private lazy var postProcessor = StagePostProcessor(library: MaterialFactory.shared.shaderLibrary)
+    /// Made outside the main actor so the closure isn't main-actor isolated (RealityKit calls it on its render thread).
+    private nonisolated static func renderThreadCallback(_ processor: StagePostProcessor) -> (ARView.PostProcessContext) -> Void {
+        { context in processor.process(context) }
+    }
+
     /// Post-processing, overlays and captions for the live view (nil or empty = the plain render, no extra pass).
     public var post: StagePost? {
         didSet {
+            var snapshot = post
+            let range = depthRange
+            snapshot?.viewSize = bounds.size
+            snapshot?.near = range.near
+            snapshot?.far = range.far
+            postProcessor.update(snapshot)
             let active = post.map { !$0.isEmpty } ?? false
             if active, renderCallbacks.postProcess == nil {
-                renderCallbacks.postProcess = { [weak self] context in
-                    MainActor.assumeIsolated {
-                        guard let self, let post = self.post else {
-                            Self.copy(context)
-                            return
-                        }
-                        let range = self.depthRange
-                        self.postProcessor.process(context, post: post, viewSize: self.bounds.size, near: range.near, far: range.far)
-                    }
-                }
+                // Runs on RealityKit's render thread: capture only the thread-safe processor.
+                renderCallbacks.postProcess = Self.renderThreadCallback(postProcessor)
             } else if !active, renderCallbacks.postProcess != nil {
                 renderCallbacks.postProcess = nil
             }
         }
-    }
-
-    /// Pass-through (when the pass is on but there's nothing to do this frame).
-    private nonisolated static func copy(_ context: ARView.PostProcessContext) {
-        guard let blit = context.commandBuffer.makeBlitCommandEncoder() else { return }
-        blit.copy(from: context.sourceColorTexture, to: context.targetColorTexture)
-        blit.endEncoding()
     }
 
     public init(renderer: SceneRenderer) {

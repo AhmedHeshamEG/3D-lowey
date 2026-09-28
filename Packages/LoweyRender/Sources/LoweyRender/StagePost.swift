@@ -6,7 +6,7 @@ import RealityKit
 import UIKit
 
 /// What the live stage post-processes this frame (set by the editor after every display update).
-public struct StagePost {
+public struct StagePost: @unchecked Sendable {
     public var look: FrameLook
     /// The export frame inside the view, in points (overlays, captions, screen effects and film look live here).
     public var frameRect: CGRect
@@ -14,7 +14,12 @@ public struct StagePost {
     public var caption: (page: CaptionPage, word: Int?, settings: CaptionSettings)?
     /// Skip depth effects (thermal pressure).
     public var reduced: Bool
-    public var image: (String) -> CGImage?
+    /// Overlay images, loaded on the main thread (the render thread only reads them).
+    public var images: [String: CGImage]
+    /// Stage size in points and the camera's depth range (for the render thread).
+    public var viewSize: CGSize = .zero
+    public var near: Float = 0.02
+    public var far: Float = 3000
 
     public init(
         look: FrameLook,
@@ -22,14 +27,14 @@ public struct StagePost {
         overlays: [OverlayPlacement] = [],
         caption: (page: CaptionPage, word: Int?, settings: CaptionSettings)? = nil,
         reduced: Bool = false,
-        image: @escaping (String) -> CGImage? = { _ in nil }
+        images: [String: CGImage] = [:]
     ) {
         self.look = look
         self.frameRect = frameRect
         self.overlays = overlays
         self.caption = caption
         self.reduced = reduced
-        self.image = image
+        self.images = images
     }
 
     /// Nothing to draw: the stage skips the post-process pass entirely.
@@ -40,9 +45,12 @@ public struct StagePost {
     }
 }
 
-/// Runs the frame compositor inside ARView's post-process pass (RealityKit hands us colour + depth textures).
-@MainActor
-final class StagePostProcessor {
+/// Runs the frame compositor inside ARView's post-process pass. RealityKit calls it on its RENDER thread, so it never
+/// touches main-actor state: the editor hands it an immutable snapshot (`update`), guarded by a lock.
+final class StagePostProcessor: @unchecked Sendable {
+    private let lock = NSLock()
+    private var snapshot: StagePost?
+    private let library: MTLLibrary?
     private let compositor = FrameCompositor()
     private var depthPipeline: MTLComputePipelineState?
     private var depthTexture: MTLTexture?
@@ -56,7 +64,36 @@ final class StagePostProcessor {
         var size: CGSize
     }
 
-    func process(_ context: ARView.PostProcessContext, post: StagePost, viewSize: CGSize, near: Float, far: Float) {
+    init(library: MTLLibrary?) {
+        self.library = library
+    }
+
+    /// Main thread: the latest state to draw.
+    func update(_ post: StagePost?) {
+        lock.lock()
+        snapshot = post
+        lock.unlock()
+    }
+
+    /// Render thread.
+    func process(_ context: ARView.PostProcessContext) {
+        lock.lock()
+        let current = snapshot
+        lock.unlock()
+        guard let post = current, !post.isEmpty else {
+            Self.copy(context)
+            return
+        }
+        render(context, post: post, viewSize: post.viewSize, near: post.near, far: post.far)
+    }
+
+    static func copy(_ context: ARView.PostProcessContext) {
+        guard let blit = context.commandBuffer.makeBlitCommandEncoder() else { return }
+        blit.copy(from: context.sourceColorTexture, to: context.targetColorTexture)
+        blit.endEncoding()
+    }
+
+    private func render(_ context: ARView.PostProcessContext, post: StagePost, viewSize: CGSize, near: Float, far: Float) {
         let source = context.sourceColorTexture
         let width = CGFloat(source.width)
         let height = CGFloat(source.height)
@@ -98,7 +135,7 @@ final class StagePostProcessor {
             return scaled
         }
         overlayImage = compositor.overlayImage(size: size) { context in
-            OverlayRenderer.draw(placements, in: context, size: size, image: post.image)
+            OverlayRenderer.draw(placements, in: context, size: size) { post.images[$0] }
             if let caption = post.caption {
                 OverlayRenderer.drawCaption(caption.page, activeWord: caption.word, settings: caption.settings, in: context, size: size)
             }
@@ -109,7 +146,7 @@ final class StagePostProcessor {
     /// Converts RealityKit's depth buffer to v = 0.5 / distance (half resolution).
     private func inverseDepth(_ context: ARView.PostProcessContext, near: Float, far: Float) -> MTLTexture? {
         guard let depth = context.sourceDepthTexture as MTLTexture? else { return nil }
-        if depthPipeline == nil, let library = MaterialFactory.shared.shaderLibrary, let function = library.makeFunction(name: "loweyInverseDepth") {
+        if depthPipeline == nil, let library, let function = library.makeFunction(name: "loweyInverseDepth") {
             depthPipeline = try? context.device.makeComputePipelineState(function: function)
         }
         guard let pipeline = depthPipeline else { return nil }
