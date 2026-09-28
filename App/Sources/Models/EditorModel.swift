@@ -95,6 +95,8 @@ final class EditorModel {
     /// Timeline zoom: points per second.
     var timelineZoom: Double = 90
     var selectedKeys: Set<KeyRef> = []
+    /// Timeline "Select" mode: dragging on empty lanes draws a selection box and taps add to the selection.
+    var keyBoxSelect = false
     var expandedObjects: Set<ObjectID> = []
     var presetDuration: Double?
     var presetStrength: Double = 1
@@ -117,6 +119,25 @@ final class EditorModel {
     var virtualCameraScale: Double = 1
     var exportProgress: Double?
     var exportResults: [URL] = []
+
+    // MARK: Audio & narration state (see EditorModel+Audio.swift)
+
+    var selectedAudio: String?
+    var showAudio = false
+    var showTranscript = false
+    /// Keys, cuts and the playhead snap to spoken words.
+    var snapToWords = true
+    var isRecordingVoice = false
+    var transcribing: String?
+    var transcriptLanguage = "en-US"
+    /// Selected words in the transcript panel (indices into `timeline.words`).
+    var wordSelection: ClosedRange<Int>?
+    @ObservationIgnored lazy var audioPlayback = AudioPlayback(folder: audioFolder)
+    @ObservationIgnored let voiceRecorder = VoiceRecorder()
+    @ObservationIgnored var recordingStart: Double = 0
+    /// Waveform peaks per audio file (100 per second), decoded once.
+    var waveforms: [String: [Float]] = [:]
+    @ObservationIgnored var decodedAudio: [String: PCMAudio] = [:]
     private(set) var displayRevision = 0
 
     @ObservationIgnored var displayed: AnimatedScene

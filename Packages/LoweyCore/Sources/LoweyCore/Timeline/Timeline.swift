@@ -308,11 +308,15 @@ public struct Timeline: Hashable, Sendable {
     public var cuts: [CameraCut]
     public var behaviors: [Behavior]
     public var clipTracks: [ClipTrack]
+    /// Voiceover, sound effects and music (Phase 3).
+    public var audio: [AudioClip]
+    /// Recognised words of audio clips (one transcript per clip).
+    public var transcripts: [Transcript]
 
     public init(
         fps: Int = 30, duration: Double = 10, stepping: Stepping = .onOnes, tracks: [Track] = [],
         markers: [Marker] = [], loop: TimeRange? = nil, cuts: [CameraCut] = [], behaviors: [Behavior] = [],
-        clipTracks: [ClipTrack] = []
+        clipTracks: [ClipTrack] = [], audio: [AudioClip] = [], transcripts: [Transcript] = []
     ) {
         self.fps = fps
         self.duration = duration
@@ -323,6 +327,8 @@ public struct Timeline: Hashable, Sendable {
         self.cuts = cuts
         self.behaviors = behaviors
         self.clipTracks = clipTracks
+        self.audio = audio
+        self.transcripts = transcripts
     }
 
     public var frameCount: Int { Int((duration * Double(fps)).rounded()) }
@@ -377,6 +383,9 @@ public struct Timeline: Hashable, Sendable {
         for cut in cuts {
             end = max(end, cut.time)
         }
+        for clip in audio {
+            end = max(end, clip.end)
+        }
         return end
     }
 
@@ -396,7 +405,7 @@ public struct Timeline: Hashable, Sendable {
 
 extension Timeline: Codable {
     private enum CodingKeys: String, CodingKey {
-        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks
+        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts
     }
 
     public init(from decoder: Decoder) throws {
@@ -410,6 +419,8 @@ extension Timeline: Codable {
         cuts = try c.decodeIfPresent([CameraCut].self, forKey: .cuts) ?? []
         behaviors = try c.decodeIfPresent([Behavior].self, forKey: .behaviors) ?? []
         clipTracks = try c.decodeIfPresent([ClipTrack].self, forKey: .clipTracks) ?? []
+        audio = try c.decodeIfPresent([AudioClip].self, forKey: .audio) ?? []
+        transcripts = try c.decodeIfPresent([Transcript].self, forKey: .transcripts) ?? []
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -423,5 +434,7 @@ extension Timeline: Codable {
         try c.encode(cuts, forKey: .cuts)
         try c.encode(behaviors, forKey: .behaviors)
         try c.encode(clipTracks, forKey: .clipTracks)
+        if !audio.isEmpty { try c.encode(audio, forKey: .audio) }
+        if !transcripts.isEmpty { try c.encode(transcripts, forKey: .transcripts) }
     }
 }

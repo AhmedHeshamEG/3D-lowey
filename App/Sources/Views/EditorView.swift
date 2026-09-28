@@ -298,6 +298,9 @@ struct KeyboardShortcuts: View {
             shortcut("k", modifiers: .command) { editor.keySelection() }
             shortcut(.leftArrow, modifiers: .option) { editor.step(frames: -1) }
             shortcut(.rightArrow, modifiers: .option) { editor.step(frames: 1) }
+            shortcut(.leftArrow, modifiers: [.option, .shift]) { editor.nudgeSelectedKeys(frames: -1) }
+            shortcut(.rightArrow, modifiers: [.option, .shift]) { editor.nudgeSelectedKeys(frames: 1) }
+            shortcut("a", modifiers: [.command, .option]) { editor.selectKeys(.all) }
             shortcut("r", modifiers: [.command, .shift]) { if editor.mode == .animate { editor.armPerform() } }
         }
         .opacity(0)

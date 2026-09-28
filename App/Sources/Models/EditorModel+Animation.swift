@@ -19,6 +19,37 @@ enum TimelineMode: String, CaseIterable, Identifiable {
     }
 }
 
+/// Ways to pick many keys at once (the timeline's Select menu).
+enum KeyQuery: String, CaseIterable, Identifiable {
+    case all, afterPlayhead, beforePlayhead, atPlayhead, loop, invert, none
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: "All keys"
+        case .afterPlayhead: "Everything after the playhead"
+        case .beforePlayhead: "Everything before the playhead"
+        case .atPlayhead: "Keys at the playhead"
+        case .loop: "Keys in the loop"
+        case .invert: "Invert selection"
+        case .none: "Select none"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .all: "checkmark.circle"
+        case .afterPlayhead: "arrow.right.to.line"
+        case .beforePlayhead: "arrow.left.to.line"
+        case .atPlayhead: "line.3.horizontal"
+        case .loop: "repeat"
+        case .invert: "circle.lefthalf.filled"
+        case .none: "xmark.circle"
+        }
+    }
+}
+
 enum PerformPhase: Equatable {
     case idle
     case countdown(Int)
@@ -191,10 +222,18 @@ extension EditorModel {
     }
 
     func play() {
+        play(withAudio: true)
+    }
+
+    /// Starts playback. With audio, the picture follows the sound's clock so they never drift apart.
+    func play(withAudio: Bool) {
         guard !isPlaying else { return }
         let range = playRange
         if time >= range.end - 1e-3 || time < range.start - 1e-3 { time = range.start }
         isPlaying = true
+        if withAudio, !timeline.audio.isEmpty {
+            audioPlayback.play(timeline.audio, from: time, until: range.end)
+        }
         clock.onTick = { [weak self] delta in self?.tick(delta) }
         clock.start()
     }
@@ -203,6 +242,8 @@ extension EditorModel {
         guard isPlaying else { return }
         isPlaying = false
         clock.stop()
+        audioPlayback.stop()
+        if isRecordingVoice { stopVoiceRecording() }
         if performPhase == .recording { finishPerform() }
         time = timeline.snapped(time)
         refreshDisplay()
@@ -211,8 +252,12 @@ extension EditorModel {
 
     private func tick(_ delta: Double) {
         let range = playRange
-        var next = time + delta
+        var next = audioPlayback.currentTime ?? time + delta
         if next > range.end {
+            if isRecordingVoice {
+                stopVoiceRecording()
+                return
+            }
             if performPhase == .recording {
                 time = range.end
                 recordPerformSample()
@@ -220,8 +265,12 @@ extension EditorModel {
                 return
             }
             next = range.duration > 0 ? range.start + (next - range.end).truncatingRemainder(dividingBy: range.duration) : range.start
+            if audioPlayback.isPlaying {
+                audioPlayback.play(timeline.audio, from: next, until: range.end)
+            }
         }
         time = next
+        if audioPlayback.isPlaying { audioPlayback.updateGains(timeline.audio, at: next) }
         if performPhase == .recording { recordPerformSample() }
         refreshDisplay()
         refreshSelectionOverlay()
@@ -309,11 +358,58 @@ extension EditorModel {
         selectedKeys = []
     }
 
-    func moveSelectedKeys(by delta: Double) {
+    func moveSelectedKeys(by delta: Double, snapToWords wordSnap: Bool = true) {
         let keys = KeyOperations()
-        let snapped = timeline.snapped(delta)
-        guard snapped != 0, perform(keys.move(Array(selectedKeys), by: snapped, in: timeline)) else { return }
+        let earliest = selectedKeys.map(\.time).min() ?? 0
+        var snapped = max(timeline.snapped(delta), -earliest)
+        // The selection's first key lands on a spoken word when it's dropped close to one.
+        if wordSnap, snapToWords, let word = WordSnap.snap(earliest + snapped, to: words, tolerance: 8 / max(timelineZoom, 1)) {
+            snapped = max(word - earliest, -earliest)
+        }
+        guard abs(snapped) > 1e-9, perform(keys.moveClamped(Array(selectedKeys), by: snapped, in: timeline)) else { return }
         selectedKeys = Set(selectedKeys.map { KeyRef(track: $0.track, time: max(0, $0.time + snapped)) })
+    }
+
+    /// Nudges the selected keys by whole frames (keyboard [ and ], the key menu).
+    func nudgeSelectedKeys(frames: Int) {
+        moveSelectedKeys(by: Double(frames) / Double(max(timeline.fps, 1)), snapToWords: false)
+    }
+
+    /// Stretches the selected keys so they span `range` (drag an end of the selection band).
+    func stretchSelectedKeys(to range: TimeRange) {
+        guard let from = KeySelection.span(of: selectedKeys) else { return }
+        let target = TimeRange(start: timeline.snapped(max(range.start, 0)), end: timeline.snapped(max(range.end, 0)))
+        guard perform(KeyOperations().stretch(Array(selectedKeys), to: target, in: timeline)) else { return }
+        selectedKeys = KeySelection.normalized(Set(selectedKeys.map {
+            KeyRef(track: $0.track, time: max(0, KeySelection.stretchedTime($0.time, from: from, to: target)))
+        }), in: timeline)
+        Haptics.tap()
+    }
+
+    /// Replaces (or adds to) the key selection.
+    func selectKeys(_ keys: Set<KeyRef>, additive: Bool = false) {
+        selectedKeys = additive ? selectedKeys.union(keys) : keys
+        if !keys.isEmpty { Haptics.select() }
+    }
+
+    /// Tracks the key-selection commands act on: the selected objects' tracks, or every track.
+    var keyScope: Set<TrackID>? {
+        selection.isEmpty ? nil : KeySelection.tracks(of: Set(selection.flatMap { baseScene.subtree(of: $0) }), in: timeline)
+    }
+
+    func selectKeys(_ query: KeyQuery) {
+        let scope = keyScope
+        switch query {
+        case .all: selectKeys(KeySelection.all(in: timeline, tracks: scope))
+        case .afterPlayhead: selectKeys(KeySelection.after(time, in: timeline, tracks: scope))
+        case .beforePlayhead: selectKeys(KeySelection.before(time, in: timeline, tracks: scope))
+        case .atPlayhead: selectKeys(KeySelection.column(at: time, in: timeline, tracks: scope))
+        case .loop:
+            guard let loop = timeline.loop else { return }
+            selectKeys(KeySelection.keys(in: loop, tracks: scope ?? Set(timeline.tracks.map(\.id)), timeline: timeline))
+        case .invert: selectKeys(KeySelection.inverted(selectedKeys, in: timeline, tracks: scope))
+        case .none: selectedKeys = []
+        }
     }
 
     func setEasing(_ easing: Easing) {

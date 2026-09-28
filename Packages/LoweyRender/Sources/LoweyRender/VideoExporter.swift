@@ -35,9 +35,13 @@ public struct VideoExportSettings: Sendable, Hashable {
     public var codec: VideoCodec
     public var format: ExportFormat
     public var transparent: Bool
+    /// The soundtrack for `range`: interleaved stereo at `audioSampleRate` (from `AudioMixer`), or nil for silence.
+    public var audio: [Float]?
+    public var audioSampleRate: Int
 
     public init(framings: [Framing] = [.landscape, .portrait], longSide: Int = 1920, range: TimeRange, fps: Int = 30,
-                codec: VideoCodec = .h264, format: ExportFormat = .video, transparent: Bool = false) {
+                codec: VideoCodec = .h264, format: ExportFormat = .video, transparent: Bool = false,
+                audio: [Float]? = nil, audioSampleRate: Int = 48000) {
         self.framings = framings
         self.longSide = longSide
         self.range = range
@@ -45,6 +49,8 @@ public struct VideoExportSettings: Sendable, Hashable {
         self.codec = codec
         self.format = format
         self.transparent = transparent
+        self.audio = audio
+        self.audioSampleRate = audioSampleRate
     }
 
     public var frameCount: Int { max(Int((range.duration * Double(fps)).rounded()), 1) }
@@ -154,12 +160,15 @@ public final class VideoExporter {
                 let url = folder.appendingPathComponent(name).appendingPathExtension(ext)
                 try? FileManager.default.removeItem(at: url)
                 let writer = try VideoWriter(url: url, width: size.width, height: size.height, fps: settings.fps, codec: settings.codec,
-                                             alpha: settings.transparent)
+                                             alpha: settings.transparent, audio: settings.audio, audioSampleRate: settings.audioSampleRate)
                 outputs.append(Output(framing: framing, target: target, url: url, writer: writer))
             case .pngSequence:
                 let url = folder.appendingPathComponent(name, isDirectory: true)
                 try? FileManager.default.removeItem(at: url)
                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+                if let audio = settings.audio, !audio.isEmpty {
+                    try WAV.data(audio, channels: 2, sampleRate: settings.audioSampleRate).write(to: url.appendingPathComponent("soundtrack.wav"))
+                }
                 outputs.append(Output(framing: framing, target: target, url: url, writer: nil))
             }
         }
@@ -368,8 +377,13 @@ final class VideoWriter {
     private let input: AVAssetWriterInput
     private let adaptor: AVAssetWriterInputPixelBufferAdaptor
     private let fps: Int
+    private let audioInput: AVAssetWriterInput?
+    private let audio: [Float]
+    private let audioRate: Int
+    private var audioWritten = 0
+    private let audioFormat: CMAudioFormatDescription?
 
-    init(url: URL, width: Int, height: Int, fps: Int, codec: VideoCodec, alpha: Bool) throws {
+    init(url: URL, width: Int, height: Int, fps: Int, codec: VideoCodec, alpha: Bool, audio: [Float]? = nil, audioSampleRate: Int = 48000) throws {
         let type: AVFileType = alpha ? .mov : .mp4
         writer = try AVAssetWriter(outputURL: url, fileType: type)
         let codecType: AVVideoCodecType = alpha ? .hevcWithAlpha : (codec == .hevc ? .hevc : .h264)
@@ -394,6 +408,33 @@ final class VideoWriter {
         ])
         guard writer.canAdd(input) else { throw ExportError.writer("can't add the video track") }
         writer.add(input)
+        self.audio = audio ?? []
+        audioRate = audioSampleRate
+        if let audio, !audio.isEmpty {
+            let settings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: audioSampleRate,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderBitRateKey: 192_000
+            ]
+            let audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: settings)
+            audioInput.expectsMediaDataInRealTime = false
+            guard writer.canAdd(audioInput) else { throw ExportError.writer("can't add the sound track") }
+            writer.add(audioInput)
+            self.audioInput = audioInput
+            var description = AudioStreamBasicDescription(
+                mSampleRate: Float64(audioSampleRate), mFormatID: kAudioFormatLinearPCM,
+                mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked, mBytesPerPacket: 8, mFramesPerPacket: 1,
+                mBytesPerFrame: 8, mChannelsPerFrame: 2, mBitsPerChannel: 32, mReserved: 0
+            )
+            var format: CMAudioFormatDescription?
+            CMAudioFormatDescriptionCreate(allocator: kCFAllocatorDefault, asbd: &description, layoutSize: 0, layout: nil,
+                                           magicCookieSize: 0, magicCookie: nil, extensions: nil, formatDescriptionOut: &format)
+            audioFormat = format
+        } else {
+            audioInput = nil
+            audioFormat = nil
+        }
         guard writer.startWriting() else { throw ExportError.writer(writer.error?.localizedDescription ?? "couldn't start") }
         writer.startSession(atSourceTime: .zero)
         self.fps = fps
@@ -415,9 +456,47 @@ final class VideoWriter {
         guard adaptor.append(buffer, withPresentationTime: time) else {
             throw ExportError.writer(writer.error?.localizedDescription ?? "couldn't append frame \(frame)")
         }
+        // Keep the sound interleaved with the picture: write audio up to the end of this frame.
+        try await appendAudio(upTo: Int((Double(frame + 1) / Double(fps) * Double(audioRate)).rounded()))
+    }
+
+    private func appendAudio(upTo frameLimit: Int) async throws {
+        guard let audioInput, let audioFormat else { return }
+        let totalFrames = audio.count / 2
+        let limit = min(frameLimit, totalFrames)
+        while audioWritten < limit {
+            var waited = 0
+            while !audioInput.isReadyForMoreMediaData {
+                try await Task.sleep(for: .milliseconds(4))
+                waited += 1
+                if waited > 5000 { throw ExportError.writer("the audio encoder stopped accepting samples") }
+            }
+            let count = min(limit - audioWritten, 4096)
+            let bytes = count * 8
+            var block: CMBlockBuffer?
+            CMBlockBufferCreateWithMemoryBlock(allocator: kCFAllocatorDefault, memoryBlock: nil, blockLength: bytes, blockAllocator: kCFAllocatorDefault,
+                                               customBlockSource: nil, offsetToData: 0, dataLength: bytes, flags: 0, blockBufferOut: &block)
+            guard let block else { throw ExportError.writer("no audio buffer") }
+            audio.withUnsafeBufferPointer { samples in
+                _ = CMBlockBufferReplaceDataBytes(with: samples.baseAddress! + audioWritten * 2, blockBuffer: block, offsetIntoDestination: 0,
+                                                  dataLength: bytes)
+            }
+            var sample: CMSampleBuffer?
+            CMAudioSampleBufferCreateReadyWithPacketDescriptions(
+                allocator: kCFAllocatorDefault, dataBuffer: block, formatDescription: audioFormat, sampleCount: count,
+                presentationTimeStamp: CMTime(value: CMTimeValue(audioWritten), timescale: CMTimeScale(audioRate)),
+                packetDescriptions: nil, sampleBufferOut: &sample
+            )
+            guard let sample, audioInput.append(sample) else {
+                throw ExportError.writer(writer.error?.localizedDescription ?? "couldn't append sound")
+            }
+            audioWritten += count
+        }
     }
 
     func finish() async throws {
+        try await appendAudio(upTo: audio.count / 2)
+        audioInput?.markAsFinished()
         input.markAsFinished()
         let writer = writer
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in

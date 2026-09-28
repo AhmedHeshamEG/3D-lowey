@@ -66,7 +66,9 @@ targets:
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         NSPhotoLibraryAddUsageDescription: "3D-lowey saves the videos and snapshots you export to your photo library."
-        NSCameraUsageDescription: "3D-lowey uses the camera to track how you move the iPad when it acts as a virtual film camera."
+        NSCameraUsageDescription: "3D-lowey uses the camera to track how you move the iPad when it acts as a virtual film camera, and the front camera to read your face for character performances."
+        NSMicrophoneUsageDescription: "3D-lowey records your voiceover so your animation can be timed to your words."
+        NSSpeechRecognitionUsageDescription: "3D-lowey finds when each word is spoken, on the device, so shots can be synced to your voiceover."
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: org.khronos.gltf
             UTTypeDescription: glTF model

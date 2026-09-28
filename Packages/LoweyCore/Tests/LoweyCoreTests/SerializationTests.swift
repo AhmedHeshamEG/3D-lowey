@@ -118,7 +118,7 @@ final class SerializationTests: XCTestCase {
         let library = try SchemaCoder.shared.decode(LibraryManifest.self, kind: .library,
                                                     from: Data(#"{"schemaVersion":1,"kind":"library","payload":{"assets":[],"prefabs":[],"looks":[]}}"#.utf8))
         XCTAssertTrue(library.scripts.isEmpty)
-        XCTAssertEqual(SchemaCoder.currentVersion, 2)
+        XCTAssertEqual(SchemaCoder.currentVersion, 3)
     }
 
     func testJSONValue() throws {
