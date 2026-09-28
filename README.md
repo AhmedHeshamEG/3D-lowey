@@ -11,9 +11,10 @@ direct them with a camera, animate them fast, and sync them to your narration.
 - Every non-obvious choice and why: [`DECISIONS.md`](DECISIONS.md)
 - What changed: [`CHANGELOG.md`](CHANGELOG.md)
 
-Current phase: **Phase 2 — Motion, camera, characters, export (v0.8)**. Build worlds (Phase 1), then make them move:
-keyframes, one-tap presets, Perform (motion capture by touch), behaviours, characters with real clips, camera moves,
-the iPad as a camera — and export 16:9 and 9:16 videos.
+Current version: **v1.0 — Phase 3: story, voice, VFX, AI, polish.** Build worlds (Phase 1), make them move (Phase 2),
+then read your script into it: voiceover with word timing, lip sync and face performance on your own character,
+overlays, captions, particles, post-processing, transitions, and Claude building shots through MCP — exported as
+16:9 and 9:16 videos with sound.
 
 ---
 
@@ -28,7 +29,10 @@ Every push to `main` builds an installable `Lowey.ipa` on GitHub Actions.
 3. In Sideloadly, drag `Lowey.ipa` in, pick the iPad, enter your **free Apple ID**, press **Start**.
 4. On the iPad: **Settings → General → VPN & Device Management** → your Apple ID → **Trust**.
    (If asked, turn on **Settings → Privacy & Security → Developer Mode** and restart.)
-5. Open **3D-lowey**. The first launch creates the **Enigma — sets** sample project.
+5. Open **3D-lowey**. The first launch creates two samples — the **Welcome island** (with a 60-second tour) and the
+   **Enigma** project (sets, the animated opening, and *5 · The story (narrated)*).
+6. Optional — the **iPhone face companion**: install the same `Lowey.ipa` on an iPhone with Face ID. On an iPhone the app
+   is only the companion screen: it tracks your face and streams it to the iPad on the same Wi-Fi.
 
 **Every 7 days** a free Apple ID signature expires and the app stops opening. Plug in and press **Start** in
 Sideloadly again with the same .ipa (or a newer one). Your projects are kept — they live in the app's Documents
@@ -79,6 +83,46 @@ Open the sample **Enigma — sets → 4 · Opening (animated)**, switch to **Cam
 | Export a video | **Export** mode: tick 16:9 and 9:16 → *Export video* (keeps working in the background) → Share / Save to Photos |
 | Keyboard | Space play/pause · ⌘K key · ⌥← ⌥→ frame step · ⇧⌘R record |
 
+## Story, voice, VFX, AI (Phase 3)
+
+Open **Enigma → 5 · The story (narrated)** and press ▶︎ in **Camera** mode: voiceover, captions, the label that follows
+the paper, the glitch on "Enigma", the flash and the X on "Nobody", sparks on "AI", and the narrator lip-syncing the last
+line. (The voice is a placeholder made on the iPad — record your own and transcribe it.)
+
+| Do this | How |
+|---|---|
+| Pick many keys | Timeline → **Select** (or long-press) and drag a box across rows; **Pick** menu: all / after / before the playhead / in the loop / invert. Drag the white band's ends on the ruler to stretch their timing |
+| Voiceover | Timeline → 〰 **Audio & words** → *Record voiceover* (the timeline plays while you narrate) or *Import* (also music and sound effects) |
+| Word timing | Audio & words → pick the language → **Transcribe** (on the iPad, Apple speech, no internet after the first download). Words appear in a lane; keys, cuts and the playhead snap to them |
+| Sync to a word | ⇧⌘T **Transcript** → tap a word to jump, long-press a word then tap another to pick a phrase → *Animate selection here*, *Camera move here*, *Cut here*, *Marker*, or *Fix words* |
+| Your character | **+** → **Character**: head, hair, eyes, body, clothes, extras, colours. Animate panel → *Play a clip* (Idle, Walk, Talk, Wave…, or your imported Mixamo clips) |
+| Lip sync | Select the character → Animate panel → *Lip sync to the voiceover* (or pick words in the transcript first) |
+| Face performance | Animate panel → *Face (front camera)* or *Use my iPhone*; *Neutral* to recalibrate; Timeline → Perform → ● Record to capture a take |
+| Titles, labels, the big X | **+** → Text / On the frame. Drag in the frame, pinch to size, twist to turn; *Follow an object* for labels. Typewriter preset types text and draws arrows |
+| Captions | Animate panel → *Captions from the voiceover* (Punchy, Subtitle, Pill, Outline); burn-in on export; Export → .srt |
+| Particles | **+** → Effects (fire, sparks, smoke, dust, magic, rain, snow, confetti, embers, explosion); amount / size / speed / colour in the inspector |
+| The finish | **Look** → *Finish*: Cinematic, Dreamy, Retro (PS1), Ink outlines, Collage, Old film — or the sliders. Camera aperture now blurs for real |
+| Flashes, shakes… | Animate panel → *Screen effects* at the playhead (flash, shake, speed lines, zoom blur, glitch); they show in the Effects lane |
+| Transitions | Camera mode → *Transition* for the cut at the playhead (fade, dip to black, wipe, zoom through); *Match cut on the selection* |
+| Claude / any AI | Scene menu → **AI & laptop bridge** → on. On the laptop: `lowey-link pair <address> <code>`, then `claude mcp add lowey -- lowey-mcp`. Claude's changes appear as a preview — **Apply** or **Not now**. See [`tools/lowey/README.md`](tools/lowey/README.md) |
+| Scene Scripts from anywhere | Scene menu → *Paste a Scene Script* (any AI can write one — `/schemas/scene-script.schema.json`) |
+| Laptop ↔ iPad | `lowey-link push model.glb`, `lowey-link audio voiceover.m4a`, `lowey-link pull --all`, `lowey-link generate tree` (Blender) |
+| Projects | Home → touch and hold a project: *Share as one file (.loweypack)*, archive, duplicate; ⋯ → import, archive, tour, diagnostics |
+| Keyboard | ⌘1–5 modes · Space play · ⌘K key · ⌘M marker · ⇧⌘T transcript · ⇧⌘U audio · ⌥⌘R record voice · ⇧⌘B bridge · ⌥⌘V paste script · ⇧⌘P post preview |
+
+## Idea-to-screen time
+
+The north star, measured for **a new simple shot: a world + a character + a camera move + synced to a word**.
+
+| Path | Steps | Time |
+|---|---|---|
+| **By hand on the iPad** (Hesham, iPad Air M3) | new scene → Look mood → place 3–4 library/blockout props → **+** Character → *Play a clip → Talk* → *Save camera from view* → transcript: pick the word → *Camera move here → Push in* → *Lip sync* | **to measure on the device** (checklist below) |
+| **With Claude** (lowey-mcp) | "Build the 'Nobody could' shot" → one `run_script` → preview on the iPad → *Apply* → tweak by hand | a 17-action shot script compiles and applies in well under a second (`ScriptCompilerTests`, Linux debug build); total ≈ Claude's thinking time + one tap |
+
+How to measure (so the number is honest): start a stopwatch when the idea is said out loud, stop when the shot plays
+synced in Camera mode. Do it three times with different ideas; write the median here. The components the app controls
+are fast (a whole shot script compiles and applies in under a second; transcription runs on the device).
+
 ---
 
 ## Development
@@ -90,9 +134,17 @@ LoweyCore/     pure Swift model, commands, undo, timeline math, geometry, librar
 LoweyCore/     … + motion (timeline evaluation, presets, behaviours, Perform, camera moves, simulations),
                rigs (glTF skeletons & clips, retargeting, IK), 3D export (GLB, USDZ)
 LoweyRender/   RealityKit bridge: entities, materials + fog shader, environment, offscreen renderer, video exporter
+LoweyCore/     … + audio (clips, mixer, transcripts, words), text & overlays & captions, VFX (particles, post, screen effects,
+               transitions), face (lip sync, face solver, face rig), characters (builder, puppet rig, built-in clips),
+               AI (Scene Script actions compiler, LAN bridge core), project packages, samples (Enigma story, welcome island)
+LoweyRender/   … + frame compositor (Core Image), overlay renderer, stage post-process, depth world, particles
 LoweyScript/   JavaScriptCore scripting (one script run = one undoable command)
-App/           SwiftUI app: home, stage, tools, panels, timeline, gestures, virtual camera
-AppTests/      render tests on the iPad simulator (import, thumbnails, offscreen, 50 instances, video export, tiger walk, scripts)
+App/           SwiftUI app: home, stage, tools, panels, timeline, gestures, virtual camera, audio, speech, face capture,
+               bridge server, tour, diagnostics
+AppTests/      render tests on the iPad simulator (import, thumbnails, offscreen, 50 instances, video export, tiger walk, scripts,
+               narrated story, post, overlays, particles, character, depth pass, soundtrack, SpeechAnalyzer)
+tools/lowey/   laptop side: lowey-mcp (MCP server) and lowey-link (companion CLI), with pytest tests
+skills/        Claude skills: script-breakdown, shot-planner, scene-builder, camera-director
 AppUITests/    smoke test of the critical flow (with screenshots)
 ```
 

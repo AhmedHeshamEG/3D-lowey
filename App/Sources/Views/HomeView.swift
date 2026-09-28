@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var sharing: URL?
     @State private var importing = false
     @State private var showArchive = false
+    @State private var showAcknowledgements = false
 
     private let columns = [GridItem(.adaptive(minimum: 260, maximum: 360), spacing: 24)]
 
@@ -77,6 +78,7 @@ struct HomeView: View {
             if case let .success(url) = result { app.importPackage(url) }
         }
         .sheet(isPresented: $showArchive) { ArchiveSheet().presentationDetents([.medium]) }
+        .sheet(isPresented: $showAcknowledgements) { AcknowledgementsView() }
     }
 
     private var header: some View {
@@ -97,6 +99,7 @@ struct HomeView: View {
                 Button("Import a project (.loweypack)", systemImage: "square.and.arrow.down") { importing = true }
                 Button("Archive (\(app.archived.count))", systemImage: "archivebox") { showArchive = true }
                 Button("Export diagnostics", systemImage: "stethoscope") { sharing = Diagnostics.shared.exportArchive(app: app) }
+                Button("Acknowledgements", systemImage: "doc.text") { showAcknowledgements = true }
                 Text("Version \(Branding.version)")
             } label: {
                 Image(systemName: "ellipsis.circle")

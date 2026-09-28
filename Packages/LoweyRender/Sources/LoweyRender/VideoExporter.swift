@@ -85,6 +85,8 @@ public final class VideoExporter {
     private var depthWorld: SceneRenderer?
     private var depthSession: RenderSession?
     private var depthTargets: [String: RenderTarget] = [:]
+    /// Stored byte → true v (RealityKit's display transform bends even unlit output; measured once per export).
+    private var depthTable: [UInt8]?
     private var secondTargets: [String: RenderTarget] = [:]
     private let compositor = FrameCompositor()
     private var captionPages: [Framing: [CaptionPage]] = [:]
@@ -243,6 +245,9 @@ public final class VideoExporter {
             depthSession?.renderer.lighting.resource = nil
         }
         guard let depthSession else { throw OffscreenError.noMetal }
+        if depthTable == nil {
+            depthTable = try await DepthCalibration.table(session: depthSession, world: depthWorld)
+        }
         let w = max(width / 2, 1)
         let h = max(height / 2, 1)
         let key = "\(w)x\(h)"
@@ -250,8 +255,8 @@ public final class VideoExporter {
         depthTargets[key] = target
         try await depthSession.render(camera: camera, target: target, world: depthWorld, deltaTime: 0)
         var bytes = target.bytes()
-        // The texture is sRGB: undo the encoding so v is linear again.
-        let table = Self.srgbToLinear
+        // Stored bytes → the true v, through the calibration table.
+        let table = depthTable ?? Self.srgbToLinear
         for index in stride(from: 0, to: bytes.count, by: 4) {
             let v = table[Int(bytes[index + 2])]
             bytes[index] = v
@@ -262,7 +267,7 @@ public final class VideoExporter {
         return CIImage(bitmapData: Data(bytes), bytesPerRow: w * 4, size: CGSize(width: w, height: h), format: .BGRA8, colorSpace: nil)
     }
 
-    static let srgbToLinear: [UInt8] = (0 ..< 256).map { index in
+    static let srgbToLinear: [UInt8] = (0 ..< 256).map { index -> UInt8 in
         let c = Double(index) / 255
         let linear = c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
         return UInt8((linear * 255).rounded())
@@ -411,6 +416,60 @@ public final class VideoExporter {
         }
         CGImageDestinationAddImage(destination, image, nil)
         guard CGImageDestinationFinalize(destination) else { throw OffscreenError.readback }
+    }
+}
+
+/// Measures how the depth world's stored bytes map to v = 0.5 / distance: a plane is rendered at known distances with the
+/// depth material, and the readings become a 256-entry lookup table (exact, whatever the renderer's tone mapping).
+@MainActor
+enum DepthCalibration {
+    static let distances: [Double] = [0.5, 0.55, 0.62, 0.7, 0.8, 0.9, 1, 1.15, 1.3, 1.5, 1.75, 2, 2.4, 3, 3.6, 4.5, 6, 8, 11, 16, 25, 40, 80]
+
+    static func table(session: RenderSession, world: SceneRenderer) async throws -> [UInt8] {
+        let target = try session.target(width: 8, height: 8)
+        let plane = ModelEntity(mesh: .generatePlane(width: 1, height: 1), materials: [MaterialFactory.shared.depthMaterial])
+        let wasEnabled = world.root.isEnabled
+        world.root.isEnabled = false
+        session.renderer.entities.append(plane)
+        defer {
+            session.renderer.entities.removeAll { $0 === plane }
+            world.root.isEnabled = wasEnabled
+        }
+        let camera = OffscreenRenderer.Camera(position: .zero, orientation: simd_quatf(angle: 0, axis: SIMD3(0, 1, 0)), fieldOfView: 40)
+        var points: [(raw: Double, v: Double)] = [(0, 0)]
+        for distance in distances {
+            plane.position = SIMD3<Float>(0, 0, Float(-distance))
+            plane.scale = SIMD3<Float>(repeating: Float(distance * 2))
+            try await session.render(camera: camera, target: target, world: world, deltaTime: 0)
+            let bytes = target.bytes()
+            let center = (4 * 8 + 4) * 4
+            points.append((Double(bytes[center + 2]), min(0.5 / distance, 1)))
+        }
+        return table(from: points)
+    }
+
+    /// Piecewise-linear raw → v (monotonic), as bytes.
+    static func table(from points: [(raw: Double, v: Double)]) -> [UInt8] {
+        var sorted = points.sorted { $0.raw < $1.raw }
+        // Equal readings: keep the average v (8-bit plateaus).
+        var merged: [(raw: Double, v: Double)] = []
+        for point in sorted {
+            if let last = merged.last, last.raw == point.raw {
+                merged[merged.count - 1].v = (last.v + point.v) / 2
+            } else {
+                merged.append(point)
+            }
+        }
+        sorted = merged
+        return (0 ..< 256).map { index -> UInt8 in
+            let raw = Double(index)
+            guard let upper = sorted.firstIndex(where: { $0.raw >= raw }) else { return UInt8((sorted.last?.v ?? 1) * 255) }
+            guard upper > 0 else { return UInt8((sorted[0].v * 255).rounded()) }
+            let a = sorted[upper - 1]
+            let b = sorted[upper]
+            let t = b.raw > a.raw ? (raw - a.raw) / (b.raw - a.raw) : 0
+            return UInt8((min(max(a.v + (b.v - a.v) * t, 0), 1) * 255).rounded())
+        }
     }
 }
 

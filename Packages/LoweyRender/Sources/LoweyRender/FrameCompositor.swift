@@ -181,13 +181,15 @@ public final class FrameCompositor: @unchecked Sendable {
         let red = channel(1, 0, 0, scale: 1 + spread)
         let green = channel(0, 1, 0, scale: 1)
         let blue = channel(0, 0, 1, scale: 1 - spread)
-        let add1 = CIFilter.additionCompositing()
-        add1.inputImage = red
-        add1.backgroundImage = green
-        let add2 = CIFilter.additionCompositing()
-        add2.inputImage = blue
-        add2.backgroundImage = add1.outputImage
-        return add2.outputImage?.cropped(to: extent) ?? image
+        // Each channel image is zero in the other channels, so a per-channel maximum puts them back together
+        // (the addition-compositing version rendered black in CI).
+        let first = CIFilter.maximumCompositing()
+        first.inputImage = red
+        first.backgroundImage = green
+        let second = CIFilter.maximumCompositing()
+        second.inputImage = blue
+        second.backgroundImage = first.outputImage
+        return second.outputImage?.cropped(to: extent) ?? image
     }
 
     // MARK: 2. Transition

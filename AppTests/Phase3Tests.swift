@@ -128,10 +128,12 @@ final class Phase3Tests: XCTestCase {
         let image = try target.image(transparent: false)
         attach(image, name: "depth-pass")
         XCTAssertTrue(MaterialFactory.shared.depthShaderAvailable, "the loweyDepth shader compiled")
+        let table = try await DepthCalibration.table(session: session, world: world)
+        try await session.render(camera: camera, target: target, world: world, deltaTime: 0)
         let bytes = target.bytes()
         func v(atX x: Int) -> Double {
             let index = (50 * 300 + x) * 4
-            return Double(VideoExporter.srgbToLinear[Int(bytes[index + 2])]) / 255
+            return Double(table[Int(bytes[index + 2])]) / 255
         }
         let near = v(atX: 50)
         let middle = v(atX: 150)
@@ -141,7 +143,11 @@ final class Phase3Tests: XCTestCase {
         XCTAssertGreaterThan(middle, far)
         XCTAssertEqual(near, 0.5, accuracy: 0.08)
         XCTAssertEqual(middle, 0.2, accuracy: 0.05)
-        XCTAssertEqual(far, 0.083, accuracy: 0.04)
+        XCTAssertEqual(far, 0.083, accuracy: 0.03)
+        let calibration = XCTAttachment(string: "raw→v table: \(table)")
+        calibration.name = "depth-calibration"
+        calibration.lifetime = .keepAlways
+        add(calibration)
     }
 
     func testLensBlurAndInkOutlines() async throws {
