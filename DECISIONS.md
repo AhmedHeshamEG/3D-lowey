@@ -326,3 +326,10 @@ next launch, an "ended unexpectedly" marker, and "Export diagnostics" (a zip Hes
 
 **D72 — Thermal-aware preview.** At `.serious` the stage renders at ⅔ scale and skips depth effects; at `.critical`, 1×.
 Exports render offscreen and are unaffected.
+
+**D73 — Performance pass: what was done and what was deliberately not.** Done: particles as a few banded meshes (D59),
+shared meshes and materials for repeated objects (D21), the post pass switched off when unused (D60), overlays redrawn
+only when they change, thermal-aware preview (D72). Not done yet: distance LODs and texture compression for imported
+models, and `MeshInstancesComponent` for thousands of static copies — the 60 fps budget scene (~300 low-poly objects,
+3 characters, 2 particle systems) has to be profiled on the iPad Air first ("profile before optimizing"); CI simulators
+can't measure GPU frame times. Show FPS & stats is in the scene menu for that.

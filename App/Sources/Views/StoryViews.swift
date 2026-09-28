@@ -404,10 +404,12 @@ struct AddStorySection: View {
                     editor.characterBuilderTarget = nil
                     editor.showCharacterBuilder = true
                 }
+                .accessibilityIdentifier("add-character")
             }
             SectionHeader(title: "Text")
             LazyVGrid(columns: columns, spacing: 10) {
                 tile("3D text", "textformat") { editor.addText3D() }
+                    .accessibilityIdentifier("add-text3d")
                 tile("Title", "textformat.size") { editor.addOverlay(.title) }
                 tile("Label", "tag") { editor.addOverlay(.label) }
             }
@@ -415,12 +417,14 @@ struct AddStorySection: View {
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach([OverlayRecipe.Shape.cross, .question, .arrow, .highlight, .exclamation, .check, .circle, .star], id: \.self) { shape in
                     tile(shape.title, shape.systemImage) { editor.addOverlay(shape) }
+                        .accessibilityIdentifier("add-overlay-\(shape.rawValue)")
                 }
             }
             SectionHeader(title: "Effects")
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(ParticleRecipe.Preset.allCases) { preset in
                     tile(preset.title, preset.systemImage) { editor.addParticles(preset) }
+                        .accessibilityIdentifier("add-fx-\(preset.rawValue)")
                 }
             }
         }

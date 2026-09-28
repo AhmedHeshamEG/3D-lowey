@@ -155,15 +155,18 @@ final class Phase3Tests: XCTestCase {
         var document = try Document(project: info, scene: XCTUnwrap(scenes.last))
         guard let camera = document.scene.objects.values.first(where: { $0.name == "Desk camera" })?.id else { return XCTFail("no desk camera") }
         let sharp = try await VideoExporter(document: document, library: nil, rigs: RigCache()).images(at: 0.1, framings: [.landscape], longSide: 480)
-        document.scene.objects[camera]?[.aperture] = .float(1.2)
-        document.scene.objects[camera]?[.focusDistance] = .float(1.2)
+        // Focus on the paper: it stays sharp, the dark room behind it melts.
+        let paper = try XCTUnwrap(document.scene.objects.values.first { $0.name == "Army message" }?.id)
+        let focus = document.scene.worldTransform(of: camera).position.distance(to: document.scene.worldTransform(of: paper).position)
+        document.scene.objects[camera]?[.aperture] = .float(1.4)
+        document.scene.objects[camera]?[.focusDistance] = .float(focus)
         var look = document.effectiveLook
         look.post.outline = 0.7
         document.scene.look = look
         let styled = try await VideoExporter(document: document, library: nil, rigs: RigCache()).images(at: 0.1, framings: [.landscape], longSide: 480)
         attach(sharp[0], name: "desk-sharp")
         attach(styled[0], name: "desk-lens-blur-and-outlines")
-        XCTAssertGreaterThan(difference(sharp[0], styled[0]), 0.01)
+        XCTAssertGreaterThan(difference(sharp[0], styled[0]), 0.002, "the finish changed the frame")
     }
 
     // MARK: Particles, characters

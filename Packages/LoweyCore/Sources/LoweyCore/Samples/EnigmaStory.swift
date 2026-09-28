@@ -81,8 +81,8 @@ public extension EnigmaSample {
         {"t": {"word": "AI"}, "value": 1, "easing": "step"}, {"t": {"word": "did it", "edge": "end"}, "value": 0, "easing": "step"}]},
       {"do": "effect", "kind": "speedLines", "at": {"word": "AI"}, "duration": 1.2, "strength": 0.6},
 
-      {"do": "light", "type": "point", "name": "Narrator light", "at": [62.2, 2.2, 3.2], "color": "#FFC58A", "intensity": 1.6, "range": 5},
-      {"do": "character", "name": "Me", "at": [61.7, 0, 1.6], "facing": -22,
+      {"do": "light", "type": "point", "name": "Narrator light", "at": [61.9, 2.3, 1.6], "color": "#FFC58A", "intensity": 1.8, "range": 5},
+      {"do": "character", "name": "Me", "at": [61.45, 0, -0.2], "facing": -12,
        "recipe": {"name": "Me", "hair": "short", "top": "hoodie", "extras": ["beard"], "eyes": "round"}},
       {"do": "clip", "character": "Me", "clip": "Idle", "at": 0},
       {"do": "clip", "character": "Me", "clip": "Talk", "at": {"word": "What's", "offset": -0.2}},
