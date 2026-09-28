@@ -67,10 +67,15 @@ final class SmokeTests: XCTestCase {
         bridgeItem.tap()
         let toggle = app.switches["bridge-toggle"].firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
-        // Tap the switch itself (the right end of the row).
-        if toggle.value as? String != "1" { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.5)).tap() }
-        XCTAssertTrue(app.staticTexts["bridge-code"].waitForExistence(timeout: 5), "the pairing code shows")
+        // Tap the switch itself (SwiftUI exposes the inner switch as a child element).
+        let inner = toggle.switches.firstMatch
+        (inner.exists ? inner : toggle).tap()
+        if app.staticTexts["bridge-code"].waitForExistence(timeout: 5) == false {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        }
+        let code = app.staticTexts["bridge-code"].waitForExistence(timeout: 8)
         screenshot(app, "p3-04-bridge")
+        XCTAssertTrue(code, "the pairing code shows")
     }
 
     @MainActor
