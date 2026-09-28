@@ -15,8 +15,8 @@ of truth: nothing here is eyeballed, it is measured.
 
 ## How it is made
 
-- **Head**: a surface of revolution of the traced silhouette (left and right averaged), a little
-  deeper than wide is tall (depth 0.92), with a cap that tucks under the beret.
+- **Head**: a surface of revolution of the traced silhouette (left and right averaged), slightly
+  shallower front-to-back than wide (0.92), with a cap that tucks under the beret.
 - **Face**: every stroke of the drawing (brows, eyes, shines, mouth with its curl, cheeks) is
   traced as a smooth contour, filled, and painted onto the head from the front. Each part is
   its own object (`Eye.L`, `Brow.R`, `Mouth`, …) parented to `Head`, so the face can animate.
