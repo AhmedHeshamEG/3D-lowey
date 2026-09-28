@@ -9,7 +9,7 @@ of truth: nothing here is eyeballed, it is measured.
 | `trace_drawing.py` | measures the drawing → `trace.json` |
 | `trace.json` | head silhouette, every face mark as a contour, inflated body and beret meshes, hands |
 | `build_avatar.py` | Blender build → `avatar.glb`, `avatar.blend`, renders |
-| `avatar.glb` | the Lowey asset: neutral pose, plain PBR, ink outlines included (~31k triangles) |
+| `avatar.glb` | the Lowey asset: neutral pose, plain PBR, ink outlines included (~62k triangles, half of them the ink shells) |
 | `avatar.blend` | the look-dev file: toon shading, the drawing's pose, cameras |
 | `compare.py` | lays out `renders/sheet.jpg` (drawing vs model, overlay, hero, turnaround) |
 
@@ -29,7 +29,7 @@ of truth: nothing here is eyeballed, it is measured.
   drawing's line.
 
 Hierarchy: `Avatar` → `Head` (face parts, `Hat` → `Hat.Mark`), `Body`, `Hand.L`, `Hand.R`. Units:
-683 drawing pixels = 1; he is about 1.9 units tall with the beret.
+683 drawing pixels = 1; his beret tops out at about 1.8 units.
 
 ## Rebuild
 
