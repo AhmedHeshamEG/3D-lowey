@@ -268,3 +268,11 @@ public final class GuideEntity: Entity {
         }
     }
 }
+
+extension UIFont {
+    /// The same font in another system design (rounded, serif…), or itself when unavailable.
+    func withDesign(_ design: UIFontDescriptor.SystemDesign) -> UIFont {
+        guard let descriptor = fontDescriptor.withDesign(design) else { return self }
+        return UIFont(descriptor: descriptor, size: pointSize)
+    }
+}

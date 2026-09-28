@@ -138,6 +138,18 @@ final class EditorModel {
     /// Waveform peaks per audio file (100 per second), decoded once.
     var waveforms: [String: [Float]] = [:]
     @ObservationIgnored var decodedAudio: [String: PCMAudio] = [:]
+
+    // MARK: Story, VFX & post state (see EditorModel+Story.swift)
+
+    /// Post-processing in the live view (off = the plain render, for speed while blocking out).
+    var previewPost = true {
+        didSet { updateStagePost() }
+    }
+
+    /// Screen effects (shake, flash…) in the live view.
+    var previewEffects = true
+    @ObservationIgnored var overlayImages: [String: CGImage] = [:]
+    @ObservationIgnored var captionCache: (factor: Double, revision: Int, pages: [CaptionPage])?
     private(set) var displayRevision = 0
 
     @ObservationIgnored var displayed: AnimatedScene
@@ -304,6 +316,7 @@ final class EditorModel {
 
     private func cameraMoved(_ viewpoint: Viewpoint) {
         if projection != viewpoint.projection { projection = viewpoint.projection }
+        updateStagePost()
         refreshGuide()
         refreshSelectionOverlay(moveOnly: true)
         viewpointSaveTask?.cancel()
@@ -454,6 +467,7 @@ final class EditorModel {
         if mode != .animate, performPhase != .idle { cancelPerform() }
         if mode != .camera, virtualCameraActive { stopVirtualCamera() }
         updateLookThrough()
+        updateStagePost()
         if mode != .build { tool = .select }
         eyedropperActive = false
         refreshSelectionOverlay()

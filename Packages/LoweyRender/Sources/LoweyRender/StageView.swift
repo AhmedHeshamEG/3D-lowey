@@ -22,6 +22,35 @@ public final class StageView: ARView {
     /// Called whenever the camera moves (to refresh screen-space overlays, save the viewpoint…).
     public var onCameraChanged: ((Viewpoint) -> Void)?
 
+    private let postProcessor = StagePostProcessor()
+    /// Post-processing, overlays and captions for the live view (nil or empty = the plain render, no extra pass).
+    public var post: StagePost? {
+        didSet {
+            let active = post.map { !$0.isEmpty } ?? false
+            if active, renderCallbacks.postProcess == nil {
+                renderCallbacks.postProcess = { [weak self] context in
+                    MainActor.assumeIsolated {
+                        guard let self, let post = self.post else {
+                            Self.copy(context)
+                            return
+                        }
+                        let range = self.depthRange
+                        self.postProcessor.process(context, post: post, viewSize: self.bounds.size, near: range.near, far: range.far)
+                    }
+                }
+            } else if !active, renderCallbacks.postProcess != nil {
+                renderCallbacks.postProcess = nil
+            }
+        }
+    }
+
+    /// Pass-through (when the pass is on but there's nothing to do this frame).
+    private nonisolated static func copy(_ context: ARView.PostProcessContext) {
+        guard let blit = context.commandBuffer.makeBlitCommandEncoder() else { return }
+        blit.copy(from: context.sourceColorTexture, to: context.targetColorTexture)
+        blit.endEncoding()
+    }
+
     public init(renderer: SceneRenderer) {
         self.renderer = renderer
         super.init(frame: .zero, cameraMode: .nonAR, automaticallyConfigureSession: false)

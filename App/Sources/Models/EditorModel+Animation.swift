@@ -143,7 +143,9 @@ extension EditorModel {
         renderer.sync(displayDocument, changes: set)
         renderer.applyPoses(animated.poses, rigs: rigs)
         renderer.applyClipFallback(timeline, at: time, skipping: Set(animated.poses.keys))
+        renderer.applyParticles(animated.scene, timeline: timeline, time: time)
         updateLookThrough()
+        updateStagePost()
         // During playback SwiftUI panels refresh a few times a second, not every frame.
         let now = CACurrentMediaTime()
         if !isPlaying || now - lastRevisionBump > 0.15 {

@@ -62,9 +62,30 @@ struct StageOverlay: View {
                 } else if editor.mode == .camera, editor.lookThrough, editor.shotCamera != nil {
                     FramingGuide(framing: editor.cameraFraming, size: geometry.size, safeZones: editor.showSafeZones)
                 }
+                OverlaySelection(editor: editor)
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// Dashed frames around selected overlays (they have no 3D selection box).
+struct OverlaySelection: View {
+    let editor: EditorModel
+
+    var body: some View {
+        _ = editor.scene.id
+        let selected = Set(editor.selection)
+        let rect = editor.frameRect
+        let placements = selected.isEmpty ? [] : editor.stageOverlayPlacements().filter { selected.contains($0.id) }
+        ForEach(placements, id: \.id) { placement in
+            let box = OverlayRenderer.boxSize(placement, frame: rect.size)
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Theme.accent, style: StrokeStyle(lineWidth: 2, dash: [7, 5]))
+                .frame(width: box.width + 16, height: box.height + 16)
+                .rotationEffect(.radians(-placement.angle))
+                .position(x: rect.minX + CGFloat(placement.center.x), y: rect.minY + CGFloat(placement.center.y))
+        }
     }
 }
 

@@ -286,10 +286,13 @@ public struct TimeRange: Codable, Hashable, Sendable {
 public struct CameraCut: Codable, Hashable, Sendable {
     public var time: Double
     public var camera: ObjectID
+    /// How the previous camera hands over (nil = a straight cut).
+    public var transition: TransitionSpec?
 
-    public init(time: Double, camera: ObjectID) {
+    public init(time: Double, camera: ObjectID, transition: TransitionSpec? = nil) {
         self.time = time
         self.camera = camera
+        self.transition = transition
     }
 }
 
@@ -312,11 +315,16 @@ public struct Timeline: Hashable, Sendable {
     public var audio: [AudioClip]
     /// Recognised words of audio clips (one transcript per clip).
     public var transcripts: [Transcript]
+    /// Flash, shake, speed lines, zoom blur, glitch.
+    public var effects: [ScreenEffect]
+    /// Captions from the transcript (nil = off).
+    public var captions: CaptionSettings?
 
     public init(
         fps: Int = 30, duration: Double = 10, stepping: Stepping = .onOnes, tracks: [Track] = [],
         markers: [Marker] = [], loop: TimeRange? = nil, cuts: [CameraCut] = [], behaviors: [Behavior] = [],
-        clipTracks: [ClipTrack] = [], audio: [AudioClip] = [], transcripts: [Transcript] = []
+        clipTracks: [ClipTrack] = [], audio: [AudioClip] = [], transcripts: [Transcript] = [], effects: [ScreenEffect] = [],
+        captions: CaptionSettings? = nil
     ) {
         self.fps = fps
         self.duration = duration
@@ -329,6 +337,8 @@ public struct Timeline: Hashable, Sendable {
         self.clipTracks = clipTracks
         self.audio = audio
         self.transcripts = transcripts
+        self.effects = effects
+        self.captions = captions
     }
 
     public var frameCount: Int { Int((duration * Double(fps)).rounded()) }
@@ -386,6 +396,9 @@ public struct Timeline: Hashable, Sendable {
         for clip in audio {
             end = max(end, clip.end)
         }
+        for effect in effects {
+            end = max(end, effect.end)
+        }
         return end
     }
 
@@ -405,7 +418,7 @@ public struct Timeline: Hashable, Sendable {
 
 extension Timeline: Codable {
     private enum CodingKeys: String, CodingKey {
-        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts
+        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts, effects, captions
     }
 
     public init(from decoder: Decoder) throws {
@@ -421,6 +434,8 @@ extension Timeline: Codable {
         clipTracks = try c.decodeIfPresent([ClipTrack].self, forKey: .clipTracks) ?? []
         audio = try c.decodeIfPresent([AudioClip].self, forKey: .audio) ?? []
         transcripts = try c.decodeIfPresent([Transcript].self, forKey: .transcripts) ?? []
+        effects = try c.decodeIfPresent([ScreenEffect].self, forKey: .effects) ?? []
+        captions = try c.decodeIfPresent(CaptionSettings.self, forKey: .captions)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -436,5 +451,7 @@ extension Timeline: Codable {
         try c.encode(clipTracks, forKey: .clipTracks)
         if !audio.isEmpty { try c.encode(audio, forKey: .audio) }
         if !transcripts.isEmpty { try c.encode(transcripts, forKey: .transcripts) }
+        if !effects.isEmpty { try c.encode(effects, forKey: .effects) }
+        try c.encodeIfPresent(captions, forKey: .captions)
     }
 }

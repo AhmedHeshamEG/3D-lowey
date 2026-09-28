@@ -57,6 +57,29 @@ public final class MaterialFactory {
     /// True when the fog shader loaded (shown in diagnostics).
     public var customShaderAvailable: Bool { surfaceShader != nil }
 
+    /// The package's compiled Metal library (surface shaders + post-processing kernels).
+    public private(set) lazy var shaderLibrary: MTLLibrary? = {
+        guard let device = MTLCreateSystemDefaultDevice() else { return nil }
+        let candidates = [try? device.makeDefaultLibrary(bundle: Bundle.module), device.makeDefaultLibrary()]
+        return candidates.compactMap { $0 }.first { $0.functionNames.contains("loweySurface") }
+    }()
+
+    private var depthCache: (any RealityKit.Material)?
+
+    /// Unlit material writing v = 0.5 / distance (the depth world for lens blur and outlines).
+    public var depthMaterial: any RealityKit.Material {
+        if let depthCache { return depthCache }
+        var material: any RealityKit.Material = UnlitMaterial(color: .black)
+        if let library = shaderLibrary {
+            let shader = CustomMaterial.SurfaceShader(named: "loweyDepth", in: library)
+            if let custom = try? CustomMaterial(surfaceShader: shader, geometryModifier: nil, lightingModel: .unlit) {
+                material = custom
+            }
+        }
+        depthCache = material
+        return material
+    }
+
     private static func loadShader(logger: Logger) -> CustomMaterial.SurfaceShader? {
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
         // The package's own metallib first, then the app's (if a host app ships the shader).

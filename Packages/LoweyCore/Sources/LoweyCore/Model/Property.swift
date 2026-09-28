@@ -203,6 +203,38 @@ public struct PropertyKey: RawRepresentable, Hashable, Sendable, Codable, Compar
     public static let portraitShift: PropertyKey = "portraitShift"
     // Generators
     public static let seed: PropertyKey = "seed"
+    // Overlays & text (Phase 3)
+    /// 0…1: how much of an overlay or text is revealed (typewriter, an arrow drawing itself).
+    public static let reveal: PropertyKey = "reveal"
+    /// Second colour (label background, outline).
+    public static let accentColor: PropertyKey = "accentColor"
+    // VFX
+    /// Particle emission multiplier (0 = off, 1 = the preset's rate) — animate bursts on and off.
+    public static let emission: PropertyKey = "emission"
+    // Face & lip sync
+    /// Mouth shape (viseme): "rest", "A"…"H", "X" (Rhubarb / Preston Blair set). Steps, never blends.
+    public static let mouth: PropertyKey = "mouth"
+    /// 0…1 jaw open (from loudness when a word has no known sounds, or from face capture).
+    public static let jawOpen: PropertyKey = "jawOpen"
+    public static let mouthWide: PropertyKey = "mouthWide"
+    public static let smile: PropertyKey = "smile"
+    /// −1…1 eyebrows (down = frown, up = surprise).
+    public static let brows: PropertyKey = "brows"
+    /// 0…1 eyelids closed.
+    public static let blinkLeft: PropertyKey = "blinkLeft"
+    public static let blinkRight: PropertyKey = "blinkRight"
+    /// Head turn / nod / tilt in degrees (face performance).
+    public static let headYaw: PropertyKey = "headYaw"
+    public static let headPitch: PropertyKey = "headPitch"
+    public static let headRoll: PropertyKey = "headRoll"
+    /// Eye look direction (−1…1).
+    public static let lookX: PropertyKey = "lookX"
+    public static let lookY: PropertyKey = "lookY"
+
+    /// Face channels a performance records.
+    public static let faceChannels: [PropertyKey] = [
+        .jawOpen, .mouthWide, .smile, .brows, .blinkLeft, .blinkRight, .headYaw, .headPitch, .headRoll, .lookX, .lookY
+    ]
 
     /// Type and animatability of well-known keys.
     public var spec: PropertySpec? { PropertySpec.known[self] }
@@ -238,7 +270,22 @@ public struct PropertySpec: Sendable, Hashable {
         .aperture: PropertySpec(type: .float, animatable: true, label: "Aperture"),
         .portraitZoom: PropertySpec(type: .float, animatable: true, label: "9:16 zoom"),
         .portraitShift: PropertySpec(type: .float, animatable: true, label: "9:16 pan"),
-        .seed: PropertySpec(type: .int, animatable: false, label: "Seed")
+        .seed: PropertySpec(type: .int, animatable: false, label: "Seed"),
+        .reveal: PropertySpec(type: .float, animatable: true, label: "Reveal"),
+        .accentColor: PropertySpec(type: .color, animatable: true, label: "Second color"),
+        .emission: PropertySpec(type: .float, animatable: true, label: "Emission"),
+        .mouth: PropertySpec(type: .enumeration, animatable: true, label: "Mouth"),
+        .jawOpen: PropertySpec(type: .float, animatable: true, label: "Jaw open"),
+        .mouthWide: PropertySpec(type: .float, animatable: true, label: "Mouth wide"),
+        .smile: PropertySpec(type: .float, animatable: true, label: "Smile"),
+        .brows: PropertySpec(type: .float, animatable: true, label: "Brows"),
+        .blinkLeft: PropertySpec(type: .float, animatable: true, label: "Blink (left)"),
+        .blinkRight: PropertySpec(type: .float, animatable: true, label: "Blink (right)"),
+        .headYaw: PropertySpec(type: .float, animatable: true, label: "Head turn"),
+        .headPitch: PropertySpec(type: .float, animatable: true, label: "Head nod"),
+        .headRoll: PropertySpec(type: .float, animatable: true, label: "Head tilt"),
+        .lookX: PropertySpec(type: .float, animatable: true, label: "Look left/right"),
+        .lookY: PropertySpec(type: .float, animatable: true, label: "Look up/down")
     ]
 }
 

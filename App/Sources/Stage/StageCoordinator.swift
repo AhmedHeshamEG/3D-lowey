@@ -38,6 +38,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         case perform(planeY: Double, last: Vec3)
         /// Camera mode: aiming the shot camera (pan / tilt).
         case aimCamera
+        /// Dragging a 2D overlay in the frame.
+        case moveOverlay(ObjectID, last: CGPoint)
         case none
     }
 
@@ -134,6 +136,11 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     @objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
         guard let editor, let stage else { return }
         let point = recognizer.location(in: stage)
+        // Overlays sit on top of the world: they win the tap.
+        if !editor.eyedropperActive, editor.tool != .draw, let overlay = editor.overlayHit(at: point) {
+            editor.select(overlay)
+            return
+        }
         let picked = stage.pickObject(at: point)
         if editor.eyedropperActive {
             if let (id, _) = picked { editor.eyedrop(object: id) }
@@ -202,6 +209,9 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
                 .intersect(stage.worldRay(at: point) ?? Ray(origin: .zero, direction: .unitY))?.point ?? .zero
             editor.performTouchBegan([.position])
             return .perform(planeY: planeY, last: start)
+        }
+        if let overlay = editor.selectedOverlay, editor.overlayHit(at: point) == overlay {
+            return .moveOverlay(overlay, last: point)
         }
         if operatesCamera { return .aimCamera }
         guard editor.mode == .build || editor.mode == .look || editor.mode == .animate else { return .orbit }
@@ -304,6 +314,10 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         case .aimCamera:
             editor.aimCamera(pan: -Double(translation.x) * 0.15, tilt: -Double(translation.y) * 0.15, gesture: gestureKey)
 
+        case let .moveOverlay(id, last):
+            editor.moveOverlay(id, by: CGSize(width: point.x - last.x, height: point.y - last.y), gesture: gestureKey)
+            drag = .moveOverlay(id, last: point)
+
         case .none:
             break
         }
@@ -330,7 +344,7 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             scatterRadius = 0
         case .perform:
             editor.performTouchEnded()
-        case .orbit, .aimCamera, .none:
+        case .orbit, .aimCamera, .moveOverlay, .none:
             break
         }
         editor.endGesture()
@@ -437,6 +451,16 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             recognizer.scale = 1
             return
         }
+        if let editor, let overlay = editor.selectedOverlay {
+            if recognizer.state == .began { pinchKey = UUID().uuidString }
+            if recognizer.state == .ended || recognizer.state == .cancelled {
+                editor.endGesture()
+                return
+            }
+            editor.scaleOverlay(overlay, by: Double(recognizer.scale), gesture: pinchKey)
+            recognizer.scale = 1
+            return
+        }
         if operatesCamera, let editor {
             if recognizer.state == .began { pinchKey = UUID().uuidString }
             if recognizer.state == .ended || recognizer.state == .cancelled {
@@ -465,6 +489,16 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             case .changed: editor.performRotate(by: -Double(recognizer.rotation))
             default: editor.performTouchEnded()
             }
+            recognizer.rotation = 0
+            return
+        }
+        if let overlay = editor.selectedOverlay {
+            if recognizer.state == .began { twistKey = UUID().uuidString }
+            if recognizer.state == .ended || recognizer.state == .cancelled {
+                editor.endGesture()
+                return
+            }
+            editor.rotateOverlay(overlay, by: -Double(recognizer.rotation), gesture: twistKey)
             recognizer.rotation = 0
             return
         }

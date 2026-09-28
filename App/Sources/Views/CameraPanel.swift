@@ -30,6 +30,7 @@ struct CameraPanel: View {
                     .accessibilityIdentifier("look-through")
                 }
                 cameraList
+                TransitionSection(editor: editor)
                 if let camera = editor.editedCamera {
                     moves
                     lens(camera)

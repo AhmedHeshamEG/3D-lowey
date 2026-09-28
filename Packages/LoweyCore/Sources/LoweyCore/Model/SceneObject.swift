@@ -75,6 +75,12 @@ public enum ObjectKind: Hashable, Sendable {
     case drawing(DrawingRecipe)
     case light(LightType)
     case camera
+    /// 3D text in the world (Phase 3).
+    case text(TextRecipe)
+    /// A 2D element over the shot: title, label, arrow, the big X… (frame-space transform).
+    case overlay(OverlayRecipe)
+    /// A particle effect: fire, sparks, rain… (deterministic in time).
+    case particles(ParticleRecipe)
 
     public var typeName: String {
         switch self {
@@ -85,7 +91,16 @@ public enum ObjectKind: Hashable, Sendable {
         case .drawing: "drawing"
         case .light: "light"
         case .camera: "camera"
+        case .text: "text"
+        case .overlay: "overlay"
+        case .particles: "particles"
         }
+    }
+
+    /// Lives in the frame, not the world (no 3D entity, no picking in the stage).
+    public var isOverlay: Bool {
+        if case .overlay = self { return true }
+        return false
     }
 
     public var assetID: AssetID? {
@@ -101,15 +116,15 @@ public enum ObjectKind: Hashable, Sendable {
     /// Objects that render a surface (can take color, shading, glow).
     public var hasSurface: Bool {
         switch self {
-        case .primitive, .asset, .prefab, .drawing: true
-        case .group, .light, .camera: false
+        case .primitive, .asset, .prefab, .drawing, .text: true
+        case .group, .light, .camera, .overlay, .particles: false
         }
     }
 }
 
 extension ObjectKind: Codable {
     private enum Key: String, CodingKey {
-        case type, shape, asset, prefab, drawing, light
+        case type, shape, asset, prefab, drawing, light, text, overlay, particles
     }
 
     public init(from decoder: Decoder) throws {
@@ -123,6 +138,9 @@ extension ObjectKind: Codable {
         case "drawing": self = try .drawing(container.decode(DrawingRecipe.self, forKey: .drawing))
         case "light": self = try .light(container.decode(LightType.self, forKey: .light))
         case "camera": self = .camera
+        case "text": self = try .text(container.decode(TextRecipe.self, forKey: .text))
+        case "overlay": self = try .overlay(container.decode(OverlayRecipe.self, forKey: .overlay))
+        case "particles": self = try .particles(container.decode(ParticleRecipe.self, forKey: .particles))
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown object type \(type)")
         }
@@ -138,6 +156,9 @@ extension ObjectKind: Codable {
         case let .prefab(id): try container.encode(id, forKey: .prefab)
         case let .drawing(recipe): try container.encode(recipe, forKey: .drawing)
         case let .light(type): try container.encode(type, forKey: .light)
+        case let .text(recipe): try container.encode(recipe, forKey: .text)
+        case let .overlay(recipe): try container.encode(recipe, forKey: .overlay)
+        case let .particles(recipe): try container.encode(recipe, forKey: .particles)
         }
     }
 }

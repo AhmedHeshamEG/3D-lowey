@@ -32,6 +32,7 @@ struct AnimatePanel: View {
                     behaviorSection
                     motionSection
                 }
+                ScreenAndCaptionSection(editor: editor)
             }
             .padding(16)
         }

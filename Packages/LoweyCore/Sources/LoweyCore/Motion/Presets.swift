@@ -197,7 +197,8 @@ public struct PresetBuilder: Sendable {
             var keys: [Keyframe] = []
             for index in 0 ... quarters {
                 let easing: Easing = quarters == 1 ? .easeInOut : (index == 0 ? .easeIn : (index == quarters - 1 ? .easeOut : .linear))
-                let rotation = (t.rotation * Quat(angle: step * Double(index), axis: .unitY)).normalized
+                // Overlays turn in the frame; everything else spins around its vertical axis.
+                let rotation = (t.rotation * Quat(angle: step * Double(index), axis: object.kind.isOverlay ? .unitZ : .unitY)).normalized
                 keys.append(k(d * Double(index) / Double(quarters), .quat(rotation), easing))
             }
             return [(id, .rotation, keys)]
@@ -206,6 +207,13 @@ public struct PresetBuilder: Sendable {
         case .fadeOut:
             return [(id, .opacity, [k(0, .float(object.opacity), .easeIn), k(d, .float(0))])]
         case .typewriter:
+            // Text and overlays type themselves out (and arrows draw themselves).
+            switch object.kind {
+            case .text, .overlay:
+                return [(id, .reveal, [k(0, .float(0), .linear), k(d, .float(1))])]
+            default:
+                break
+            }
             // Reveal parts one by one (titles, lists, a row of desks). Without parts: appear at start.
             let parts = children.isEmpty ? [id] : children
             let step = d / Double(max(parts.count, 1))
