@@ -3,6 +3,14 @@
 All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
 Phase 4 = v1.1 → v1.3).
 
+## [1.3.1] — Smooth stage
+
+- The live stage works out the glow halo at quarter size (it blurred the whole screen at full size every frame whenever
+  anything glowed, including the blob's hover glow). Looks the same; exports keep the full-size halo.
+- Blob faces stop making a new mesh every frame: springs settle to the exact pose and step in steps too small to see, so
+  shapes are reused; the mouth works out each moment once instead of eight times.
+- The renderer's mesh cache is bounded (it grew for as long as a face animated, so the app got slower the longer it ran).
+
 ## [1.3.0] — Phase 4: Characters, stability, feel
 
 ### Characters: the blob house style
