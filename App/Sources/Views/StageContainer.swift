@@ -74,7 +74,9 @@ struct OverlaySelection: View {
     let editor: EditorModel
 
     var body: some View {
-        _ = editor.scene.id
+        // Re-render when the playhead or the scene changes (the placements read unobserved state).
+        // swiftlint:disable:next redundant_discardable_let
+        let _ = editor.scene.id
         let selected = Set(editor.selection)
         let rect = editor.frameRect
         let placements = selected.isEmpty ? [] : editor.stageOverlayPlacements().filter { selected.contains($0.id) }
