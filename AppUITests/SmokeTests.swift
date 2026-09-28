@@ -176,6 +176,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testSampleProjectOpensAllScenes() throws {
+        executionTimeAllowance = 470
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-sample"]
         app.launch()
@@ -186,7 +187,7 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(stage.waitForExistence(timeout: 20))
         sleep(3)
         screenshot(app, "sample-scene-1")
-        for index in 2 ... 4 {
+        for index in 2 ... 5 {
             button(app, "scene-menu").tap()
             let item = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(index) ·")).firstMatch
             XCTAssertTrue(item.waitForExistence(timeout: 5))
