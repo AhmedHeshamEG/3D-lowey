@@ -58,7 +58,9 @@ struct StageOverlay: View {
                         .position(preview.center)
                 }
                 if editor.mode == .export {
-                    FramingGuide(framing: editor.snapshotFraming, size: geometry.size)
+                    FramingGuide(framing: editor.snapshotFraming, size: geometry.size, safeZones: false)
+                } else if editor.mode == .camera, editor.lookThrough, editor.shotCamera != nil {
+                    FramingGuide(framing: editor.cameraFraming, size: geometry.size, safeZones: editor.showSafeZones)
                 }
             }
         }
@@ -70,6 +72,7 @@ struct StageOverlay: View {
 struct FramingGuide: View {
     let framing: Framing
     let size: CGSize
+    var safeZones = true
 
     var body: some View {
         let frame = rect()
@@ -87,6 +90,26 @@ struct FramingGuide: View {
                 .stroke(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
                 .frame(width: frame.width * 0.9, height: frame.height * 0.9)
                 .position(x: frame.midX, y: frame.midY)
+            if safeZones {
+                // Title safe (80 %) and thirds.
+                Rectangle()
+                    .stroke(.white.opacity(0.22), style: StrokeStyle(lineWidth: 1, dash: [2, 6]))
+                    .frame(width: frame.width * 0.8, height: frame.height * 0.8)
+                    .position(x: frame.midX, y: frame.midY)
+                Path { path in
+                    for fraction in [1.0 / 3, 2.0 / 3] {
+                        path.move(to: CGPoint(x: frame.minX + frame.width * fraction, y: frame.minY))
+                        path.addLine(to: CGPoint(x: frame.minX + frame.width * fraction, y: frame.maxY))
+                        path.move(to: CGPoint(x: frame.minX, y: frame.minY + frame.height * fraction))
+                        path.addLine(to: CGPoint(x: frame.maxX, y: frame.minY + frame.height * fraction))
+                    }
+                }
+                .stroke(.white.opacity(0.15), lineWidth: 1)
+            }
+            Text(framing.rawValue)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(.white.opacity(0.7))
+                .position(x: frame.minX + 22, y: frame.minY + 12)
         }
     }
 

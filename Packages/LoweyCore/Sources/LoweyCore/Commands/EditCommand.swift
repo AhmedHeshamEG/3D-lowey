@@ -64,6 +64,24 @@ public struct RestoreEntry: Codable, Hashable, Sendable {
     }
 }
 
+/// Inserts, replaces or removes one timeline track (`track == nil` removes).
+public struct TrackEdit: Codable, Hashable, Sendable {
+    public var id: TrackID
+    public var track: Track?
+    /// Position in the track list for inserts (append when `nil`); inverses use it to restore order.
+    public var index: Int?
+
+    public init(id: TrackID, track: Track?, index: Int? = nil) {
+        self.id = id
+        self.track = track
+        self.index = index
+    }
+
+    public init(_ track: Track) {
+        self.init(id: track.id, track: track)
+    }
+}
+
 public enum LookScope: String, Codable, Sendable {
     /// The project look (shared by every scene without its own look).
     case project
@@ -91,6 +109,8 @@ public indirect enum EditCommand: Hashable, Sendable {
     case renameScene(String)
     case setActiveCamera(ObjectID?)
     case setTimeline(Timeline)
+    /// Fine-grained key editing (the common case: keying, Perform takes, presets).
+    case setTracks([TrackEdit])
     /// Several commands as one undo step.
     case batch(String, [EditCommand])
 
@@ -116,6 +136,9 @@ public indirect enum EditCommand: Hashable, Sendable {
         case .renameScene: return "Rename scene"
         case .setActiveCamera: return "Set camera"
         case .setTimeline: return "Edit timeline"
+        case let .setTracks(edits):
+            if edits.allSatisfy({ $0.track == nil }) { return "Delete keys" }
+            return "Animate"
         case let .batch(label, _): return label
         }
     }

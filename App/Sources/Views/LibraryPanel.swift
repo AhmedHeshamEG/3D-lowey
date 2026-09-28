@@ -216,6 +216,7 @@ private struct LibraryTile: View {
         case .asset: "shippingbox"
         case .prefab: "hammer"
         case .look: "paintpalette"
+        case .script: "curlybraces"
         }
     }
 }

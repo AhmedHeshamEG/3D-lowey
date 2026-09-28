@@ -74,6 +74,11 @@ public struct TrackID: LoweyIdentifier {
     public init(raw: String) { self.raw = raw }
 }
 
+public struct ScriptID: LoweyIdentifier {
+    public let raw: String
+    public init(raw: String) { self.raw = raw }
+}
+
 /// Deterministic identifier factory. The app uses random IDs; tests, samples and
 /// Scene Scripts can use a counter so output is reproducible.
 public struct IDFactory: Sendable {

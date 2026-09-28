@@ -48,7 +48,10 @@ public struct Migration: Sendable {
 /// Reads and writes versioned files, migrating old ones on load. Migrations exist from day one.
 public struct SchemaCoder: Sendable {
     /// Current schema version of every file kind.
-    public static let currentVersion = 1
+    /// v2 (Phase 2): timelines gain markers, loop, cuts, behaviours and clip tracks; the library
+    /// gains scripts. The shape is backward compatible, but older apps must refuse v2 files rather
+    /// than silently drop animation when they re-save them.
+    public static let currentVersion = 2
 
     public var migrations: [Migration]
     public var currentVersion: Int
@@ -134,7 +137,11 @@ public struct SchemaCoder: Sendable {
             return scene
         },
         Migration(kind: .project, from: 0) { $0 },
-        Migration(kind: .library, from: 0) { $0 }
+        Migration(kind: .library, from: 0) { $0 },
+        // v1 → v2: new fields are optional with defaults; nothing to rewrite.
+        Migration(kind: .scene, from: 1) { $0 },
+        Migration(kind: .project, from: 1) { $0 },
+        Migration(kind: .library, from: 1) { $0 }
     ]
 
     private static func liftTransform(_ object: JSONValue) -> JSONValue {

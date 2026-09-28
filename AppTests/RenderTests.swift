@@ -222,7 +222,10 @@ final class RenderTests: XCTestCase {
         let changes = try session.perform(.setProperties([PropertyChange(object: paper, key: .color, value: .color(.palette(2)))]))
         renderer.sync(session.document, changes: changes)
         XCTAssertTrue(renderer.node(for: desk)?.findEntity(named: "content") === deskContent, "untouched objects keep their entities")
-        XCTAssertFalse(renderer.node(for: paper)?.findEntity(named: "content") === paperContentBefore, "changed object was rebuilt")
+        // A colour change swaps the material in place (animated colours don't rebuild entities).
+        let paperContentAfter = renderer.node(for: paper)?.findEntity(named: "content")
+        XCTAssertTrue(paperContentAfter === paperContentBefore, "colour change keeps the entity")
+        XCTAssertNotNil((paperContentAfter as? ModelEntity)?.model?.materials.first)
         // Moving only updates the transform.
         let paperContent = renderer.node(for: paper)?.findEntity(named: "content")
         let moved = try session.perform(.setProperties([PropertyChange(object: paper, key: .position, value: .vec3(Vec3(0, 1, 0)))]))

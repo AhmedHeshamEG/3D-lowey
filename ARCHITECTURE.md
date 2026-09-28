@@ -80,9 +80,45 @@ Documents/
   Lowey Library/                library.json, assets/<asset-id>/…, thumbnails/<id>.png
 ```
 
-## Where Phase 2 plugs in
+## Phase 2: motion, cameras, characters, export
 
-- Timeline UI edits `Scene.timeline` via `.setTimeline` / future fine-grained key commands; the renderer applies
-  `Timeline.evaluate(at:)` as property overrides.
-- Video export = `OffscreenRenderer.render` in a fixed-timestep loop → AVAssetWriter.
-- Presets / Perform mode / behaviours produce keyframes through commands.
+```
+             ┌──────────── LoweyCore ────────────┐
+ document ──▶│ Animator.evaluate(document, t)     │──▶ AnimatedScene
+             │  1 tracks (per-object stepping)    │      scene (values at t)
+             │  2 behaviours (stateless of t)     │      animated ids
+             │  3 camera cuts                     │      camera
+             │  4 clip tracks → ClipMixer         │      poses (joint transforms)
+             │     (retarget, crossfade, IK)      │
+             └────────────────────────────────────┘
+                 ▲ keys / behaviours / clips come from commands:
+                 │ KeyOperations · PresetBuilder (+ stagger) · CameraMoves · PerformBaker
+                 │ Simulation (physics, flock, crowd, bake) · ScriptRunner (LoweyScript)
+```
+
+| Area | Files | What |
+|---|---|---|
+| Timeline | `Timeline/Timeline.swift` | tracks, markers, loop, camera cuts, behaviours, clip tracks; fps, duration, project stepping |
+| Motion | `Motion/` | `Animator` (evaluation), `KeyOperations` (key, move, retime, reverse, mirror, easing, copy/paste, shift, clear), `Presets` (15 presets + stagger/order/randomise, animated generators), `Behaviors` (follow path, look at, follow, orbit, wobble, wind sway, bob, spin), `Perform` (takes → smoothed keys), `CameraMoves` (10 moves + focus pull), `Simulation` (physics, flock, crowd walk, bake behaviour), `Noise`, `CameraLens` (focal length, 9:16 framing) |
+| Rig | `Rig/` | `Skeleton`, `MotionClip`, `ClipTrack` (segments, crossfades, IK settings), `GLTFReader` (skins + animations from glTF/GLB), `BoneMapper` + `SkeletonStandard`, `Retargeter`, `IKSolver`, `ClipMixer`, stride speed |
+| Export | `Export/SceneExport.swift` | GLB writer, USDA/USDZ writer (stored zip, 64-byte aligned), CRC-32 |
+| Samples | `Samples/EnigmaOpening.swift` | the Enigma opening animated end to end (the Phase 2 proof) |
+
+- **Commands**: `setTracks([TrackEdit])` edits keys (coalesces during gestures); `setTimeline` for markers, cuts, behaviours, clips.
+- **LoweyRender**: `SceneRenderer` applies opacity, swaps materials for animated colour/glow without rebuilding, writes
+  poses to `jointTransforms` (`applyPoses`), scrubs RealityKit clips for USDZ (`applyClipFallback`), hides the camera
+  you look through. `RigCache` reads rigs once. `VideoExporter` renders frame by frame (see DECISIONS D49).
+  `ModelExport` gathers meshes for GLB/USDZ. `StageView.setLookThrough` shows the shot camera.
+- **LoweyScript** (iPadOS/macOS package): `ScriptRunner` (JavaScriptCore → one command), `ScriptExamples`.
+- **App**: `EditorModel` keeps the playhead and the evaluated `displayed` scene; `EditorModel+Animation` (auto-key,
+  playback clock, presets, behaviours, Perform), `+Camera` (look-through, cuts, lens, moves, touch camera, virtual
+  camera), `+Export` (video jobs, Photos, 3D export, scripts, characters). Views: `TimelineDrawer`, `AnimatePanel`,
+  `CameraPanel`, `ExportPanel`, `ScriptPanel`, `PerformOverlay`. `VirtualCameraController` wraps ARKit.
+
+### Data flow for one frame of playback
+
+1. `PlaybackClock` (display link) advances `time`.
+2. `refreshDisplay()` → `Animator.evaluate` (+ live Perform overrides) → `SceneRenderer.sync` for the animated objects
+   only → `applyPoses`.
+3. While recording a Perform take, the overrides are sampled at `time`.
+4. SwiftUI panels refresh a few times a second (not every frame).

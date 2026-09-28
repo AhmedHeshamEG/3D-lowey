@@ -168,6 +168,8 @@ final class LibraryModel: LibraryProviding {
             if let index = manifest.prefabs.firstIndex(where: { $0.id == prefab.id }) { manifest.prefabs[index].favorite.toggle() }
         case let .look(look):
             if let index = manifest.looks.firstIndex(where: { $0.id == look.id }) { manifest.looks[index].favorite.toggle() }
+        case let .script(script):
+            if let index = manifest.scripts.firstIndex(where: { $0.id == script.id }) { manifest.scripts[index].favorite.toggle() }
         }
         save()
     }
@@ -181,6 +183,8 @@ final class LibraryModel: LibraryProviding {
             if let index = manifest.prefabs.firstIndex(where: { $0.id == prefab.id }) { manifest.prefabs[index].name = name }
         case let .look(look):
             if let index = manifest.looks.firstIndex(where: { $0.id == look.id }) { manifest.looks[index].name = name }
+        case let .script(script):
+            if let index = manifest.scripts.firstIndex(where: { $0.id == script.id }) { manifest.scripts[index].name = name }
         }
         save()
     }
@@ -192,6 +196,8 @@ final class LibraryModel: LibraryProviding {
             if let index = manifest.assets.firstIndex(where: { $0.id == asset.id }) { manifest.assets[index].tags = cleaned }
         case let .prefab(prefab):
             if let index = manifest.prefabs.firstIndex(where: { $0.id == prefab.id }) { manifest.prefabs[index].tags = cleaned }
+        case let .script(script):
+            if let index = manifest.scripts.firstIndex(where: { $0.id == script.id }) { manifest.scripts[index].tags = cleaned }
         case .look:
             break
         }
@@ -208,6 +214,8 @@ final class LibraryModel: LibraryProviding {
             manifest.prefabs.removeAll { $0.id == prefab.id }
         case let .look(look):
             manifest.looks.removeAll { $0.id == look.id }
+        case let .script(script):
+            manifest.scripts.removeAll { $0.id == script.id }
         }
         thumbnails[item.thumbnailName] = nil
         try? FileManager.default.removeItem(at: store.thumbnailURL(for: item))
@@ -223,6 +231,8 @@ final class LibraryModel: LibraryProviding {
             if let index = manifest.prefabs.firstIndex(where: { $0.id == prefab.id }) { manifest.prefabs[index].lastUsed = now }
         case let .look(look):
             if let index = manifest.looks.firstIndex(where: { $0.id == look.id }) { manifest.looks[index].lastUsed = now }
+        case let .script(script):
+            if let index = manifest.scripts.firstIndex(where: { $0.id == script.id }) { manifest.scripts[index].lastUsed = now }
         }
         save()
     }
@@ -247,6 +257,16 @@ final class LibraryModel: LibraryProviding {
             storeThumbnail(image, named: LibraryItem.prefab(prefab).thumbnailName)
         }
         return prefab
+    }
+
+    /// Saves a script (a new one, or updates the one with the same name).
+    func saveScript(name: String, source: String) {
+        if let index = manifest.scripts.firstIndex(where: { $0.name == name }) {
+            manifest.scripts[index].source = source
+        } else {
+            manifest.scripts.append(ScriptAsset(id: .make(), name: name, source: source))
+        }
+        save()
     }
 
     func saveLook(_ look: Look, name: String) {

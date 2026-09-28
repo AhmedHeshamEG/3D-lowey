@@ -99,7 +99,14 @@ jobs:
           print(best[1]); print(best[2], file=sys.stderr)
           ')
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: Build only (commit message contains [build-only])
+        if: contains(github.event.head_commit.message, '[build-only]')
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath DerivedData -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|\*\* " || true
+          grep -q "\*\* TEST BUILD SUCCEEDED \*\*" xcodebuild.log
       - name: Build and test (render tests + UI smoke test)
+        if: "!contains(github.event.head_commit.message, '[build-only]')"
         run: |
           set -o pipefail
           xcodebuild test \
@@ -113,7 +120,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: .*Lowey|Test Case|Executed|\*\* " || true
           grep -q "\*\* TEST SUCCEEDED \*\*" xcodebuild.log
       - name: Export screenshots & renders
-        if: always()
+        if: always() && !contains(github.event.head_commit.message, '[build-only]')
         run: |
           mkdir -p attachments
           xcrun xcresulttool export attachments --path TestResults.xcresult --output-path attachments || true

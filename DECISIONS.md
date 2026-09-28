@@ -137,3 +137,92 @@ the simulator without linking the packages twice into a hosted bundle. The UI sm
 
 **D33 — Test screenshots and renders are exported from the xcresult as a CI artifact** (`test-attachments`) — visual
 evidence without a Mac.
+
+## Phase 2 — motion, camera, characters, export
+
+**D34 — One evaluator for everything that moves: `Animator.evaluate(document, at:)`.** Tracks, per-object stepping,
+behaviours, camera cuts and character poses are resolved by one pure function in LoweyCore. The stage, snapshots,
+the exporter and the tests all call it, so preview and export can't drift apart and every rule is unit-tested on Linux.
+
+**D35 — The stage shows the scene *as evaluated at the playhead*; tools edit what you see.** `EditorModel.scene` is
+the evaluated scene. Editing an animated property (or any animatable property in Animate/Camera mode with auto-key on)
+is rewritten into a key at the playhead (`EditorModel.keyed`). A brand-new track also gets a key at 0 holding the old
+value, so the first edit already animates instead of just snapping. Structural edits (add, delete, group) are never keyed.
+
+**D36 — `setTracks` is the fine-grained key command; everything else in the timeline uses `setTimeline`.** Keying
+while dragging happens many times per second: `setTracks` carries only the touched tracks and coalesces (latest
+track wins, first inverse kept), so a whole gesture or Perform take is one undo step. Markers, cuts, behaviours and
+clip tracks change rarely and go through `setTimeline`.
+
+**D37 — Deleting / duplicating objects takes their animation along.** Delete removes their tracks, behaviours, clips and
+cuts in the same undo step; duplicate copies them (position keys of top-level copies are shifted with the copy).
+
+**D38 — Schema v2.** New timeline fields are optional with defaults (Phase 1 files open unchanged; tested), but the
+version is bumped so a Phase 1 app refuses v2 files instead of silently dropping animation when it re-saves them.
+
+**D39 — Presets, camera moves, simulations and Perform takes all produce plain keyframes.** Nothing is a hidden effect:
+everything can be edited, retimed, copied or deleted in the timeline. Presets are relative to how the object looks at
+the playhead; applying one replaces keys only inside its own time span.
+
+**D40 — Behaviours are stateless functions of time.** Noise is lattice value noise seeded by the behaviour id; `follow`
+with lag reads the target's *keyed* position at `time - lag` (no simulation state). Any frame can be evaluated in any
+order — required for scrubbing and for exact, parallelisable export. Baking samples them at the project fps.
+
+**D41 — Simulations run in LoweyCore at a fixed timestep and bake, instead of RealityKit's live physics.** RealityKit's
+simulation advances with the display clock, can't be stepped headlessly, and doesn't promise identical replays; a baked
+take must be exact and testable. Rigid bodies are spheres fitted to the bounds (ground + body collisions, bounce,
+friction, explode impulse); flocks are boids; crowds walk to targets with separation. All deterministic (tested).
+
+**D42 — Perform = live override + recorded samples → `PerformBaker`.** While recording, touches drive a per-object
+override on top of the evaluated scene (you see the motion immediately); samples are taken on every display frame at
+the playhead time. Lifting the finger ends a segment (the timeline keeps playing). At the end the baker resamples to the
+project fps, smooths with a zero-phase filter (the curve doesn't lag behind the finger), simplifies (Ramer–Douglas–Peucker)
+unless smoothing is 0 % ("capture everything"), and replaces only the performed ranges — one undo step.
+
+**D43 — Characters: skeletons and clips are read by LoweyCore from the glTF file (`GLTFReader`), not from RealityKit.**
+RealityKit plays clips but can't sample, blend, retarget or apply IK to them deterministically. Reading the glTF skin
+and animation channels in pure Swift makes clip playback, crossfades, retargeting, IK and path-speed matching part of
+the tested evaluator. Poses are written to `ModelEntity.jointTransforms`, applied relative to the model's own rest pose
+(so armature/axis conventions don't matter). USDZ models without Core rig data fall back to RealityKit's own animation,
+paused and scrubbed (`applyClipFallback`).
+
+**D44 — Retargeting in model space.** Bones are auto-mapped to a standard (Humanoid, Quadruped, Bird) by name and
+chain; each mapped bone's rotation change from rest is transferred as a model-space delta, and the hips' travel is
+scaled by hip height. Works across Mixamo/Quaternius/Blender naming and differing local bone axes, as long as rest
+poses are similar (T/A pose facing +Z). Tested on two humans of different sizes and naming, and two quadrupeds.
+
+**D45 — Walking without foot sliding = speed matching, plus feet-on-ground IK.** The clip's stride speed is measured
+(root motion if the hips travel, otherwise from how far the feet sweep in a cycle); "Walk speed = path speed" sets the
+clip speed to path speed ÷ stride speed. IK keeps feet above the ground; look-at turns the head; reach bends an arm.
+
+**D46 — Cameras: the stage looks *through* the shot camera in Camera mode.** The stage widens its field of view so the
+framing guide covers exactly the camera's frame (WYSIWYG with export). Dragging aims the camera (pan/tilt), two
+fingers move it, pinch dollies, twist rolls — keyed at the playhead. Cuts are a list of (time, camera).
+
+**D47 — One camera, two framings.** 16:9 uses the camera as framed; 9:16 uses the same vertical field of view × a
+per-camera *portrait zoom* and a *portrait pan* (a small yaw), both animatable. One scene exports both without a
+second camera.
+
+**D48 — Virtual camera = ARKit world tracking relative to where you started.** The rear camera tracks the iPad
+(works on iPad Air; no TrueDepth needed). The device's motion since the start is applied to the scene camera with a
+scale factor (1 m of walking can be 10 m in the world) and recorded through Perform like any other take.
+
+**D49 — Export renders frame by frame in a dedicated world.** `VideoExporter` owns a second `SceneRenderer` without
+editor helpers and one persistent `RealityRenderer`; for each frame it evaluates the timeline, syncs only what moved,
+renders every framing into its own texture and appends it to an `AVAssetWriter` (H.264/HEVC .mp4; HEVC-with-alpha
+.mov when transparent) or writes PNGs. It waits for models to load and renders warm-up frames before frame 0. The
+stage stays usable; progress and cancel are in the Export panel. Determinism is tested (same frame twice → same pixels).
+
+**D50 — Depth of field is stored and animatable (focus distance, aperture, focus pulls) but not yet rendered.**
+`RealityRenderer` exposes no depth output (see D17), so a correct lens blur needs a separate depth pass. The lens data
+is in place so Phase 3's post-processing pass (bloom, grain, lens blur…) can render it identically in preview and export.
+
+**D51 — Scripting is JavaScriptCore in its own package (`LoweyScript`), returning ONE command.** Scripts run on a
+worker thread against a copy of the document with a time limit; every API call is a real command applied to that
+copy (so later calls see earlier results); the collected commands come back as one batch the editor performs —
+undoable like any tool. No file, network or timer APIs are exposed. `lowey.random(seed)` is a deterministic xorshift.
+JavaScriptCore doesn't exist on Linux, so its tests live in the app test bundle.
+
+**D52 — 3D export is written in LoweyCore (GLB + USDZ).** Blockout and drawn objects export from their exact recipes;
+library models and prefab instances are read back from their loaded meshes (geometry only — textures aren't carried).
+USDZ is an uncompressed zip with 64-byte-aligned entries around a USD text layer with `UsdPreviewSurface` materials.

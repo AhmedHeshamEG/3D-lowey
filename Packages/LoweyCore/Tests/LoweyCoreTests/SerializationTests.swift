@@ -79,10 +79,10 @@ final class SerializationTests: XCTestCase {
     }
 
     func testMissingMigrationAndMalformed() throws {
-        let coder = SchemaCoder(migrations: [], currentVersion: 2)
-        let v1 = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
-        XCTAssertThrowsError(try coder.decode(Scene.self, kind: .scene, from: v1)) { error in
-            XCTAssertEqual(error as? SchemaError, .missingMigration(from: 1))
+        let coder = SchemaCoder(migrations: [], currentVersion: SchemaCoder.currentVersion + 1)
+        let current = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
+        XCTAssertThrowsError(try coder.decode(Scene.self, kind: .scene, from: current)) { error in
+            XCTAssertEqual(error as? SchemaError, .missingMigration(from: SchemaCoder.currentVersion))
         }
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data("not json".utf8)))
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data("{\"schemaVersion\":1,\"payload\":{}}".utf8)))
@@ -92,17 +92,33 @@ final class SerializationTests: XCTestCase {
     }
 
     func testCustomMigrationChain() throws {
-        // A future v2 that renames "name" → "title" and back, proving the chain runs in order.
+        // A future version that rewrites the name, proving the chain runs in order.
+        let next = SchemaCoder.currentVersion
         let coder = SchemaCoder(migrations: SchemaCoder.builtInMigrations + [
-            Migration(kind: .scene, from: 1) { payload in
+            Migration(kind: .scene, from: next) { payload in
                 var p = payload
                 p["name"] = .string((payload["name"]?.stringValue ?? "") + " (migrated)")
                 return p
             }
-        ], currentVersion: 2)
-        let v1 = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
-        let scene = try coder.decode(Scene.self, kind: .scene, from: v1)
+        ], currentVersion: next + 1)
+        let current = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
+        let scene = try coder.decode(Scene.self, kind: .scene, from: current)
         XCTAssertEqual(scene.name, "Test (migrated)")
+    }
+
+    func testPhase1FilesOpenInPhase2() throws {
+        // A v1 (Phase 1) scene: no markers, cuts, behaviours or clip tracks in its timeline.
+        let v1 = """
+        {"schemaVersion": 1, "kind": "scene", "payload": {"id": "s", "name": "Old", "objects": {}, "roots": [],
+         "viewpoint": {"target": [0, 0.5, 0], "yaw": 35, "pitch": 28, "distance": 9, "projection": "perspective", "fieldOfView": 50},
+         "timeline": {"fps": 30, "duration": 10, "stepping": 1, "tracks": []}}}
+        """
+        let scene = try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data(v1.utf8))
+        XCTAssertEqual(scene.timeline, Timeline())
+        let library = try SchemaCoder.shared.decode(LibraryManifest.self, kind: .library,
+                                                    from: Data(#"{"schemaVersion":1,"kind":"library","payload":{"assets":[],"prefabs":[],"looks":[]}}"#.utf8))
+        XCTAssertTrue(library.scripts.isEmpty)
+        XCTAssertEqual(SchemaCoder.currentVersion, 2)
     }
 
     func testJSONValue() throws {

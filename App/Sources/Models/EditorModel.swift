@@ -17,7 +17,17 @@ final class EditorModel {
     private(set) var projectURL: URL
     private(set) var session: EditSession
     var document: Document { session.document }
-    var scene: CoreScene { session.document.scene }
+    /// The scene as edited (what's saved).
+    var baseScene: CoreScene { session.document.scene }
+    /// The scene as shown: animation evaluated at the playhead. Tools read this, so moving an
+    /// animated object moves what you see, and the change becomes a key at the playhead.
+    var scene: CoreScene {
+        _ = displayRevision
+        return displayed.scene
+    }
+
+    /// The document with the scene as shown (for the renderer and snapshots).
+    var displayDocument: Document { Document(project: session.document.project, scene: displayed.scene) }
 
     private(set) var selection: [ObjectID] = [] {
         didSet {
@@ -74,6 +84,60 @@ final class EditorModel {
     var lassoPoints: [CGPoint] = []
     var scatterPreview: (center: CGPoint, radius: CGFloat)?
 
+    // MARK: Animation state (see EditorModel+Animation.swift)
+
+    /// Playhead (seconds). Change it with `setTime` so the stage follows.
+    var time: Double = 0
+    var isPlaying = false
+    var timelineMode: TimelineMode = .keyframe
+    /// In Animate / Camera mode, edits become keys at the playhead.
+    var autoKey = true
+    /// Timeline zoom: points per second.
+    var timelineZoom: Double = 90
+    var selectedKeys: Set<KeyRef> = []
+    var expandedObjects: Set<ObjectID> = []
+    var presetDuration: Double?
+    var presetStrength: Double = 1
+    var stagger = StaggerPanelSettings()
+    var performSettings = PerformSettings()
+    var performPhase: PerformPhase = .idle
+    /// A property being performed with a slider (glow, light, focal length…).
+    var performSliderKey: PropertyKey?
+    var graphKey: KeyRef?
+    var showScripts = false
+    var scriptSource = ""
+    var scriptName = "My script"
+    var scriptLog: [String] = []
+    var scriptRunning = false
+    /// Camera mode: see through the shot camera.
+    var lookThrough = true
+    var cameraFraming: Framing = .landscape
+    var showSafeZones = true
+    var virtualCameraActive = false
+    var virtualCameraScale: Double = 1
+    var exportProgress: Double?
+    var exportResults: [URL] = []
+    private(set) var displayRevision = 0
+
+    @ObservationIgnored var displayed: AnimatedScene
+    @ObservationIgnored var previousAnimated = Set<ObjectID>()
+    @ObservationIgnored let rigCache = RigCache()
+    @ObservationIgnored var rigs: [AssetID: RigAsset] = [:]
+    @ObservationIgnored let clock = PlaybackClock()
+    @ObservationIgnored var keyClipboard: KeyClipboard?
+    @ObservationIgnored var takes: [PerformChannel: PerformTake] = [:]
+    @ObservationIgnored var performOverride: [ObjectID: CoreTransform] = [:]
+    @ObservationIgnored var propertyOverride: [ObjectID: [PropertyKey: PropertyValue]] = [:]
+    @ObservationIgnored var performChannels = Set<PerformChannel>()
+    @ObservationIgnored var performTouching = false
+    @ObservationIgnored var exportTask: Task<Void, Never>?
+    @ObservationIgnored var virtualCamera: VirtualCameraController?
+    @ObservationIgnored var lastRevisionBump: CFTimeInterval = 0
+
+    func bumpDisplayRevision() {
+        displayRevision &+= 1
+    }
+
     enum RailPanel: Equatable {
         case add, color
     }
@@ -88,7 +152,7 @@ final class EditorModel {
     @ObservationIgnored let renderer = SceneRenderer()
     @ObservationIgnored weak var stage: StageView?
     @ObservationIgnored let offscreen = OffscreenRenderer()
-    @ObservationIgnored private var operations = Operations()
+    @ObservationIgnored var operations = Operations()
     @ObservationIgnored private var factory = ObjectFactory()
     @ObservationIgnored private let store: ProjectStore
     @ObservationIgnored private let saver: DocumentSaver
@@ -103,10 +167,12 @@ final class EditorModel {
         self.app = app
         self.projectURL = projectURL
         session = EditSession(document: document)
+        displayed = Animator.evaluate(document, at: 0)
         store = app.projectStore
         saver = DocumentSaver(store: app.projectStore)
         renderer.library = app.library
         renderer.load(document)
+        refreshDisplay()
         app.library.onPrefabChanged = { [weak self] id in self?.renderer.prefabChanged(id) }
         let url = projectURL
         let saver = saver
@@ -134,9 +200,9 @@ final class EditorModel {
     func perform(_ command: EditCommand?, coalesceKey: String? = nil) -> Bool {
         guard let command else { return false }
         do {
-            let changes = try session.perform(command, coalesceKey: coalesceKey)
+            let changes = try session.perform(keyed(command), coalesceKey: coalesceKey)
             if AppModel.isUITesting { debugTrail = Array((debugTrail + ["cmd=\(command.label)"]).suffix(12)) }
-            renderer.sync(session.document, changes: changes)
+            refreshDisplay(changes)
             afterChange()
             return true
         } catch {
@@ -156,7 +222,7 @@ final class EditorModel {
     func undo() {
         do {
             guard let changes = try session.undo() else { return }
-            renderer.sync(session.document, changes: changes)
+            refreshDisplay(changes)
             Haptics.tap()
             afterChange()
         } catch {
@@ -167,7 +233,7 @@ final class EditorModel {
     func redo() {
         do {
             guard let changes = try session.redo() else { return }
-            renderer.sync(session.document, changes: changes)
+            refreshDisplay(changes)
             Haptics.tap()
             afterChange()
         } catch {
@@ -177,6 +243,7 @@ final class EditorModel {
 
     private func afterChange() {
         selection = selection.filter { scene.objects[$0] != nil }
+        selectedKeys = selectedKeys.filter { key in timeline.track(key.track)?.key(at: key.time) != nil }
         refreshSelectionOverlay()
         scheduleAutosave()
     }
@@ -244,7 +311,13 @@ final class EditorModel {
                 doc.project = (try? store.loadProjectInfo(at: projectURL).info) ?? doc.project
                 session = EditSession(document: doc)
                 selection = []
+                selectedKeys = []
+                pause()
+                time = 0
+                displayed = Animator.evaluate(doc, at: 0)
+                previousAnimated = []
                 renderer.load(doc)
+                refreshDisplay()
                 stage?.setViewpoint(loaded.viewpoint, notify: false)
                 await saver.markSaved(0, for: projectURL)
                 refreshSelectionOverlay()
@@ -342,9 +415,14 @@ final class EditorModel {
 
     func refreshSelectionOverlay(moveOnly: Bool = false) {
         guard let stage else { return }
-        let showGizmo = mode == .build && tool == .select && !selection.isEmpty
+        let showGizmo = (mode == .build || mode == .animate) && tool == .select && !selection.isEmpty && performPhase == .idle
             && !selection.contains(where: { scene.isEffectivelyLocked($0) })
         if moveOnly, selection.isEmpty { return }
+        // Looking through a camera: no selection box around the lens you're looking through.
+        if stage.lookThrough != nil {
+            stage.showSelection(nil, pivot: nil, gizmoVisible: false)
+            return
+        }
         stage.showSelection(selection.isEmpty ? nil : selectionBounds, pivot: selectionPivot, gizmoVisible: showGizmo)
     }
 
@@ -352,6 +430,9 @@ final class EditorModel {
 
     private func modeChanged() {
         stage?.showsGrid = showGrid && mode == .build
+        if mode != .animate, performPhase != .idle { cancelPerform() }
+        if mode != .camera, virtualCameraActive { stopVirtualCamera() }
+        updateLookThrough()
         if mode != .build { tool = .select }
         eyedropperActive = false
         refreshSelectionOverlay()
@@ -371,7 +452,7 @@ final class EditorModel {
     // MARK: Library integration
 
     /// Operations need current asset/prefab bounds (placement, swap-to-fit, snapping).
-    private func refreshOperationsLibrary() {
+    func refreshOperationsLibrary() {
         operations.bounds = SceneBounds(library: library.manifest)
     }
 
@@ -439,6 +520,9 @@ final class EditorModel {
         case let .look(preset):
             applyLook(preset.look, sceneOnly: document.scene.look != nil)
             app.show("Look “\(preset.name)” applied")
+        case let .script(script):
+            showLibrary = false
+            openScript(script)
         }
         library.markUsed(item)
     }
@@ -860,10 +944,17 @@ final class EditorModel {
 
     // MARK: Snapshot
 
-    func exportSnapshot(framing: Framing, longSide: Int) async -> URL? {
+    func exportSnapshot(framing: Framing, longSide: Int, throughCamera: Bool = false) async -> URL? {
         do {
-            let image = try await offscreen.snapshot(of: renderer, viewpoint: stage?.viewpoint ?? scene.viewpoint,
+            let image: CGImage
+            if throughCamera, displayed.camera != nil {
+                let exporter = VideoExporter(document: session.document, library: library, rigs: rigCache)
+                guard let frame = try await exporter.images(at: time, framings: [framing], longSide: longSide).first else { return nil }
+                image = frame
+            } else {
+                image = try await offscreen.snapshot(of: renderer, viewpoint: stage?.viewpoint ?? scene.viewpoint,
                                                      framing: framing, longSide: longSide, viewportSize: stage?.bounds.size)
+            }
             guard let png = OffscreenRenderer.pngData(image) else { return nil }
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH.mm.ss"

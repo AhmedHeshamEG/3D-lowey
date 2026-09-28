@@ -61,7 +61,7 @@ public final class EnvironmentRig {
         }
 
         // Ground.
-        ground.isEnabled = look.ground.visible
+        ground.isEnabled = look.ground.visible && !backdropHidden
         let groundScale = Float(max(look.ground.size, 1))
         ground.scale = SIMD3<Float>(groundScale, 1, groundScale)
         let groundKey = SurfaceKey(color: look.ground.color, roughness: 0.95, fog: fog)
@@ -113,6 +113,14 @@ public final class EnvironmentRig {
         sky.position = position.simd
         let needed = Float((position.length + 50) / Double(Self.skyRadius))
         sky.scale = SIMD3<Float>(repeating: max(1, needed))
+    }
+
+    /// Hides the sky dome and ground (transparent-background exports keep only the objects).
+    public var backdropHidden = false {
+        didSet {
+            sky.isEnabled = !backdropHidden
+            ground.isEnabled = !backdropHidden && (lastLook?.ground.visible ?? true)
+        }
     }
 
     /// Waits until the image-based light for the current look exists (for offscreen renders).

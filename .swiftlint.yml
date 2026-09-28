@@ -5,6 +5,7 @@ included:
   - Packages/LoweyCore/Sources
   - Packages/LoweyCore/Tests
   - Packages/LoweyRender/Sources
+  - Packages/LoweyScript/Sources
 excluded:
   - "**/.build"
   - DerivedData

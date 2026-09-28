@@ -28,6 +28,8 @@ packages:
     path: Packages/LoweyCore
   LoweyRender:
     path: Packages/LoweyRender
+  LoweyScript:
+    path: Packages/LoweyScript
 
 targets:
   Lowey:
@@ -39,6 +41,7 @@ targets:
     dependencies:
       - package: LoweyCore
       - package: LoweyRender
+      - package: LoweyScript
     info:
       path: App/Info.plist
       properties:
@@ -62,7 +65,8 @@ targets:
         # Projects and the library are visible in the Files app.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
-        NSPhotoLibraryAddUsageDescription: "3D-lowey saves snapshots you export to your photo library."
+        NSPhotoLibraryAddUsageDescription: "3D-lowey saves the videos and snapshots you export to your photo library."
+        NSCameraUsageDescription: "3D-lowey uses the camera to track how you move the iPad when it acts as a virtual film camera."
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: org.khronos.gltf
             UTTypeDescription: glTF model
@@ -121,6 +125,7 @@ targets:
     dependencies:
       - package: LoweyCore
       - package: LoweyRender
+      - package: LoweyScript
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hesham.lowey.tests

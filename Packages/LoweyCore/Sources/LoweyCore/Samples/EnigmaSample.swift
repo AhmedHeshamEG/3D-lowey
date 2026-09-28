@@ -32,7 +32,7 @@ public enum EnigmaSample {
 
     // MARK: Helpers
 
-    private struct Builder {
+    struct Builder {
         var session: EditSession
         var factory: ObjectFactory
         var operations: Operations
@@ -97,7 +97,7 @@ public enum EnigmaSample {
         }
     }
 
-    private static func deskScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
+    static func deskScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
         var scene = Scene(id: ids.next(), name: "1 · Desk, paper, warm lamp")
         var look = info.look
         look.lighting.sunIntensity = 0.12
@@ -154,7 +154,7 @@ public enum EnigmaSample {
         return b.session.document.scene
     }
 
-    private static func roomScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
+    static func roomScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
         var scene = Scene(id: ids.next(), name: "2 · Room of people at PCs")
         var look = info.look
         look.lighting.sunIntensity = 0.3
@@ -201,7 +201,7 @@ public enum EnigmaSample {
         return b.session.document.scene
     }
 
-    private static func caveScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
+    static func caveScene(ids: inout IDFactory, info: ProjectInfo) throws -> Scene {
         var scene = Scene(id: ids.next(), name: "3 · Hero robot in a cave")
         var look = info.look
         look.shading = .flat

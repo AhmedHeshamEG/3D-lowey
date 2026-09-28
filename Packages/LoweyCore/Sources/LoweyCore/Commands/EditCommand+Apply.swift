@@ -109,6 +109,36 @@ public extension EditCommand {
             document.scene.timeline = timeline
             return (.setTimeline(old), ChangeSet(objects: Set(timeline.tracks.map(\.target) + old.tracks.map(\.target)), scene: true))
 
+        case let .setTracks(edits):
+            var inverse: [TrackEdit] = []
+            var changed = Set<ObjectID>()
+            for edit in edits {
+                if let track = edit.track, track.id != edit.id { throw CommandError.empty }
+                var tracks = document.scene.timeline.tracks
+                if let existing = tracks.firstIndex(where: { $0.id == edit.id }) {
+                    let old = tracks[existing]
+                    changed.insert(old.target)
+                    if let track = edit.track {
+                        tracks[existing] = track
+                        changed.insert(track.target)
+                        inverse.append(TrackEdit(id: edit.id, track: old, index: existing))
+                    } else {
+                        tracks.remove(at: existing)
+                        inverse.append(TrackEdit(id: edit.id, track: old, index: existing))
+                    }
+                } else if let track = edit.track {
+                    let at = min(max(edit.index ?? tracks.count, 0), tracks.count)
+                    tracks.insert(track, at: at)
+                    changed.insert(track.target)
+                    inverse.append(TrackEdit(id: edit.id, track: nil))
+                } else {
+                    // Removing a track that isn't there: a no-op (keeps scripts forgiving).
+                    continue
+                }
+                document.scene.timeline.tracks = tracks
+            }
+            return (.setTracks(inverse.reversed()), ChangeSet(objects: changed, scene: true))
+
         case let .batch(label, commands):
             var inverses: [EditCommand] = []
             var changes = ChangeSet()

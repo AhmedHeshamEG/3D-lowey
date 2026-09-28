@@ -178,6 +178,25 @@ public struct Track: Codable, Hashable, Sendable, Identifiable {
         keyframes.removeAll { abs($0.time - time) < 0.0005 }
     }
 
+    /// Replaces every key (sorted on the way in).
+    public mutating func setKeys(_ keys: [Keyframe]) {
+        keyframes = keys.sorted { $0.time < $1.time }
+    }
+
+    /// Removes the keys inside a time range (inclusive, half-millisecond tolerance).
+    public mutating func removeKeys(in range: TimeRange) {
+        keyframes.removeAll { range.contains($0.time, tolerance: 0.0005) }
+    }
+
+    public func key(at time: Double) -> Keyframe? {
+        keyframes.first { abs($0.time - time) < 0.0005 }
+    }
+
+    public var timeRange: TimeRange? {
+        guard let first = keyframes.first, let last = keyframes.last else { return nil }
+        return TimeRange(start: first.time, end: last.time)
+    }
+
     /// Value at `time`: holds before the first and after the last key.
     public func value(at time: Double, palette: Palette = .empty) -> PropertyValue? {
         guard let first = keyframes.first, let last = keyframes.last else { return nil }
@@ -206,33 +225,163 @@ public enum Stepping: Int, Codable, Sendable, CaseIterable {
     /// Quantizes `time` to the stepped frame grid at `fps`.
     public func quantize(_ time: Double, fps: Int) -> Double {
         guard rawValue > 1, fps > 0 else { return time }
-        let frame = (time * Double(fps)).rounded(.down)
+        // A hair of tolerance so frame times computed as `frame / fps` land on their own frame.
+        let frame = (time * Double(fps) + 1e-6).rounded(.down)
         let stepped = (frame / Double(rawValue)).rounded(.down) * Double(rawValue)
         return stepped / Double(fps)
     }
+
+    /// Name used by the per-object `stepping` property.
+    public var name: String {
+        switch self {
+        case .onOnes: "ones"
+        case .onTwos: "twos"
+        case .onThrees: "threes"
+        }
+    }
+
+    public init?(name: String) {
+        switch name {
+        case "ones": self = .onOnes
+        case "twos": self = .onTwos
+        case "threes": self = .onThrees
+        default: return nil
+        }
+    }
 }
 
-/// The scene timeline. Empty in Phase 1; evaluation already works so the render
-/// layer and tests can rely on it from day one.
-public struct Timeline: Codable, Hashable, Sendable {
+/// A named point in time ("Enigma", "the X pops").
+public struct Marker: Codable, Hashable, Sendable, Identifiable {
+    public var id: String
+    public var time: Double
+    public var name: String
+
+    public init(id: String, time: Double, name: String) {
+        self.id = id
+        self.time = time
+        self.name = name
+    }
+}
+
+/// A span of time (loop region, export range, perform range).
+public struct TimeRange: Codable, Hashable, Sendable {
+    public var start: Double
+    public var end: Double
+
+    public init(start: Double, end: Double) {
+        self.start = min(start, end)
+        self.end = max(start, end)
+    }
+
+    public var duration: Double { end - start }
+
+    public func contains(_ time: Double, tolerance: Double = 1e-9) -> Bool {
+        time >= start - tolerance && time <= end + tolerance
+    }
+
+    public func clamp(_ time: Double) -> Double { min(max(time, start), end) }
+}
+
+/// From `time` on, the scene is seen through `camera` (the camera-cut track).
+public struct CameraCut: Codable, Hashable, Sendable {
+    public var time: Double
+    public var camera: ObjectID
+
+    public init(time: Double, camera: ObjectID) {
+        self.time = time
+        self.camera = camera
+    }
+}
+
+/// The scene timeline: keyframe tracks, clip tracks (characters), behaviours, camera cuts,
+/// markers and a loop region. Full evaluation (per-object stepping, behaviours, clips) lives in `Animator`.
+public struct Timeline: Hashable, Sendable {
+    public static let frameRates = [24, 25, 30, 60]
+
     public var fps: Int
     public var duration: Double
+    /// Project-wide stepping. Objects can override it (`stepping` property); cameras stay smooth.
     public var stepping: Stepping
     public var tracks: [Track]
+    public var markers: [Marker]
+    public var loop: TimeRange?
+    public var cuts: [CameraCut]
+    public var behaviors: [Behavior]
+    public var clipTracks: [ClipTrack]
 
-    public init(fps: Int = 30, duration: Double = 10, stepping: Stepping = .onOnes, tracks: [Track] = []) {
+    public init(
+        fps: Int = 30, duration: Double = 10, stepping: Stepping = .onOnes, tracks: [Track] = [],
+        markers: [Marker] = [], loop: TimeRange? = nil, cuts: [CameraCut] = [], behaviors: [Behavior] = [],
+        clipTracks: [ClipTrack] = []
+    ) {
         self.fps = fps
         self.duration = duration
         self.stepping = stepping
         self.tracks = tracks
+        self.markers = markers
+        self.loop = loop
+        self.cuts = cuts
+        self.behaviors = behaviors
+        self.clipTracks = clipTracks
     }
 
     public var frameCount: Int { Int((duration * Double(fps)).rounded()) }
 
-    public func frame(for time: Double) -> Int { Int((time * Double(fps)).rounded(.down)) }
+    public func frame(for time: Double) -> Int { Int((time * Double(fps) + 1e-6).rounded(.down)) }
     public func time(for frame: Int) -> Double { Double(frame) / Double(fps) }
 
-    /// Resolved animated values at `time`: `[object: [property: value]]`.
+    /// Snaps a time to the nearest frame.
+    public func snapped(_ time: Double) -> Double { (time * Double(fps)).rounded() / Double(fps) }
+
+    public var isEmpty: Bool { tracks.isEmpty && behaviors.isEmpty && clipTracks.isEmpty && cuts.isEmpty }
+
+    public func track(_ id: TrackID) -> Track? { tracks.first { $0.id == id } }
+
+    public func track(for object: ObjectID, _ property: PropertyKey) -> Track? {
+        tracks.first { $0.target == object && $0.property == property }
+    }
+
+    /// Everything that moves (keyed, behaviour-driven or playing clips).
+    public var animatedObjects: Set<ObjectID> {
+        var result = Set(tracks.map(\.target))
+        result.formUnion(behaviors.map(\.target))
+        result.formUnion(clipTracks.map(\.target))
+        return result
+    }
+
+    /// The camera in charge at `time` (`nil` before the first cut or without cuts).
+    public func cutCamera(at time: Double) -> ObjectID? {
+        var result: ObjectID?
+        var best = -Double.infinity
+        for cut in cuts where cut.time <= time + 1e-9 && cut.time >= best {
+            result = cut.camera
+            best = cut.time
+        }
+        return result
+    }
+
+    /// Time of the last key, behaviour end or clip end (for "fit duration").
+    public var contentEnd: Double {
+        var end = 0.0
+        for track in tracks {
+            end = max(end, track.keyframes.last?.time ?? 0)
+        }
+        for behavior in behaviors {
+            end = max(end, behavior.end ?? behavior.start)
+        }
+        for clipTrack in clipTracks {
+            for segment in clipTrack.segments {
+                end = max(end, segment.end)
+            }
+        }
+        for cut in cuts {
+            end = max(end, cut.time)
+        }
+        return end
+    }
+
+    /// Keyed values at `time` (tracks only, project stepping): `[object: [property: value]]`.
+    /// `Animator` adds per-object stepping, behaviours and clips on top.
     public func evaluate(at time: Double, palette: Palette = .empty) -> [ObjectID: [PropertyKey: PropertyValue]] {
         let sampleTime = stepping.quantize(time, fps: fps)
         var result: [ObjectID: [PropertyKey: PropertyValue]] = [:]
@@ -242,5 +391,37 @@ public struct Timeline: Codable, Hashable, Sendable {
             }
         }
         return result
+    }
+}
+
+extension Timeline: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        fps = try c.decodeIfPresent(Int.self, forKey: .fps) ?? 30
+        duration = try c.decodeIfPresent(Double.self, forKey: .duration) ?? 10
+        stepping = try c.decodeIfPresent(Stepping.self, forKey: .stepping) ?? .onOnes
+        tracks = try c.decodeIfPresent([Track].self, forKey: .tracks) ?? []
+        markers = try c.decodeIfPresent([Marker].self, forKey: .markers) ?? []
+        loop = try c.decodeIfPresent(TimeRange.self, forKey: .loop)
+        cuts = try c.decodeIfPresent([CameraCut].self, forKey: .cuts) ?? []
+        behaviors = try c.decodeIfPresent([Behavior].self, forKey: .behaviors) ?? []
+        clipTracks = try c.decodeIfPresent([ClipTrack].self, forKey: .clipTracks) ?? []
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(fps, forKey: .fps)
+        try c.encode(duration, forKey: .duration)
+        try c.encode(stepping, forKey: .stepping)
+        try c.encode(tracks, forKey: .tracks)
+        try c.encode(markers, forKey: .markers)
+        try c.encodeIfPresent(loop, forKey: .loop)
+        try c.encode(cuts, forKey: .cuts)
+        try c.encode(behaviors, forKey: .behaviors)
+        try c.encode(clipTracks, forKey: .clipTracks)
     }
 }
