@@ -114,6 +114,10 @@ struct EditorView: View {
             ScriptPanel(editor: editor)
                 .presentationDetents([.large])
         }
+        .sheet(isPresented: $editor.showCharacterBuilder) {
+            CharacterBuilderSheet(editor: editor, editing: editor.characterBuilderTarget)
+                .presentationDetents([.large])
+        }
         .overlay(alignment: .bottomLeading) {
             if AppModel.isUITesting {
                 Text(editor.debugTrail.joined(separator: " | "))

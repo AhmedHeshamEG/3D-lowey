@@ -133,7 +133,7 @@ extension EditorModel {
     /// Re-evaluates the timeline at the playhead and updates the stage.
     func refreshDisplay(_ changes: ChangeSet? = nil) {
         rigs = rigCache.rigs(for: session.document, library: library)
-        var animated = Animator.evaluate(session.document, at: time, rigs: rigs)
+        var animated = Animator.evaluate(session.document, at: time, rigs: rigs, overrides: propertyOverride)
         applyPerformOverrides(&animated)
         var set = changes ?? ChangeSet()
         set.objects.formUnion(animated.animated)
@@ -159,14 +159,6 @@ extension EditorModel {
             guard var object = animated.scene.objects[id] else { continue }
             let parentWorld = object.parent.map { animated.scene.worldTransform(of: $0) } ?? .identity
             object.transform = CoreTransform.relative(world: transform, toParent: parentWorld)
-            animated.scene.objects[id] = object
-            animated.animated.insert(id)
-        }
-        for (id, values) in propertyOverride {
-            guard var object = animated.scene.objects[id] else { continue }
-            for (key, value) in values {
-                object[key] = value
-            }
             animated.scene.objects[id] = object
             animated.animated.insert(id)
         }

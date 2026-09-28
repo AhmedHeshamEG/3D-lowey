@@ -17,7 +17,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    TARGETED_DEVICE_FAMILY: "2" # iPad
+    TARGETED_DEVICE_FAMILY: "1,2" # iPad app; on iPhone it runs as the face companion
     IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     DEAD_CODE_STRIPPING: YES
     CODE_SIGN_STYLE: Automatic
@@ -68,6 +68,12 @@ targets:
         NSPhotoLibraryAddUsageDescription: "3D-lowey saves the videos and snapshots you export to your photo library."
         NSCameraUsageDescription: "3D-lowey uses the camera to track how you move the iPad when it acts as a virtual film camera, and the front camera to read your face for character performances."
         NSMicrophoneUsageDescription: "3D-lowey records your voiceover so your animation can be timed to your words."
+        NSLocalNetworkUsageDescription: "3D-lowey talks to your laptop (AI bridge, files) and your iPhone (face capture) on your local network only."
+        NSBonjourServices:
+          - _loweyface._tcp
+          - _lowey._tcp
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
         NSSpeechRecognitionUsageDescription: "3D-lowey finds when each word is spoken, on the device, so shots can be synced to your voiceover."
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: org.khronos.gltf

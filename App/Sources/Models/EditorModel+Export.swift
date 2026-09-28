@@ -157,7 +157,10 @@ extension EditorModel {
     }
 
     func availableClips(for asset: LibraryAsset) -> [ClipRef] {
-        rigCache.availableClips(for: asset, library: library)
+        var clips = rigCache.availableClips(for: asset, library: library)
+        // Humanoids also get the built-in clips (idle, walk, talk, wave…).
+        if asset.rig == .humanoid { clips += BuiltinClips.names.map { ClipRef(asset: BuiltinClips.assetID, name: $0) } }
+        return clips
     }
 
     func clipTrack(for id: ObjectID) -> ClipTrack? {
@@ -166,7 +169,7 @@ extension EditorModel {
 
     /// Plays a clip from the playhead to the end (looping); it crossfades from what played before.
     func addClip(_ clip: ClipRef) {
-        guard let character = selectedCharacter?.object.id else { return }
+        guard let character = selectedCharacter?.object.id ?? selectedPuppet else { return }
         let duration = max(timeline.duration - time, 1)
         updateTimeline("Play \(clip.name)") { timeline in
             var track = timeline.clipTracks.first { $0.target == character } ?? ClipTrack(id: UUID().uuidString.lowercased(), target: character)
@@ -204,7 +207,7 @@ extension EditorModel {
     }
 
     func setIK(_ change: @escaping (inout IKSettings) -> Void) {
-        guard let character = selectedCharacter?.object.id else { return }
+        guard let character = selectedCharacter?.object.id ?? selectedPuppet else { return }
         updateTimeline("Character IK") { timeline in
             if let index = timeline.clipTracks.firstIndex(where: { $0.target == character }) {
                 change(&timeline.clipTracks[index].ik)

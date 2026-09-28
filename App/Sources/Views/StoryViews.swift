@@ -351,6 +351,13 @@ struct AddStorySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(title: "Characters")
+            LazyVGrid(columns: columns, spacing: 10) {
+                tile("Character", "person.fill") {
+                    editor.characterBuilderTarget = nil
+                    editor.showCharacterBuilder = true
+                }
+            }
             SectionHeader(title: "Text")
             LazyVGrid(columns: columns, spacing: 10) {
                 tile("3D text", "textformat") { editor.addText3D() }

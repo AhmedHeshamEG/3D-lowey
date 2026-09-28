@@ -8,13 +8,20 @@ struct LoweyApp: App {
 
     var body: some SwiftUI.Scene {
         WindowGroup {
-            RootView()
-                .environment(app)
-                .preferredColorScheme(.dark)
-                .tint(Theme.accent)
-                .onOpenURL { url in
-                    app.handleOpenedFile(url)
-                }
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                // On an iPhone the app is the face companion for the iPad.
+                CompanionView()
+                    .preferredColorScheme(.dark)
+                    .tint(Theme.accent)
+            } else {
+                RootView()
+                    .environment(app)
+                    .preferredColorScheme(.dark)
+                    .tint(Theme.accent)
+                    .onOpenURL { url in
+                        app.handleOpenedFile(url)
+                    }
+            }
         }
     }
 }

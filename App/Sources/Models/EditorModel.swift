@@ -149,6 +149,17 @@ final class EditorModel {
     /// Screen effects (shake, flash…) in the live view.
     var previewEffects = true
     @ObservationIgnored var overlayImages: [String: CGImage] = [:]
+
+    // MARK: Character & face state (see EditorModel+Character.swift)
+
+    var showCharacterBuilder = false
+    /// The character the builder edits (nil = a new one).
+    var characterBuilderTarget: ObjectID?
+    var faceActive = false
+    var faceStatus: String?
+    @ObservationIgnored var faceCapture: FaceCapture?
+    @ObservationIgnored var faceLink: FaceLinkReceiver?
+    @ObservationIgnored let facePerformer = FacePerformer()
     @ObservationIgnored var captionCache: (factor: Double, revision: Int, pages: [CaptionPage])?
     private(set) var displayRevision = 0
 
