@@ -80,10 +80,18 @@ public struct OverlayRecipe: Codable, Hashable, Sendable {
     public var bend: Double
     /// Follow a 3D object: the overlay sits where the object is in the shot (plus its own position as an offset).
     public var anchor: ObjectID?
+    /// A video file inside the project's `assets/` folder (an `.image` overlay that plays): a clip, a Manim render…
+    public var video: String?
+    /// Timeline time (s) at which the video's first frame shows. Before it, the overlay isn't drawn.
+    public var videoStart: Double?
+    /// The video's length (s). After it ends it holds its last frame, or loops.
+    public var videoDuration: Double?
+    public var videoLoop: Bool?
 
     public init(
         shape: Shape, text: String = "", font: Font = .rounded, image: String? = nil, stroke: Double = 0.12, filled: Bool = true,
-        aspect: Double = 1, bend: Double = 0, anchor: ObjectID? = nil
+        aspect: Double = 1, bend: Double = 0, anchor: ObjectID? = nil, video: String? = nil, videoStart: Double? = nil,
+        videoDuration: Double? = nil, videoLoop: Bool? = nil
     ) {
         self.shape = shape
         self.text = text
@@ -94,6 +102,21 @@ public struct OverlayRecipe: Codable, Hashable, Sendable {
         self.aspect = aspect
         self.bend = bend
         self.anchor = anchor
+        self.video = video
+        self.videoStart = videoStart
+        self.videoDuration = videoDuration
+        self.videoLoop = videoLoop
+    }
+
+    /// Where in the video the timeline is at `time` (nil before it starts). Frame-exact at 60 fps steps.
+    public func videoTime(at time: Double) -> Double? {
+        guard video != nil else { return nil }
+        let local = time - (videoStart ?? 0)
+        guard local >= -1e-9 else { return nil }
+        let step = 1.0 / 60
+        guard let duration = videoDuration, duration > step else { return (max(local, 0) / step).rounded(.down) * step }
+        let wrapped = videoLoop == true ? local.truncatingRemainder(dividingBy: duration) : min(local, duration - step)
+        return (max(wrapped, 0) / step).rounded(.down) * step
     }
 
     public static func `default`(_ shape: Shape) -> OverlayRecipe {
@@ -127,16 +150,33 @@ public struct OverlayPlacement: Hashable, Sendable {
     public var layer: Double
 }
 
+/// Names a video overlay's frame so it can be fetched like any overlay image: "clip.mov#t=1.250".
+public enum VideoFrameKey {
+    public static func make(file: String, time: Double) -> String {
+        "\(file)#t=\(String(format: "%.4f", time))"
+    }
+
+    public static func parse(_ key: String) -> (file: String, time: Double)? {
+        guard let range = key.range(of: "#t=", options: .backwards), let time = Double(key[range.upperBound...]) else { return nil }
+        return (String(key[..<range.lowerBound]), time)
+    }
+}
+
 public enum OverlayLayout {
     /// Visible overlays of `scene`, back to front. `project` maps a world point to frame space (−1…1, y up)
-    /// for anchored overlays, or nil when it's behind the camera.
+    /// for anchored overlays, or nil when it's behind the camera. `time` (the timeline's) picks video frames:
+    /// a video overlay's image becomes a `VideoFrameKey`; before its start it isn't drawn.
     public static func placements(
-        in scene: Scene, palette: Palette, width: Double, height: Double, project: ((Vec3) -> (Double, Double)?)? = nil
+        in scene: Scene, palette: Palette, width: Double, height: Double, time: Double? = nil, project: ((Vec3) -> (Double, Double)?)? = nil
     ) -> [OverlayPlacement] {
         var result: [OverlayPlacement] = []
         let unit = min(width, height) / 10
         for id in scene.orderedIDs() {
-            guard let object = scene.objects[id], case let .overlay(recipe) = object.kind, scene.isEffectivelyVisible(id) else { continue }
+            guard let object = scene.objects[id], case var .overlay(recipe) = object.kind, scene.isEffectivelyVisible(id) else { continue }
+            if let video = recipe.video {
+                guard let time, let local = recipe.videoTime(at: time) else { continue }
+                recipe.image = VideoFrameKey.make(file: video, time: local)
+            }
             let transform = object.transform
             var x = transform.position.x
             var y = transform.position.y

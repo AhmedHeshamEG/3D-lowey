@@ -28,16 +28,14 @@ final class BlobCharacterTests: XCTestCase {
         let scene = document.scene
         XCTAssertTrue(scene.validate().isEmpty, "\(scene.validate())")
         XCTAssertEqual(scene.objects[root]?[.rigStandard]?.stringValue, "blob")
-        for part in ["head", "eye.L", "eye.R", "pupil.L", "pupil.R", "brow.L", "brow.R", "mouth", "hand.L", "hand.R", "hover"] {
+        for part in ["head", "eye.L", "eye.R", "pupil.L", "pupil.R", "brow.L", "brow.R", "mouth.lips", "mouth.curl", "mouth.inside",
+                     "mouth.teeth", "mouth.tongue", "hand.L", "hand.R", "hover", "hat"] {
             XCTAssertNotNil(role(part, in: scene, under: root), "has \(part)")
         }
-        let shapes = scene.subtree(of: root).compactMap { scene.objects[$0]?[.faceRole]?.stringValue }.filter { $0.hasPrefix("mouth.") }
-        XCTAssertEqual(Set(shapes), Set(Viseme.allCases.map { "mouth.\($0.rawValue)" } + ["mouth.smile", "mouth.grin", "mouth.frown"]),
-                       "every lip-sync shape plus the expressions")
-        let visible = scene.subtree(of: root).filter {
-            scene.objects[$0]?[.faceRole]?.stringValue?.hasPrefix("mouth.") == true && scene.objects[$0]?[.visible]?.boolValue == true
+        // At rest: his smirk and curl show, the open-mouth layers wait.
+        for (part, shown) in [("mouth.lips", true), ("mouth.curl", true), ("mouth.inside", false), ("mouth.teeth", false)] {
+            XCTAssertEqual(role(part, in: scene, under: root).flatMap { scene.objects[$0]?[.visible]?.boolValue } ?? true, shown, part)
         }
-        XCTAssertEqual(visible.count, 1, "only the rest mouth (his smirk) shows")
         XCTAssertTrue(scene.subtree(of: root).contains { scene.objects[$0]?.name == "Beret" }, "his beret")
         XCTAssertTrue(scene.subtree(of: root).contains { scene.objects[$0]?.name == "Mark" }, "with the Pisces mark")
         XCTAssertEqual(document.scene.timeline.behaviors.count, 1, "he floats")
@@ -47,25 +45,82 @@ final class BlobCharacterTests: XCTestCase {
         XCTAssertEqual(try LoweyJSON.decode(BlobRecipe.self, from: Data(#"{"hat":"topHat"}"#.utf8)).hat, .topHat, "partial recipes fill in")
     }
 
-    func testTheFaceRigBlinksLooksAndTalks() throws {
+    /// Keys `expression` on the character at `at` (as the Expressions buttons and the script action do).
+    private func key(_ expression: FaceExpression, at time: Double, on root: ObjectID, in document: inout Document) throws {
+        var ids = IDFactory.sequential("expr")
+        _ = try EditCommand.setTimeline(expression.keyed(on: root, at: time, in: document.scene.timeline, ids: &ids)).apply(to: &document)
+    }
+
+    func testTheScriptKeysAnExpressionOnAWord() throws {
+        let (document, root) = try document()
+        let json = #"{"title": "Take", "actions": [{"do": "expression", "target": "\#(root.raw)", "name": "shocked", "at": 2}]}"#
+        let script = try LoweyJSON.decode(SceneScript.self, from: Data(json.utf8))
+        let applied = try ScriptCompiler.compile(script, document: document, context: ScriptContext()).document
+        let mouth = applied.scene.timeline.tracks.first { $0.target == root && $0.property == .mouth }
+        XCTAssertEqual(mouth?.value(at: 1)?.stringValue, "X", "calm before (a neutral key at 0)")
+        XCTAssertEqual(mouth?.value(at: 2.5)?.stringValue, "D", "shocked from 2 s")
+    }
+
+    func testAnAtRestFaceIsNeverRebuilt() throws {
+        let (document, root) = try document()
+        let scene = document.scene
+        let animated = Animator.evaluate(document, at: 0.5).animated
+        for part in ["eye.L", "brow.L", "mouth.lips", "pupil.L", "head"] {
+            XCTAssertFalse(try animated.contains(XCTUnwrap(role(part, in: scene, under: root))), "\(part) stays as built")
+        }
+    }
+
+    func testAKeyedExpressionOvershootsThenSettles() throws {
         var (document, root) = try document()
-        document.scene.objects[root]?[.blinkLeft] = .float(1)
-        document.scene.objects[root]?[.lookX] = .float(1)
-        document.scene.objects[root]?[.brows] = .float(1)
-        document.scene.objects[root]?[.mouth] = .enumeration("C")
+        try key(.neutral, at: 0, on: root, in: &document)
+        try key(.surprised, at: 1, on: root, in: &document)
         let base = document.scene
-        let animated = Animator.evaluate(document, at: 0).scene
-        let eye = try XCTUnwrap(role("eye.L", in: base, under: root))
-        XCTAssertLessThan(animated.objects[eye]!.transform.scale.y, 0.1, "the eye closes")
-        let pupil = try XCTUnwrap(role("pupil.L", in: base, under: root))
-        let moved = animated.objects[pupil]!.transform.position.x - base.objects[pupil]!.transform.position.x
-        XCTAssertEqual(moved, 0.35 * 0.23, accuracy: 1e-9, "the shines slide a few centimetres, not 35")
         let brow = try XCTUnwrap(role("brow.L", in: base, under: root))
-        XCTAssertEqual(animated.objects[brow]!.transform.position.y - base.objects[brow]!.transform.position.y, 0.6 * 0.05, accuracy: 1e-9)
-        let talking = try XCTUnwrap(role("mouth.C", in: base, under: root))
-        let resting = try XCTUnwrap(role("mouth.X", in: base, under: root))
-        XCTAssertEqual(animated.objects[talking]?[.visible]?.boolValue, true)
-        XCTAssertEqual(animated.objects[resting]?[.visible]?.boolValue, false)
+        let head = try XCTUnwrap(role("head", in: base, under: root))
+        func browHeight(_ t: Double) -> Double {
+            let scene = Animator.evaluate(document, at: t).scene
+            guard case let .drawing(recipe) = scene.objects[brow]?.kind, let points = recipe.strokes.first?.points else { return 0 }
+            return points.map(\.y).reduce(0, +) / Double(points.count)
+        }
+        let settled = browHeight(3)
+        let before = browHeight(0.9)
+        XCTAssertGreaterThan(settled, before + 0.03, "surprise raises the brows")
+        let peak = stride(from: 1.02, through: 1.5, by: 0.02).map(browHeight).max() ?? 0
+        XCTAssertGreaterThan(peak, settled + 0.004, "…past where they end up (overshoot)")
+        XCTAssertEqual(browHeight(2.8), settled, accuracy: 0.002, "and they settle")
+        // The hit stretches the head, then it's back to round.
+        let stretch = stride(from: 1.02, through: 1.4, by: 0.02).map { Animator.evaluate(document, at: $0).scene.objects[head]?.transform.scale.y ?? 1 }.max()
+        XCTAssertGreaterThan(stretch ?? 1, 1.08, "squash & stretch on the hit")
+        XCTAssertEqual(Animator.evaluate(document, at: 3).scene.objects[head]?.transform.scale.y ?? 0, 1 + 0.22 * 0.5, accuracy: 0.01)
+    }
+
+    func testHappyEyesAreCrescentsAndLipSyncOpensTheMouth() throws {
+        var (document, root) = try document()
+        try key(.laugh, at: 0, on: root, in: &document)
+        let scene = Animator.evaluate(document, at: 2).scene
+        let eye = try XCTUnwrap(role("eye.L", in: document.scene, under: root))
+        guard case let .drawing(recipe) = scene.objects[eye]?.kind, let outline = recipe.strokes.first?.points else { return XCTFail("eye") }
+        let height = (outline.map(\.y).max() ?? 0) - (outline.map(\.y).min() ?? 0)
+        XCTAssertLessThan(height, BlobCharacter.eye.ry, "a squeezed crescent, not the round eye")
+        let inside = try XCTUnwrap(role("mouth.inside", in: document.scene, under: root))
+        XCTAssertEqual(scene.objects[inside]?[.visible]?.boolValue, true, "laughing: the mouth is open")
+        let curl = try XCTUnwrap(role("mouth.curl", in: document.scene, under: root))
+        XCTAssertEqual(scene.objects[curl]?[.visible]?.boolValue, false, "the smirk's curl goes away")
+    }
+
+    func testItBlinksOnItsOwnAndTheGlowStaysOnTheGround() throws {
+        let (document, root) = try document()
+        let eye = try XCTUnwrap(role("eye.L", in: document.scene, under: root))
+        let blinks = stride(from: 0.0, through: 12, by: 1.0 / 30).filter { t in
+            let scene = Animator.evaluate(document, at: t).scene
+            guard case let .drawing(recipe) = scene.objects[eye]?.kind, let outline = recipe.strokes.first?.points else { return false }
+            return (outline.map(\.y).max() ?? 0) - (outline.map(\.y).min() ?? 0) < BlobCharacter.eye.ry * 0.6
+        }
+        XCTAssertGreaterThan(blinks.count, 3, "several blinks in 12 s")
+        XCTAssertLessThan(blinks.count, 60, "…but eyes mostly open")
+        let glow = try XCTUnwrap(role("hover", in: document.scene, under: root))
+        let heights = stride(from: 0.0, through: 3, by: 0.25).map { Animator.evaluate(document, at: $0).scene.worldTransform(of: glow).position.y }
+        XCTAssertLessThan((heights.max() ?? 0) - (heights.min() ?? 0), 0.002, "the glow doesn't bob with him")
     }
 
     func testArmsFollowTheHands() throws {

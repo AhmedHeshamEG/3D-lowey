@@ -285,7 +285,13 @@ public struct PropertySpec: Sendable, Hashable {
         .headPitch: PropertySpec(type: .float, animatable: true, label: "Head nod"),
         .headRoll: PropertySpec(type: .float, animatable: true, label: "Head tilt"),
         .lookX: PropertySpec(type: .float, animatable: true, label: "Look left/right"),
-        .lookY: PropertySpec(type: .float, animatable: true, label: "Look up/down")
+        .lookY: PropertySpec(type: .float, animatable: true, label: "Look up/down"),
+        .eyeWide: PropertySpec(type: .float, animatable: true, label: "Eyes wide"),
+        .eyeHappy: PropertySpec(type: .float, animatable: true, label: "Happy eyes"),
+        .browAngle: PropertySpec(type: .float, animatable: true, label: "Brow angle"),
+        .squash: PropertySpec(type: .float, animatable: true, label: "Squash & stretch"),
+        .cartoon: PropertySpec(type: .float, animatable: false, label: "Cartoon springiness"),
+        .autoBlink: PropertySpec(type: .bool, animatable: false, label: "Blink on its own")
     ]
 }
 

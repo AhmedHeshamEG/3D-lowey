@@ -173,7 +173,8 @@ public enum FaceRig {
     /// Characters (objects carrying face channels) in `scene`.
     static func faces(in scene: Scene) -> [ObjectID] {
         scene.objects.values.filter { object in
-            object[.rigStandard] != nil && channelKeys.contains { object[$0] != nil }
+            // Blobs have their own, cartoon rig (BlobRig).
+            object[.rigStandard] != nil && object[.rigStandard]?.stringValue != "blob" && channelKeys.contains { object[$0] != nil }
         }.map(\.id)
     }
 

@@ -320,12 +320,16 @@ public enum BlobCharacter {
         accessories(&a, head: head, body: body, recipe: recipe)
 
         if recipe.hover {
-            let glow = a.shape("Hover glow", parent: root, recipe: lathe([Vec3(0.3, 0, 0), Vec3(0.2, 0.004, 0), Vec3(0, 0.005, 0)], segments: 40),
-                               color: glowColor)
-            a.objects[a.index(glow)].transform.position = Vec3(0, 0.005, 0)
-            a.objects[a.index(glow)][.emissiveIntensity] = .float(1.3)
-            a.objects[a.index(glow)][.opacity] = .float(0.45)
-            a.objects[a.index(glow)][.faceRole] = .string("hover")
+            // A soft pool of light right under the drop (stacked discs fade it out towards the edge). The rig keeps it on
+            // the ground while he floats and tightens it as he rises.
+            let pool = a.group("Hover glow", parent: root, at: Vec3(0, 0.006, 0.02))
+            a.objects[a.index(pool)][.faceRole] = .string("hover")
+            for (index, radius) in [0.2, 0.155, 0.11, 0.07].enumerated() {
+                let disc = a.shape("Glow", parent: pool, recipe: lathe([Vec3(radius, 0, 0), Vec3(0, 0.001, 0)], segments: 40), color: glowColor)
+                a.objects[a.index(disc)].transform.position = Vec3(0, 0.0015 * Double(index), 0)
+                a.objects[a.index(disc)][.emissiveIntensity] = .float(0.9)
+                a.objects[a.index(disc)][.opacity] = .float(0.16)
+            }
         }
 
         var objects = a.objects
@@ -347,109 +351,53 @@ public enum BlobCharacter {
 
     // MARK: Face
 
+    /// The face at rest, drawn with the rig's own shapes (so a still face is never rebuilt). `BlobRig` redraws the
+    /// eyes, brows and mouth from their dials as they animate.
     static func face(_ a: inout CharacterBuilder.Assembler, head: ObjectID, recipe: BlobRecipe) {
         for side in [-1.0, 1.0] {
             let tag = side < 0 ? "L" : "R"
-            // Eye: a black oval, tilted a touch, with two shines that slide when it looks around.
-            let centre = onHead(side * eye.x, eye.y, lift: 0.002)
-            let eyeID = a.shape("Eye \(tag)", parent: head, recipe: slab(ellipse(rx: eye.rx, ry: eye.ry, rotation: side * -0.07), depth: 0.008),
+            let normal = headNormal(side * eye.x, eye.y)
+            let eyeID = a.shape("Eye \(tag)", parent: head, recipe: slab(BlobRig.eyeOutline(open: 1, happy: 0, wide: 0, side: side), depth: 0.008),
                                 color: ink)
-            a.objects[a.index(eyeID)].transform = Transform(position: centre - headNormal(side * eye.x, eye.y) * 0.004,
-                                                            rotation: .rotation(from: .unitZ, to: headNormal(side * eye.x, eye.y)))
+            a.objects[a.index(eyeID)].transform = Transform(position: onHead(side * eye.x, eye.y, lift: 0.002) - normal * 0.004,
+                                                            rotation: .rotation(from: .unitZ, to: normal))
             a.objects[a.index(eyeID)][.faceRole] = .string("eye.\(tag)")
             let look = a.group("Look \(tag)", parent: eyeID, at: Vec3(0, 0, 0.008))
             a.objects[a.index(look)][.faceRole] = .string("pupil.\(tag)")
-            a.objects[a.index(look)][.faceRange] = .float(0.23)
             let shine = slabs([ellipse(rx: 0.31 * eye.rx, ry: 0.3 * eye.rx, center: Vec2(-0.3 * eye.rx, 0.34 * eye.ry)),
                                ellipse(rx: 0.13 * eye.rx, ry: 0.13 * eye.rx, center: Vec2(0.36 * eye.rx, -0.42 * eye.ry))], depth: 0.003)
             a.shape("Shine", parent: look, recipe: shine, color: white)
 
-            // Brow: a thick soft arc, outer end lower (his hopeful look). Painted along the head's curve.
-            let browPoints: [(Double, Double)] = [(-0.1, 0.004), (-0.045, 0.034), (0.03, 0.036), (0.105, -0.018)].map { (side * $0.0, $0.1) }
             let browCentre = onHead(side * brow.x, brow.y, lift: 0.003)
-            let browStroke = surfaceStroke(browPoints.map { (side * brow.x + $0.0, brow.y + $0.1) }, halfWidths: [0.021, 0.029, 0.028, 0.022],
-                                           origin: browCentre, lift: 0.003)
-            let browID = a.shape("Brow \(tag)", parent: head, recipe: DrawingRecipe(style: .ribbon, strokes: [browStroke], normal: .unitZ),
+            let browID = a.shape("Brow \(tag)", parent: head, recipe: BlobRig.browRecipe(side: side, raise: 0, angle: 0, arch: 0, origin: browCentre),
                                  color: ink)
             a.objects[a.index(browID)].transform.position = browCentre
             a.objects[a.index(browID)][.faceRole] = .string("brow.\(tag)")
-            a.objects[a.index(browID)][.faceRange] = .float(0.05)
 
             if recipe.blush {
                 let cheekID = a.shape("Cheek \(tag)", parent: head, recipe: slab(ellipse(rx: 0.036, ry: 0.026), depth: 0.006), color: blushColor)
-                let normal = headNormal(side * cheek.x, cheek.y)
                 a.objects[a.index(cheekID)].transform = Transform(position: onHead(side * cheek.x, cheek.y, lift: -0.002),
-                                                                  rotation: .rotation(from: .unitZ, to: normal))
+                                                                  rotation: .rotation(from: .unitZ, to: headNormal(side * cheek.x, cheek.y)))
             }
         }
 
-        // Mouth: one shape shown at a time (lip sync, expressions). X, the rest, is his smirk.
+        // Mouth: one drawn mouth that morphs (lip sync, smiles, shouts), resting on his smirk and curl.
         let mouthCentre = onHead(0, mouthY, lift: 0)
-        let mouth = a.group("Mouth", parent: head, at: mouthCentre)
-        a.objects[a.index(mouth)][.faceRole] = .string("mouth")
-        for (name, layers) in mouthShapes() {
-            let shape = a.group("Mouth \(name)", parent: mouth, at: .zero)
-            a.objects[a.index(shape)][.faceRole] = .string("mouth.\(name)")
-            a.objects[a.index(shape)][.visible] = .bool(name == Viseme.X.rawValue)
-            for layer in layers {
-                switch layer {
-                case let .line(points, halfWidth):
-                    let stroke = surfaceStroke(points.map { ($0.0, mouthY + $0.1) }, halfWidths: Array(repeating: halfWidth, count: points.count),
-                                               origin: mouthCentre, lift: 0.003, taper: true)
-                    a.shape("Line", parent: shape, recipe: DrawingRecipe(style: .ribbon, strokes: [stroke], normal: .unitZ), color: ink)
-                case let .fill(outline, color, raise):
-                    let id = a.shape("Fill", parent: shape, recipe: slab(outline, depth: 0.004), color: color)
-                    a.objects[a.index(id)].transform = Transform(position: Vec3(0, 0, raise - 0.002),
-                                                                 rotation: .rotation(from: .unitZ, to: headNormal(0, mouthY)))
-                }
-            }
-        }
-    }
-
-    enum MouthLayer {
-        /// A painted line (centre line around the mouth's centre, half-width).
-        case line([(Double, Double)], Double)
-        /// A filled shape (outline in the mouth's plane), its colour and how far it sits above the skin.
-        case fill([Vec2], ColorValue, Double)
-    }
-
-    /// The Rhubarb lip-sync set (A–H, X) plus expressions (smile, grin, frown), drawn in his style.
-    static func mouthShapes() -> [(String, [MouthLayer])] {
-        let w = 0.085
-        func lens(_ top: Double, _ bottom: Double) -> [Vec2] {
-            let n = 30
-            let upper = (0 ... n).map { Vec2(-w + 2 * w * Double($0) / Double(n), top * sin(.pi * Double($0) / Double(n))) }
-            let lower = (1 ..< n).map { Vec2(w - 2 * w * Double($0) / Double(n), -bottom * sin(.pi * Double($0) / Double(n))) }
-            return upper + lower
-        }
-        func band(_ left: Double, _ right: Double, _ top: Double, _ bottom: Double) -> [Vec2] {
-            [Vec2(left, top), Vec2(right, top), Vec2(right * 0.86, bottom), Vec2(left * 0.86, bottom)]
-        }
-        let smirk = smirkLine.map { ($0.x + smirkShift, $0.y) }
-        let curl = smirkCurl.map { ($0.x + smirkShift, $0.y) }
-        let grinOutline = [Vec2(-w * 1.15, 0.018), Vec2(w * 1.15, 0.018)]
-            + (1 ..< 30).map { Vec2(w * 1.15 * cos(.pi * Double($0) / 30), 0.018 - 0.085 * sin(.pi * Double($0) / 30)) }
-        return [
-            ("X", [.line(smirk, 0.0085), .line(curl, 0.0065)]),
-            ("A", [.line([(-w * 0.85, 0.002), (0, -0.004), (w * 0.85, 0.002)], 0.0095)]),
-            ("B", [.fill(lens(0.012, 0.026), mouthDark, 0.001), .fill(band(-w * 0.72, w * 0.72, 0.004, -0.012), white, 0.003)]),
-            ("C", [.fill(ellipse(rx: w * 0.9, ry: 0.042, center: Vec2(0, -0.012)), mouthDark, 0.001),
-                   .fill(band(-w * 0.62, w * 0.62, 0.02, 0.006), white, 0.003),
-                   .fill(ellipse(rx: w * 0.45, ry: 0.014, center: Vec2(0, -0.04)), tongue, 0.003)]),
-            ("D", [.fill(ellipse(rx: w, ry: 0.064, center: Vec2(0, -0.028), squareness: 2.4), mouthDark, 0.001),
-                   .fill(band(-w * 0.7, w * 0.7, 0.028, 0.012), white, 0.003),
-                   .fill(ellipse(rx: w * 0.55, ry: 0.02, center: Vec2(0, -0.068)), tongue, 0.003)]),
-            ("E", [.fill(ellipse(rx: w * 0.62, ry: 0.05, center: Vec2(0, -0.016)), mouthDark, 0.001),
-                   .fill(ellipse(rx: w * 0.34, ry: 0.012, center: Vec2(0, -0.046)), tongue, 0.003)]),
-            ("F", [.fill(ellipse(rx: w * 0.34, ry: 0.03, center: Vec2(0, -0.006)), mouthDark, 0.001)]),
-            ("G", [.fill(lens(0.01, 0.022), mouthDark, 0.001), .fill(band(-w * 0.55, w * 0.55, 0.012, -0.016), white, 0.003)]),
-            ("H", [.fill(ellipse(rx: w * 0.85, ry: 0.045, center: Vec2(0, -0.014)), mouthDark, 0.001),
-                   .fill(ellipse(rx: w * 0.42, ry: 0.016, center: Vec2(0, 0.004)), tongue, 0.003)]),
-            ("smile", [.line([(-w * 1.2, 0.02), (-w * 0.6, -0.012), (0, -0.02), (w * 0.6, -0.012), (w * 1.2, 0.02)], 0.009)]),
-            ("grin", [.fill(grinOutline, mouthDark, 0.001), .fill(ellipse(rx: w * 0.55, ry: 0.02, center: Vec2(0, -0.045)), tongue, 0.003),
-                      .fill(band(-w * 0.95, w * 0.95, 0.014, -0.004), white, 0.003)]),
-            ("frown", [.line([(-w * 0.9, -0.018), (-w * 0.4, 0.004), (w * 0.4, 0.004), (w * 0.9, -0.018)], 0.0085)])
+        let rest = BlobRig.mouthLayers(BlobRig.MouthPose.named("X"), origin: mouthCentre)
+        let layers: [(role: String, name: String, color: ColorValue, flat: Bool, raise: Double)] = [
+            ("mouth.inside", "Mouth inside", mouthDark, true, 0.001), ("mouth.teeth", "Teeth", white, true, 0.003),
+            ("mouth.tongue", "Tongue", tongue, true, 0.0035), ("mouth.lips", "Lips", ink, false, 0), ("mouth.curl", "Curl", ink, false, 0)
         ]
+        let normal = headNormal(0, mouthY)
+        for layer in layers {
+            let recipe = rest[layer.role] ?? slab(ellipse(rx: 0.01, ry: 0.01, n: 8), depth: 0.001)
+            let id = a.shape(layer.name, parent: head, recipe: recipe, color: layer.color)
+            a.objects[a.index(id)].transform = layer.flat
+                ? Transform(position: mouthCentre + normal * (layer.raise - 0.002), rotation: .rotation(from: .unitZ, to: normal))
+                : Transform(position: mouthCentre)
+            a.objects[a.index(id)][.faceRole] = .string(layer.role)
+            a.objects[a.index(id)][.visible] = .bool(rest[layer.role] != nil)
+        }
     }
 
     // MARK: Hat
@@ -463,6 +411,7 @@ public enum BlobCharacter {
         case .beret:
             // A soft pancake, wider than deep, tipped forward and to one side, with its little stalk.
             let hat = a.group("Beret", parent: head, at: Vec3(0.075, top - 0.035, 0))
+            a.objects[a.index(hat)][.faceRole] = .string("hat")
             a.objects[a.index(hat)].transform.rotation = (Quat(angle: 0.17, axis: .unitX) * Quat(angle: -0.05, axis: .unitZ)).normalized
             let profile = [Vec3(0, 0, 0), Vec3(0.3, 0.012, 0), Vec3(0.39, 0.045, 0), Vec3(0.41, 0.08, 0), Vec3(0.37, 0.115, 0),
                            Vec3(0.24, 0.145, 0), Vec3(0.1, 0.158, 0), Vec3(0, 0.16, 0)]

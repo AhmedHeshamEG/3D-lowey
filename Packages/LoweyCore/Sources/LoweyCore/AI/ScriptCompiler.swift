@@ -349,6 +349,15 @@ private struct State {
             try character(action)
         case "blob", "person":
             try blob(action)
+        case "expression":
+            let character = try target(action["character"] ?? action["target"])
+            let name = string(action, "name") ?? string(action, "expression") ?? ""
+            guard let expression = FaceExpression(rawValue: name) else {
+                throw fail("unknown expression “\(name)” (\(FaceExpression.allCases.map(\.rawValue).joined(separator: ", ")))")
+            }
+            let at = try time(action["at"])
+            try run(.setTimeline(expression.keyed(on: character, at: at, in: timeline, ids: &context.ids)),
+                    label: "\(expression.title) at \(format(at))")
         case "light":
             try light(action)
         case "camera":

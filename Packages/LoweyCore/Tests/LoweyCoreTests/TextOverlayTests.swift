@@ -145,4 +145,39 @@ final class TextOverlayTests: XCTestCase {
         XCTAssertTrue(Captions.vtt(pages).hasPrefix("WEBVTT\n\n00:00:00.500 --> "))
         XCTAssertEqual(Captions.timestamp(3725.042, separator: ","), "01:02:05,042")
     }
+
+    // MARK: Video overlays (media, Manim renders)
+
+    func testAVideoOverlayPlaysFromItsStartAndHoldsItsLastFrame() {
+        let clip = OverlayRecipe(shape: .image, video: "graph.mov", videoStart: 2, videoDuration: 3)
+        XCTAssertNil(clip.videoTime(at: 1.9), "not before it starts")
+        XCTAssertEqual(clip.videoTime(at: 2), 0)
+        XCTAssertEqual(clip.videoTime(at: 3.5) ?? -1, 1.5, accuracy: 1e-9)
+        XCTAssertEqual(clip.videoTime(at: 9) ?? -1, 3 - 1.0 / 60, accuracy: 1e-9, "holds the last frame")
+        var looping = clip
+        looping.videoLoop = true
+        XCTAssertEqual(looping.videoTime(at: 6) ?? -1, 1, accuracy: 1e-9)
+        XCTAssertNil(OverlayRecipe(shape: .image, image: "still.png").videoTime(at: 1))
+    }
+
+    func testVideoFrameKeysRoundTrip() throws {
+        let key = VideoFrameKey.make(file: "a#t=b.mov", time: 1.25)
+        let parsed = try XCTUnwrap(VideoFrameKey.parse(key))
+        XCTAssertEqual(parsed.file, "a#t=b.mov")
+        XCTAssertEqual(parsed.time, 1.25, accuracy: 1e-9)
+        XCTAssertNil(VideoFrameKey.parse("plain.png"))
+    }
+
+    func testVideoOverlaysResolveToTheirFrameInPlacements() {
+        var document = makeDocument()
+        let clip = SceneObject(id: "clip", name: "Clip", kind: .overlay(OverlayRecipe(shape: .image, video: "graph.mov", videoStart: 1, videoDuration: 4)))
+        document.scene.objects[clip.id] = clip
+        document.scene.roots.append(clip.id)
+        XCTAssertTrue(OverlayLayout.placements(in: document.scene, palette: document.palette, width: 1920, height: 1080, time: 0.5).isEmpty)
+        let placements = OverlayLayout.placements(in: document.scene, palette: document.palette, width: 1920, height: 1080, time: 2)
+        XCTAssertEqual(placements.first?.recipe.image, VideoFrameKey.make(file: "graph.mov", time: 1))
+        // An old file without the video fields still decodes.
+        let old = #"{"shape":"image","text":"","font":"rounded","image":"a.png","stroke":0.1,"filled":true,"aspect":1,"bend":0}"#
+        XCTAssertNoThrow(try LoweyJSON.decode(OverlayRecipe.self, from: Data(old.utf8)))
+    }
 }

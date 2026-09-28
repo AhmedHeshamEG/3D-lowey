@@ -41,17 +41,28 @@ final class Phase4Tests: XCTestCase {
         let trio = try await VideoExporter(document: document, library: nil, rigs: RigCache()).images(at: 0, framings: [.landscape], longSide: 1280)
         attach(trio[0], name: "blobs-newton-hesham-einstein")
 
-        // Close on Hesham: talking (C), blinking, looking aside, brows up.
-        var close = document
+        // Expressions: each keyed at 0 and seen once settled, plus one caught mid-overshoot.
         let root = try XCTUnwrap(heshamRoot)
-        close.scene.objects[root]?[.mouth] = .enumeration("C")
-        close.scene.objects[root]?[.blinkRight] = .float(1)
-        close.scene.objects[root]?[.lookX] = .float(0.8)
-        close.scene.objects[root]?[.brows] = .float(0.7)
-        close.scene.objects["cam"]?.transform = LoweyCore.Transform(position: Vec3(0, 1.1, 3.2))
-        let face = try await VideoExporter(document: close, library: nil, rigs: RigCache()).images(at: 0, framings: [.landscape], longSide: 960)
-        attach(face[0], name: "blob-hesham-talking")
-        XCTAssertGreaterThan(Self.difference(trio[0], face[0]), 0.01)
+        var close = document
+        close.scene.look?.lighting = Look.default.applying(.goldenHour).lighting
+        close.scene.objects["cam"]?.transform = LoweyCore.Transform(position: Vec3(0, 1.15, 2.9))
+        var sheet: [CGImage] = []
+        for expression in [FaceExpression.neutral, .happy, .laugh, .surprised, .shocked, .angry, .sad, .wink] {
+            var posed = close
+            var ids = IDFactory.sequential("e")
+            posed.scene.timeline = expression.keyed(on: root, at: 0, in: posed.scene.timeline, ids: &ids)
+            posed.scene.objects[root]?[.autoBlink] = .bool(false)
+            let frame = try await VideoExporter(document: posed, library: nil, rigs: RigCache()).images(at: 2, framings: [.landscape], longSide: 640)
+            attach(frame[0], name: "blob-face-\(expression.rawValue)")
+            sheet.append(frame[0])
+        }
+        XCTAssertGreaterThan(Self.difference(sheet[0], sheet[4]), 0.005, "shocked doesn't look like neutral")
+        var hit = close
+        var ids = IDFactory.sequential("h")
+        hit.scene.timeline = FaceExpression.neutral.keyed(on: root, at: 0, in: hit.scene.timeline, ids: &ids)
+        hit.scene.timeline = FaceExpression.shocked.keyed(on: root, at: 1, in: hit.scene.timeline, ids: &ids)
+        let overshoot = try await VideoExporter(document: hit, library: nil, rigs: RigCache()).images(at: 1.12, framings: [.landscape], longSide: 640)
+        attach(overshoot[0], name: "blob-face-shocked-overshoot")
     }
 
     static func difference(_ a: CGImage, _ b: CGImage) -> Double {

@@ -92,6 +92,9 @@ public final class VideoExporter {
     private var captionPages: [Framing: [CaptionPage]] = [:]
     /// Loads overlay images (files in the project's assets folder).
     public var overlayImage: (String) -> CGImage? = { _ in nil }
+    /// Where a media file of the project lives (video overlays: clips, Manim renders).
+    public var mediaURL: (String) -> URL? = { _ in nil }
+    private let videoFrames = VideoFrames(exact: true)
     /// Whether the GPU may be used now. iOS suspends GPU work in the background (screen locked, another app in
     /// front): the export waits for the app to come back instead of stalling on a frame that never finishes.
     public var canRender: @MainActor () -> Bool = { true }
@@ -222,7 +225,8 @@ public final class VideoExporter {
             picture = compositor.transition(from: from, to: picture, kind: transition.kind, progress: transition.progress)
         }
         let size = CGSize(width: target.width, height: target.height)
-        let overlays = overlayLayer(animated, camera: mainCamera, framing: framing, size: size)
+        let frames = await videoFrames(for: animated, framing: framing, size: size)
+        let overlays = overlayLayer(animated, camera: mainCamera, framing: framing, size: size, videoFrames: frames)
         picture = compositor.finish(picture, look: look, overlays: overlays)
         target.matte = compositor.bytes(picture, width: target.width, height: target.height)
     }
@@ -278,16 +282,36 @@ public final class VideoExporter {
         return UInt8((linear * 255).rounded())
     }
 
+    /// The exact frame of every video overlay showing at this time.
+    private func videoFrames(for animated: AnimatedScene, framing _: Framing, size: CGSize) async -> [String: CGImage] {
+        guard animated.scene.objects.values.contains(where: {
+            if case let .overlay(recipe) = $0.kind {
+                recipe.video != nil
+            } else { false }
+        })
+        else { return [:] }
+        var frames: [String: CGImage] = [:]
+        let placements = OverlayLayout.placements(in: animated.scene, palette: document.palette, width: Double(size.width),
+                                                  height: Double(size.height), time: animated.time)
+        for placement in placements {
+            guard let key = placement.recipe.image, let (file, _) = VideoFrameKey.parse(key), let url = mediaURL(file) else { continue }
+            if let image = await videoFrames.frame(key, url: url) { frames[key] = image }
+        }
+        return frames
+    }
+
     /// Overlays and captions for this frame, drawn at the frame's size.
-    private func overlayLayer(_ animated: AnimatedScene, camera: OffscreenRenderer.Camera, framing: Framing, size: CGSize) -> CIImage? {
+    private func overlayLayer(_ animated: AnimatedScene, camera: OffscreenRenderer.Camera, framing: Framing, size: CGSize,
+                              videoFrames: [String: CGImage] = [:]) -> CIImage? {
         let cameraTransform = LoweyCore.Transform(position: Vec3(camera.position), rotation: Quat(camera.orientation))
         let placements = OverlayLayout.placements(in: animated.scene, palette: document.palette, width: Double(size.width),
-                                                  height: Double(size.height)) { point in
+                                                  height: Double(size.height), time: animated.time) { point in
             OverlayLayout.project(point, camera: cameraTransform, fieldOfView: Double(camera.fieldOfView), aspect: framing.aspect)
         }
         let caption = burnsCaptions ? Captions.page(at: animated.time, in: pages(for: framing)) : nil
         guard !placements.isEmpty || caption != nil else { return nil }
-        let images = overlayImage
+        let stills = overlayImage
+        let images: (String) -> CGImage? = { name in videoFrames[name] ?? stills(name) }
         return compositor.overlayImage(size: size) { context in
             OverlayRenderer.draw(placements, in: context, size: size, image: images)
             if let caption, let settings = timeline.captions {
