@@ -314,7 +314,7 @@ private struct State {
 
     // MARK: Actions
 
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
+    // swiftlint:disable:next cyclomatic_complexity
     mutating func perform(_ action: JSONValue) throws {
         guard let verb = string(action, "do") ?? string(action, "action") else { throw fail("each action needs “do”") }
         switch verb {
@@ -472,7 +472,7 @@ private struct State {
             throw fail("nothing in the library matches “\(query)”. Library: \(names.joined(separator: ", "))")
         }
         if let scale = vec3(action["scale"]) { object.transform.scale = scale }
-        object = operations.placeOnGround(object, at: try point(action["at"]) ?? context.focus)
+        object = try operations.placeOnGround(object, at: point(action["at"]) ?? context.focus)
         try insert(object, action: action, verb: "Place")
     }
 
@@ -482,7 +482,7 @@ private struct State {
         if let size = number(action, "size") { recipe.size = size }
         var object = SceneObject(id: context.ids.next(), name: name(action, fallback: "Text"), kind: .text(recipe))
         object[.color] = .color(.palette(0))
-        object = operations.placeOnGround(object, at: try point(action["at"]) ?? context.focus)
+        object = try operations.placeOnGround(object, at: point(action["at"]) ?? context.focus)
         try insert(object, action: action, verb: "Add text")
     }
 
@@ -533,7 +533,7 @@ private struct State {
         default: .point
         }
         var factory = ObjectFactory(ids: context.ids)
-        var object = factory.light(type, at: try point(action["at"]) ?? context.focus + Vec3(0, 2, 0))
+        var object = try factory.light(type, at: point(action["at"]) ?? context.focus + Vec3(0, 2, 0))
         context.ids = factory.ids
         object.name = name(action, fallback: object.name)
         if let color = try color(action["color"]) { object[.lightColor] = .color(color) }
@@ -597,7 +597,15 @@ private struct State {
             var working = timeline
             var edits: [TrackEdit] = []
             for (id, property, value) in changes {
-                let edit = keys.setKey(id, property, value: value, at: at, previous: scene.objects[id]?[property], easing: easing(action["easing"]), in: working)
+                let edit = keys.setKey(
+                    id,
+                    property,
+                    value: value,
+                    at: at,
+                    previous: scene.objects[id]?[property],
+                    easing: easing(action["easing"]),
+                    in: working
+                )
                 if let track = edit.track { working.tracks.removeAll { $0.id == track.id }; working.tracks.append(track) }
                 edits.removeAll { $0.id == edit.id }
                 edits.append(edit)
@@ -627,8 +635,8 @@ private struct State {
         guard let keyName = string(action, "property") else { throw fail("keys need “property”") }
         let property = PropertyKey(keyName)
         guard let list = action["keys"]?.arrayValue, !list.isEmpty else { throw fail("keys need a “keys” list of {t, value}") }
-        let values = try list.map { entry in (try time(entry["t"] ?? entry["at"]), try propertyValue(property, entry["value"]), easing(entry["easing"])) }
-        try addKeys(try targets(action["target"]), property, values)
+        let values = try list.map { entry in try (time(entry["t"] ?? entry["at"]), propertyValue(property, entry["value"]), easing(entry["easing"])) }
+        try addKeys(targets(action["target"]), property, values)
     }
 
     mutating func preset(_ action: JSONValue) throws {
@@ -644,7 +652,7 @@ private struct State {
         switch string(action, "order") {
         case "leftToRight": stagger.order = .axis(.x, reversed: false)
         case "rightToLeft": stagger.order = .axis(.x, reversed: true)
-        case "wave": stagger.order = .distance(from: try point(action["from"]) ?? context.focus)
+        case "wave": stagger.order = try .distance(from: point(action["from"]) ?? context.focus)
         default: break
         }
         stagger.randomTiming = number(action, "random") ?? 0
@@ -719,8 +727,8 @@ private struct State {
             throw fail("unknown effect (\(ScreenEffect.Kind.allCases.map(\.rawValue).joined(separator: ", ")))")
         }
         var copy = timeline
-        var effect = ScreenEffect(id: context.ids.next(ObjectID.self).raw, kind: kind, start: try time(action["at"]), duration: number(action, "duration"),
-                                  strength: number(action, "strength") ?? 1)
+        var effect = try ScreenEffect(id: context.ids.next(ObjectID.self).raw, kind: kind, start: time(action["at"]), duration: number(action, "duration"),
+                                      strength: number(action, "strength") ?? 1)
         if let color = try color(action["color"]) { effect.color = color.resolved(in: document.palette) }
         copy.effects.append(effect)
         try run(.setTimeline(copy), label: "\(kind.title) at \(format(effect.start))")

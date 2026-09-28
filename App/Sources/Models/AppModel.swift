@@ -16,6 +16,8 @@ final class AppModel {
     private(set) var thumbnails: [ProjectID: UIImage] = [:]
     private(set) var editor: EditorModel?
     var toast: String?
+    /// The AI & laptop bridge (off until switched on).
+    @ObservationIgnored lazy var bridge = BridgeModel(app: self)
 
     private var toastTask: Task<Void, Never>?
     private var started = false

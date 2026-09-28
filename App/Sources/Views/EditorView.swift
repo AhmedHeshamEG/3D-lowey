@@ -114,6 +114,14 @@ struct EditorView: View {
             ScriptPanel(editor: editor)
                 .presentationDetents([.large])
         }
+        .sheet(item: $editor.proposal) { proposal in
+            ProposalSheet(editor: editor, proposal: proposal)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $editor.showBridge) {
+            BridgePanel(bridge: app.bridge, editor: editor)
+                .presentationDetents([.large])
+        }
         .sheet(isPresented: $editor.showCharacterBuilder) {
             CharacterBuilderSheet(editor: editor, editing: editor.characterBuilderTarget)
                 .presentationDetents([.large])
@@ -204,6 +212,9 @@ struct TopBar: View {
                     sceneName = editor.scene.name
                     renamingScene = true
                 }
+                Divider()
+                Button("AI & laptop bridge…", systemImage: "network") { editor.showBridge = true }
+                Button("Paste a Scene Script", systemImage: "doc.on.clipboard") { editor.importScriptFromClipboard() }
                 Divider()
                 Toggle("Show FPS & stats", isOn: $editor.showStatistics)
             } label: {

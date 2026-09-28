@@ -153,6 +153,9 @@ final class EditorModel {
     // MARK: Character & face state (see EditorModel+Character.swift)
 
     var showCharacterBuilder = false
+    /// A Scene Script waiting for your decision (AI proposes, you decide).
+    var proposal: ScriptProposal?
+    var showBridge = false
     /// The character the builder edits (nil = a new one).
     var characterBuilderTarget: ObjectID?
     var faceActive = false
@@ -290,6 +293,7 @@ final class EditorModel {
         selectedKeys = selectedKeys.filter { key in timeline.track(key.track)?.key(at: key.time) != nil }
         refreshSelectionOverlay()
         scheduleAutosave()
+        if app.bridge.isOn { app.bridge.notify("scene", ["revision": String(session.revision)]) }
     }
 
     // MARK: Autosave (debounced, off the main thread, atomic)

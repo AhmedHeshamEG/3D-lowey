@@ -93,7 +93,7 @@ final class ScriptCompilerTests: XCTestCase {
         ]}
         """)
         let result = try ScriptCompiler.compile(edit, document: document, context: ScriptContext(ids: .sequential("e")))
-        let applied = try assertReverts(try XCTUnwrap(result.command), on: document)
+        let applied = try assertReverts(XCTUnwrap(result.command), on: document)
         XCTAssertEqual(applied.scene.objects["a"]?.color, .rgba(RGBA(1, 0, 0)))
         XCTAssertEqual(applied.scene.worldTransform(of: "a").position.z, 1, accuracy: 1e-9, "moved, then grouped (world kept)")
         XCTAssertEqual(applied.scene.timeline.track(for: "c", .scale)?.key(at: 1.5)?.easing, .backOut)
@@ -107,7 +107,7 @@ final class ScriptCompilerTests: XCTestCase {
         let document = narratedDocument()
         func error(_ actions: String) -> String {
             do {
-                _ = try ScriptCompiler.compile(try script("{\"title\": \"x\", \"actions\": [\(actions)]}"), document: document, context: ScriptContext())
+                _ = try ScriptCompiler.compile(script("{\"title\": \"x\", \"actions\": [\(actions)]}"), document: document, context: ScriptContext())
                 return "no error"
             } catch {
                 return String(describing: error)
