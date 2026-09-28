@@ -118,6 +118,12 @@ public enum BlobRig {
         }
     }
 
+    /// A spring's value in steps of 1/512 (far below a pixel), exactly the goal once it's that close: a settling face
+    /// stops making new shapes, and shapes it has made before come from the renderer's cache.
+    static func settled(_ value: Double, _ goal: Double) -> Double {
+        abs(value - goal) < 1.0 / 512 ? goal : (value * 512).rounded() / 512
+    }
+
     static func springs(cartoon: Double) -> (face: Spring, mouth: Spring) {
         let c = min(max(cartoon, 0), 1)
         return (Spring(omega: 15, zeta: 0.85 - 0.6 * c), Spring(omega: 34, zeta: 0.9 - 0.45 * c))
@@ -165,7 +171,6 @@ public enum BlobRig {
         }
     }
 
-    // swiftlint:disable:next function_body_length
     static func pose(_ root: ObjectID, in scene: inout Scene, document: Document, time: Double, live: [PropertyKey: PropertyValue],
                      animated: inout Set<ObjectID>) {
         guard let character = scene.objects[root] else { return }
@@ -187,7 +192,7 @@ public enum BlobRig {
         func sprung(_ key: PropertyKey) -> (now: Double, target: Double) {
             let goal = target(key, time)
             guard live[key] == nil, tracks[key] != nil else { return (goal, goal) }
-            return (faceSpring.filter(at: time, step: 1.0 / 120) { target(key, $0) }, goal)
+            return (settled(faceSpring.filter(at: time, step: 1.0 / 120) { target(key, $0) }, goal), goal)
         }
         let brows = sprung(.brows)
         let browAngle = sprung(.browAngle)
@@ -201,13 +206,22 @@ public enum BlobRig {
         var blinkR = sprung(.blinkRight).now
         if character[.autoBlink]?.boolValue != false, tracks[.blinkLeft] == nil, tracks[.blinkRight] == nil,
            live[.blinkLeft] == nil, live[.blinkRight] == nil {
-            let auto = autoBlink(at: time, seed: root.raw)
+            // In 64 steps: every blink reuses the same few eye shapes (built once, then cached).
+            let auto = (autoBlink(at: time, seed: root.raw) * 64).rounded() / 64
             blinkL = max(blinkL, auto)
             blinkR = max(blinkR, auto)
         }
 
         // Mouth: the named shape (lip sync, expressions) plus the smile and jaw dials, all springy.
+        // Every part of the mouth filters the same moments, so each moment is worked out once.
+        var mouthSamples: [Double: MouthPose] = [:]
         func mouthTarget(_ t: Double) -> MouthPose {
+            if let pose = mouthSamples[t] { return pose }
+            let pose = mouthTargetUncached(t)
+            mouthSamples[t] = pose
+            return pose
+        }
+        func mouthTargetUncached(_ t: Double) -> MouthPose {
             let name = live[.mouth]?.stringValue ?? tracks[.mouth]?.value(at: t)?.stringValue ?? base?[.mouth]?.stringValue ?? "X"
             var pose = MouthPose.named(name)
             pose.smile = min(max(pose.smile + target(.smile, t), -1.2), 1.2)
@@ -218,7 +232,7 @@ public enum BlobRig {
         let mouthMoves = tracks[.mouth] != nil || tracks[.smile] != nil || tracks[.jawOpen] != nil
         func mouthPart(_ path: KeyPath<MouthPose, Double>) -> Double {
             guard mouthMoves, live[.mouth] == nil else { return mouthTarget(time)[keyPath: path] }
-            return mouthSpring.filter(at: time, step: 1.0 / 240) { mouthTarget($0)[keyPath: path] }
+            return settled(mouthSpring.filter(at: time, step: 1.0 / 240) { mouthTarget($0)[keyPath: path] }, mouthTarget(time)[keyPath: path])
         }
         var mouth = MouthPose(open: max(mouthPart(\.open), 0), wide: mouthPart(\.wide), round: mouthPart(\.round), smile: mouthPart(\.smile),
                               teeth: mouthPart(\.teeth), tongueUp: mouthPart(\.tongueUp), bite: mouthPart(\.bite), smirk: mouthPart(\.smirk))

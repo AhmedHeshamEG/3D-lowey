@@ -68,6 +68,7 @@ final class StagePostProcessor: @unchecked Sendable {
 
     init(library: MTLLibrary?) {
         self.library = library
+        compositor.previewHalos = true
     }
 
     /// Main thread: the latest state to draw.

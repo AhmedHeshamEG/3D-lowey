@@ -54,6 +54,8 @@ public final class FrameCompositor: @unchecked Sendable {
     public let context: CIContext
     private let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
     private var paperCache: [String: CIImage] = [:]
+    /// Live stage only: glow halos at a quarter of the resolution (same look, a fraction of the work).
+    var previewHalos = false
 
     public init(device: MTLDevice? = MTLCreateSystemDefaultDevice()) {
         if let device {
@@ -83,10 +85,25 @@ public final class FrameCompositor: @unchecked Sendable {
         clamp.minComponents = CIVector(x: 0, y: 0, z: 0, w: 1)
         clamp.maxComponents = CIVector(x: 1, y: 1, z: 1, w: 1)
         let blur = CIFilter.gaussianBlur()
-        blur.inputImage = clamp.outputImage?.clampedToExtent()
-        blur.radius = Float(height * 0.05)
+        var blurred: CIImage?
+        if previewHalos, let bright = clamp.outputImage {
+            // Live stage: the same wide, soft halo worked out at a quarter of the size (it's all low frequencies),
+            // so a glowing character doesn't cost a full-resolution blur every frame. Exports keep the full pass.
+            let shrink = CIFilter.lanczosScaleTransform()
+            shrink.inputImage = bright
+            shrink.scale = 0.25
+            shrink.aspectRatio = 1
+            blur.inputImage = shrink.outputImage?.clampedToExtent()
+            blur.radius = Float(height * 0.05 * 0.25)
+            // Lanczos scales about the origin, so this puts it back exactly.
+            blurred = blur.outputImage?.transformed(by: CGAffineTransform(scaleX: 4, y: 4))
+        } else {
+            blur.inputImage = clamp.outputImage?.clampedToExtent()
+            blur.radius = Float(height * 0.05)
+            blurred = blur.outputImage
+        }
         let level = CIFilter.colorMatrix()
-        level.inputImage = blur.outputImage?.cropped(to: extent)
+        level.inputImage = blurred?.cropped(to: extent)
         let amount = CGFloat(min(max(strength, 0), 1)) * 1.4
         level.rVector = CIVector(x: amount, y: 0, z: 0, w: 0)
         level.gVector = CIVector(x: 0, y: amount, z: 0, w: 0)

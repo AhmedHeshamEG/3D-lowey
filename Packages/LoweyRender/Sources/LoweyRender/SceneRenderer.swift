@@ -4,6 +4,9 @@ import os
 import RealityKit
 import UIKit
 
+/// Most meshes the renderer keeps for reuse (animated faces make new ones most frames).
+private let meshCacheLimit = 1500
+
 /// Marks the entity that represents a scene object (its "node").
 public struct LoweyObjectComponent: Component, Sendable {
     public var id: String
@@ -432,6 +435,8 @@ public final class SceneRenderer {
         case let .blockText(recipe): BlockFont.mesh(for: recipe)
         }
         guard !data.isEmpty, let resource = try? MeshUpload.resource(from: data), let bounds = data.bounds else { return nil }
+        // Animated faces make a new shape most frames: keep the cache bounded (meshes on screen stay alive in their entities).
+        if meshCache.count >= meshCacheLimit { meshCache.removeAll(keepingCapacity: true) }
         meshCache[key] = (resource, bounds)
         return (resource, bounds)
     }
