@@ -67,13 +67,14 @@ final class SmokeTests: XCTestCase {
         bridgeItem.tap()
         let toggle = app.switches["bridge-toggle"].firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
-        // Tap the switch itself (SwiftUI exposes the inner switch as a child element).
-        let inner = toggle.switches.firstMatch
-        (inner.exists ? inner : toggle).tap()
-        if app.staticTexts["bridge-code"].waitForExistence(timeout: 5) == false {
-            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        // Tap the switch knob until it reads on; never tap again once it is on (a second tap turns it back off).
+        for _ in 0 ..< 3 where toggle.value as? String != "1" {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            let isOn = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+            _ = XCTWaiter.wait(for: [isOn], timeout: 3)
         }
-        let code = app.staticTexts["bridge-code"].waitForExistence(timeout: 8)
+        let pairLine = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'lowey-link pair'")).firstMatch
+        let code = app.staticTexts["bridge-code"].waitForExistence(timeout: 8) || pairLine.waitForExistence(timeout: 2)
         screenshot(app, "p3-04-bridge")
         XCTAssertTrue(code, "the pairing code shows")
     }
