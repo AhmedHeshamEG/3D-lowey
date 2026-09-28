@@ -218,6 +218,8 @@ extension EditorModel {
         var changed = 0
         updateTimeline("Match walk to path") { timeline in
             guard let index = timeline.clipTracks.firstIndex(where: { $0.id == track.id }) else { return }
+            // The path moves the character; the clip only animates the legs.
+            timeline.clipTracks[index].ik.inPlace = true
             for segmentIndex in timeline.clipTracks[index].segments.indices {
                 let clip = timeline.clipTracks[index].segments[segmentIndex].clip
                 guard let rig = rigCache.rig(

@@ -221,7 +221,9 @@ public final class VideoExporter {
         await world.environment.waitForEnvironment()
         let look = document.effectiveLook
         let background = transparent ? UIColor.clear : look.sky.horizon.uiColor
-        return try RenderSession(device: device, world: world, background: background)
+        let session = try RenderSession(device: device, world: world, background: background)
+        session.transparent = transparent
+        return session
     }
 
     static func writePNG(_ image: CGImage, to url: URL) throws {
@@ -259,7 +261,30 @@ final class RenderSession {
         try RenderTarget(device: device, width: width, height: height)
     }
 
+    /// Transparent frames: RealityRenderer always writes opaque pixels, so the frame is rendered over black and
+    /// over white; alpha = 1 − (white − black) and the over-black colour is the premultiplied colour.
+    var transparent = false
+
     func render(camera pose: OffscreenRenderer.Camera, target: RenderTarget, world: SceneRenderer, deltaTime: Double) async throws {
+        guard transparent else {
+            try await renderOnce(camera: pose, target: target, world: world, deltaTime: deltaTime)
+            return
+        }
+        renderer.cameraSettings.colorBackground = .color(UIColor.white.cgColor)
+        try await renderOnce(camera: pose, target: target, world: world, deltaTime: deltaTime)
+        let white = target.bytes()
+        renderer.cameraSettings.colorBackground = .color(UIColor.black.cgColor)
+        try await renderOnce(camera: pose, target: target, world: world, deltaTime: 0)
+        var black = target.bytes()
+        for index in stride(from: 0, to: black.count - 3, by: 4) {
+            let spread = (Int(white[index]) - Int(black[index]) + Int(white[index + 1]) - Int(black[index + 1])
+                + Int(white[index + 2]) - Int(black[index + 2])) / 3
+            black[index + 3] = UInt8(clamping: 255 - max(spread, 0))
+        }
+        target.matte = black
+    }
+
+    private func renderOnce(camera pose: OffscreenRenderer.Camera, target: RenderTarget, world: SceneRenderer, deltaTime: Double) async throws {
         camera.components.set(PerspectiveCameraComponent(near: 0.02, far: 60000, fieldOfViewInDegrees: pose.fieldOfView))
         camera.position = pose.position
         camera.orientation = pose.orientation
@@ -284,6 +309,8 @@ final class RenderTarget {
     let output: RealityRenderer.CameraOutput
     let width: Int
     let height: Int
+    /// Premultiplied BGRA of the last transparent frame (overrides the texture).
+    var matte: [UInt8]?
 
     init(device: MTLDevice, width: Int, height: Int) throws {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm_srgb, width: width, height: height, mipmapped: false)
@@ -296,17 +323,31 @@ final class RenderTarget {
         self.height = height
     }
 
+    func bytes() -> [UInt8] {
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        texture.getBytes(&bytes, bytesPerRow: width * 4, from: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0)
+        return bytes
+    }
+
     func copy(into buffer: CVPixelBuffer) {
         CVPixelBufferLockBaseAddress(buffer, [])
         defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
         guard let base = CVPixelBufferGetBaseAddress(buffer) else { return }
+        if let matte {
+            let rowBytes = CVPixelBufferGetBytesPerRow(buffer)
+            matte.withUnsafeBytes { source in
+                for row in 0 ..< height {
+                    memcpy(base + row * rowBytes, source.baseAddress! + row * width * 4, width * 4)
+                }
+            }
+            return
+        }
         texture.getBytes(base, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), from: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0)
     }
 
     func image(transparent: Bool) throws -> CGImage {
         let bytesPerRow = width * 4
-        var bytes = [UInt8](repeating: 0, count: bytesPerRow * height)
-        texture.getBytes(&bytes, bytesPerRow: bytesPerRow, from: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0)
+        let bytes = transparent ? (matte ?? bytes()) : bytes()
         let alpha: CGImageAlphaInfo = transparent ? .premultipliedFirst : .noneSkipFirst
         guard let provider = CGDataProvider(data: Data(bytes) as CFData),
               let image = CGImage(

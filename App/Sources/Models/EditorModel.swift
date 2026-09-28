@@ -418,6 +418,11 @@ final class EditorModel {
         let showGizmo = (mode == .build || mode == .animate) && tool == .select && !selection.isEmpty && performPhase == .idle
             && !selection.contains(where: { scene.isEffectivelyLocked($0) })
         if moveOnly, selection.isEmpty { return }
+        // Looking through a camera: no selection box around the lens you're looking through.
+        if stage.lookThrough != nil {
+            stage.showSelection(nil, pivot: nil, gizmoVisible: false)
+            return
+        }
         stage.showSelection(selection.isEmpty ? nil : selectionBounds, pivot: selectionPivot, gizmoVisible: showGizmo)
     }
 

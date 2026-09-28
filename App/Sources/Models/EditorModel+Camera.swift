@@ -44,6 +44,7 @@ extension EditorModel {
     func setLookThrough(_ on: Bool) {
         lookThrough = on
         updateLookThrough()
+        refreshSelectionOverlay()
     }
 
     // MARK: Cameras & cuts

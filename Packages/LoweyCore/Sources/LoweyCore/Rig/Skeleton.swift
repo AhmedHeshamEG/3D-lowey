@@ -211,17 +211,33 @@ public struct IKSettings: Codable, Hashable, Sendable {
     public var lookAt: ObjectID?
     public var reach: ObjectID?
     public var reachWithLeft: Bool
+    /// Walk in place: the clip's forward travel (root motion) is removed, so a path (or keys) moves the
+    /// character instead of the clip moving it a second time.
+    public var inPlace: Bool
 
     public init(feetOnGround: Bool = false, groundHeight: Double = 0, lookAt: ObjectID? = nil, reach: ObjectID? = nil,
-                reachWithLeft: Bool = false) {
+                reachWithLeft: Bool = false, inPlace: Bool = false) {
         self.feetOnGround = feetOnGround
         self.groundHeight = groundHeight
         self.lookAt = lookAt
         self.reach = reach
         self.reachWithLeft = reachWithLeft
+        self.inPlace = inPlace
     }
 
-    public var isActive: Bool { feetOnGround || lookAt != nil || reach != nil }
+    private enum CodingKeys: String, CodingKey { case feetOnGround, groundHeight, lookAt, reach, reachWithLeft, inPlace }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        feetOnGround = try c.decodeIfPresent(Bool.self, forKey: .feetOnGround) ?? false
+        groundHeight = try c.decodeIfPresent(Double.self, forKey: .groundHeight) ?? 0
+        lookAt = try c.decodeIfPresent(ObjectID.self, forKey: .lookAt)
+        reach = try c.decodeIfPresent(ObjectID.self, forKey: .reach)
+        reachWithLeft = try c.decodeIfPresent(Bool.self, forKey: .reachWithLeft) ?? false
+        inPlace = try c.decodeIfPresent(Bool.self, forKey: .inPlace) ?? false
+    }
+
+    public var isActive: Bool { feetOnGround || lookAt != nil || reach != nil || inPlace }
 }
 
 /// The clip track of one character.

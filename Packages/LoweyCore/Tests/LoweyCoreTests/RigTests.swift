@@ -411,6 +411,16 @@ final class RigTests: XCTestCase {
         ClipMixer.applyIK(IKSettings(reach: "cup"), to: &reaching, character: asset, world: .identity, targetPosition: { _ in Vec3(-0.5, 1.3, 0.3) })
         let rightHand = try XCTUnwrap(asset.joint("rightHand"))
         XCTAssertLessThan(asset.skeleton.modelSpace(reaching)[rightHand].position.distance(to: Vec3(-0.5, 1.3, 0.3)), 1e-4)
+        // Walk in place: the kick's hips travel is removed, the height kept.
+        var kick = TestRig.humanoid(mixamo: true)
+        kick.clips = [("Kick", TestRig.kickClip(for: kick))]
+        let kicker = try XCTUnwrap(GLTFReader.rig(data: kick.glb()))
+        var moving = try XCTUnwrap(kicker.clips["Kick"]).pose(at: 0.5, skeleton: kicker.skeleton)
+        XCTAssertEqual(moving[0].position.z, 0.5, accuracy: 1e-5)
+        ClipMixer.applyIK(IKSettings(inPlace: true), to: &moving, character: kicker, world: .identity, targetPosition: { _ in nil })
+        XCTAssertEqual(moving[0].position.z, 0, accuracy: 1e-9)
+        XCTAssertEqual(moving[0].position.y, 1, accuracy: 1e-9)
+        XCTAssertEqual(try LoweyJSON.decode(IKSettings.self, from: Data("{}".utf8)), IKSettings())
         XCTAssertNil(SkeletonStandard.quadruped.arm(left: true))
         XCTAssertEqual(SkeletonStandard.custom.bones.count, 0)
         XCTAssertEqual(SkeletonStandard(rig: .bird), .bird)

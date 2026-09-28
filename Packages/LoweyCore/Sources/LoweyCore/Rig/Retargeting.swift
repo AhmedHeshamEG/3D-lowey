@@ -379,6 +379,11 @@ public enum ClipMixer {
     static func applyIK(_ ik: IKSettings, to pose: inout [Transform], character: RigAsset, world: Transform, targetPosition: (ObjectID) -> Vec3?) {
         guard ik.isActive else { return }
         let skeleton = character.skeleton
+        if ik.inPlace, let hips = character.joint("hips") {
+            // Keep the hips' height (the bounce of the walk) but not their forward travel.
+            let rest = skeleton.joints[hips].rest.position
+            pose[hips].position = Vec3(rest.x, pose[hips].position.y, rest.z)
+        }
         if ik.feetOnGround {
             for (upperBone, lowerBone, footBone) in character.standard.legs {
                 guard let upper = character.joint(upperBone), let lower = character.joint(lowerBone),

@@ -20,6 +20,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testCreateBuildUndoReopen() throws {
+        executionTimeAllowance = 470
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()

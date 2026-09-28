@@ -273,6 +273,8 @@ struct CharacterSection: View {
                 PillButton(title: "Walk speed = path speed", systemName: "figure.walk.motion") { editor.matchClipSpeedToPath() }
                 Toggle("Feet stay on the ground", isOn: Binding(get: { track.ik.feetOnGround }, set: { value in editor.setIK { $0.feetOnGround = value } }))
                     .font(.system(size: 13))
+                Toggle("Walk in place (the path moves it)", isOn: Binding(get: { track.ik.inPlace }, set: { value in editor.setIK { $0.inPlace = value } }))
+                    .font(.system(size: 13))
                 Menu {
                     Button("Nothing") { editor.setIK { $0.lookAt = nil } }
                     ForEach(editor.baseScene.roots.filter { $0 != object.id }.prefix(20).map { $0 }, id: \.self) { id in
