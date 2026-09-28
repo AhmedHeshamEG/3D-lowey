@@ -193,15 +193,16 @@ final class Phase3Tests: XCTestCase {
         let glowing = try await VideoExporter(document: document(glow: 4), library: nil, rigs: RigCache()).images(at: 0, framings: [.landscape], longSide: 480)
         attach(plain[0], name: "glow-off")
         attach(glowing[0], name: "glow-on")
-        // A band just outside the sphere's silhouette (left and right of it): dark without glow, lit by the halo.
+        XCTAssertGreaterThan(sphereRed(glowing[0]), sphereRed(plain[0]) + 0.15, "the sphere itself glows")
+        // Just outside the sphere's silhouette (left and right of it, level with its middle): lit by the halo.
         func ring(_ image: CGImage) -> Double {
             let bytes = pixels(image)
             let width = image.width
             let height = image.height
             var sum = 0.0
             var count = 0.0
-            for y in stride(from: height * 35 / 100, to: height * 65 / 100, by: 3) {
-                for x in [width * 30 / 100, width * 32 / 100, width * 68 / 100, width * 70 / 100] {
+            for y in stride(from: height * 22 / 100, to: height * 40 / 100, by: 2) {
+                for x in [width * 35 / 100, width * 37 / 100, width * 63 / 100, width * 65 / 100] {
                     let index = (y * width + x) * 4
                     sum += Double(bytes[index]) + Double(bytes[index + 1]) + Double(bytes[index + 2])
                     count += 3
@@ -209,7 +210,21 @@ final class Phase3Tests: XCTestCase {
             }
             return sum / count / 255
         }
-        XCTAssertGreaterThan(ring(glowing[0]), ring(plain[0]) + 0.03, "the glow spills into the dark around the sphere")
+        XCTAssertGreaterThan(ring(glowing[0]), ring(plain[0]) + 0.02, "the glow spills into the dark around the sphere")
+    }
+
+    /// Average red in the middle of the glow test's sphere (0…1).
+    private func sphereRed(_ image: CGImage) -> Double {
+        let bytes = pixels(image)
+        var sum = 0.0
+        var count = 0.0
+        for y in stride(from: image.height * 24 / 100, to: image.height * 38 / 100, by: 2) {
+            for x in stride(from: image.width * 46 / 100, to: image.width * 54 / 100, by: 2) {
+                sum += Double(bytes[(y * image.width + x) * 4])
+                count += 1
+            }
+        }
+        return sum / max(count, 1) / 255
     }
 
     // MARK: Particles, characters

@@ -70,6 +70,8 @@ public enum Animator {
         }
         // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
         FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
+        // Rubber-hose limbs follow wherever their hands went.
+        RubberHose.apply(to: &scene, animated: &animated)
         let camera = timeline.cutCamera(at: time).flatMap { scene.objects[$0] != nil ? $0 : nil }
             ?? scene.activeCamera.flatMap { scene.objects[$0] != nil ? $0 : nil }
         return AnimatedScene(time: time, scene: scene, animated: animated, camera: camera, poses: poses)

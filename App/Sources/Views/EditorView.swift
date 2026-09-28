@@ -83,6 +83,10 @@ struct EditorView: View {
             CharacterBuilderSheet(editor: editor, editing: editor.characterBuilderTarget)
                 .presentationDetents([.large])
         }
+        .sheet(isPresented: $editor.showBlobBuilder) {
+            BlobBuilderSheet(editor: editor)
+                .presentationDetents([.medium, .large])
+        }
         .overlay(alignment: .bottomLeading) {
             if AppModel.isUITesting {
                 Text(editor.debugTrail.joined(separator: " | "))

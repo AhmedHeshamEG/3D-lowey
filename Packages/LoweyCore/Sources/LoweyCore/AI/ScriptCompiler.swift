@@ -347,6 +347,8 @@ private struct State {
             try particles(action)
         case "character":
             try character(action)
+        case "blob", "person":
+            try blob(action)
         case "light":
             try light(action)
         case "camera":
@@ -542,6 +544,39 @@ private struct State {
         fragment.objects[index].transform.position = try point(action["at"]) ?? context.focus
         if let facing = number(action, "facing") { fragment.objects[index].transform.rotation = Quat(angle: facing * .pi / 180, axis: .unitY) }
         try run(.insert(fragment, parent: nil, index: nil), label: "Character “\(fragment.objects[index].name)”")
+        remember(action, root, name: fragment.objects[index].name)
+    }
+
+    /// A blob character (the house style): {"do": "blob", "likeness": "Isaac Newton"} or {"recipe": {...}}, or both
+    /// (the recipe's fields override the likeness). Optional: name, label (text on the hat), at, facing.
+    mutating func blob(_ action: JSONValue) throws {
+        var recipe = BlobRecipe()
+        if let who = string(action, "likeness") ?? string(action, "person") {
+            guard let known = Likeness.recipe(for: who) else {
+                throw fail("unknown likeness “\(who)” (\(Likeness.people.keys.sorted().joined(separator: ", "))); describe them with “recipe” instead")
+            }
+            recipe = known
+        }
+        if let raw = action["recipe"]?.objectValue {
+            // Overlay the given fields on the likeness (or the defaults).
+            var merged = try LoweyJSON.decode(JSONValue.self, from: LoweyJSON.encode(recipe)).objectValue ?? [:]
+            for (key, value) in raw {
+                merged[key] = value
+            }
+            recipe = try LoweyJSON.decode(BlobRecipe.self, from: LoweyJSON.encode(JSONValue.object(merged)))
+        }
+        if let given = string(action, "name") { recipe.name = given }
+        if let label = string(action, "label") { recipe.hatLabel = label }
+        let build = BlobCharacter.build(recipe, ids: &context.ids)
+        var fragment = build.fragment
+        guard let root = fragment.roots.first, let index = fragment.objects.firstIndex(where: { $0.id == root }) else { return }
+        fragment.objects[index].name = ObjectFactory.uniqueName(recipe.name, in: scene)
+        fragment.objects[index].transform.position = try point(action["at"]) ?? context.focus
+        if let facing = number(action, "facing") { fragment.objects[index].transform.rotation = Quat(angle: facing * .pi / 180, axis: .unitY) }
+        try run(.insert(fragment, parent: nil, index: nil), label: "Character “\(fragment.objects[index].name)”")
+        var withFloat = timeline
+        withFloat.behaviors += build.behaviors
+        try run(.setTimeline(withFloat), label: nil)
         remember(action, root, name: fragment.objects[index].name)
     }
 

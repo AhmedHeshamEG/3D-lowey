@@ -400,6 +400,10 @@ struct AddStorySection: View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: "Characters")
             LazyVGrid(columns: columns, spacing: 10) {
+                tile("Blob", "face.smiling") { editor.showBlobBuilder = true }
+                    .accessibilityIdentifier("add-blob")
+                tile("Me", "person.crop.circle") { editor.buildBlob(.hesham) }
+                    .accessibilityIdentifier("add-me")
                 tile("Character", "person.fill") {
                     editor.characterBuilderTarget = nil
                     editor.showCharacterBuilder = true

@@ -84,7 +84,7 @@ public final class FrameCompositor: @unchecked Sendable {
         clamp.maxComponents = CIVector(x: 1, y: 1, z: 1, w: 1)
         let blur = CIFilter.gaussianBlur()
         blur.inputImage = clamp.outputImage?.clampedToExtent()
-        blur.radius = Float(height * 0.035)
+        blur.radius = Float(height * 0.05)
         let level = CIFilter.colorMatrix()
         level.inputImage = blur.outputImage?.cropped(to: extent)
         let amount = CGFloat(min(max(strength, 0), 1)) * 1.4

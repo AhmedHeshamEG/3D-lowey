@@ -167,6 +167,8 @@ final class EditorModel {
     // MARK: Character & face state (see EditorModel+Character.swift)
 
     var showCharacterBuilder = false
+    /// The blob character sheet (the house style).
+    var showBlobBuilder = false
     /// A Scene Script waiting for your decision (AI proposes, you decide).
     var proposal: ScriptProposal?
     var showBridge = false

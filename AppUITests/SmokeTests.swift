@@ -11,6 +11,16 @@ final class SmokeTests: XCTestCase {
         app.buttons.matching(identifier: identifier).firstMatch
     }
 
+    /// Taps `opener` until `target` shows up (a tap during a panel's slide-in can land before the button is live).
+    private func open(_ target: XCUIElement, with opener: XCUIElement, attempts: Int = 3) -> Bool {
+        for _ in 0 ..< attempts {
+            _ = opener.waitForExistence(timeout: 5)
+            if opener.isHittable { opener.tap() }
+            if target.waitForExistence(timeout: 4) { return true }
+        }
+        return false
+    }
+
     private func screenshot(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
@@ -67,6 +77,10 @@ final class SmokeTests: XCTestCase {
         bridgeItem.tap()
         let toggle = app.switches["bridge-toggle"].firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        // Let the sheet finish presenting before touching the switch.
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: toggle)
+        _ = XCTWaiter.wait(for: [hittable], timeout: 5)
+        sleep(1)
         // Tap the switch knob until it reads on; never tap again once it is on (a second tap turns it back off).
         for _ in 0 ..< 3 where toggle.value as? String != "1" {
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
@@ -140,8 +154,7 @@ final class SmokeTests: XCTestCase {
         screenshot(app, "05-export-framing")
         // Animate: a one-tap preset on a new cone, play and pause.
         button(app, "mode-build").tap()
-        button(app, "Add").tap()
-        XCTAssertTrue(button(app, "add-cone").waitForExistence(timeout: 5))
+        XCTAssertTrue(open(button(app, "add-cone"), with: button(app, "Add")), "the Add menu opens")
         button(app, "add-cone").tap()
         button(app, "mode-animate").tap()
         let bounce = button(app, "preset-bounce")
@@ -163,6 +176,15 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(button(app, "export-video").waitForExistence(timeout: 5))
         screenshot(app, "10-export-video")
         button(app, "mode-build").tap()
+
+        // Phase 4: Hesham's own character (the house style), from the Add menu.
+        XCTAssertTrue(open(button(app, "add-me"), with: button(app, "Add")), "the Add menu offers Me")
+        button(app, "add-me").tap()
+        XCTAssertTrue(inspectorName.waitForExistence(timeout: 10))
+        XCTAssertEqual(inspectorName.value as? String, "Hesham")
+        button(app, "Frame").tap()
+        sleep(2)
+        screenshot(app, "11-me")
 
         // Home and back: the project is there and reopens.
         button(app, "Home").tap()

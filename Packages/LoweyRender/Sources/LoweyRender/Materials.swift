@@ -97,12 +97,12 @@ public final class MaterialFactory {
     }
 
     /// Packs fog density + glow into the shader's single custom float4:
-    /// rgb = fog color, w = round(glow × 100) + density (density < 1), negative when the surface glows in its own
-    /// base colour (imported models, which have no glow colour).
-    static func customValue(fog: FogUniform, emissiveIntensity: Double, selfGlow: Bool = false) -> SIMD4<Float> {
+    /// rgb = fog color, w = round(glow × 100) + density (density < 1). Negative for an imported model's material
+    /// (it keeps its emission map; `emissiveIntensity` is then its self glow). Never −0, which reads as positive.
+    static func customValue(fog: FogUniform, emissiveIntensity: Double, imported: Bool = false) -> SIMD4<Float> {
         let glow = (min(max(emissiveIntensity, 0), 100) * 100).rounded()
         let packed = Float(glow + fog.density)
-        return SIMD4<Float>(Float(fog.color.r), Float(fog.color.g), Float(fog.color.b), selfGlow ? -packed : packed)
+        return SIMD4<Float>(Float(fog.color.r), Float(fog.color.g), Float(fog.color.b), imported ? -(packed + 0.0001) : packed)
     }
 
     public func material(for key: SurfaceKey) -> any RealityKit.Material {
@@ -145,9 +145,7 @@ public final class MaterialFactory {
         if let cached = convertedCache[key] { return cached }
         do {
             var custom = try CustomMaterial(from: material, surfaceShader: shader, geometryModifier: nil)
-            custom.custom.value = glow > 0
-                ? Self.customValue(fog: fog, emissiveIntensity: glow, selfGlow: true)
-                : Self.customValue(fog: fog, emissiveIntensity: 1)
+            custom.custom.value = Self.customValue(fog: fog, emissiveIntensity: glow, imported: true)
             convertedCache[key] = custom
             return custom
         } catch {
