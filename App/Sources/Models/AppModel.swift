@@ -18,6 +18,8 @@ final class AppModel {
     var toast: String?
     /// The 60-second interactive tour (first launch, or ⋯ → Take the tour).
     var showTour = false
+    /// The gestures & shortcuts page.
+    var showGestures = false
     /// The AI & laptop bridge (off until switched on).
     @ObservationIgnored lazy var bridge = BridgeModel(app: self)
 

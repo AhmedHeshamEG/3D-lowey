@@ -194,4 +194,22 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(document.effectiveLook, document.project.look)
         XCTAssertEqual(document.palette, document.project.look.palette)
     }
+
+    // MARK: Palette
+
+    func testRemovingASwatchHidesItButKeepsEveryColour() throws {
+        var palette = Palette.starter
+        let count = palette.swatches.count
+        let before = (0 ..< count).map { palette.color(at: $0) }
+        palette.remove(slot: 1)
+        XCTAssertEqual(palette.swatches.count, count, "slots never shift: objects bound to later slots keep their colour")
+        XCTAssertEqual((0 ..< count).map { palette.color(at: $0) }, before, "nothing changes colour")
+        XCTAssertFalse(palette.visibleSlots.contains(1))
+        XCTAssertEqual(palette.visibleSlots.count, count - 1)
+        // Old files (no "removed" key) still load, and the flag round-trips.
+        let data = try JSONEncoder().encode(palette)
+        XCTAssertEqual(try JSONDecoder().decode(Palette.self, from: data), palette)
+        let old = try JSONDecoder().decode(Palette.Swatch.self, from: Data(##"{"name":"Paper","color":"#F2E8D5"}"##.utf8))
+        XCTAssertNil(old.removed)
+    }
 }

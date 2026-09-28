@@ -21,6 +21,86 @@ struct EditorView: View {
             StageOverlay(editor: editor)
                 .ignoresSafeArea()
 
+            if !editor.focusMode {
+                chrome
+                    .transition(.opacity)
+            }
+
+            PerformOverlay(editor: editor)
+
+            if editor.focusMode {
+                FocusRestoreButton(editor: editor)
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            }
+
+            if editor.showStatistics {
+                StatsPill(monitor: editor.statsMonitor, objects: editor.baseScene.objects.count)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(.leading, 16)
+                    .padding(.top, editor.focusMode ? 12 : 72)
+                    .allowsHitTesting(false)
+            }
+
+            if app.showTour {
+                TourOverlay(editor: editor)
+            }
+
+            if editor.showLibrary, !editor.focusMode {
+                HStack {
+                    Spacer()
+                    LibraryPanel(editor: editor)
+                        .frame(width: 420)
+                        .padding(.trailing, 16)
+                        .padding(.vertical, 16)
+                        .transition(.move(edge: .trailing))
+                }
+                .background(
+                    Color.black.opacity(0.001)
+                        .onTapGesture { closeLibrary() }
+                )
+            }
+        }
+        .animation(.spring(duration: 0.3), value: editor.mode)
+        .animation(.spring(duration: 0.3), value: editor.focusMode)
+        .animation(.spring(duration: 0.3), value: editor.tool)
+        .animation(.spring(duration: 0.3), value: editor.showLibrary)
+        .animation(.spring(duration: 0.25), value: editor.railPanel)
+        .animation(.spring(duration: 0.25), value: editor.selection.isEmpty)
+        .background(KeyboardShortcuts(editor: editor))
+        .sheet(isPresented: $editor.showScripts) {
+            ScriptPanel(editor: editor)
+                .presentationDetents([.large])
+        }
+        .sheet(item: $editor.proposal) { proposal in
+            ProposalSheet(editor: editor, proposal: proposal)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $editor.showBridge) {
+            BridgePanel(bridge: app.bridge, editor: editor)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $editor.showCharacterBuilder) {
+            CharacterBuilderSheet(editor: editor, editing: editor.characterBuilderTarget)
+                .presentationDetents([.large])
+        }
+        .overlay(alignment: .bottomLeading) {
+            if AppModel.isUITesting {
+                Text(editor.debugTrail.joined(separator: " | "))
+                    .font(.system(size: 8))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .accessibilityIdentifier("debug-trail")
+                    .allowsHitTesting(false)
+            }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            Task { await app.library.importFiles(urls) }
+            return true
+        }
+    }
+
+    /// Everything around the stage: top bar, rail, panels, joystick, view controls, timeline.
+    private var chrome: some View {
+        ZStack {
             VStack(spacing: 0) {
                 TopBar(editor: editor)
                     .padding(.horizontal, 16)
@@ -86,62 +166,6 @@ struct EditorView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-
-            PerformOverlay(editor: editor)
-
-            if app.showTour {
-                TourOverlay(editor: editor)
-            }
-
-            if editor.showLibrary {
-                HStack {
-                    Spacer()
-                    LibraryPanel(editor: editor)
-                        .frame(width: 420)
-                        .padding(.trailing, 16)
-                        .padding(.vertical, 16)
-                        .transition(.move(edge: .trailing))
-                }
-                .background(
-                    Color.black.opacity(0.001)
-                        .onTapGesture { closeLibrary() }
-                )
-            }
-        }
-        .animation(.spring(duration: 0.3), value: editor.mode)
-        .animation(.spring(duration: 0.3), value: editor.tool)
-        .animation(.spring(duration: 0.3), value: editor.showLibrary)
-        .animation(.spring(duration: 0.25), value: editor.railPanel)
-        .animation(.spring(duration: 0.25), value: editor.selection.isEmpty)
-        .background(KeyboardShortcuts(editor: editor))
-        .sheet(isPresented: $editor.showScripts) {
-            ScriptPanel(editor: editor)
-                .presentationDetents([.large])
-        }
-        .sheet(item: $editor.proposal) { proposal in
-            ProposalSheet(editor: editor, proposal: proposal)
-                .presentationDetents([.medium, .large])
-        }
-        .sheet(isPresented: $editor.showBridge) {
-            BridgePanel(bridge: app.bridge, editor: editor)
-                .presentationDetents([.large])
-        }
-        .sheet(isPresented: $editor.showCharacterBuilder) {
-            CharacterBuilderSheet(editor: editor, editing: editor.characterBuilderTarget)
-                .presentationDetents([.large])
-        }
-        .overlay(alignment: .bottomLeading) {
-            if AppModel.isUITesting {
-                Text(editor.debugTrail.joined(separator: " | "))
-                    .font(.system(size: 8))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .accessibilityIdentifier("debug-trail")
-                    .allowsHitTesting(false)
-            }
-        }
-        .dropDestination(for: URL.self) { urls, _ in
-            Task { await app.library.importFiles(urls) }
-            return true
         }
     }
 
@@ -192,6 +216,7 @@ struct TopBar: View {
     @Environment(AppModel.self) private var app
     @State private var renamingScene = false
     @State private var sceneName = ""
+    @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -231,6 +256,8 @@ struct TopBar: View {
                 Button("Paste a Scene Script", systemImage: "doc.on.clipboard") { editor.importScriptFromClipboard() }
                 Divider()
                 Toggle("Show FPS & stats", isOn: $editor.showStatistics)
+                Toggle("Pencil hover preview", isOn: $pencilHover)
+                Button("Gestures & shortcuts", systemImage: "hand.draw") { app.showGestures = true }
             } label: {
                 HStack(spacing: 8) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -256,6 +283,7 @@ struct TopBar: View {
                 ProgressView().controlSize(.small)
             }
             Spacer()
+            IconButton(systemName: "arrow.up.left.and.arrow.down.right", label: "Hide interface") { editor.focusMode = true }
             ModeSwitcher(mode: $editor.mode)
         }
         .alert("Rename scene", isPresented: $renamingScene) {
@@ -322,6 +350,7 @@ struct KeyboardShortcuts: View {
             shortcut("a", modifiers: .command) { editor.selectAll() }
             shortcut(.delete, modifiers: .command) { editor.deleteSelection() }
             shortcut("f", modifiers: .command) { editor.frameSelection() }
+            shortcut("f", modifiers: [.command, .control]) { editor.focusMode.toggle() }
             shortcut("l", modifiers: .command) { editor.showLibrary.toggle() }
             shortcut(.space, modifiers: []) { editor.togglePlay() }
             shortcut("k", modifiers: .command) { editor.keySelection() }
@@ -335,5 +364,57 @@ struct KeyboardShortcuts: View {
         .opacity(0)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The one control left in focus mode: brings the interface back.
+struct FocusRestoreButton: View {
+    let editor: EditorModel
+
+    var body: some View {
+        Button {
+            Haptics.tap()
+            editor.focusMode = false
+        } label: {
+            Image(systemName: "arrow.down.right.and.arrow.up.left")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.text)
+                .frame(width: 40, height: 40)
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay(Circle().strokeBorder(Theme.panelStroke, lineWidth: 0.5))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        .padding(.trailing, 16)
+        .padding(.top, 12)
+        .accessibilityLabel("Show interface")
+        .accessibilityIdentifier("show-interface")
+    }
+}
+
+/// Frame rate, slowest frame, object count and heat, small, in the stage's corner.
+struct StatsPill: View {
+    let monitor: StatsMonitor
+    let objects: Int
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text("\(Int(monitor.fps.rounded())) fps")
+                .foregroundStyle(monitor.fps >= 55 ? Theme.text : (monitor.fps >= 30 ? Color.yellow : Color.red))
+            Text("\(Int(monitor.worstMilliseconds.rounded())) ms")
+                .foregroundStyle(monitor.worstMilliseconds <= 34 ? Theme.secondaryText : Color.yellow)
+            Text("\(objects) obj").foregroundStyle(Theme.secondaryText)
+            if monitor.thermal == .serious || monitor.thermal == .critical {
+                Image(systemName: "thermometer.high").foregroundStyle(Color.orange)
+            }
+        }
+        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+        .padding(.horizontal, 10)
+        .frame(height: 26)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.panelStroke, lineWidth: 0.5))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("stats-pill")
     }
 }

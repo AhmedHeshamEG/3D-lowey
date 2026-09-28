@@ -105,7 +105,7 @@ struct CharacterBuilderSheet: View {
     private func colorRow(_ title: String, _ key: WritableKeyPath<CharacterRecipe, ColorValue>, swatches: [String]?) -> some View {
         let palette = editor.look.palette
         let colors: [ColorValue] = swatches.map { $0.compactMap { RGBA(hex: $0).map(ColorValue.rgba) } }
-            ?? palette.swatches.indices.map { ColorValue.palette($0) }
+            ?? palette.visibleSlots.map { ColorValue.palette($0) }
         return HStack(spacing: 8) {
             Text(title).font(.system(size: 13, weight: .semibold)).frame(width: 60, alignment: .leading)
             ForEach(Array(colors.enumerated()), id: \.offset) { _, color in

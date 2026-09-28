@@ -16,6 +16,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     private let doubleTap = UITapGestureRecognizer()
     private let undoTap = UITapGestureRecognizer()
     private let redoTap = UITapGestureRecognizer()
+    /// Four fingers: hide or show the interface (focus mode), as in Procreate.
+    private let focusTap = UITapGestureRecognizer()
     private let oneFingerPan = UIPanGestureRecognizer()
     private let twoFingerPan = UIPanGestureRecognizer()
     private let pinch = UIPinchGestureRecognizer()
@@ -70,6 +72,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         undoTap.addTarget(self, action: #selector(handleUndoTap(_:)))
         redoTap.numberOfTouchesRequired = 3
         redoTap.addTarget(self, action: #selector(handleRedoTap(_:)))
+        focusTap.numberOfTouchesRequired = 4
+        focusTap.addTarget(self, action: #selector(handleFocusTap(_:)))
         oneFingerPan.maximumNumberOfTouches = 1
         oneFingerPan.addTarget(self, action: #selector(handleOneFingerPan(_:)))
         twoFingerPan.minimumNumberOfTouches = 2
@@ -80,6 +84,7 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         longPress.addTarget(self, action: #selector(handleLongPress(_:)))
         stroke.addTarget(self, action: #selector(handleStroke(_:)))
         stroke.delegate = self
+        stroke.onHold = { [weak self] in self?.snapToQuickShape() }
         twist.addTarget(self, action: #selector(handleTwist(_:)))
         twist.delegate = self
         hover.addTarget(self, action: #selector(handleHover(_:)))
@@ -87,10 +92,11 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         pencilRoll.configure()
         pencilRoll.onRoll = { [weak self] delta in self?.handlePencilRoll(delta) }
         pencilRoll.delegate = self
-        for recognizer in [tap, doubleTap, undoTap, redoTap, oneFingerPan, twoFingerPan, pinch, longPress] as [UIGestureRecognizer] {
+        for recognizer in [tap, doubleTap, undoTap, redoTap, focusTap, oneFingerPan, twoFingerPan, pinch, longPress] as [UIGestureRecognizer] {
             recognizer.delegate = self
         }
-        let all: [UIGestureRecognizer] = [tap, doubleTap, undoTap, redoTap, oneFingerPan, twoFingerPan, pinch, longPress, stroke, twist, pencilRoll]
+        let all: [UIGestureRecognizer] = [tap, doubleTap, undoTap, redoTap, focusTap, oneFingerPan, twoFingerPan, pinch, longPress, stroke, twist,
+                                          pencilRoll]
         for recognizer in all {
             stage.addGestureRecognizer(recognizer)
         }
@@ -139,6 +145,10 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     /// Apple Pencil hovering above the screen: preview where the stroke will land and how thick it will be.
     @objc private func handleHover(_ recognizer: UIHoverGestureRecognizer) {
         guard let editor else { return }
+        guard UserDefaults.standard.bool(forKey: AppSettings.pencilHoverPreview) else {
+            if editor.hoverPoint != nil { editor.hoverPoint = nil }
+            return
+        }
         switch recognizer.state {
         case .began, .changed:
             // Only the Pencil reports a height; a trackpad pointer doesn't need the preview.
@@ -190,6 +200,11 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     @objc private func handleRedoTap(_ recognizer: UITapGestureRecognizer) {
         guard recognizer.state == .ended else { return }
         editor?.redo()
+    }
+
+    @objc private func handleFocusTap(_ recognizer: UITapGestureRecognizer) {
+        guard recognizer.state == .ended, let editor else { return }
+        editor.focusMode.toggle()
     }
 
     @objc private func handleLongPress(_ recognizer: UILongPressGestureRecognizer) {
@@ -550,6 +565,7 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         guard let editor, let stage else { return }
         switch recognizer.state {
         case .began:
+            snapped = nil
             strokePoints = []
             strokePressures = []
             strokeNormals = []
@@ -565,22 +581,74 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             }
             consume(recognizer.samples, editor: editor, stage: stage)
         case .changed:
-            consume(recognizer.samples.suffix(from: min(consumedSamples, recognizer.samples.count)).map { $0 }, editor: editor, stage: stage)
+            if snapped != nil {
+                adjustQuickShape(editor: editor, stage: stage)
+            } else {
+                consume(recognizer.samples.suffix(from: min(consumedSamples, recognizer.samples.count)).map { $0 }, editor: editor, stage: stage)
+            }
         case .ended:
-            consume(recognizer.samples.suffix(from: min(consumedSamples, recognizer.samples.count)).map { $0 }, editor: editor, stage: stage)
+            if snapped != nil {
+                adjustQuickShape(editor: editor, stage: stage)
+            } else {
+                consume(recognizer.samples.suffix(from: min(consumedSamples, recognizer.samples.count)).map { $0 }, editor: editor, stage: stage)
+            }
             stage.showStrokePreview(nil, color: .white)
             editor.commitStroke(points: strokePoints, pressures: strokePressures, normals: strokeNormals, guide: strokeGuide)
             consumedSamples = 0
+            snapped = nil
         default:
             stage.showStrokePreview(nil, color: .white)
             consumedSamples = 0
+            snapped = nil
         }
+    }
+
+    // MARK: QuickShape
+
+    /// The shape the held stroke snapped to, where the tip was when it snapped, and the stroke's pressure.
+    private var snapped: (shape: QuickShape.Result, anchor: CGPoint, pressure: Double)?
+
+    /// Draw, then hold: replace the stroke with the clean shape it was meant to be.
+    private func snapToQuickShape() {
+        guard let editor, let stage, stroke.state == .began || stroke.state == .changed,
+              let anchor = stroke.samples.last?.location else { return }
+        let points = stroke.samples.map { Vec2(Double($0.location.x), Double($0.location.y)) }
+        guard let shape = QuickShape.fit(points) else { return }
+        let pressure = stroke.samples.map(\.pressure).reduce(0, +) / Double(max(stroke.samples.count, 1))
+        snapped = (shape, anchor, pressure)
+        redrawStroke(shape.points, pressure: pressure, editor: editor, stage: stage)
+        Haptics.select()
+        editor.app.show("\(shape.kind.title). Keep holding and drag to adjust")
+    }
+
+    /// Still holding after the snap: the line's end follows the tip; other shapes turn and scale.
+    private func adjustQuickShape(editor: EditorModel, stage: StageView) {
+        guard let snapped, let tip = stroke.samples.last?.location else { return }
+        let shape = QuickShape.adjusted(snapped.shape, anchor: Vec2(Double(snapped.anchor.x), Double(snapped.anchor.y)),
+                                        current: Vec2(Double(tip.x), Double(tip.y)))
+        redrawStroke(shape.points, pressure: snapped.pressure, editor: editor, stage: stage)
+    }
+
+    /// Replaces the stroke so far with `points` (screen space), projected like any stroke onto its guide.
+    private func redrawStroke(_ points: [Vec2], pressure: Double, editor: EditorModel, stage: StageView) {
+        strokePoints = []
+        strokePressures = []
+        strokeNormals = []
+        let samples = points.map { StrokeGestureRecognizer.Sample(location: CGPoint(x: $0.x, y: $0.y), pressure: pressure) }
+        project(samples, editor: editor, stage: stage)
+        updatePreview(editor: editor, stage: stage)
     }
 
     private var consumedSamples = 0
 
     private func consume(_ samples: [StrokeGestureRecognizer.Sample], editor: EditorModel, stage: StageView) {
         consumedSamples += samples.count
+        project(samples, editor: editor, stage: stage)
+        updatePreview(editor: editor, stage: stage)
+    }
+
+    /// Screen samples → points on the stroke's guide (or the object it started on).
+    private func project(_ samples: [StrokeGestureRecognizer.Sample], editor: EditorModel, stage: StageView) {
         for sample in samples {
             guard let ray = stage.worldRay(at: sample.location) else { continue }
             let hit: SurfaceHit? = if let mesh = strokeTargetMesh {
@@ -595,7 +663,6 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             strokePressures.append(sample.pressure)
             strokeNormals.append(hit.normal)
         }
-        updatePreview(editor: editor, stage: stage)
     }
 
     private func updatePreview(editor: EditorModel, stage: StageView) {

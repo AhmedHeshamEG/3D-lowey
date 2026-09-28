@@ -137,10 +137,11 @@ struct ColorPickerPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: "Project palette")
-            PaletteRow(palette: editor.look.palette, selected: editor.currentColor.paletteSlot) { slot in
+            PaletteRow(palette: editor.look.palette, selected: editor.currentColor.paletteSlot,
+                       remove: { editor.removePaletteSwatch($0) }) { slot in
                 editor.setColor(.palette(slot))
             }
-            Text("Palette colours stay linked: change the palette in Look and everything updates.")
+            Text("Palette colours stay linked: change the palette in Look and everything updates. Long-press a colour to remove it.")
                 .font(.system(size: 12))
                 .foregroundStyle(Theme.secondaryText)
             SectionHeader(title: "Custom")
@@ -158,11 +159,14 @@ struct ColorPickerPanel: View {
 struct PaletteRow: View {
     let palette: Palette
     let selected: Int?
+    /// Offers "Remove from palette" on a long press when set.
+    var remove: ((Int) -> Void)?
     let pick: (Int) -> Void
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 36), spacing: 8)], spacing: 8) {
-            ForEach(Array(palette.swatches.enumerated()), id: \.offset) { index, swatch in
+            ForEach(palette.visibleSlots, id: \.self) { index in
+                let swatch = palette.swatches[index]
                 Button {
                     Haptics.select()
                     pick(index)
@@ -174,6 +178,11 @@ struct PaletteRow: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(swatch.name)
+                .contextMenu {
+                    if let remove {
+                        Button("Remove from palette", systemImage: "trash", role: .destructive) { remove(index) }
+                    }
+                }
             }
         }
     }

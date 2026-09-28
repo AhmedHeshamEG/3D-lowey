@@ -63,6 +63,9 @@ struct RootView: View {
                 app.open(url: island.url)
             }
         }
+        .sheet(isPresented: Binding(get: { app.showGestures }, set: { app.showGestures = $0 })) {
+            GestureGuide()
+        }
         .animation(.easeInOut(duration: 0.25), value: app.editor == nil)
         .animation(.spring(duration: 0.3), value: app.toast)
         .task { await app.start() }

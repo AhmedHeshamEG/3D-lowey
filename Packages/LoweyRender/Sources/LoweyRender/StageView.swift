@@ -37,14 +37,30 @@ public final class StageView: ARView {
             snapshot?.near = range.near
             snapshot?.far = range.far
             postProcessor.update(snapshot)
-            let active = post.map { !$0.isEmpty } ?? false
-            if active, renderCallbacks.postProcess == nil {
-                // Runs on RealityKit's render thread: capture only the thread-safe processor.
-                renderCallbacks.postProcess = Self.renderThreadCallback(postProcessor)
-            } else if !active, renderCallbacks.postProcess != nil {
-                renderCallbacks.postProcess = nil
-            }
+            updatePostCallback()
         }
+    }
+
+    /// Whether the post-processing pass is installed (it waits for the view to be on screen).
+    public var isPostProcessing: Bool { renderCallbacks.postProcess != nil }
+
+    /// Installs or removes the post-processing pass. RealityKit traps when render callbacks change before the
+    /// view is in a window (opening a scene with a look straight into a new stage did exactly that, e.g. the
+    /// welcome island on first launch), so until then this waits for `didMoveToWindow`.
+    private func updatePostCallback() {
+        guard window != nil else { return }
+        let active = post.map { !$0.isEmpty } ?? false
+        if active, renderCallbacks.postProcess == nil {
+            // Runs on RealityKit's render thread: capture only the thread-safe processor.
+            renderCallbacks.postProcess = Self.renderThreadCallback(postProcessor)
+        } else if !active, renderCallbacks.postProcess != nil {
+            renderCallbacks.postProcess = nil
+        }
+    }
+
+    override public func didMoveToWindow() {
+        super.didMoveToWindow()
+        updatePostCallback()
     }
 
     public init(renderer: SceneRenderer) {

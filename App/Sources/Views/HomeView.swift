@@ -94,6 +94,7 @@ struct HomeView: View {
             Spacer()
             Menu {
                 Button("Take the tour", systemImage: "hand.wave") { app.showTour = true }
+                Button("Gestures & shortcuts", systemImage: "hand.draw") { app.showGestures = true }
                 Button("Add the welcome island", systemImage: "tree") { app.createIslandSample(open: true) }
                 Button("Add the Enigma sample", systemImage: "sparkles") { app.createSampleProject(open: true) }
                 Button("Import a project (.loweypack)", systemImage: "square.and.arrow.down") { importing = true }

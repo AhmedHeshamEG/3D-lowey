@@ -65,9 +65,14 @@ final class EditorModel {
     var railPanel: RailPanel?
     var showOutliner = false
     var libraryPurpose: LibraryPurpose = .place
+    /// The stats pill (frame rate, slowest frame, heat) in the stage's corner.
     var showStatistics = false {
-        didSet { stage?.showsStatistics = showStatistics }
+        didSet { statsMonitor.setRunning(showStatistics) }
     }
+
+    let statsMonitor = StatsMonitor()
+    /// Focus mode: every panel hidden, only the stage (and one button to bring the interface back).
+    var focusMode = false
 
     var showGrid = true {
         didSet { stage?.showsGrid = showGrid && mode == .build }
@@ -239,7 +244,6 @@ final class EditorModel {
         projection = scene.viewpoint.projection
         stage.showsGrid = showGrid && mode == .build
         stage.gizmo.mode = gizmoMode
-        stage.showsStatistics = showStatistics
         stage.onCameraChanged = { [weak self] viewpoint in self?.cameraMoved(viewpoint) }
         renderer.onContentChanged = { [weak self] in self?.refreshSelectionOverlay() }
         refreshGuide()
@@ -894,6 +898,14 @@ final class EditorModel {
         } else {
             perform(.setLook(nil, scope: .scene))
         }
+    }
+
+    /// Takes a colour out of the palette. Objects painted with it keep their colour (the slot is kept, hidden).
+    func removePaletteSwatch(_ slot: Int) {
+        guard look.palette.swatches.indices.contains(slot) else { return }
+        if currentColor == .palette(slot) { currentColor = .rgba(look.palette.color(at: slot)) }
+        updateLook { $0.palette.remove(slot: slot) }
+        Haptics.tap()
     }
 
     /// Eyedropper: take an object's colour into a palette slot and bind the object to it.
