@@ -120,11 +120,22 @@ final class Phase2Tests: XCTestCase {
         XCTAssertEqual(frames.count, 3)
         let image = try XCTUnwrap(UIImage(contentsOfFile: urls[0].appendingPathComponent("frame_00003.png").path)?.cgImage)
         XCTAssertNotEqual(image.alphaInfo, .none)
-        let transparent = try await VideoExporter(document: document, library: nil, rigs: RigCache())
-            .images(at: 11, framings: [.square], longSide: 128, transparent: true)
-        let pixels = try bytes(XCTUnwrap(transparent.first))
-        XCTAssertLessThan(pixels[3], 255, "the background is see-through")
-        try attach(XCTUnwrap(transparent.first), name: "transparent-question-mark")
+        // One cube in an empty world: the background is see-through, the cube solid.
+        var scene = CoreScene(id: "t", name: "t")
+        var cube = SceneObject(id: "cube", name: "Cube", kind: .primitive(.cube))
+        cube[.color] = .color(.rgba(RGBA(1, 0.5, 0.2)))
+        scene.objects["cube"] = cube
+        scene.roots = ["cube"]
+        scene.viewpoint = Viewpoint(target: Vec3(0, 0.5, 0), yaw: 30, pitch: 20, distance: 3)
+        let single = Document(project: ProjectInfo(id: "p", name: "p"), scene: scene)
+        let transparent = try await VideoExporter(document: single, library: nil, rigs: RigCache())
+            .images(at: 0, framings: [.square], longSide: 128, transparent: true)
+        let matte = try XCTUnwrap(transparent.first)
+        let pixels = bytes(matte)
+        XCTAssertLessThan(pixels[3], 10, "the background is see-through")
+        let center = 64 * matte.bytesPerRow + 64 * 4
+        XCTAssertGreaterThan(pixels[center + 3], 245, "the cube is solid")
+        attach(matte, name: "transparent-cube")
     }
 
     // MARK: Characters
