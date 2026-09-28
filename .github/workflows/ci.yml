@@ -59,9 +59,23 @@ jobs:
           echo "### LoweyCore line coverage: ${COVERAGE}%" >> "$GITHUB_STEP_SUMMARY"
           awk -v c="$COVERAGE" 'BEGIN { exit !(c >= 80) }'
 
+  tools:
+    name: Laptop tools (lowey-mcp, lowey-link)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test against a fake iPad bridge
+        working-directory: tools/lowey
+        run: |
+          pip install -e ".[test]"
+          pytest -q
+
   app:
     name: iPad app build + render & UI tests
-    needs: [lint, core-tests]
+    needs: [lint, core-tests, tools]
     runs-on: xcode-27
     timeout-minutes: 60
     steps:

@@ -22,3 +22,8 @@ Package.resolved
 .idea/
 .vscode/
 .sfbin/
+
+# Python (tools/)
+__pycache__/
+*.egg-info/
+.pytest_cache/
