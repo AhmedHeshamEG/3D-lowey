@@ -73,14 +73,19 @@ final class AppModel {
 
     func createSampleProject(open shouldOpen: Bool) {
         do {
-            let (info, scenes) = try EnigmaSample.buildWithOpening(ids: .random)
+            let (info, scenes) = try EnigmaSample.buildFull(ids: .random)
             var fresh = info
             fresh.id = .make()
             fresh.created = Date()
             fresh.modified = Date()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
             refreshProjects()
-            if shouldOpen { open(url: url) }
+            // A placeholder narrator for the story scene (the device's voice, at each sentence's time).
+            let voice = url.appendingPathComponent(ProjectLayout.audioFolder).appendingPathComponent(EnigmaSample.voiceoverFile)
+            Task {
+                try? await PlaceholderVoice.render(EnigmaSample.narration.map { ($0.sentence, $0.start) }, duration: 12.6, to: voice)
+                if shouldOpen { open(url: url) }
+            }
         } catch {
             show("Couldn't create the sample: \(error.localizedDescription)")
         }

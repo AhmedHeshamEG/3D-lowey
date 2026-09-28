@@ -165,6 +165,14 @@ public struct TimelineWord: Hashable, Sendable, Identifiable {
     public var start: Double
     public var end: Double
 
+    public init(clip: String, index: Int, text: String, start: Double, end: Double) {
+        self.clip = clip
+        self.index = index
+        self.text = text
+        self.start = start
+        self.end = end
+    }
+
     public var id: String { "\(clip)#\(index)" }
     public var duration: Double { end - start }
 

@@ -59,6 +59,54 @@ final class EnigmaSampleTests: XCTestCase {
 
     // MARK: Phase 2 — the animated opening
 
+    func testTheStoryIsNarratedAndSyncedToWords() throws {
+        let (_, scenes) = try EnigmaSample.buildFull()
+        let story = try XCTUnwrap(scenes.last)
+        XCTAssertEqual(story.name, EnigmaSample.storyName)
+        XCTAssertTrue(story.validate().isEmpty)
+        let timeline = story.timeline
+        let words = timeline.words
+        XCTAssertEqual(words.first?.text, "This")
+        XCTAssertEqual(words.last?.text, "years?")
+        func start(_ word: String) -> Double { words.first { $0.normalized == word }!.start }
+        // The narrator lip-syncs the last line and raises her brows on "secret".
+        let me = try XCTUnwrap(story.objects.values.first { $0.name == "Me" && $0[.rigStandard] != nil }?.id)
+        let mouth = try XCTUnwrap(timeline.track(for: me, .mouth))
+        XCTAssertTrue(mouth.keyframes.contains { $0.time >= start("what's") && $0.value != .enumeration("X") })
+        XCTAssertNotNil(timeline.track(for: me, .brows)?.key(at: start("secret")))
+        XCTAssertEqual(timeline.clipTracks.first { $0.target == me }?.segments.map(\.clip.name), ["Idle", "Talk"])
+        // Word-synced beats.
+        XCTAssertEqual(timeline.effects.first { $0.kind == .flash }?.start ?? -1, start("nobody"), accuracy: 1e-9)
+        XCTAssertEqual(timeline.effects.first { $0.kind == .glitch }?.start ?? -1, start("enigma"), accuracy: 1e-9)
+        XCTAssertEqual(timeline.cuts.first { $0.time == 8 }?.transition?.kind, .dipToBlack)
+        XCTAssertEqual(timeline.captions?.style, .punchy)
+        XCTAssertEqual(Set(timeline.markers.map(\.name)), ["message", "Nobody", "AI", "secret"])
+        XCTAssertTrue(story.objects.values.contains {
+            if case .particles = $0.kind {
+                true
+            } else {
+                false
+            }
+        })
+        XCTAssertTrue(story.objects.values.contains {
+            if case .text = $0.kind {
+                true
+            } else {
+                false
+            }
+        })
+        let question = try XCTUnwrap(story.objects.values.first { $0.name == "Big question" }?.id)
+        let info = ProjectInfo(id: "p", name: "Enigma")
+        let before = Animator.evaluate(Document(project: info, scene: story), at: start("secret") - 0.3).scene
+        let after = Animator.evaluate(Document(project: info, scene: story), at: start("secret") + 0.5).scene
+        XCTAssertEqual(before.objects[question]?.opacity, 0)
+        XCTAssertEqual(after.objects[question]?.opacity, 1)
+        // She talks on the last line: her face moves.
+        let talking = Animator.evaluate(Document(project: info, scene: story), at: start("secret") + 0.1).scene
+        XCTAssertGreaterThan(talking.objects[me]?[.brows]?.floatValue ?? 0, 0.3)
+        XCTAssertEqual(Captions.page(at: start("nobody") + 0.1, in: Captions.pages(words, maxCharacters: 32, maxLines: 2))?.page.text.contains("Nobody"), true)
+    }
+
     func testOpeningIsAnimatedEndToEnd() throws {
         let (info, scenes) = try EnigmaSample.buildWithOpening()
         XCTAssertEqual(scenes.count, 4)

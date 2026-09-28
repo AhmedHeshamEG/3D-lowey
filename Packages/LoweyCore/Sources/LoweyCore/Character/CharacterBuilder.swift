@@ -86,6 +86,34 @@ public struct CharacterRecipe: Codable, Hashable, Sendable {
     }
 }
 
+extension CharacterRecipe {
+    private enum CodingKeys: String, CodingKey {
+        case name, head, hair, eyes, body, top, bottom, extras, skin, hairColor, topColor, bottomColor, shoeColor, height
+    }
+
+    /// Any subset of fields (an AI can say just {"hair": "curly"}); the rest are the defaults.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let base = CharacterRecipe()
+        try self.init(
+            name: c.decodeIfPresent(String.self, forKey: .name) ?? base.name,
+            head: c.decodeIfPresent(Head.self, forKey: .head) ?? base.head,
+            hair: c.decodeIfPresent(Hair.self, forKey: .hair) ?? base.hair,
+            eyes: c.decodeIfPresent(Eyes.self, forKey: .eyes) ?? base.eyes,
+            body: c.decodeIfPresent(Body.self, forKey: .body) ?? base.body,
+            top: c.decodeIfPresent(Top.self, forKey: .top) ?? base.top,
+            bottom: c.decodeIfPresent(Bottom.self, forKey: .bottom) ?? base.bottom,
+            extras: c.decodeIfPresent([Extra].self, forKey: .extras) ?? base.extras,
+            skin: c.decodeIfPresent(ColorValue.self, forKey: .skin) ?? base.skin,
+            hairColor: c.decodeIfPresent(ColorValue.self, forKey: .hairColor) ?? base.hairColor,
+            topColor: c.decodeIfPresent(ColorValue.self, forKey: .topColor) ?? base.topColor,
+            bottomColor: c.decodeIfPresent(ColorValue.self, forKey: .bottomColor) ?? base.bottomColor,
+            shoeColor: c.decodeIfPresent(ColorValue.self, forKey: .shoeColor) ?? base.shoeColor,
+            height: c.decodeIfPresent(Double.self, forKey: .height) ?? base.height
+        )
+    }
+}
+
 public extension PropertyKey {
     /// The recipe a built character came from (JSON), so it can be re-opened in the builder.
     static let characterRecipe: PropertyKey = "characterRecipe"
