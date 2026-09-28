@@ -18,6 +18,8 @@ final class AppModel {
     var toast: String?
     /// The 60-second interactive tour (first launch, or ⋯ → Take the tour).
     var showTour = false
+    /// The gestures & shortcuts page.
+    var showGestures = false
     /// The AI & laptop bridge (off until switched on).
     @ObservationIgnored lazy var bridge = BridgeModel(app: self)
 
@@ -27,6 +29,8 @@ final class AppModel {
 
     /// UI tests launch with a clean sandbox folder so runs are repeatable.
     static let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
+    /// A UI test that walks through the first-launch tour.
+    static let isTestingTour = ProcessInfo.processInfo.arguments.contains("-ui-testing-tour")
 
     init() {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -53,7 +57,7 @@ final class AppModel {
         if projects.isEmpty, wantsSample {
             createIslandSample(open: false)
             createSampleProject(open: false)
-            showTour = !Self.isUITesting
+            showTour = !Self.isUITesting || Self.isTestingTour
         }
         refreshArchived()
     }

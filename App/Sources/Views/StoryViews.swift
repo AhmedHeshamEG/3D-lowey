@@ -400,6 +400,10 @@ struct AddStorySection: View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: "Characters")
             LazyVGrid(columns: columns, spacing: 10) {
+                tile("Blob", "face.smiling") { editor.showBlobBuilder = true }
+                    .accessibilityIdentifier("add-blob")
+                tile("Me", "person.crop.circle") { editor.buildBlob(.hesham) }
+                    .accessibilityIdentifier("add-me")
                 tile("Character", "person.fill") {
                     editor.characterBuilderTarget = nil
                     editor.showCharacterBuilder = true
@@ -412,6 +416,8 @@ struct AddStorySection: View {
                     .accessibilityIdentifier("add-text3d")
                 tile("Title", "textformat.size") { editor.addOverlay(.title) }
                 tile("Label", "tag") { editor.addOverlay(.label) }
+                tile("Photo or video", "photo.on.rectangle") { editor.showMediaImporter = true }
+                    .accessibilityIdentifier("add-media")
             }
             SectionHeader(title: "On the frame")
             LazyVGrid(columns: columns, spacing: 10) {

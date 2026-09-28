@@ -173,7 +173,8 @@ public enum FaceRig {
     /// Characters (objects carrying face channels) in `scene`.
     static func faces(in scene: Scene) -> [ObjectID] {
         scene.objects.values.filter { object in
-            object[.rigStandard] != nil && channelKeys.contains { object[$0] != nil }
+            // Blobs have their own, cartoon rig (BlobRig).
+            object[.rigStandard] != nil && object[.rigStandard]?.stringValue != "blob" && channelKeys.contains { object[$0] != nil }
         }.map(\.id)
     }
 
@@ -192,11 +193,14 @@ public enum FaceRig {
                     let blink = role == "eye.L" ? value(.blinkLeft) : value(.blinkRight)
                     transform.scale.y = rest.scale.y * max(1 - blink * 0.92, 0.06)
                 case "pupil.L", "pupil.R":
-                    transform.position = rest.position + Vec3(value(.lookX) * 0.35, value(.lookY) * 0.25, 0) * rest.scale.x
+                    // A part's scale is its size for built puppets; true-size parts (blobs) say how far with `faceRange`.
+                    let size = part[.faceRange]?.floatValue ?? rest.scale.x
+                    transform.position = rest.position + Vec3(value(.lookX) * 0.35, value(.lookY) * 0.25, 0) * size
                 case "brow.L", "brow.R":
                     let brows = value(.brows)
                     let sign: Double = role == "brow.L" ? 1 : -1
-                    transform.position = rest.position + Vec3(0, brows * 0.6, 0) * rest.scale.y
+                    let size = part[.faceRange]?.floatValue ?? rest.scale.y
+                    transform.position = rest.position + Vec3(0, brows * 0.6, 0) * size
                     transform.rotation = (rest.rotation * Quat(angle: -brows * 0.18 * sign, axis: .unitZ)).normalized
                 case "mouth":
                     // Without a shape set the mouth itself opens and widens.

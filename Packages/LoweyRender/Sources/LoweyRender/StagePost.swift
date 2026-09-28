@@ -38,7 +38,9 @@ public struct StagePost: @unchecked Sendable {
     }
 
     /// Nothing to draw: the stage skips the post-process pass entirely.
-    public var isEmpty: Bool { look.post.isNeutral && !needsDepth && look.screen.isEmpty && overlays.isEmpty && caption == nil }
+    public var isEmpty: Bool {
+        look.post.isNeutral && !needsDepth && look.screen.isEmpty && overlays.isEmpty && caption == nil && look.glow == 0
+    }
 
     var needsDepth: Bool {
         !reduced && (look.post.outline > 0 || (look.post.depthOfField && (look.lens?.aperture ?? 0) > 0))

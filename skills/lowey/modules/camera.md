@@ -1,8 +1,3 @@
----
-name: camera-director
-description: Direct the camera for 3D-lowey shots — framing, cameras, cuts, transitions and camera moves timed to spoken words, for both 16:9 and 9:16. Use when Hesham asks to "add camera moves", "punch in on Enigma", "make it more cinematic", or to cut between shots.
----
-
 # Camera director (3D-lowey)
 
 Fast-paced explainer direction: strong framing, a camera move on the words that matter, cuts on new ideas.
@@ -10,6 +5,7 @@ Fast-paced explainer direction: strong framing, a camera move on the words that 
 ## Vocabulary (cameraMove)
 - **pushIn** — slow reveal / "look closer" (1.5–3 s).
 - **punchIn** — emphasis on one word (0.2–0.4 s). Max one every few seconds.
+- **snapZoom** — the explainer snap (Zach D Films): rush at the subject, overshoot, settle with a jolt (0.35–0.5 s). For reveals and punchlines.
 - **pullOut** — context / "and it's everywhere".
 - **orbit** — hero moments (the robot appears).
 - **dolly / truck / crane** — travel with the action; crane up for scale.
@@ -28,3 +24,8 @@ Fast-paced explainer direction: strong framing, a camera move on the words that 
 1. `get_scene` (cameras, cuts), `get_transcript` (beat words).
 2. One `run_script`: `camera`s → `cut`s → `cameraMove`s.
 3. `snapshot` at each cut and at the end of each move; adjust with a tiny script.
+
+## Performing the camera by hand (tell Hesham when it fits)
+Camera mode → look through the camera → Timeline Perform → Record: his normal gestures (drag to aim, two fingers to
+move, pinch to dolly, twist to roll) fly the camera and the path is recorded and smoothed. Best for handheld energy
+you can't key.

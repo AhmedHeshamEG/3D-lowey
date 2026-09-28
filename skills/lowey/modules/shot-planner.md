@@ -1,8 +1,3 @@
----
-name: shot-planner
-description: Plan and build ONE 3D-lowey shot from a line of the script, synced to the voiceover's words, as a single Scene Script (one approval, one undo step). Use when Hesham says "build shot 3", "make the 'Nobody could' shot", or picks a row from a breakdown.
----
-
 # Shot planner (3D-lowey)
 
 Goal: a finished, synced shot in ONE `run_script` call. Hesham approves it on the iPad, then edits by hand.

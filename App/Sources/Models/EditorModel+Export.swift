@@ -22,6 +22,13 @@ extension EditorModel {
         formatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
         let base = "\(ProjectStore.sanitize(baseScene.name)) \(formatter.string(from: Date()))"
         let exporter = VideoExporter(document: session.document, library: library, rigs: rigCache)
+        exporter.canRender = { UIApplication.shared.applicationState != .background }
+        // Image overlays and video frames come from the project's assets (images were missing from exports before).
+        exporter.overlayImage = { [weak self] name in self?.overlayImage(name) }
+        exporter.mediaURL = { [weak self] file in self?.mediaURL(file) }
+        exporter.onWaiting = { [weak self] waiting in self?.exportWaiting = waiting }
+        // A long export must not be cut off by auto-lock (a locked iPad can't render).
+        UIApplication.shared.isIdleTimerDisabled = true
         let folder = rendersFolder
         let clips = timeline.audio
         let audioFolder = audioFolder
@@ -52,7 +59,9 @@ extension EditorModel {
                 self?.app.show("Export failed: \(error)")
             }
             self?.exportProgress = nil
+            self?.exportWaiting = false
             self?.exportTask = nil
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
 

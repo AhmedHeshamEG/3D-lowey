@@ -554,6 +554,13 @@ final class MotionTests: XCTestCase {
                 XCTAssertGreaterThan(end.transform.position.distance(to: Vec3(0, 1, 0)), 10.01)
             case .punchIn:
                 XCTAssertLessThan(end[.fieldOfView]?.floatValue ?? 50, 50)
+            case .snapZoom:
+                // Rushes most of the way in, and ends looking exactly where it looked (the jolt settles).
+                XCTAssertLessThan(end.transform.position.distance(to: Vec3(0, 1, 0)), 5)
+                XCTAssertTrue(end.transform.rotation.isApproximately(original.transform.rotation, tolerance: 1e-6))
+                let early = Animator.evaluate(applied, at: 0.5 + move.defaultDuration * 0.3).scene.objects[cam]!
+                XCTAssertLessThan(early.transform.position.distance(to: Vec3(0, 1, 0)), end.transform.position.distance(to: Vec3(0, 1, 0)),
+                                  "overshoots before it settles")
             case .truck:
                 XCTAssertEqual(end.transform.position.x, 2, accuracy: 1e-9)
             case .crane:

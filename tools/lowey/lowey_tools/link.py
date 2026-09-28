@@ -9,6 +9,8 @@
   lowey-link generate tree --seed 3        run a laptop-side generator (Blender) and push the result
   lowey-link generate text "a red fox"     run your text-to-3D command (LOWEY_TEXT_TO_3D) and push the result
   lowey-link script shot.json              send a Scene Script (preview + approval on the iPad)
+  lowey-link media graph.png clip.mov --at 3   put pictures / videos in the shot (videos play from --at seconds)
+  lowey-link manim scene.py Graph --at 3   render a Manim scene (transparent) and put it in the shot at 3 s
 """
 from __future__ import annotations
 
@@ -88,6 +90,16 @@ def main(argv: list[str] | None = None) -> int:
     generate = sub.add_parser("generate")
     generate.add_argument("generator")
     generate.add_argument("args", nargs=argparse.REMAINDER)
+    media = sub.add_parser("media")
+    media.add_argument("files", nargs="+", type=pathlib.Path)
+    media.add_argument("--at", type=float)
+    manim = sub.add_parser("manim")
+    manim.add_argument("script", type=pathlib.Path)
+    manim.add_argument("scene")
+    manim.add_argument("--at", type=float)
+    manim.add_argument("--quality", default="high", choices=["low", "medium", "high", "4k"])
+    manim.add_argument("--fps", type=int, default=30)
+    manim.add_argument("--opaque", action="store_true", help="keep Manim's background (an .mp4) instead of transparency")
     script = sub.add_parser("script")
     script.add_argument("file", type=pathlib.Path)
     script.add_argument("--dry-run", action="store_true")
@@ -131,6 +143,16 @@ def main(argv: list[str] | None = None) -> int:
             with tempfile.TemporaryDirectory() as folder:
                 made = run_generator(options.generator, options.args, pathlib.Path(folder))
                 print(f"{made.name}: {bridge.import_file(made)}")
+        elif options.command == "media":
+            for path in options.files:
+                print(f"{path.name}: {bridge.import_media(path, at=options.at)}")
+        elif options.command == "manim":
+            from .manim_render import render
+
+            with tempfile.TemporaryDirectory() as folder:
+                video = render(options.script, options.scene, pathlib.Path(folder), quality=options.quality, fps=options.fps,
+                               transparent=not options.opaque)
+                print(f"{video.name}: {bridge.import_media(video, at=options.at)}")
         elif options.command == "script":
             payload = json.loads(options.file.read_text(encoding="utf-8"))
             print(describe(bridge.script(payload.get("title", options.file.stem), payload.get("actions", []), dry_run=options.dry_run)))

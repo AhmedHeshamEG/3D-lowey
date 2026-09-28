@@ -34,6 +34,41 @@ extension EditorModel {
         }
     }
 
+    /// A blob character (the house style: cartoon face with springs).
+    func isBlob(_ id: ObjectID) -> Bool {
+        baseScene.objects[id]?[.rigStandard]?.stringValue == "blob"
+    }
+
+    /// Keys a whole expression at the playhead (Character Animator's triggers). The rig overshoots into it and settles.
+    func keyExpression(_ expression: FaceExpression, on character: ObjectID) {
+        var ids = IDFactory.random
+        let keyed = expression.keyed(on: character, at: time, in: timeline, ids: &ids)
+        perform(.batch("\(expression.title) face", [.setTimeline(keyed)]))
+        Haptics.tap()
+    }
+
+    /// How rubbery a blob's in-betweens are (0 = straight, 1 = Looney Tunes).
+    func setCartoon(_ value: Double, on character: ObjectID) {
+        perform(.setProperties([PropertyChange(object: character, key: .cartoon, value: .float(value))]), coalesceKey: "cartoon-\(character.raw)")
+    }
+
+    /// Adds a blob character (the house style) where you're looking, floating.
+    func buildBlob(_ recipe: BlobRecipe) {
+        var ids = IDFactory.random
+        let build = BlobCharacter.build(recipe, ids: &ids)
+        var fragment = build.fragment
+        guard let rootIndex = fragment.objects.firstIndex(where: { $0.id == fragment.roots.first }) else { return }
+        fragment.objects[rootIndex].name = ObjectFactory.uniqueName(recipe.name, in: scene)
+        fragment.objects[rootIndex].transform.position = dropPoint()
+        let root = fragment.objects[rootIndex].id
+        var floating = timeline
+        floating.behaviors += build.behaviors
+        if perform(.batch("Add \(recipe.name)", [.insert(fragment, parent: nil, index: nil), .setTimeline(floating)])) {
+            select(root)
+            app.show("\(recipe.name) is here. Try Animate → Lip sync, or Perform the hands")
+        }
+    }
+
     /// Rebuilds a character from an edited recipe. The root keeps its id, place and animation (clips, lip sync, face).
     func rebuildCharacter(_ root: ObjectID, with recipe: CharacterRecipe) {
         guard let old = baseScene.objects[root] else { return }

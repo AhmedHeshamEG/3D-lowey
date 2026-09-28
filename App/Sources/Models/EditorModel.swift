@@ -65,9 +65,23 @@ final class EditorModel {
     var railPanel: RailPanel?
     var showOutliner = false
     var libraryPurpose: LibraryPurpose = .place
+    /// The stats pill (frame rate, slowest frame, heat) in the stage's corner.
     var showStatistics = false {
-        didSet { stage?.showsStatistics = showStatistics }
+        didSet { statsMonitor.setRunning(showStatistics) }
     }
+
+    let statsMonitor = StatsMonitor()
+    /// Video overlay frames for the live stage (nearest frame, never waits).
+    @ObservationIgnored lazy var videoPreview: VideoFrames = {
+        let frames = VideoFrames(exact: false)
+        frames.onFrame = { [weak self] in self?.updateStagePost() }
+        return frames
+    }()
+
+    /// The picture / video picker (Add → Photo or video).
+    var showMediaImporter = false
+    /// Focus mode: every panel hidden, only the stage (and one button to bring the interface back).
+    var focusMode = false
 
     var showGrid = true {
         didSet { stage?.showsGrid = showGrid && mode == .build }
@@ -101,6 +115,10 @@ final class EditorModel {
     /// Timeline "Select" mode: dragging on empty lanes draws a selection box and taps add to the selection.
     var keyBoxSelect = false
     var expandedObjects: Set<ObjectID> = []
+    /// Timeline group rows whose children are folded away.
+    var collapsedGroups: Set<ObjectID> = []
+    /// First second shown in the timeline (scrolled by drags, flicks and zoom).
+    var timelineStart: Double = 0
     var presetDuration: Double?
     var presetStrength: Double = 1
     var stagger = StaggerPanelSettings()
@@ -121,6 +139,8 @@ final class EditorModel {
     var virtualCameraActive = false
     var virtualCameraScale: Double = 1
     var exportProgress: Double?
+    /// The export is holding until the app is back in front (it resumes by itself).
+    var exportWaiting = false
     var exportResults: [URL] = []
 
     // MARK: Audio & narration state (see EditorModel+Audio.swift)
@@ -156,6 +176,8 @@ final class EditorModel {
     // MARK: Character & face state (see EditorModel+Character.swift)
 
     var showCharacterBuilder = false
+    /// The blob character sheet (the house style).
+    var showBlobBuilder = false
     /// A Scene Script waiting for your decision (AI proposes, you decide).
     var proposal: ScriptProposal?
     var showBridge = false
@@ -237,7 +259,6 @@ final class EditorModel {
         projection = scene.viewpoint.projection
         stage.showsGrid = showGrid && mode == .build
         stage.gizmo.mode = gizmoMode
-        stage.showsStatistics = showStatistics
         stage.onCameraChanged = { [weak self] viewpoint in self?.cameraMoved(viewpoint) }
         renderer.onContentChanged = { [weak self] in self?.refreshSelectionOverlay() }
         refreshGuide()
@@ -288,6 +309,8 @@ final class EditorModel {
 
     func endGesture() {
         session.endCoalescing()
+        // Fingers up while recording a flown camera: that take pauses until the next touch.
+        if performPhase == .recording, performedCamera != nil { performTouching = false }
     }
 
     var canUndo: Bool { session.canUndo }
@@ -892,6 +915,14 @@ final class EditorModel {
         } else {
             perform(.setLook(nil, scope: .scene))
         }
+    }
+
+    /// Takes a colour out of the palette. Objects painted with it keep their colour (the slot is kept, hidden).
+    func removePaletteSwatch(_ slot: Int) {
+        guard look.palette.swatches.indices.contains(slot) else { return }
+        if currentColor == .palette(slot) { currentColor = .rgba(look.palette.color(at: slot)) }
+        updateLook { $0.palette.remove(slot: slot) }
+        Haptics.tap()
     }
 
     /// Eyedropper: take an object's colour into a palette slot and bind the object to it.

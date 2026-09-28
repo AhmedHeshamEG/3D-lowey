@@ -92,6 +92,14 @@ public final class VideoExporter {
     private var captionPages: [Framing: [CaptionPage]] = [:]
     /// Loads overlay images (files in the project's assets folder).
     public var overlayImage: (String) -> CGImage? = { _ in nil }
+    /// Where a media file of the project lives (video overlays: clips, Manim renders).
+    public var mediaURL: (String) -> URL? = { _ in nil }
+    private let videoFrames = VideoFrames(exact: true)
+    /// Whether the GPU may be used now. iOS suspends GPU work in the background (screen locked, another app in
+    /// front): the export waits for the app to come back instead of stalling on a frame that never finishes.
+    public var canRender: @MainActor () -> Bool = { true }
+    /// Called with true while the export waits for the app to come back, false when it resumes.
+    public var onWaiting: @MainActor (Bool) -> Void = { _ in }
 
     public init(document: Document, library: LibraryProviding?, rigs: RigCache) {
         self.document = document
@@ -126,7 +134,7 @@ public final class VideoExporter {
     /// Anything beyond the plain render (post, overlays, captions, effects, transitions)?
     var compositing: Bool {
         !post.isNeutral || depthWorld != nil || !timeline.effects.isEmpty || timeline.cuts.contains { ($0.transition?.kind ?? .cut) != .cut }
-            || document.scene.objects.values.contains { $0.kind.isOverlay } || burnsCaptions
+            || document.scene.objects.values.contains { $0.kind.isOverlay } || burnsCaptions || FrameLook.mayGlow(document)
     }
 
     private var burnsCaptions: Bool {
@@ -203,7 +211,7 @@ public final class VideoExporter {
         try await session.render(camera: mainCamera, target: target, world: world, deltaTime: deltaTime)
         guard compositing else { return }
         let look = FrameLook(post: post, lens: lens(mainID, in: animated), screen: ScreenEffects.state(at: time, effects: timeline.effects, fps: timeline.fps),
-                             frame: frame)
+                             frame: frame, glow: FrameLook.glow(in: animated.scene))
         var picture = try await shot(target: target, camera: mainCamera, look: look, session: session)
         if let transition {
             let key = "\(target.width)x\(target.height)"
@@ -217,7 +225,8 @@ public final class VideoExporter {
             picture = compositor.transition(from: from, to: picture, kind: transition.kind, progress: transition.progress)
         }
         let size = CGSize(width: target.width, height: target.height)
-        let overlays = overlayLayer(animated, camera: mainCamera, framing: framing, size: size)
+        let frames = await videoFrames(for: animated, framing: framing, size: size)
+        let overlays = overlayLayer(animated, camera: mainCamera, framing: framing, size: size, videoFrames: frames)
         picture = compositor.finish(picture, look: look, overlays: overlays)
         target.matte = compositor.bytes(picture, width: target.width, height: target.height)
     }
@@ -273,16 +282,36 @@ public final class VideoExporter {
         return UInt8((linear * 255).rounded())
     }
 
+    /// The exact frame of every video overlay showing at this time.
+    private func videoFrames(for animated: AnimatedScene, framing _: Framing, size: CGSize) async -> [String: CGImage] {
+        guard animated.scene.objects.values.contains(where: {
+            if case let .overlay(recipe) = $0.kind {
+                recipe.video != nil
+            } else { false }
+        })
+        else { return [:] }
+        var frames: [String: CGImage] = [:]
+        let placements = OverlayLayout.placements(in: animated.scene, palette: document.palette, width: Double(size.width),
+                                                  height: Double(size.height), time: animated.time)
+        for placement in placements {
+            guard let key = placement.recipe.image, let (file, _) = VideoFrameKey.parse(key), let url = mediaURL(file) else { continue }
+            if let image = await videoFrames.frame(key, url: url) { frames[key] = image }
+        }
+        return frames
+    }
+
     /// Overlays and captions for this frame, drawn at the frame's size.
-    private func overlayLayer(_ animated: AnimatedScene, camera: OffscreenRenderer.Camera, framing: Framing, size: CGSize) -> CIImage? {
+    private func overlayLayer(_ animated: AnimatedScene, camera: OffscreenRenderer.Camera, framing: Framing, size: CGSize,
+                              videoFrames: [String: CGImage] = [:]) -> CIImage? {
         let cameraTransform = LoweyCore.Transform(position: Vec3(camera.position), rotation: Quat(camera.orientation))
         let placements = OverlayLayout.placements(in: animated.scene, palette: document.palette, width: Double(size.width),
-                                                  height: Double(size.height)) { point in
+                                                  height: Double(size.height), time: animated.time) { point in
             OverlayLayout.project(point, camera: cameraTransform, fieldOfView: Double(camera.fieldOfView), aspect: framing.aspect)
         }
         let caption = burnsCaptions ? Captions.page(at: animated.time, in: pages(for: framing)) : nil
         guard !placements.isEmpty || caption != nil else { return nil }
-        let images = overlayImage
+        let stills = overlayImage
+        let images: (String) -> CGImage? = { name in videoFrames[name] ?? stills(name) }
         return compositor.overlayImage(size: size) { context in
             OverlayRenderer.draw(placements, in: context, size: size, image: images)
             if let caption, let settings = timeline.captions {
@@ -320,6 +349,7 @@ public final class VideoExporter {
         guard !settings.framings.isEmpty else { throw ExportError.nothingToExport }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let session = try await makeSession(transparent: settings.transparent)
+        session.canRender = canRender
         let rigs = rigCache.rigs(for: document, library: world.library)
         _ = prepare(at: settings.range.start, rigs: rigs, first: true)
         await world.waitForAssets()
@@ -352,6 +382,7 @@ public final class VideoExporter {
         let frames = settings.frameCount
         let step = 1 / Double(max(settings.fps, 1))
         // Settle textures and lighting once before frame 0.
+        try await waitUntilRenderable()
         let first = prepare(at: settings.range.start, rigs: rigs, first: false)
         for output in outputs {
             for _ in 0 ..< 3 {
@@ -361,6 +392,7 @@ public final class VideoExporter {
         do {
             for frame in 0 ..< frames {
                 try Task.checkCancellation()
+                try await waitUntilRenderable()
                 let time = settings.range.start + Double(frame) * step
                 let animated = prepare(at: time, rigs: rigs, first: false)
                 for output in outputs {
@@ -389,6 +421,17 @@ public final class VideoExporter {
             try await output.writer?.finish()
         }
         return outputs.map(\.url)
+    }
+
+    /// Holds the export while the app can't use the GPU (it resumes by itself when the app is back in front).
+    private func waitUntilRenderable() async throws {
+        guard !canRender() else { return }
+        logger.notice("Export waiting: the app is not in front")
+        onWaiting(true)
+        defer { onWaiting(false) }
+        while !canRender() {
+            try await Task.sleep(for: .milliseconds(250))
+        }
     }
 
     private struct Output {
@@ -502,6 +545,11 @@ final class RenderSession {
     /// Transparent frames: RealityRenderer always writes opaque pixels, so the frame is rendered over black and
     /// over white; alpha = 1 − (white − black) and the over-black colour is the premultiplied colour.
     var transparent = false
+    /// Whether the GPU may be used (false in the background); a stalled frame waits for this before retrying.
+    var canRender: @MainActor () -> Bool = { true }
+    /// How long one frame may take before it counts as stalled.
+    var frameDeadline: Duration = .seconds(15)
+    private let logger = Logger(subsystem: "com.hesham.lowey", category: "export")
 
     func render(camera pose: OffscreenRenderer.Camera, target: RenderTarget, world: SceneRenderer, deltaTime: Double) async throws {
         target.matte = nil
@@ -528,16 +576,66 @@ final class RenderSession {
         camera.position = pose.position
         camera.orientation = pose.orientation
         world.environment.follow(camera: Vec3(pose.position))
+        var attempts = 0
+        while true {
+            do {
+                try await renderWithDeadline(target: target, deltaTime: attempts == 0 ? deltaTime : 0)
+                return
+            } catch RenderStall.timedOut {
+                attempts += 1
+                logger.error("A frame did not finish in time (attempt \(attempts))")
+                if attempts >= 3 {
+                    throw ExportError.writer("the renderer stopped responding. Keep 3D-lowey in front while it exports")
+                }
+                // Usually the app went to the background mid-frame: wait until it's back, then render again.
+                while !canRender() {
+                    try await Task.sleep(for: .milliseconds(250))
+                }
+            }
+        }
+    }
+
+    /// One `updateAndRender`, resumed by its completion or by the deadline, whichever comes first (never both).
+    private func renderWithDeadline(target: RenderTarget, deltaTime: Double) async throws {
+        let gate = ResumeGate()
+        let deadline = frameDeadline
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let watchdog = Task {
+                try? await Task.sleep(for: deadline)
+                if !Task.isCancelled, gate.claim() { continuation.resume(throwing: RenderStall.timedOut) }
+            }
             do {
                 try renderer.updateAndRender(
                     deltaTime: deltaTime, cameraOutput: target.output, whenScheduled: nil,
-                    onComplete: { _ in continuation.resume() }, actionsBeforeRender: [], actionsAfterRender: []
+                    onComplete: { _ in
+                        watchdog.cancel()
+                        if gate.claim() { continuation.resume() }
+                    }, actionsBeforeRender: [], actionsAfterRender: []
                 )
             } catch {
-                continuation.resume(throwing: error)
+                watchdog.cancel()
+                if gate.claim() { continuation.resume(throwing: error) }
             }
         }
+    }
+}
+
+enum RenderStall: Error {
+    case timedOut
+}
+
+/// Lets exactly one of several racing callbacks resume a continuation.
+final class ResumeGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var claimed = false
+
+    /// True for the first caller only.
+    func claim() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        if claimed { return false }
+        claimed = true
+        return true
     }
 }
 

@@ -85,8 +85,10 @@ struct ExportPanel: View {
                 VStack(alignment: .leading, spacing: 6) {
                     ProgressView(value: progress)
                     HStack {
-                        Text("Rendering \(Int(progress * 100))% — keep working, it runs in the background")
-                            .font(.system(size: 12)).foregroundStyle(Theme.secondaryText)
+                        Text(editor.exportWaiting
+                            ? "Paused while 3D-lowey is in the background: it carries on when you're back"
+                            : "Rendering \(Int(progress * 100))%. You can keep working; keep 3D-lowey open")
+                            .font(.system(size: 12)).foregroundStyle(editor.exportWaiting ? Theme.accent : Theme.secondaryText)
                         Spacer()
                         PillButton(title: "Cancel", destructive: true) { editor.cancelExport() }
                     }

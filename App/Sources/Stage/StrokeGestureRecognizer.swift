@@ -11,6 +11,14 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
 
     private(set) var samples: [Sample] = []
     private var trackedTouch: UITouch?
+    /// Draw, then hold still: called once per stroke (QuickShape). Moving on after it keeps reporting samples.
+    var onHold: (() -> Void)?
+    /// How long the tip must rest, and how far it may drift while resting (points).
+    var holdDuration: TimeInterval = 0.45
+    var holdTolerance: CGFloat = 5
+    private(set) var held = false
+    private var holdAnchor: CGPoint?
+    private var holdTimer: Timer?
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         guard trackedTouch == nil, let touch = touches.first else {
@@ -22,6 +30,7 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
         trackedTouch = touch
         samples = [sample(touch)]
         state = .began
+        armHold(at: samples[0].location)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
@@ -30,7 +39,24 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
         for item in coalesced {
             samples.append(sample(item))
         }
+        if let last = samples.last?.location, !held,
+           let anchor = holdAnchor, hypot(last.x - anchor.x, last.y - anchor.y) > holdTolerance {
+            armHold(at: last)
+        }
         state = .changed
+    }
+
+    /// (Re)starts the rest timer: it fires only if the tip stays within `holdTolerance` for `holdDuration`.
+    private func armHold(at point: CGPoint) {
+        holdAnchor = point
+        holdTimer?.invalidate()
+        holdTimer = Timer.scheduledTimer(withTimeInterval: holdDuration, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, !self.held, self.trackedTouch != nil, self.samples.count > 3 else { return }
+                self.held = true
+                self.onHold?()
+            }
+        }
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
@@ -47,6 +73,10 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
         super.reset()
         trackedTouch = nil
         samples = []
+        held = false
+        holdAnchor = nil
+        holdTimer?.invalidate()
+        holdTimer = nil
     }
 
     private func sample(_ touch: UITouch) -> Sample {

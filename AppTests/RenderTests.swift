@@ -75,6 +75,32 @@ final class RenderTests: XCTestCase {
 
     // MARK: Shader
 
+    /// First launch crashed: the tour opened the welcome island (a scene with post-processing) straight into a new
+    /// stage, which installed RealityKit's render callbacks before the view had rendered (RealityKit traps there).
+    /// The pass must wait for the stage's first frames, and arrive once it renders.
+    func testPostProcessingWaitsForTheFirstFrames() throws {
+        let stage = StageView(renderer: SceneRenderer())
+        var settings = PostSettings.none
+        settings.vignette = 0.4
+        stage.post = StagePost(look: FrameLook(post: settings), frameRect: CGRect(x: 0, y: 0, width: 400, height: 300))
+        XCTAssertFalse(stage.isPostProcessing, "not installed on a stage that never rendered (this is where it trapped)")
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        window.isHidden = false
+        window.addSubview(stage)
+        stage.frame = window.bounds
+        XCTAssertFalse(stage.isPostProcessing, "still waiting: nothing rendered yet (the second place it trapped)")
+        let deadline = Date().addingTimeInterval(5)
+        while !stage.isPostProcessing, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+        guard stage.isPostProcessing else {
+            throw XCTSkip("the simulator didn't render the stage in a test window; the crash itself is covered above")
+        }
+        stage.post = nil
+        XCTAssertFalse(stage.isPostProcessing)
+        stage.removeFromSuperview()
+    }
+
     func testFogShaderCompiledIntoThePackage() {
         XCTAssertTrue(MaterialFactory.shared.customShaderAvailable, "loweySurface must load (fog + glow)")
     }

@@ -64,6 +64,8 @@ class FakeBridge(BaseHTTPRequestHandler):
             return self.reply(200, b"\x89PNG....", "image/png")
         if path == "/v1/library/import":
             return self.reply(200, {"imported": "tree.glb"})
+        if path == "/v1/media/import":
+            return self.reply(200, {"added": "graph.mov", "id": "id-9", "name": "graph"})
         return self.reply(404, {"error": "no"})
 
 
@@ -141,3 +143,35 @@ def test_errors_are_readable(tmp_path, monkeypatch):
     with pytest.raises(client.BridgeError, match="Can't reach"):
         unreachable.status()
     assert client.normalize_host("http://10.0.0.2/") == "10.0.0.2:7717"
+
+
+def test_media_and_manim_reach_the_shot(bridge_host, tmp_path, monkeypatch):
+    from lowey_tools import link, manim_render
+    importlib = __import__("importlib")
+    importlib.reload(link)
+    assert link.main(["pair", bridge_host, "123456"]) == 0
+    picture = tmp_path / "chart.png"
+    picture.write_bytes(b"PNG")
+    assert link.main(["media", str(picture), "--at", "2.5"]) == 0
+    assert RECEIVED[-1][0] == "/v1/media/import" and "name=chart.png" in RECEIVED[-1][1] and "at=2.5" in RECEIVED[-1][1]
+    assert RECEIVED[-1][2] == b"PNG"
+
+    # Manim: the command asks for transparent PNG frames at 30 fps in a private media folder…
+    command = manim_render.manim_command(pathlib.Path("scene.py"), "Graph", tmp_path / "m", "high", 30, True)
+    assert command[1:4] == ["-m", "manim", "render"] and "--transparent" in command and command[-2:] == ["scene.py", "Graph"]
+    assert "--fps" in command and "30" in command
+    assert "--format" in command and command[command.index("--format") + 1] == "png"
+
+    # …and the frames become a ProRes 4444 movie with alpha (when PyAV is here: it comes with Manim).
+    av = pytest.importorskip("av")
+    image = pytest.importorskip("PIL.Image")
+    frames = []
+    for index in range(3):
+        path = tmp_path / f"Graph{index:04d}.png"
+        image.new("RGBA", (64, 36), (255, 0, 0, 120 + index * 40)).save(path)
+        frames.append(path)
+    movie = manim_render.pack_prores(frames, tmp_path / "Graph.mov", 30)
+    with av.open(str(movie)) as container:
+        stream = container.streams.video[0]
+        assert stream.codec_context.name == "prores"
+        assert "a" in stream.codec_context.pix_fmt, "the movie keeps its alpha"

@@ -105,7 +105,7 @@ struct CharacterBuilderSheet: View {
     private func colorRow(_ title: String, _ key: WritableKeyPath<CharacterRecipe, ColorValue>, swatches: [String]?) -> some View {
         let palette = editor.look.palette
         let colors: [ColorValue] = swatches.map { $0.compactMap { RGBA(hex: $0).map(ColorValue.rgba) } }
-            ?? palette.swatches.indices.map { ColorValue.palette($0) }
+            ?? palette.visibleSlots.map { ColorValue.palette($0) }
         return HStack(spacing: 8) {
             Text(title).font(.system(size: 13, weight: .semibold)).frame(width: 60, alignment: .leading)
             ForEach(Array(colors.enumerated()), id: \.offset) { _, color in
@@ -208,6 +208,9 @@ struct FaceSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if editor.isBlob(character) {
+                ExpressionTriggers(editor: editor, character: character)
+            }
             SectionHeader(title: "Voice & face")
             HStack {
                 PillButton(title: editor.wordSelection == nil ? "Lip sync to the voiceover" : "Lip sync these words", systemName: "mouth",
@@ -234,6 +237,48 @@ struct FaceSection: View {
                     PillButton(title: "Use my iPhone", systemName: "iphone") { editor.startFaceCapture(useIPhone: true) }
                 }
             }
+        }
+    }
+}
+
+/// One tap poses the whole face at the playhead; the springs overshoot into it (Character Animator-style triggers).
+struct ExpressionTriggers: View {
+    let editor: EditorModel
+    let character: ObjectID
+
+    private let columns = [GridItem(.adaptive(minimum: 88), spacing: 8)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: "Expressions")
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(FaceExpression.allCases) { expression in
+                    Button {
+                        editor.keyExpression(expression, on: character)
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: expression.symbol).font(.system(size: 16, weight: .semibold))
+                            Text(expression.title).font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(Theme.text)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.raised))
+                        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("expression-\(expression.rawValue)")
+                }
+            }
+            HStack {
+                Text("Cartoon").font(.system(size: 13, weight: .semibold))
+                Slider(value: Binding(
+                    get: { editor.baseScene.objects[character]?[.cartoon]?.floatValue ?? 0.8 },
+                    set: { editor.setCartoon($0, on: character) }
+                ), in: 0 ... 1)
+            }
+            Text("Tap a face at the playhead. It snaps into it, overshoots and settles; move the playhead and tap the next.")
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.secondaryText)
         }
     }
 }

@@ -122,7 +122,8 @@ extension EditorModel {
             camera = CoreTransform(position: pose.eye, rotation: pose.rotation)
             fieldOfView = pose.fieldOfView
         }
-        return OverlayLayout.placements(in: displayed.scene, palette: document.palette, width: Double(rect.width), height: Double(rect.height)) { point in
+        return OverlayLayout.placements(in: displayed.scene, palette: document.palette, width: Double(rect.width), height: Double(rect.height),
+                                        time: time) { point in
             OverlayLayout.project(point, camera: camera, fieldOfView: fieldOfView, aspect: aspect)
         }
     }
@@ -289,6 +290,11 @@ extension EditorModel {
 
     /// Overlay images live in the project's assets folder.
     func overlayImage(_ name: String) -> CGImage? {
+        if let (file, _) = VideoFrameKey.parse(name) {
+            // A video's frame: whatever is decoded (the stage never waits); it refreshes when the frame arrives.
+            guard let url = mediaURL(file) else { return nil }
+            return videoPreview.frameNow(name, url: url)
+        }
         if let cached = overlayImages[name] { return cached }
         let url = projectURL.appendingPathComponent(ProjectLayout.assetsFolder).appendingPathComponent(name)
         guard let image = UIImage(contentsOfFile: url.path)?.cgImage else { return nil }
@@ -322,7 +328,9 @@ extension EditorModel {
         for placement in overlays {
             if let name = placement.recipe.image, let image = overlayImage(name) { images[name] = image }
         }
-        stage.post = StagePost(look: FrameLook(post: previewPost ? look.post : PostSettings(), lens: lens, screen: screen, frame: timeline.frame(for: time)),
+        let glow = previewPost ? FrameLook.glow(in: displayed.scene) : 0
+        stage.post = StagePost(look: FrameLook(post: previewPost ? look.post : PostSettings(), lens: lens, screen: screen, frame: timeline.frame(for: time),
+                                               glow: glow),
                                frameRect: frameRect, overlays: overlays, caption: caption, reduced: reduced, images: images)
     }
 }

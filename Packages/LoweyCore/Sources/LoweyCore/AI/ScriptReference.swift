@@ -22,6 +22,9 @@ public enum ScriptReference {
     {"do":"place","asset":"tiger","name":"Tiger","at":[2,0,0],"scale":1.2}        (library search; see GET /v1/assets?q=)
     {"do":"text","text":"1941","at":[0,0.8,0],"size":0.2,"style":"blocky|rounded|bold|serif|mono"}
     {"do":"light","type":"point|spot|sun","at":[0,2,0],"color":"#FFB347","intensity":2}
+    {"do":"blob","likeness":"hesham|newton|einstein|turing|curie|darwin|tesla|lovelace|edison|sherlock|wizard","name":"Me","at":[0,0,0]}
+    {"do":"blob","name":"Ada","facing":20,"label":"ADA","recipe":{"hat":"beret","hair":"bob","accessories":["glasses"],"prop":"gear"}}
+    {"do":"expression","target":"Me","name":"neutral|happy|laugh|smug|surprised|shocked|scared|sad|angry|sleepy|wink|thinking","at":{"word":"what"}}
     {"do":"character","name":"Me","at":[1,0,0],"facing":-30,"recipe":{"hair":"short","top":"hoodie","extras":["beard"]}}
     {"do":"particles","preset":"fire|sparks|smoke|dust|magic|rain|snow|confetti|embers|explosion","at":"Lamp","amount":1,"time":{"word":"boom"}}
     {"do":"array","target":"Desk","count":6,"step":[2,0,0]}   {"do":"scatter","target":"Tree","count":30,"radius":8,"at":[0,0,0]}
@@ -38,7 +41,7 @@ public enum ScriptReference {
 
     Camera
     {"do":"camera","name":"Desk cam","from":[0,1.6,2.2],"lookAt":"Paper","focalLength":35,"aperture":2.8,"active":true}
-    {"do":"cameraMove","camera":"Desk cam","move":"pushIn|pullOut|punchIn|orbit|dolly|truck|crane|whipPan|shake|reveal","subject":"Paper","at":{"word":"message"},"duration":2}
+    {"do":"cameraMove","camera":"Desk cam","move":"pushIn|pullOut|punchIn|snapZoom|orbit|dolly|truck|crane|whipPan|shake|reveal","subject":"Paper","at":{"word":"message"},"duration":2}
     {"do":"cut","camera":"Room cam","at":{"word":"people"},"transition":"cut|fade|dipToBlack|wipe|zoomThrough","duration":0.6}
 
     Story

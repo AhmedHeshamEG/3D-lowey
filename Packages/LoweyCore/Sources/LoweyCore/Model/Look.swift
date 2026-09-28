@@ -5,14 +5,29 @@ public struct Palette: Codable, Hashable, Sendable {
     public struct Swatch: Codable, Hashable, Sendable {
         public var name: String
         public var color: RGBA
+        /// Removed from the palette. The slot keeps its colour, so everything already painted with it (in any
+        /// scene) looks exactly the same; it just isn't offered any more. Undo brings it back.
+        public var removed: Bool?
 
-        public init(name: String, color: RGBA) {
+        public init(name: String, color: RGBA, removed: Bool? = nil) {
             self.name = name
             self.color = color
+            self.removed = removed
         }
     }
 
     public var swatches: [Swatch]
+
+    /// The slots offered in pickers (removed swatches stay in `swatches`, hidden).
+    public var visibleSlots: [Int] {
+        swatches.indices.filter { swatches[$0].removed != true }
+    }
+
+    /// Takes a swatch out of the palette without changing any object's colour.
+    public mutating func remove(slot: Int) {
+        guard swatches.indices.contains(slot) else { return }
+        swatches[slot].removed = true
+    }
 
     public init(swatches: [Swatch]) {
         self.swatches = swatches

@@ -123,7 +123,10 @@ struct LookPanel: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Add colour")
             }
-            PaletteRow(palette: look.palette, selected: editingSlot) { slot in
+            PaletteRow(palette: look.palette, selected: editingSlot, remove: { slot in
+                if editingSlot == slot { editingSlot = nil }
+                editor.removePaletteSwatch(slot)
+            }) { slot in
                 editingSlot = slot
                 slotColor = look.palette.color(at: slot).color
             }
@@ -137,7 +140,16 @@ struct LookPanel: View {
                             editor.updateLook(coalesce: "palette-\(slot)") { $0.palette.swatches[slot].color = RGBA(value) }
                         }
                 }
-                Text("Everything using this colour updates.").font(.system(size: 12)).foregroundStyle(Theme.secondaryText)
+                HStack {
+                    Text("Everything using this colour updates.").font(.system(size: 12)).foregroundStyle(Theme.secondaryText)
+                    Spacer()
+                    Button("Remove", systemImage: "trash", role: .destructive) {
+                        editingSlot = nil
+                        editor.removePaletteSwatch(slot)
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .accessibilityIdentifier("remove-swatch")
+                }
             }
         }
     }

@@ -284,6 +284,7 @@ public enum CharacterBuilder {
 
         func index(_ id: ObjectID) -> Int { positions[id]! }
 
+        @discardableResult
         mutating func add(_ object: SceneObject) -> ObjectID {
             var object = object
             if let parent = object.parent {

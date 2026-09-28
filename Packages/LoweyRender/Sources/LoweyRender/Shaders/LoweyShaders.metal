@@ -26,14 +26,24 @@ void loweySurface(realitykit::surface_parameters params)
     half3 baseColor = half3(material.base_color_tint().rgb) * baseSample.rgb;
     half roughness = half(material.roughness_scale()) * textures.roughness().sample(loweySampler, uv).r;
     half metallic = half(material.metallic_scale()) * textures.metallic().sample(loweySampler, uv).r;
-    half3 emissive = half3(material.emissive_color()) * textures.emissive_color().sample(loweySampler, uv).rgb;
     half opacity = half(material.opacity_scale()) * baseSample.a;
 
     float4 custom = params.uniforms().custom_parameter();
-    float packed = max(custom.w, 0.0);
+    // w = round(glow × 100) + fog density. Negative w marks an imported model's material.
+    bool imported = custom.w < 0.0;
+    float packed = abs(custom.w);
     float glow = floor(packed) / 100.0;
     float density = fract(packed);
-    emissive *= half(max(glow, 1.0));
+    half3 tint = half3(material.emissive_color());
+    half3 emissive;
+    if (imported) {
+        // Its own emission map, plus "self glow" (glowing in its own colours: it has no glow colour).
+        emissive = tint * textures.emissive_color().sample(loweySampler, uv).rgb + baseColor * half(glow);
+    } else {
+        // Lowey's surfaces glow in a colour, with no emission map. (Multiplying by the unset map, which RealityKit
+        // leaves black, is what made glow do nothing at all.)
+        emissive = tint * half(max(glow, 1.0));
+    }
 
     // Distance fog (exponential), computed from the view-space distance.
     float3 world = params.geometry().world_position();

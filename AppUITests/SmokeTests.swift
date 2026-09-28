@@ -11,6 +11,16 @@ final class SmokeTests: XCTestCase {
         app.buttons.matching(identifier: identifier).firstMatch
     }
 
+    /// Taps `opener` until `target` shows up (a tap during a panel's slide-in can land before the button is live).
+    private func open(_ target: XCUIElement, with opener: XCUIElement, attempts: Int = 3) -> Bool {
+        for _ in 0 ..< attempts {
+            _ = opener.waitForExistence(timeout: 5)
+            if opener.isHittable { opener.tap() }
+            if target.waitForExistence(timeout: 4) { return true }
+        }
+        return false
+    }
+
     private func screenshot(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
@@ -67,6 +77,10 @@ final class SmokeTests: XCTestCase {
         bridgeItem.tap()
         let toggle = app.switches["bridge-toggle"].firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        // Let the sheet finish presenting before touching the switch.
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: toggle)
+        _ = XCTWaiter.wait(for: [hittable], timeout: 5)
+        sleep(1)
         // Tap the switch knob until it reads on; never tap again once it is on (a second tap turns it back off).
         for _ in 0 ..< 3 where toggle.value as? String != "1" {
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
@@ -77,6 +91,64 @@ final class SmokeTests: XCTestCase {
         let code = app.staticTexts["bridge-code"].waitForExistence(timeout: 8) || pairLine.waitForExistence(timeout: 2)
         screenshot(app, "p3-04-bridge")
         XCTAssertTrue(code, "the pairing code shows")
+
+        // End to end, as Claude does it through lowey-mcp: pair with the code on screen, send a Scene Script over HTTP,
+        // approve it on the iPad, and find the result in the scene.
+        let pairing = app.staticTexts["bridge-code"].label.filter(\.isNumber)
+        let paired = request("POST", "/v1/pair", body: #"{"code": "\#(pairing)"}"#)
+        let token = try XCTUnwrap(paired.flatMap { try? JSONSerialization.jsonObject(with: $0.body) as? [String: Any] }?["token"] as? String,
+                                  "paired: \(String(describing: paired.map { String(decoding: $0.body, as: UTF8.self) }))")
+        button(app, "Done").tap()
+        let script = #"{"version": 2, "title": "Newton reacts", "actions": ["#
+            + #"{"do": "blob", "likeness": "Isaac Newton", "name": "Newton", "at": [1.6, 0, 0]}, "#
+            + #"{"do": "expression", "target": "Newton", "name": "shocked", "at": 0.5}]}"#
+        let reply = expectation(description: "the script's reply")
+        let answer = ReplyBox()
+        send("POST", "/v1/script", body: script, token: token) { result in
+            answer.value = result
+            reply.fulfill()
+        }
+        let apply = button(app, "apply-proposal")
+        XCTAssertTrue(apply.waitForExistence(timeout: 20), "the iPad asks before applying")
+        screenshot(app, "p4-mcp-proposal")
+        apply.tap()
+        wait(for: [reply], timeout: 30)
+        let json = try XCTUnwrap(answer.value.flatMap { try? JSONSerialization.jsonObject(with: $0.body) as? [String: Any] })
+        XCTAssertEqual(json["applied"] as? Bool, true, "\(json)")
+        XCTAssertNotNil((json["created"] as? [String: Any])?["Newton"], "Newton was created")
+        let scene = request("GET", "/v1/scene?depth=1", token: token).map { String(decoding: $0.body, as: UTF8.self) } ?? ""
+        XCTAssertTrue(scene.contains("Newton"), scene)
+        sleep(2)
+        screenshot(app, "p4-mcp-newton")
+    }
+
+    // MARK: The bridge over HTTP (what lowey-mcp does from the laptop)
+
+    private func send(_ method: String, _ path: String, body: String? = nil, token: String? = nil,
+                      completion: @escaping @Sendable ((status: Int, body: Data)?) -> Void) {
+        guard let url = URL(string: "http://127.0.0.1:7717\(path)") else { return completion(nil) }
+        var request = URLRequest(url: url, timeoutInterval: 60)
+        request.httpMethod = method
+        request.setValue("Claude", forHTTPHeaderField: "X-Lowey-Client")
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        if let body {
+            request.httpBody = Data(body.utf8)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            completion((response as? HTTPURLResponse).map { ($0.statusCode, data ?? Data()) })
+        }.resume()
+    }
+
+    private func request(_ method: String, _ path: String, body: String? = nil, token: String? = nil) -> (status: Int, body: Data)? {
+        let done = expectation(description: "\(method) \(path)")
+        let box = ReplyBox()
+        send(method, path, body: body, token: token) { result in
+            box.value = result
+            done.fulfill()
+        }
+        wait(for: [done], timeout: 30)
+        return box.value
     }
 
     @MainActor
@@ -140,8 +212,7 @@ final class SmokeTests: XCTestCase {
         screenshot(app, "05-export-framing")
         // Animate: a one-tap preset on a new cone, play and pause.
         button(app, "mode-build").tap()
-        button(app, "Add").tap()
-        XCTAssertTrue(button(app, "add-cone").waitForExistence(timeout: 5))
+        XCTAssertTrue(open(button(app, "add-cone"), with: button(app, "Add")), "the Add menu opens")
         button(app, "add-cone").tap()
         button(app, "mode-animate").tap()
         let bounce = button(app, "preset-bounce")
@@ -164,6 +235,15 @@ final class SmokeTests: XCTestCase {
         screenshot(app, "10-export-video")
         button(app, "mode-build").tap()
 
+        // Phase 4: Hesham's own character (the house style), from the Add menu.
+        XCTAssertTrue(open(button(app, "add-me"), with: button(app, "Add")), "the Add menu offers Me")
+        button(app, "add-me").tap()
+        XCTAssertTrue(inspectorName.waitForExistence(timeout: 10))
+        XCTAssertEqual(inspectorName.value as? String, "Hesham")
+        button(app, "Frame").tap()
+        sleep(2)
+        screenshot(app, "11-me")
+
         // Home and back: the project is there and reopens.
         button(app, "Home").tap()
         let card = app.otherElements["project-Smoke test"].firstMatch
@@ -173,6 +253,27 @@ final class SmokeTests: XCTestCase {
         app.staticTexts["Smoke test"].firstMatch.tap()
         XCTAssertTrue(stage.waitForExistence(timeout: 20))
         screenshot(app, "07-reopened")
+    }
+
+    /// The first-launch tour, every card, including the one that plays the island's camera shot.
+    @MainActor
+    func testTourRunsToTheEnd() throws {
+        executionTimeAllowance = 470
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-ui-testing-sample", "-ui-testing-tour"]
+        app.launch()
+        let next = button(app, "tour-next")
+        XCTAssertTrue(next.waitForExistence(timeout: 90), "the tour opens on the welcome island")
+        for step in 1 ... 8 {
+            XCTAssertTrue(next.waitForExistence(timeout: 15), "card \(step) shows")
+            sleep(2)
+            screenshot(app, "tour-\(step)")
+            next.tap()
+        }
+        XCTAssertTrue(app.otherElements["stage"].waitForExistence(timeout: 15), "the editor is there after the tour")
+        XCTAssertFalse(next.waitForExistence(timeout: 3), "the tour closed")
+        XCTAssertEqual(app.state, .runningForeground, "no crash")
+        screenshot(app, "tour-done")
     }
 
     @MainActor
@@ -205,4 +306,9 @@ final class SmokeTests: XCTestCase {
         button(app, "Pause").tap()
         screenshot(app, "sample-opening-playing")
     }
+}
+
+/// Carries an HTTP reply out of URLSession's callback.
+private final class ReplyBox: @unchecked Sendable {
+    var value: (status: Int, body: Data)?
 }

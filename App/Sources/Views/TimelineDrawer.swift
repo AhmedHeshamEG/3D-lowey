@@ -7,8 +7,13 @@ import SwiftUI
 /// modes — Compose (slide whole animations), Perform (record by touch), Keyframe (edit keys).
 struct TimelineDrawer: View {
     @Bindable var editor: EditorModel
-    /// Visible window: first second shown and zoom (points per second).
-    @State private var visibleStart: Double = 0
+    /// Flicks keep gliding.
+    @State private var momentum = TimelineMomentum()
+    /// A sideways drag is scrolling time (the list doesn't scroll meanwhile).
+    @State private var panning = false
+    /// Pinch: the moment under the fingers stays under the fingers.
+    @State private var zoomAnchor: (time: Double, x: CGFloat)?
+    @State private var laneWidth: CGFloat = 0
     /// Live offset of the selected keys while they're dragged.
     @State private var keyDrag: Double?
     @State private var composeDrag: (ids: Set<ObjectID>, delta: Double)?
@@ -33,6 +38,11 @@ struct TimelineDrawer: View {
 
     private var timeline: Timeline { editor.timeline }
     private var pps: Double { editor.timelineZoom }
+    /// Visible window: first second shown (zoom is `pps`, points per second).
+    private var visibleStart: Double {
+        get { editor.timelineStart }
+        nonmutating set { editor.timelineStart = newValue }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,14 +76,21 @@ struct TimelineDrawer: View {
                         .coordinateSpace(name: Self.lanesSpace)
                         .overlay(alignment: .topLeading) { marqueeView }
                         .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
-                        .simultaneousGesture(laneDragGesture, including: editor.timelineMode == .compose ? .subviews : .all)
+                        .simultaneousGesture(laneDragGesture)
                         .simultaneousGesture(marqueeLongPress, including: editor.timelineMode == .compose ? .subviews : .all)
                     }
-                    .scrollDisabled(marqueeArmed || marquee != nil)
+                    .scrollDisabled(marqueeArmed || marquee != nil || panning)
                 }
-                .overlay(alignment: .topLeading) { playhead(width: width, height: geometry.size.height) }
+                .overlay(alignment: .topLeading) {
+                    PlayheadLine(editor: editor, visibleStart: visibleStart, pps: pps, width: width, height: geometry.size.height)
+                }
                 .gesture(zoomGesture(width: width))
-                .onAppear { fit(width: width) }
+                .onAppear {
+                    laneWidth = width
+                    fit(width: width)
+                }
+                .onChange(of: width) { _, newWidth in laneWidth = newWidth }
+                .onDisappear { momentum.stop() }
             }
         }
         .panelStyle()
@@ -111,19 +128,8 @@ struct TimelineDrawer: View {
     private var header: some View {
         HStack(spacing: 10) {
             transport
-            Text(Self.format(editor.time))
-                .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Theme.text)
-                .frame(minWidth: 70, alignment: .leading)
-                .accessibilityIdentifier("timeline-time")
-            Picker("Mode", selection: $editor.timelineMode) {
-                ForEach(TimelineMode.allCases) { mode in
-                    Text(mode.title).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 270)
-            .accessibilityIdentifier("timeline-mode")
+            TimelineClock(editor: editor)
+            TimelineModePicker(mode: $editor.timelineMode)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     switch editor.timelineMode {
@@ -134,29 +140,43 @@ struct TimelineDrawer: View {
                 }
             }
             IconButton(systemName: "waveform", label: "Audio and words", isOn: editor.showAudio, size: 36) { editor.showAudio = true }
-            IconButton(systemName: "flag", label: "Add marker", size: 36) { editor.addMarker() }
-            Menu {
+            moreMenu
+        }
+    }
+
+    /// Everything that isn't needed every second, in one place.
+    private var moreMenu: some View {
+        Menu {
+            Button("Add marker", systemImage: "flag") { editor.addMarker() }
+            Section("Loop") {
                 Button("Loop starts here", systemImage: "arrow.right.to.line") { editor.setLoopStart() }
                 Button("Loop ends here", systemImage: "arrow.left.to.line") { editor.setLoopEnd() }
                 if timeline.loop != nil { Button("No loop", systemImage: "xmark") { editor.clearLoop() } }
-            } label: {
-                Image(systemName: "repeat")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(timeline.loop != nil ? Color.black : Theme.text)
-                    .frame(width: 36, height: 36)
-                    .background(Circle().fill(timeline.loop != nil ? Theme.accent : Theme.raised))
             }
-            .accessibilityLabel("Loop")
-            IconButton(systemName: "slider.horizontal.3", label: "Timeline settings", size: 36) { showSettings = true }
+            Section {
+                Button("Show the whole timeline", systemImage: "arrow.left.and.right") { fit(width: laneWidth) }
+                Button("Go to start", systemImage: "backward.end") {
+                    editor.pause()
+                    editor.setTime(editor.playRange.start)
+                }
+                if editor.selection.count > 1 {
+                    Button("Group the selection", systemImage: "folder.badge.plus") { editor.groupSelection() }
+                }
+                Button("Timeline settings…", systemImage: "slider.horizontal.3") { showSettings = true }
+            }
+        } label: {
+            Image(systemName: timeline.loop != nil ? "repeat" : "ellipsis")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(timeline.loop != nil ? Theme.accent : Theme.text)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(Theme.raised))
         }
+        .accessibilityLabel("Timeline menu")
+        .accessibilityIdentifier("timeline-menu")
     }
 
     private var transport: some View {
         HStack(spacing: 6) {
-            IconButton(systemName: "backward.end.fill", label: "To start", size: 34) {
-                editor.pause()
-                editor.setTime(editor.playRange.start)
-            }
             IconButton(systemName: "chevron.left", label: "Previous frame", size: 34) { editor.step(frames: -1) }
             IconButton(systemName: editor.isPlaying ? "pause.fill" : "play.fill", label: editor.isPlaying ? "Pause" : "Play",
                        isOn: editor.isPlaying, size: 42) { editor.togglePlay() }
@@ -342,16 +362,6 @@ struct TimelineDrawer: View {
         .accessibilityIdentifier("timeline-ruler")
     }
 
-    private func playhead(width: CGFloat, height: CGFloat) -> some View {
-        let px = x(editor.time)
-        return Rectangle()
-            .fill(Theme.accent)
-            .frame(width: 2, height: height)
-            .offset(x: Self.labelWidth + px - 1)
-            .opacity(px >= 0 && px <= width ? 1 : 0)
-            .allowsHitTesting(false)
-    }
-
     // MARK: Rows
 
     /// Object rows (and expanded property rows) in outliner order.
@@ -366,31 +376,46 @@ struct TimelineDrawer: View {
         case effects
     }
 
+    /// Animated (and selected) objects under the groups they live in.
+    private var outline: [TimelineOutline.Entry] {
+        TimelineOutline.entries(scene: editor.baseScene, include: timeline.animatedObjects.union(editor.selection),
+                                collapsed: editor.collapsedGroups)
+    }
+
+    private var outlineEntries: [ObjectID: TimelineOutline.Entry] {
+        Dictionary(outline.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
     private var rows: [Row] {
-        let animated = timeline.animatedObjects
-        let wanted = animated.union(editor.selection)
         var result: [Row] = timeline.audio.map { .audio($0.id) }
         if !timeline.transcripts.isEmpty { result.append(.words) }
         if !timeline.effects.isEmpty { result.append(.effects) }
-        for id in editor.baseScene.orderedIDs() where wanted.contains(id) {
-            result.append(.object(id))
-            if editor.expandedObjects.contains(id) {
-                result += timeline.tracks.filter { $0.target == id }.map { .track($0.id) }
+        for entry in outline {
+            result.append(.object(entry.id))
+            if editor.expandedObjects.contains(entry.id) {
+                result += timeline.tracks.filter { $0.target == entry.id }.map { .track($0.id) }
             }
         }
         return result
+    }
+
+    /// What a row stands for: a group row, everything animated inside it; any other row, its object.
+    private func members(of id: ObjectID) -> Set<ObjectID> {
+        guard outlineEntries[id]?.isGroup == true else { return [id] }
+        return Set(TimelineOutline.members(of: id, scene: editor.baseScene, animated: timeline.animatedObjects))
     }
 
     @ViewBuilder
     private func rowView(_ row: Row, width: CGFloat) -> some View {
         switch row {
         case let .object(id):
+            let entry = outlineEntries[id]
             HStack(spacing: 0) {
-                objectLabel(id)
-                objectLane(id, width: width)
+                objectLabel(id, entry: entry)
+                objectLane(id, isGroup: entry?.isGroup == true, width: width)
             }
             .frame(height: Self.rowHeight)
-            .background(editor.selection.contains(id) ? Theme.accent.opacity(0.08) : Color.clear)
+            .background(editor.selection.contains(id) ? Theme.accent.opacity(0.08) : (entry?.isGroup == true ? Color.white.opacity(0.03) : Color.clear))
         case let .audio(id):
             if let clip = editor.audioClip(id) {
                 AudioRow(editor: editor, clip: clip, width: width, x: x, pps: pps)
@@ -418,59 +443,80 @@ struct TimelineDrawer: View {
         }
     }
 
-    private func objectLabel(_ id: ObjectID) -> some View {
+    private func objectLabel(_ id: ObjectID, entry: TimelineOutline.Entry?) -> some View {
         let object = editor.baseScene.objects[id]
         let hasTracks = timeline.tracks.contains { $0.target == id }
+        let isGroup = entry?.isGroup == true
+        let isOpen = isGroup ? entry?.isCollapsed != true : editor.expandedObjects.contains(id)
         return HStack(spacing: 4) {
             Button {
-                if editor.expandedObjects.contains(id) {
-                    editor.expandedObjects.remove(id)
+                if isGroup {
+                    editor.collapsedGroups.formSymmetricDifference([id])
                 } else {
-                    editor.expandedObjects.insert(id)
+                    editor.expandedObjects.formSymmetricDifference([id])
                 }
             } label: {
-                Image(systemName: editor.expandedObjects.contains(id) ? "chevron.down" : "chevron.right")
+                Image(systemName: isOpen ? "chevron.down" : "chevron.right")
                     .font(.system(size: 10, weight: .bold))
                     .frame(width: 18, height: 24)
-                    .foregroundStyle(hasTracks ? Theme.secondaryText : Color.clear)
+                    .foregroundStyle(isGroup || hasTracks ? Theme.secondaryText : Color.clear)
             }
             .buttonStyle(.plain)
-            .disabled(!hasTracks)
+            .disabled(!(isGroup || hasTracks))
+            .accessibilityLabel(isOpen ? "Fold \(object?.name ?? "")" : "Unfold \(object?.name ?? "")")
+            if isGroup {
+                Image(systemName: "folder.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.accent.opacity(0.85))
+            }
             Text(object?.name ?? "?")
                 .font(.system(size: 13, weight: editor.selection.contains(id) ? .bold : .medium))
                 .foregroundStyle(Theme.text)
                 .lineLimit(1)
             Spacer(minLength: 0)
         }
-        .padding(.leading, 6)
+        .padding(.leading, 6 + CGFloat(entry?.depth ?? 0) * 12)
         .frame(width: Self.labelWidth, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture { editor.select(id) }
+        .contextMenu {
+            if hasTracks {
+                Button(editor.expandedObjects.contains(id) ? "Hide properties" : "Show properties", systemImage: "list.bullet.indent") {
+                    editor.expandedObjects.formSymmetricDifference([id])
+                }
+            }
+            if isGroup {
+                Button("Select everything inside", systemImage: "square.stack.3d.up") {
+                    editor.setSelection(editor.baseScene.subtree(of: id))
+                }
+            }
+        }
     }
 
     @ViewBuilder
-    private func objectLane(_ id: ObjectID, width: CGFloat) -> some View {
-        let tracks = timeline.tracks.filter { $0.target == id }
+    private func objectLane(_ id: ObjectID, isGroup: Bool, width: CGFloat) -> some View {
+        let ids = members(of: id)
+        let tracks = timeline.tracks.filter { ids.contains($0.target) }
         if editor.timelineMode == .compose {
-            composeBar(id, tracks: tracks, width: width)
+            composeBar(id, members: ids, tracks: tracks, width: width)
         } else {
             ZStack(alignment: .leading) {
-                spans(id, width: width)
-                keyLane(tracks, width: width, color: Theme.accent)
+                spans(ids, width: width)
+                keyLane(tracks, width: width, color: isGroup ? Theme.accent.opacity(0.6) : Theme.accent)
             }
         }
     }
 
     /// Behaviour spans (lines) and clip segments (capsules) under the keys.
-    private func spans(_ id: ObjectID, width: CGFloat) -> some View {
+    private func spans(_ ids: Set<ObjectID>, width: CGFloat) -> some View {
         Canvas { context, size in
-            for behavior in timeline.behaviors where behavior.target == id {
+            for behavior in timeline.behaviors where ids.contains(behavior.target) {
                 let start = x(behavior.start)
                 let end = x(behavior.end ?? timeline.duration)
                 let rect = CGRect(x: start, y: size.height - 6, width: max(end - start, 2), height: 3)
                 context.fill(Path(roundedRect: rect, cornerRadius: 1.5), with: .color(Color.purple.opacity(behavior.enabled ? 0.8 : 0.3)))
             }
-            for track in timeline.clipTracks where track.target == id {
+            for track in timeline.clipTracks where ids.contains(track.target) {
                 for segment in track.segments {
                     let rect = CGRect(x: x(segment.start), y: 3, width: max(CGFloat(segment.duration * pps), 4), height: size.height - 10)
                     context.fill(Path(roundedRect: rect, cornerRadius: 5), with: .color(Color.teal.opacity(0.3)))
@@ -507,25 +553,30 @@ struct TimelineDrawer: View {
         .contentShape(Rectangle())
     }
 
-    private func composeBar(_ id: ObjectID, tracks: [Track], width: CGFloat) -> some View {
+    private func composeBar(_ id: ObjectID, members ids: Set<ObjectID>, tracks: [Track], width: CGFloat) -> some View {
         let times = tracks.flatMap { $0.keyframes.map(\.time) }
         let start = times.min()
         let end = times.max()
-        let delta = composeDrag?.ids.contains(id) == true ? composeDrag?.delta ?? 0 : 0
+        let moving = composeDrag.map { !$0.ids.isDisjoint(with: ids) } ?? false
+        let delta = moving ? composeDrag?.delta ?? 0 : 0
+        let selected = editor.selection.contains(id)
         return ZStack(alignment: .leading) {
-            spans(id, width: width)
+            spans(ids, width: width)
             if let start, let end {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Theme.accent.opacity(editor.selection.contains(id) ? 0.85 : 0.5))
+                    .fill(Theme.accent.opacity(selected ? 0.85 : 0.45))
+                    .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(.white.opacity(selected ? 0.6 : 0), lineWidth: 1))
                     .frame(width: max(CGFloat((end - start) * pps), 10), height: Self.rowHeight - 10)
                     .offset(x: x(start + delta))
+                    // Only a selected bar moves (tap to select first); dragging anything else scrolls.
                     .gesture(
                         DragGesture(minimumDistance: 2)
-                            .onChanged { value in composeDrag = (composeGroup(for: id), Double(value.translation.width) / pps) }
+                            .onChanged { value in composeDrag = (composeGroup(for: id, members: ids), Double(value.translation.width) / pps) }
                             .onEnded { value in
-                                editor.shiftAnimation(of: composeGroup(for: id), by: Double(value.translation.width) / pps)
+                                editor.shiftAnimation(of: composeGroup(for: id, members: ids), by: Double(value.translation.width) / pps)
                                 composeDrag = nil
-                            }
+                            },
+                        including: selected ? .all : .subviews
                     )
                     .onTapGesture { editor.select(id, additive: editor.keyBoxSelect) }
             }
@@ -534,11 +585,21 @@ struct TimelineDrawer: View {
         .clipped()
     }
 
-    /// Dragging a selected bar moves every selected animated object together.
-    private func composeGroup(for id: ObjectID) -> Set<ObjectID> {
-        guard editor.selection.contains(id), editor.selection.count > 1 else { return [id] }
+    /// Dragging a selected bar moves what it stands for, plus every other selected animated object.
+    private func composeGroup(for id: ObjectID, members ids: Set<ObjectID>) -> Set<ObjectID> {
+        guard editor.selection.contains(id), editor.selection.count > 1 else { return ids }
         let animated = timeline.animatedObjects
-        return Set(editor.selection.filter { animated.contains($0) }).union([id])
+        return Set(editor.selection.filter { animated.contains($0) }).union(ids)
+    }
+
+    /// Whether a touch at `point` (lanes space) starts on a selected compose bar (the bar's own drag handles it).
+    private func startsOnSelectedBar(_ point: CGPoint) -> Bool {
+        guard editor.timelineMode == .compose, case let .object(id)? = row(at: point.y), editor.selection.contains(id) else { return false }
+        let ids = members(of: id)
+        let times = timeline.tracks.filter { ids.contains($0.target) }.flatMap { $0.keyframes.map(\.time) }
+        guard let start = times.min(), let end = times.max() else { return false }
+        let local = point.x - Self.labelWidth
+        return local >= x(start) - 6 && local <= x(start) + max(CGFloat((end - start) * pps), 10) + 6
     }
 
     // MARK: Multi-select (one gesture layer over every lane)
@@ -581,9 +642,11 @@ struct TimelineDrawer: View {
 
     private func trackIDs(for row: Row) -> [TrackID] {
         switch row {
-        case let .object(id): timeline.tracks.filter { $0.target == id }.map(\.id)
-        case let .track(id): [id]
-        case .audio, .words, .effects: []
+        case let .object(id):
+            let ids = members(of: id)
+            return timeline.tracks.filter { ids.contains($0.target) }.map(\.id)
+        case let .track(id): return [id]
+        case .audio, .words, .effects: return []
         }
     }
 
@@ -627,7 +690,8 @@ struct TimelineDrawer: View {
         DragGesture(minimumDistance: 6, coordinateSpace: .named(Self.lanesSpace))
             .onChanged { value in
                 if laneDrag == nil {
-                    laneDrag = beginLaneDrag(at: value.startLocation)
+                    momentum.stop()
+                    laneDrag = beginLaneDrag(at: value.startLocation, translation: value.translation)
                 }
                 switch laneDrag {
                 case .moveKeys:
@@ -641,17 +705,27 @@ struct TimelineDrawer: View {
                     break
                 }
             }
-            .onEnded { _ in
+            .onEnded { value in
                 switch laneDrag {
                 case .moveKeys:
                     if let delta = keyDrag { editor.moveSelectedKeys(by: delta) }
                 case .marquee:
                     commitMarquee()
+                case .pan:
+                    // A flick keeps gliding, slowing down like any scroll view.
+                    let editor = editor
+                    momentum.start(velocity: -Double(value.velocity.width) / pps, pointsPerSecond: pps) { delta in
+                        let next = max(0, editor.timelineStart + delta)
+                        let moved = next != editor.timelineStart
+                        editor.timelineStart = next
+                        return moved
+                    }
                 default:
                     break
                 }
                 keyDrag = nil
                 laneDrag = nil
+                panning = false
             }
     }
 
@@ -675,17 +749,22 @@ struct TimelineDrawer: View {
             }
     }
 
-    private func beginLaneDrag(at start: CGPoint) -> LaneDrag {
+    /// What a drag on the lanes does, decided once as it starts (Procreate Dreams-style):
+    /// selected keys move; in Select mode it draws a box; sideways scrolls time; up and down scrolls the rows.
+    private func beginLaneDrag(at start: CGPoint, translation: CGSize) -> LaneDrag {
         if marqueeArmed { return .ignore }
         guard start.x >= Self.labelWidth, !isOwnGestureRow(at: start.y) else { return .ignore }
-        if let hit = key(at: start) {
-            if !editor.selectedKeys.contains(hit) {
-                editor.selectedKeys = editor.keyBoxSelect ? editor.selectedKeys.union([hit]) : [hit]
+        if editor.timelineMode != .compose {
+            if let hit = key(at: start), editor.selectedKeys.contains(hit) {
+                keyDrag = 0
+                return .moveKeys
             }
-            keyDrag = 0
-            return .moveKeys
+            if editor.keyBoxSelect { return .marquee(origin: start) }
+        } else if startsOnSelectedBar(start) {
+            return .ignore
         }
-        if editor.keyBoxSelect { return .marquee(origin: start) }
+        guard abs(translation.width) >= abs(translation.height) else { return .ignore }
+        panning = true
         return .pan(start: visibleStart)
     }
 
@@ -785,7 +864,6 @@ struct TimelineDrawer: View {
 
     private func wordsRow(width: CGFloat) -> some View {
         let words = editor.words
-        let current = WordSnap.word(at: editor.time, in: words)?.id
         return HStack(spacing: 0) {
             HStack(spacing: 6) {
                 Image(systemName: "text.bubble").font(.system(size: 11))
@@ -797,35 +875,16 @@ struct TimelineDrawer: View {
             .frame(width: Self.labelWidth)
             .contentShape(Rectangle())
             .onTapGesture { editor.showTranscript = true }
-            Canvas { context, size in
-                var lastEnd: CGFloat = -1000
-                for word in words {
-                    let start = x(word.start)
-                    let end = x(word.end)
-                    guard end > 0, start < size.width else { continue }
-                    let rect = CGRect(x: start, y: 3, width: max(end - start - 1, 2), height: size.height - 6)
-                    let isCurrent = word.id == current
-                    context.fill(Path(roundedRect: rect, cornerRadius: 4),
-                                 with: .color(isCurrent ? Theme.accent.opacity(0.9) : Color.yellow.opacity(0.22)))
-                    // Labels only where there's room (zoom in to read every word).
-                    if start > lastEnd + 2 {
-                        let label = context.resolve(Text(word.text).font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(isCurrent ? .black : .white.opacity(0.85)))
-                        let labelSize = label.measure(in: CGSize(width: 200, height: size.height))
-                        context.draw(label, at: CGPoint(x: start + 3, y: size.height / 2), anchor: .leading)
-                        lastEnd = start + labelSize.width + 3
+            WordsLaneCanvas(editor: editor, words: words, visibleStart: visibleStart, pps: pps)
+                .frame(width: width)
+                .contentShape(Rectangle())
+                .gesture(SpatialTapGesture().onEnded { value in
+                    let tapped = time(at: value.location.x)
+                    if let word = words.min(by: { abs(($0.start + $0.end) / 2 - tapped) < abs(($1.start + $1.end) / 2 - tapped) }) {
+                        editor.jump(to: word)
                     }
-                }
-            }
-            .frame(width: width)
-            .contentShape(Rectangle())
-            .gesture(SpatialTapGesture().onEnded { value in
-                let tapped = time(at: value.location.x)
-                if let word = words.min(by: { abs(($0.start + $0.end) / 2 - tapped) < abs(($1.start + $1.end) / 2 - tapped) }) {
-                    editor.jump(to: word)
-                }
-            })
-            .accessibilityIdentifier("words-lane")
+                })
+                .accessibilityIdentifier("words-lane")
         }
     }
 
@@ -869,14 +928,26 @@ struct TimelineDrawer: View {
 
     // MARK: Zoom & geometry
 
+    /// Pinch to zoom time; the moment under the fingers stays where it is.
     private func zoomGesture(width: CGFloat) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
-                if zoomStart == nil { zoomStart = editor.timelineZoom }
+                if zoomStart == nil {
+                    momentum.stop()
+                    zoomStart = editor.timelineZoom
+                    let anchorX = max(value.startLocation.x - Self.labelWidth, 0)
+                    zoomAnchor = (time(at: anchorX), anchorX)
+                }
                 let minimum = Double(width) / max(timeline.duration, 1) * 0.5
                 editor.timelineZoom = min(max((zoomStart ?? pps) * value.magnification, minimum), 1200)
+                if let zoomAnchor {
+                    visibleStart = max(0, zoomAnchor.time - Double(zoomAnchor.x) / editor.timelineZoom)
+                }
             }
-            .onEnded { _ in zoomStart = nil }
+            .onEnded { _ in
+                zoomStart = nil
+                zoomAnchor = nil
+            }
     }
 
     private func fit(width: CGFloat) {

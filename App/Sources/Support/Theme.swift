@@ -13,20 +13,21 @@ enum Theme {
     static let text = Color.white.opacity(0.92)
     static let secondaryText = Color.white.opacity(0.55)
     static let danger = Color(red: 1, green: 0.38, blue: 0.36)
-    static let corner: CGFloat = 18
+    static let corner: CGFloat = 22
+    /// Darkens glass just enough for white text over bright skies.
+    static let glassTint = Color.black.opacity(0.32)
     static let touch: CGFloat = 48
 }
 
 extension View {
-    /// Floating panel look.
+    /// Floating panel look: the system's Liquid Glass, tinted dark so text stays legible over any scene.
     func panelStyle(cornerRadius: CGFloat = Theme.corner) -> some View {
-        background(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(Theme.panel.opacity(0.7)))
-                .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).stroke(Theme.panelStroke, lineWidth: 1))
-                .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
-        )
+        glassEffect(.regular.tint(Theme.glassTint), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+
+    /// A floating control on glass (round buttons, pills that sit on the stage).
+    func floatingGlass(in shape: some Shape = Capsule(), interactive: Bool = true) -> some View {
+        glassEffect(interactive ? .regular.tint(Theme.glassTint).interactive() : .regular.tint(Theme.glassTint), in: shape)
     }
 }
 
@@ -50,6 +51,7 @@ struct IconButton: View {
                 .foregroundStyle(isOn ? Color.black : Theme.text)
                 .background(Circle().fill(isOn ? Theme.accent : Theme.raised))
                 .contentShape(Circle())
+                .glassEffect(.regular.tint(isOn ? Theme.accent.opacity(0.6) : Theme.glassTint).interactive(), in: Circle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

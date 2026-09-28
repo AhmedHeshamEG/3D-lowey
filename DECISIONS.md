@@ -333,3 +333,33 @@ only when they change, thermal-aware preview (D72). Not done yet: distance LODs 
 models, and `MeshInstancesComponent` for thousands of static copies — the 60 fps budget scene (~300 low-poly objects,
 3 characters, 2 particle systems) has to be profiled on the iPad Air first ("profile before optimizing"); CI simulators
 can't measure GPU frame times. Show FPS & stats is in the scene menu for that.
+
+## Phase 4
+
+**D74 — The house character is traced, not redrawn.** `assets/avatar/trace_drawing.py` measures Hesham's drawing
+(silhouette rows, every stroke as a contour, Poisson-inflated meshes for non-round parts) and the Blender build uses only
+those numbers. The drawing stays the source of truth; the in-app blob uses the same measurements.
+
+**D75 — Blobs are ordinary scene objects.** Lathes, slabs and ribbons (existing drawing kinds), so the face rig, keys,
+Perform, scripts and exports needed no special cases. Face parts are true size; `faceRange` tells the rig how far.
+
+**D76 — Cartoon timing is a spring convolution.** A blob's dials are the keyed target convolved with a damped spring's
+impulse response over the last ~1.5 s. Deterministic (preview = export, any frame in any order), no simulation state.
+Poses are keyed as steps; the springs make the in-betweens, overshoot and settle.
+
+**D77 — Rubber hose over rigs.** Arms are bezier tubes rebuilt from shoulder and hand each frame, in the hose's own
+space (so tilting or floating never changes their shape) and only when an end moved.
+
+**D78 — RealityKit render callbacks wait for the first frames.** Installing `renderCallbacks.postProcess` before the
+stage renders traps (EXC_BREAKPOINT); the stage now waits for two scene updates. Found by a UI test that plays the tour.
+
+**D79 — Exports assume the GPU can disappear.** Every render has a deadline; the exporter waits while the app is in
+the background; the idle timer is off during exports.
+
+**D80 — Video overlays are keyed frames.** A video overlay becomes `file#t=seconds` at layout time; the export decodes
+that exact frame, the stage the nearest one (never waiting). Manim renders arrive as ProRes 4444 with alpha, packed with
+PyAV (ships with Manim), because the laptop is Windows (no HEVC-with-alpha encoder).
+
+**D81 — One skill, an orchestrator and modules.** `skills/lowey/SKILL.md` routes and holds the rules; each module does
+one job. Adding a capability is adding a module.
+
