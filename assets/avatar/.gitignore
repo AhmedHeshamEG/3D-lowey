@@ -1,0 +1,3 @@
+# build by-products: only renders/sheet.jpg is kept
+*.blend1
+renders/*.png
