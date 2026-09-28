@@ -10,9 +10,8 @@ enum PlaceholderVoice {
     static func render(_ lines: [(String, Double)], duration: Double, to url: URL, language: String = "en-US") async throws {
         let rate = 48000.0
         var mix = [Float](repeating: 0, count: Int(duration * rate))
-        let synthesizer = AVSpeechSynthesizer()
         for (text, start) in lines {
-            let samples = try await speak(text, language: language, synthesizer: synthesizer, sampleRate: rate)
+            let samples = try await speak(text, language: language, sampleRate: rate)
             let offset = Int(start * rate)
             for (index, sample) in samples.enumerated() where offset + index < mix.count {
                 mix[offset + index] += sample * 0.9
@@ -21,12 +20,13 @@ enum PlaceholderVoice {
         try write(mix, sampleRate: rate, to: url)
     }
 
-    /// One utterance as mono float samples at `sampleRate`.
-    static func speak(_ text: String, language: String, synthesizer: AVSpeechSynthesizer, sampleRate: Double) async throws -> [Float] {
+    /// One utterance as mono float samples at `sampleRate`. Nonisolated: the synthesizer calls back on its own thread.
+    nonisolated static func speak(_ text: String, language: String, sampleRate: Double) async throws -> [Float] {
+        let synthesizer = AVSpeechSynthesizer()
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: language)
         utterance.rate = 0.52
-        return await withCheckedContinuation { continuation in
+        let samples: [Float] = await withCheckedContinuation { continuation in
             var collected: [Float] = []
             var finished = false
             synthesizer.write(utterance) { buffer in
@@ -39,6 +39,9 @@ enum PlaceholderVoice {
                 collected += convert(pcm, sampleRate: sampleRate)
             }
         }
+        // Keep the synthesizer alive until it has delivered every buffer.
+        withExtendedLifetime(synthesizer) {}
+        return samples
     }
 
     /// Resamples one synthesiser buffer to mono float.
