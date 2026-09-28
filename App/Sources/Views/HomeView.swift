@@ -10,6 +10,9 @@ struct HomeView: View {
     @State private var renameText = ""
     @State private var deleting: ProjectSummary?
     @State private var sharing: URL?
+    @State private var importing = false
+    @State private var showArchive = false
+    @State private var showAcknowledgements = false
 
     private let columns = [GridItem(.adaptive(minimum: 260, maximum: 360), spacing: 24)]
 
@@ -29,9 +32,13 @@ struct HomeView: View {
                                     renaming = project
                                 }
                                 Button("Duplicate", systemImage: "plus.square.on.square") { app.duplicate(project) }
-                                Button("Export (include library assets)", systemImage: "square.and.arrow.up") {
+                                Button("Share as one file (.loweypack)", systemImage: "square.and.arrow.up") {
+                                    sharing = app.packageProject(project)
+                                }
+                                Button("Export folder (include library assets)", systemImage: "folder") {
                                     sharing = app.exportProject(project)
                                 }
+                                Button("Archive", systemImage: "archivebox") { app.archive(project) }
                                 Button("Delete", systemImage: "trash", role: .destructive) { deleting = project }
                             }
                             .accessibilityIdentifier("project-\(project.info.name)")
@@ -67,6 +74,11 @@ struct HomeView: View {
         .sheet(item: Binding(get: { sharing.map(IdentifiedURL.init) }, set: { sharing = $0?.url })) { item in
             ShareSheet(items: [item.url])
         }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.item]) { result in
+            if case let .success(url) = result { app.importPackage(url) }
+        }
+        .sheet(isPresented: $showArchive) { ArchiveSheet().presentationDetents([.medium]) }
+        .sheet(isPresented: $showAcknowledgements) { AcknowledgementsView() }
     }
 
     private var header: some View {
@@ -81,7 +93,13 @@ struct HomeView: View {
             }
             Spacer()
             Menu {
+                Button("Take the tour", systemImage: "hand.wave") { app.showTour = true }
+                Button("Add the welcome island", systemImage: "tree") { app.createIslandSample(open: true) }
                 Button("Add the Enigma sample", systemImage: "sparkles") { app.createSampleProject(open: true) }
+                Button("Import a project (.loweypack)", systemImage: "square.and.arrow.down") { importing = true }
+                Button("Archive (\(app.archived.count))", systemImage: "archivebox") { showArchive = true }
+                Button("Export diagnostics", systemImage: "stethoscope") { sharing = Diagnostics.shared.exportArchive(app: app) }
+                Button("Acknowledgements", systemImage: "doc.text") { showAcknowledgements = true }
                 Text("Version \(Branding.version)")
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -90,6 +108,38 @@ struct HomeView: View {
             }
             .accessibilityIdentifier("home-menu")
         }
+    }
+}
+
+/// Archived projects: restore them.
+struct ArchiveSheet: View {
+    @Environment(AppModel.self) private var app
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Archive").font(.system(size: 22, weight: .bold, design: .rounded))
+                Spacer()
+                PillButton(title: "Done", prominent: true) { dismiss() }
+            }
+            if app.archived.isEmpty {
+                Text("Nothing archived. Archive a project from its menu (touch and hold) to tidy the Home screen without deleting it.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            ScrollView {
+                ForEach(app.archived) { project in
+                    HStack {
+                        Text(project.info.name).font(.system(size: 16, weight: .semibold))
+                        Spacer()
+                        PillButton(title: "Restore", systemName: "arrow.uturn.backward") { app.unarchive(project) }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .padding(24)
     }
 }
 

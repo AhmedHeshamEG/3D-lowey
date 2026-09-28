@@ -17,6 +17,7 @@ struct InspectorPanel: View {
                     TransformEditor(editor: editor, object: object)
                     if object.kind.hasSurface { surfaceSection(object) }
                     if case let .light(type) = object.kind { LightEditor(editor: editor, object: object, type: type) }
+                    RecipeInspector(editor: editor, object: object)
                     if case let .asset(id) = object.kind, let asset = editor.library.manifest.asset(id) { assetInfo(asset) }
                 } else {
                     Text("\(editor.selection.count) objects selected")
@@ -221,6 +222,9 @@ struct InspectorPanel: View {
         case .drawing: "scribble"
         case .light: "lightbulb"
         case .camera: "video"
+        case .text: "textformat"
+        case .overlay: "square.on.square.intersection.dashed"
+        case .particles: "sparkles"
         }
     }
 }

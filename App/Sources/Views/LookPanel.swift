@@ -78,6 +78,8 @@ struct LookPanel: View {
                 }
                 Toggle("Ground", isOn: Binding(get: { look.ground.visible }, set: { value in editor.updateLook { $0.ground.visible = value } }))
 
+                PostSection(editor: editor)
+
                 DisclosureGroup("Fine tune", isExpanded: $showFineTune) {
                     fineTune.padding(.top, 10)
                 }

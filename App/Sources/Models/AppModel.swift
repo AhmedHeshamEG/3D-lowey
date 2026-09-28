@@ -16,6 +16,10 @@ final class AppModel {
     private(set) var thumbnails: [ProjectID: UIImage] = [:]
     private(set) var editor: EditorModel?
     var toast: String?
+    /// The 60-second interactive tour (first launch, or ⋯ → Take the tour).
+    var showTour = false
+    /// The AI & laptop bridge (off until switched on).
+    @ObservationIgnored lazy var bridge = BridgeModel(app: self)
 
     private var toastTask: Task<Void, Never>?
     private var started = false
@@ -38,13 +42,20 @@ final class AppModel {
     func start() async {
         guard !started else { return }
         started = true
+        Diagnostics.shared.start()
+        if Diagnostics.shared.previousSessionCrashed, !Self.isUITesting {
+            show("3D-lowey quit unexpectedly last time — your work was autosaved. ⋯ → Export diagnostics if it keeps happening.")
+        }
         library.load()
         refreshProjects()
         // First launch: the Enigma sets are there to explore and to prove the tool.
         let wantsSample = !Self.isUITesting || ProcessInfo.processInfo.arguments.contains("-ui-testing-sample")
         if projects.isEmpty, wantsSample {
+            createIslandSample(open: false)
             createSampleProject(open: false)
+            showTour = !Self.isUITesting
         }
+        refreshArchived()
     }
 
     // MARK: Projects
@@ -71,14 +82,19 @@ final class AppModel {
 
     func createSampleProject(open shouldOpen: Bool) {
         do {
-            let (info, scenes) = try EnigmaSample.buildWithOpening(ids: .random)
+            let (info, scenes) = try EnigmaSample.buildFull(ids: .random)
             var fresh = info
             fresh.id = .make()
             fresh.created = Date()
             fresh.modified = Date()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
             refreshProjects()
-            if shouldOpen { open(url: url) }
+            // A placeholder narrator for the story scene (the device's voice, at each sentence's time).
+            let voice = url.appendingPathComponent(ProjectLayout.audioFolder).appendingPathComponent(EnigmaSample.voiceoverFile)
+            Task {
+                try? await PlaceholderVoice.render(EnigmaSample.narration.map { ($0.sentence, $0.start) }, duration: 12.6, to: voice)
+                if shouldOpen { open(url: url) }
+            }
         } catch {
             show("Couldn't create the sample: \(error.localizedDescription)")
         }
@@ -149,11 +165,101 @@ final class AppModel {
         }
     }
 
+    // MARK: Archive, packages, welcome island
+
+    private(set) var archived: [ProjectSummary] = []
+
+    func refreshArchived() {
+        archived = projectStore.listArchived()
+    }
+
+    func archive(_ project: ProjectSummary) {
+        do {
+            _ = try projectStore.archiveProject(at: project.url)
+            refreshProjects()
+            refreshArchived()
+            show("Archived — find it under ⋯ → Archive")
+        } catch {
+            show("Couldn't archive: \(error.localizedDescription)")
+        }
+    }
+
+    func unarchive(_ project: ProjectSummary) {
+        do {
+            _ = try projectStore.unarchiveProject(at: project.url)
+            refreshProjects()
+            refreshArchived()
+        } catch {
+            show("Couldn't restore: \(error.localizedDescription)")
+        }
+    }
+
+    /// One `.loweypack` file (the project with its library assets embedded) to share or back up.
+    func packageProject(_ project: ProjectSummary) -> URL? {
+        guard exportProject(project) != nil else { return nil }
+        do {
+            let data = try ProjectPackage.archive(project.url)
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(ProjectStore.sanitize(project.info.name))
+                .appendingPathExtension(ProjectPackage.fileExtension)
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            show("Couldn't package the project: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    func importPackage(_ url: URL) {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        do {
+            let destination = try ProjectPackage.unpack(Data(contentsOf: url), into: projectStore)
+            var manifest = library.manifest
+            let added = try ProjectAssets.adopt(from: destination, into: &manifest, libraryStore: library.store)
+            library.replaceManifest(manifest)
+            refreshProjects()
+            show(added > 0 ? "Project imported with \(added) library items" : "Project imported")
+        } catch {
+            show("Couldn't import: \(error)")
+        }
+    }
+
+    /// Copies a scene of the open project into another project.
+    func copyScene(_ scene: SceneID, from source: URL, to project: ProjectSummary) {
+        do {
+            let copied = try projectStore.copyScene(scene, from: source, to: project.url)
+            show("“\(copied.name)” copied to \(project.info.name)")
+        } catch {
+            show("Couldn't copy the scene: \(error.localizedDescription)")
+        }
+    }
+
+    func createIslandSample(open shouldOpen: Bool) {
+        do {
+            let (info, scenes) = try IslandSample.build(ids: .random)
+            var fresh = info
+            fresh.id = .make()
+            let url = try projectStore.writeProject(info: fresh, scenes: scenes)
+            refreshProjects()
+            if shouldOpen { open(url: url) }
+        } catch {
+            show("Couldn't create the island: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: Incoming files (share sheet, "Open in…", drag & drop)
 
     func handleOpenedFile(_ url: URL) {
         if url.pathExtension == ProjectLayout.fileExtension {
             importProjectFolder(url)
+            return
+        }
+        if url.pathExtension == ProjectPackage.fileExtension {
+            importPackage(url)
+            return
+        }
+        if url.pathExtension.lowercased() == "json", let data = try? Data(contentsOf: url), let editor {
+            editor.importScript(data, source: url.lastPathComponent)
             return
         }
         Task {
@@ -184,6 +290,7 @@ final class AppModel {
 
     func show(_ message: String) {
         logger.info("\(message)")
+        Diagnostics.shared.log(message)
         toast = message
         toastTask?.cancel()
         toastTask = Task {

@@ -5,16 +5,28 @@ import SwiftUI
 @main
 struct LoweyApp: App {
     @State private var app = AppModel()
+    @Environment(\.scenePhase) private var phase
 
     var body: some SwiftUI.Scene {
         WindowGroup {
-            RootView()
-                .environment(app)
-                .preferredColorScheme(.dark)
-                .tint(Theme.accent)
-                .onOpenURL { url in
-                    app.handleOpenedFile(url)
-                }
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                // On an iPhone the app is the face companion for the iPad.
+                CompanionView()
+                    .preferredColorScheme(.dark)
+                    .tint(Theme.accent)
+            } else {
+                RootView()
+                    .environment(app)
+                    .preferredColorScheme(.dark)
+                    .tint(Theme.accent)
+                    .onOpenURL { url in
+                        app.handleOpenedFile(url)
+                    }
+            }
+        }
+        .commands { LoweyCommands(app: app) }
+        .onChange(of: phase) { _, phase in
+            if phase == .background { Diagnostics.shared.markClean() } else if phase == .active { Diagnostics.shared.markRunning() }
         }
     }
 }
@@ -38,6 +50,17 @@ struct RootView: View {
                     .padding(.top, 12)
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .allowsHitTesting(false)
+            }
+        }
+        .onChange(of: app.showTour) { _, show in
+            // The tour happens on the welcome island.
+            if show, app.editor == nil, let island = app.projects.first(where: { $0.info.name == IslandSample.projectName }) {
+                app.open(url: island.url)
+            }
+        }
+        .onChange(of: app.projects.count) { _, _ in
+            if app.showTour, app.editor == nil, let island = app.projects.first(where: { $0.info.name == IslandSample.projectName }) {
+                app.open(url: island.url)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: app.editor == nil)

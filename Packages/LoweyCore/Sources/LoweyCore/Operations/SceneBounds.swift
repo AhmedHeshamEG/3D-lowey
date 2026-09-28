@@ -24,7 +24,11 @@ public struct SceneBounds: Sendable {
             return fragmentBounds(prefab.fragment, depth: 0)
         case .light, .camera:
             return Bounds(min: Vec3(-0.15, -0.15, -0.15), max: Vec3(0.15, 0.15, 0.15))
-        case .group:
+        case let .text(recipe):
+            return recipe.coreMeshable ? (BlockFont.mesh(for: recipe).bounds ?? recipe.estimatedBounds) : recipe.estimatedBounds
+        case let .particles(recipe):
+            return ParticleSimulator.bounds(recipe)
+        case .group, .overlay:
             return nil
         }
     }

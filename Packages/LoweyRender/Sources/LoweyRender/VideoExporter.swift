@@ -35,9 +35,13 @@ public struct VideoExportSettings: Sendable, Hashable {
     public var codec: VideoCodec
     public var format: ExportFormat
     public var transparent: Bool
+    /// The soundtrack for `range`: interleaved stereo at `audioSampleRate` (from `AudioMixer`), or nil for silence.
+    public var audio: [Float]?
+    public var audioSampleRate: Int
 
     public init(framings: [Framing] = [.landscape, .portrait], longSide: Int = 1920, range: TimeRange, fps: Int = 30,
-                codec: VideoCodec = .h264, format: ExportFormat = .video, transparent: Bool = false) {
+                codec: VideoCodec = .h264, format: ExportFormat = .video, transparent: Bool = false,
+                audio: [Float]? = nil, audioSampleRate: Int = 48000) {
         self.framings = framings
         self.longSide = longSide
         self.range = range
@@ -45,6 +49,8 @@ public struct VideoExportSettings: Sendable, Hashable {
         self.codec = codec
         self.format = format
         self.transparent = transparent
+        self.audio = audio
+        self.audioSampleRate = audioSampleRate
     }
 
     public var frameCount: Int { max(Int((range.duration * Double(fps)).rounded()), 1) }
@@ -75,6 +81,17 @@ public final class VideoExporter {
     private let device: MTLDevice?
     private let logger = Logger(subsystem: "com.hesham.lowey", category: "export")
     private var previousAnimated = Set<ObjectID>()
+    /// Second world where every surface writes its distance (lens blur, outlines). Only when the look needs it.
+    private var depthWorld: SceneRenderer?
+    private var depthSession: RenderSession?
+    private var depthTargets: [String: RenderTarget] = [:]
+    /// Stored byte → true v (RealityKit's display transform bends even unlit output; measured once per export).
+    private var depthTable: [UInt8]?
+    private var secondTargets: [String: RenderTarget] = [:]
+    private let compositor = FrameCompositor()
+    private var captionPages: [Framing: [CaptionPage]] = [:]
+    /// Loads overlay images (files in the project's assets folder).
+    public var overlayImage: (String) -> CGImage? = { _ in nil }
 
     public init(document: Document, library: LibraryProviding?, rigs: RigCache) {
         self.document = document
@@ -82,6 +99,56 @@ public final class VideoExporter {
         device = MTLCreateSystemDefaultDevice()
         world.showsHelpers = false
         world.library = library
+        if Self.needsDepth(document) {
+            let depth = SceneRenderer()
+            depth.showsHelpers = false
+            depth.library = library
+            depth.depthPass = true
+            depthWorld = depth
+        }
+    }
+
+    // MARK: What a frame needs
+
+    private var timeline: Timeline { document.scene.timeline }
+    private var post: PostSettings { document.effectiveLook.post }
+
+    /// Lens blur (a camera with an aperture) or ink outlines need the depth world.
+    static func needsDepth(_ document: Document) -> Bool {
+        let post = document.effectiveLook.post
+        if post.outline > 0 { return true }
+        guard post.depthOfField else { return false }
+        let cameras = document.scene.objects.values.filter { $0.kind == .camera }
+        return cameras.contains { ($0[.aperture]?.floatValue ?? 0) > 0 }
+            || document.scene.timeline.tracks.contains { $0.property == .aperture && $0.keyframes.contains { ($0.value.floatValue ?? 0) > 0 } }
+    }
+
+    /// Anything beyond the plain render (post, overlays, captions, effects, transitions)?
+    var compositing: Bool {
+        !post.isNeutral || depthWorld != nil || !timeline.effects.isEmpty || timeline.cuts.contains { ($0.transition?.kind ?? .cut) != .cut }
+            || document.scene.objects.values.contains { $0.kind.isOverlay } || burnsCaptions
+    }
+
+    private var burnsCaptions: Bool {
+        guard let captions = timeline.captions else { return false }
+        return captions.enabled && captions.burnIn && !timeline.transcripts.isEmpty
+    }
+
+    /// Caption pages for a framing (narrow frames get shorter lines).
+    func pages(for framing: Framing) -> [CaptionPage] {
+        if let cached = captionPages[framing] { return cached }
+        guard let settings = timeline.captions else { return [] }
+        let factor = framing.aspect < 1 ? 0.6 : (framing.aspect == 1 ? 0.8 : 1)
+        let pages = Captions.pages(timeline.words, maxCharacters: max(Int(Double(settings.maxCharacters) * factor), 8), maxLines: settings.maxLines)
+        captionPages[framing] = pages
+        return pages
+    }
+
+    /// Where a specific camera looks from (the transition's other shot).
+    public static func camera(_ id: ObjectID?, in animated: AnimatedScene, fallback: Viewpoint, aspect: Double) -> OffscreenRenderer.Camera {
+        var copy = animated
+        copy.camera = id
+        return camera(for: copy, fallback: fallback, aspect: aspect)
     }
 
     /// Where each framing looks from at `time` (the cut camera, else the scene's saved view).
@@ -105,10 +172,123 @@ public final class VideoExporter {
         } else {
             world.sync(evaluated, changes: ChangeSet(objects: animated.animated.union(previousAnimated)))
         }
-        previousAnimated = animated.animated
         world.applyPoses(animated.poses, rigs: rigs)
         world.applyClipFallback(document.scene.timeline, at: time, skipping: Set(animated.poses.keys))
+        world.applyParticles(animated.scene, timeline: timeline, time: time)
+        if let depthWorld {
+            if first {
+                depthWorld.load(evaluated)
+            } else {
+                depthWorld.sync(evaluated, changes: ChangeSet(objects: animated.animated.union(previousAnimated)))
+            }
+            depthWorld.applyPoses(animated.poses, rigs: rigs)
+        }
+        previousAnimated = animated.animated
         return animated
+    }
+
+    // MARK: One frame
+
+    /// Renders one framing of one frame into `target` — the shot, then (when the look asks for it) post-processing,
+    /// the transition's other shot, screen effects, film look, overlays and captions. The result is left in
+    /// `target` (its pixels, or `target.matte` when composited).
+    func renderFrame(_ animated: AnimatedScene, framing: Framing, target: RenderTarget, session: RenderSession, frame: Int,
+                     deltaTime: Double) async throws {
+        let time = animated.time
+        let aspect = framing.aspect
+        let viewpoint = document.scene.viewpoint
+        let transition = compositing ? timeline.transition(at: time, fallback: document.scene.activeCamera) : nil
+        let mainID = transition?.to ?? animated.camera
+        let mainCamera = Self.camera(mainID, in: animated, fallback: viewpoint, aspect: aspect)
+        try await session.render(camera: mainCamera, target: target, world: world, deltaTime: deltaTime)
+        guard compositing else { return }
+        let look = FrameLook(post: post, lens: lens(mainID, in: animated), screen: ScreenEffects.state(at: time, effects: timeline.effects, fps: timeline.fps),
+                             frame: frame)
+        var picture = try await shot(target: target, camera: mainCamera, look: look, session: session)
+        if let transition {
+            let key = "\(target.width)x\(target.height)"
+            let other = try secondTargets[key] ?? session.target(width: target.width, height: target.height)
+            secondTargets[key] = other
+            let fromCamera = Self.camera(transition.from, in: animated, fallback: viewpoint, aspect: aspect)
+            try await session.render(camera: fromCamera, target: other, world: world, deltaTime: 0)
+            var fromLook = look
+            fromLook.lens = lens(transition.from, in: animated)
+            let from = try await shot(target: other, camera: fromCamera, look: fromLook, session: session)
+            picture = compositor.transition(from: from, to: picture, kind: transition.kind, progress: transition.progress)
+        }
+        let size = CGSize(width: target.width, height: target.height)
+        let overlays = overlayLayer(animated, camera: mainCamera, framing: framing, size: size)
+        picture = compositor.finish(picture, look: look, overlays: overlays)
+        target.matte = compositor.bytes(picture, width: target.width, height: target.height)
+    }
+
+    private func lens(_ id: ObjectID?, in animated: AnimatedScene) -> CameraLens? {
+        id.flatMap { animated.scene.objects[$0] }.map(CameraLens.init)
+    }
+
+    /// The rendered pixels of `target` (+ its depth when needed) post-processed as a shot.
+    private func shot(target: RenderTarget, camera: OffscreenRenderer.Camera, look: FrameLook, session _: RenderSession) async throws -> CIImage {
+        let bytes = target.matte ?? target.bytes()
+        let image = compositor.image(bytes: bytes, width: target.width, height: target.height)
+        var depth: CIImage?
+        if let depthWorld, look.post.outline > 0 || (look.post.depthOfField && (look.lens?.aperture ?? 0) > 0) {
+            depth = try await depthImage(camera: camera, width: target.width, height: target.height, world: depthWorld)
+        }
+        return compositor.shot(image, depth: depth, look: look)
+    }
+
+    /// Renders the depth world (half resolution) and returns v = 0.5 / distance as a linear grey image.
+    private func depthImage(camera: OffscreenRenderer.Camera, width: Int, height: Int, world depthWorld: SceneRenderer) async throws -> CIImage {
+        guard let device else { throw OffscreenError.noMetal }
+        if depthSession == nil {
+            depthSession = try RenderSession(device: device, world: depthWorld, background: .black)
+            depthSession?.renderer.lighting.resource = nil
+        }
+        guard let depthSession else { throw OffscreenError.noMetal }
+        if depthTable == nil {
+            depthTable = try await DepthCalibration.table(session: depthSession, world: depthWorld)
+        }
+        let w = max(width / 2, 1)
+        let h = max(height / 2, 1)
+        let key = "\(w)x\(h)"
+        let target = try depthTargets[key] ?? depthSession.target(width: w, height: h)
+        depthTargets[key] = target
+        try await depthSession.render(camera: camera, target: target, world: depthWorld, deltaTime: 0)
+        var bytes = target.bytes()
+        // Stored bytes → the true v, through the calibration table.
+        let table = depthTable ?? Self.srgbToLinear
+        for index in stride(from: 0, to: bytes.count, by: 4) {
+            let v = table[Int(bytes[index + 2])]
+            bytes[index] = v
+            bytes[index + 1] = v
+            bytes[index + 2] = v
+            bytes[index + 3] = 255
+        }
+        return CIImage(bitmapData: Data(bytes), bytesPerRow: w * 4, size: CGSize(width: w, height: h), format: .BGRA8, colorSpace: nil)
+    }
+
+    static let srgbToLinear: [UInt8] = (0 ..< 256).map { index -> UInt8 in
+        let c = Double(index) / 255
+        let linear = c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+        return UInt8((linear * 255).rounded())
+    }
+
+    /// Overlays and captions for this frame, drawn at the frame's size.
+    private func overlayLayer(_ animated: AnimatedScene, camera: OffscreenRenderer.Camera, framing: Framing, size: CGSize) -> CIImage? {
+        let cameraTransform = LoweyCore.Transform(position: Vec3(camera.position), rotation: Quat(camera.orientation))
+        let placements = OverlayLayout.placements(in: animated.scene, palette: document.palette, width: Double(size.width),
+                                                  height: Double(size.height)) { point in
+            OverlayLayout.project(point, camera: cameraTransform, fieldOfView: Double(camera.fieldOfView), aspect: framing.aspect)
+        }
+        let caption = burnsCaptions ? Captions.page(at: animated.time, in: pages(for: framing)) : nil
+        guard !placements.isEmpty || caption != nil else { return nil }
+        let images = overlayImage
+        return compositor.overlayImage(size: size) { context in
+            OverlayRenderer.draw(placements, in: context, size: size, image: images)
+            if let caption, let settings = timeline.captions {
+                OverlayRenderer.drawCaption(caption.page, activeWord: caption.word, settings: settings, in: context, size: size)
+            }
+        }
     }
 
     /// Renders one frame of every framing at `time` as images (single frames, tests).
@@ -117,15 +297,16 @@ public final class VideoExporter {
         let rigs = rigCache.rigs(for: document, library: world.library)
         let animated = prepare(at: time, rigs: rigs, first: true)
         await world.waitForAssets()
+        await depthWorld?.waitForAssets()
         _ = prepare(at: time, rigs: rigs, first: false)
         var result: [CGImage] = []
+        let frame = timeline.frame(for: time)
         for framing in framings {
             let size = framing.pixelSize(longSide: longSide)
             let target = try session.target(width: size.width, height: size.height)
-            let camera = Self.camera(for: animated, fallback: document.scene.viewpoint, aspect: framing.aspect)
             // Warm-up renders let textures and lighting settle; export frames get the same treatment once.
             for _ in 0 ..< 3 {
-                try await session.render(camera: camera, target: target, world: world, deltaTime: 1 / 30)
+                try await renderFrame(animated, framing: framing, target: target, session: session, frame: frame, deltaTime: 1 / 30)
             }
             try result.append(target.image(transparent: transparent))
         }
@@ -142,6 +323,7 @@ public final class VideoExporter {
         let rigs = rigCache.rigs(for: document, library: world.library)
         _ = prepare(at: settings.range.start, rigs: rigs, first: true)
         await world.waitForAssets()
+        await depthWorld?.waitForAssets()
 
         var outputs: [Output] = []
         for framing in settings.framings {
@@ -154,12 +336,15 @@ public final class VideoExporter {
                 let url = folder.appendingPathComponent(name).appendingPathExtension(ext)
                 try? FileManager.default.removeItem(at: url)
                 let writer = try VideoWriter(url: url, width: size.width, height: size.height, fps: settings.fps, codec: settings.codec,
-                                             alpha: settings.transparent)
+                                             alpha: settings.transparent, audio: settings.audio, audioSampleRate: settings.audioSampleRate)
                 outputs.append(Output(framing: framing, target: target, url: url, writer: writer))
             case .pngSequence:
                 let url = folder.appendingPathComponent(name, isDirectory: true)
                 try? FileManager.default.removeItem(at: url)
                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+                if let audio = settings.audio, !audio.isEmpty {
+                    try WAV.data(audio, channels: 2, sampleRate: settings.audioSampleRate).write(to: url.appendingPathComponent("soundtrack.wav"))
+                }
                 outputs.append(Output(framing: framing, target: target, url: url, writer: nil))
             }
         }
@@ -169,9 +354,8 @@ public final class VideoExporter {
         // Settle textures and lighting once before frame 0.
         let first = prepare(at: settings.range.start, rigs: rigs, first: false)
         for output in outputs {
-            let camera = Self.camera(for: first, fallback: document.scene.viewpoint, aspect: output.framing.aspect)
             for _ in 0 ..< 3 {
-                try await session.render(camera: camera, target: output.target, world: world, deltaTime: step)
+                try await renderFrame(first, framing: output.framing, target: output.target, session: session, frame: 0, deltaTime: step)
             }
         }
         do {
@@ -180,8 +364,8 @@ public final class VideoExporter {
                 let time = settings.range.start + Double(frame) * step
                 let animated = prepare(at: time, rigs: rigs, first: false)
                 for output in outputs {
-                    let camera = Self.camera(for: animated, fallback: document.scene.viewpoint, aspect: output.framing.aspect)
-                    try await session.render(camera: camera, target: output.target, world: world, deltaTime: step)
+                    try await renderFrame(animated, framing: output.framing, target: output.target, session: session,
+                                          frame: timeline.frame(for: time), deltaTime: step)
                     if let writer = output.writer {
                         try await writer.append(output.target, frame: frame)
                     } else {
@@ -235,6 +419,60 @@ public final class VideoExporter {
     }
 }
 
+/// Measures how the depth world's stored bytes map to v = 0.5 / distance: a plane is rendered at known distances with the
+/// depth material, and the readings become a 256-entry lookup table (exact, whatever the renderer's tone mapping).
+@MainActor
+enum DepthCalibration {
+    static let distances: [Double] = [0.5, 0.55, 0.62, 0.7, 0.8, 0.9, 1, 1.15, 1.3, 1.5, 1.75, 2, 2.4, 3, 3.6, 4.5, 6, 8, 11, 16, 25, 40, 80]
+
+    static func table(session: RenderSession, world: SceneRenderer) async throws -> [UInt8] {
+        let target = try session.target(width: 8, height: 8)
+        let plane = ModelEntity(mesh: .generatePlane(width: 1, height: 1), materials: [MaterialFactory.shared.depthMaterial])
+        let wasEnabled = world.root.isEnabled
+        world.root.isEnabled = false
+        session.renderer.entities.append(plane)
+        defer {
+            session.renderer.entities.removeAll { $0 === plane }
+            world.root.isEnabled = wasEnabled
+        }
+        let camera = OffscreenRenderer.Camera(position: .zero, orientation: simd_quatf(angle: 0, axis: SIMD3(0, 1, 0)), fieldOfView: 40)
+        var points: [(raw: Double, v: Double)] = [(0, 0)]
+        for distance in distances {
+            plane.position = SIMD3<Float>(0, 0, Float(-distance))
+            plane.scale = SIMD3<Float>(repeating: Float(distance * 2))
+            try await session.render(camera: camera, target: target, world: world, deltaTime: 0)
+            let bytes = target.bytes()
+            let center = (4 * 8 + 4) * 4
+            points.append((Double(bytes[center + 2]), min(0.5 / distance, 1)))
+        }
+        return table(from: points)
+    }
+
+    /// Piecewise-linear raw → v (monotonic), as bytes.
+    static func table(from points: [(raw: Double, v: Double)]) -> [UInt8] {
+        var sorted = points.sorted { $0.raw < $1.raw }
+        // Equal readings: keep the average v (8-bit plateaus).
+        var merged: [(raw: Double, v: Double)] = []
+        for point in sorted {
+            if let last = merged.last, last.raw == point.raw {
+                merged[merged.count - 1].v = (last.v + point.v) / 2
+            } else {
+                merged.append(point)
+            }
+        }
+        sorted = merged
+        return (0 ..< 256).map { index -> UInt8 in
+            let raw = Double(index)
+            guard let upper = sorted.firstIndex(where: { $0.raw >= raw }) else { return UInt8((sorted.last?.v ?? 1) * 255) }
+            guard upper > 0 else { return UInt8((sorted[0].v * 255).rounded()) }
+            let a = sorted[upper - 1]
+            let b = sorted[upper]
+            let t = b.raw > a.raw ? (raw - a.raw) / (b.raw - a.raw) : 0
+            return UInt8((min(max(a.v + (b.v - a.v) * t, 0), 1) * 255).rounded())
+        }
+    }
+}
+
 /// One persistent `RealityRenderer` for a whole export (creating one per frame is far too slow).
 @MainActor
 final class RenderSession {
@@ -266,6 +504,7 @@ final class RenderSession {
     var transparent = false
 
     func render(camera pose: OffscreenRenderer.Camera, target: RenderTarget, world: SceneRenderer, deltaTime: Double) async throws {
+        target.matte = nil
         guard transparent else {
             try await renderOnce(camera: pose, target: target, world: world, deltaTime: deltaTime)
             return
@@ -309,7 +548,7 @@ final class RenderTarget {
     let output: RealityRenderer.CameraOutput
     let width: Int
     let height: Int
-    /// Premultiplied BGRA of the last transparent frame (overrides the texture).
+    /// BGRA that overrides the texture: the transparent matte (premultiplied) or the composited frame.
     var matte: [UInt8]?
 
     init(device: MTLDevice, width: Int, height: Int) throws {
@@ -347,7 +586,7 @@ final class RenderTarget {
 
     func image(transparent: Bool) throws -> CGImage {
         let bytesPerRow = width * 4
-        let bytes = transparent ? (matte ?? bytes()) : bytes()
+        let bytes = matte ?? bytes()
         let alpha: CGImageAlphaInfo = transparent ? .premultipliedFirst : .noneSkipFirst
         guard let provider = CGDataProvider(data: Data(bytes) as CFData),
               let image = CGImage(
@@ -368,8 +607,13 @@ final class VideoWriter {
     private let input: AVAssetWriterInput
     private let adaptor: AVAssetWriterInputPixelBufferAdaptor
     private let fps: Int
+    private let audioInput: AVAssetWriterInput?
+    private let audio: [Float]
+    private let audioRate: Int
+    private var audioWritten = 0
+    private let audioFormat: CMAudioFormatDescription?
 
-    init(url: URL, width: Int, height: Int, fps: Int, codec: VideoCodec, alpha: Bool) throws {
+    init(url: URL, width: Int, height: Int, fps: Int, codec: VideoCodec, alpha: Bool, audio: [Float]? = nil, audioSampleRate: Int = 48000) throws {
         let type: AVFileType = alpha ? .mov : .mp4
         writer = try AVAssetWriter(outputURL: url, fileType: type)
         let codecType: AVVideoCodecType = alpha ? .hevcWithAlpha : (codec == .hevc ? .hevc : .h264)
@@ -394,6 +638,33 @@ final class VideoWriter {
         ])
         guard writer.canAdd(input) else { throw ExportError.writer("can't add the video track") }
         writer.add(input)
+        self.audio = audio ?? []
+        audioRate = audioSampleRate
+        if let audio, !audio.isEmpty {
+            let settings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: audioSampleRate,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderBitRateKey: 192_000
+            ]
+            let audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: settings)
+            audioInput.expectsMediaDataInRealTime = false
+            guard writer.canAdd(audioInput) else { throw ExportError.writer("can't add the sound track") }
+            writer.add(audioInput)
+            self.audioInput = audioInput
+            var description = AudioStreamBasicDescription(
+                mSampleRate: Float64(audioSampleRate), mFormatID: kAudioFormatLinearPCM,
+                mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked, mBytesPerPacket: 8, mFramesPerPacket: 1,
+                mBytesPerFrame: 8, mChannelsPerFrame: 2, mBitsPerChannel: 32, mReserved: 0
+            )
+            var format: CMAudioFormatDescription?
+            CMAudioFormatDescriptionCreate(allocator: kCFAllocatorDefault, asbd: &description, layoutSize: 0, layout: nil,
+                                           magicCookieSize: 0, magicCookie: nil, extensions: nil, formatDescriptionOut: &format)
+            audioFormat = format
+        } else {
+            audioInput = nil
+            audioFormat = nil
+        }
         guard writer.startWriting() else { throw ExportError.writer(writer.error?.localizedDescription ?? "couldn't start") }
         writer.startSession(atSourceTime: .zero)
         self.fps = fps
@@ -415,9 +686,47 @@ final class VideoWriter {
         guard adaptor.append(buffer, withPresentationTime: time) else {
             throw ExportError.writer(writer.error?.localizedDescription ?? "couldn't append frame \(frame)")
         }
+        // Keep the sound interleaved with the picture: write audio up to the end of this frame.
+        try await appendAudio(upTo: Int((Double(frame + 1) / Double(fps) * Double(audioRate)).rounded()))
+    }
+
+    private func appendAudio(upTo frameLimit: Int) async throws {
+        guard let audioInput, let audioFormat else { return }
+        let totalFrames = audio.count / 2
+        let limit = min(frameLimit, totalFrames)
+        while audioWritten < limit {
+            var waited = 0
+            while !audioInput.isReadyForMoreMediaData {
+                try await Task.sleep(for: .milliseconds(4))
+                waited += 1
+                if waited > 5000 { throw ExportError.writer("the audio encoder stopped accepting samples") }
+            }
+            let count = min(limit - audioWritten, 4096)
+            let bytes = count * 8
+            var block: CMBlockBuffer?
+            CMBlockBufferCreateWithMemoryBlock(allocator: kCFAllocatorDefault, memoryBlock: nil, blockLength: bytes, blockAllocator: kCFAllocatorDefault,
+                                               customBlockSource: nil, offsetToData: 0, dataLength: bytes, flags: 0, blockBufferOut: &block)
+            guard let block else { throw ExportError.writer("no audio buffer") }
+            audio.withUnsafeBufferPointer { samples in
+                _ = CMBlockBufferReplaceDataBytes(with: samples.baseAddress! + audioWritten * 2, blockBuffer: block, offsetIntoDestination: 0,
+                                                  dataLength: bytes)
+            }
+            var sample: CMSampleBuffer?
+            CMAudioSampleBufferCreateReadyWithPacketDescriptions(
+                allocator: kCFAllocatorDefault, dataBuffer: block, formatDescription: audioFormat, sampleCount: count,
+                presentationTimeStamp: CMTime(value: CMTimeValue(audioWritten), timescale: CMTimeScale(audioRate)),
+                packetDescriptions: nil, sampleBufferOut: &sample
+            )
+            guard let sample, audioInput.append(sample) else {
+                throw ExportError.writer(writer.error?.localizedDescription ?? "couldn't append sound")
+            }
+            audioWritten += count
+        }
     }
 
     func finish() async throws {
+        try await appendAudio(upTo: audio.count / 2)
+        audioInput?.markAsFinished()
         input.markAsFinished()
         let writer = writer
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in

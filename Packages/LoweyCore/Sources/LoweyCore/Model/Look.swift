@@ -149,6 +149,8 @@ public struct Look: Codable, Hashable, Sendable {
     public var sky: Sky
     public var fog: Fog
     public var ground: Ground
+    /// Post-processing (bloom, grain, grade, outlines, retro, textures…) — Phase 3.
+    public var post: PostSettings
 
     public init(
         shading: ShadingStyle = .smooth,
@@ -157,7 +159,8 @@ public struct Look: Codable, Hashable, Sendable {
         lighting: Lighting = Lighting(),
         sky: Sky = LookPresets.sky(for: .day),
         fog: Fog = Fog(),
-        ground: Ground = Ground()
+        ground: Ground = Ground(),
+        post: PostSettings = PostSettings()
     ) {
         self.shading = shading
         self.palette = palette
@@ -166,6 +169,35 @@ public struct Look: Codable, Hashable, Sendable {
         self.sky = sky
         self.fog = fog
         self.ground = ground
+        self.post = post
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case shading, palette, lightingPreset, lighting, sky, fog, ground, post
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        shading = try c.decode(ShadingStyle.self, forKey: .shading)
+        palette = try c.decode(Palette.self, forKey: .palette)
+        lightingPreset = try c.decodeIfPresent(LightingPreset.self, forKey: .lightingPreset)
+        lighting = try c.decode(Lighting.self, forKey: .lighting)
+        sky = try c.decode(Sky.self, forKey: .sky)
+        fog = try c.decode(Fog.self, forKey: .fog)
+        ground = try c.decode(Ground.self, forKey: .ground)
+        post = try c.decodeIfPresent(PostSettings.self, forKey: .post) ?? PostSettings()
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(shading, forKey: .shading)
+        try c.encode(palette, forKey: .palette)
+        try c.encodeIfPresent(lightingPreset, forKey: .lightingPreset)
+        try c.encode(lighting, forKey: .lighting)
+        try c.encode(sky, forKey: .sky)
+        try c.encode(fog, forKey: .fog)
+        try c.encode(ground, forKey: .ground)
+        if post != PostSettings() { try c.encode(post, forKey: .post) }
     }
 
     public static let `default` = LookPresets.look(for: .day)

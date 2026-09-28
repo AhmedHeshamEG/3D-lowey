@@ -122,3 +122,45 @@ Documents/
    only → `applyPoses`.
 3. While recording a Perform take, the overrides are sampled at `time`.
 4. SwiftUI panels refresh a few times a second (not every frame).
+
+## Phase 3: story, voice, VFX, AI, polish
+
+```
+ voice ─▶ AudioClip (timeline.audio) ─▶ SpeechAnalyzer (app) ─▶ Transcript (file-time words) ─▶ timeline.words
+                                                                                  │
+          ┌───────────────────────────── word times ──────────────────────────────┤
+          ▼                                                                       ▼
+ Scene Script actions ──ScriptCompiler──▶ EditCommand (one undo step)      LipSync ─▶ mouth / jaw keys
+ (bridge · MCP · paste · samples)                                                   │
+                                                                                    ▼
+ Animator.evaluate: tracks → live overrides (Perform, face) → behaviours → clips (assets, puppets) → FaceRig
+          │
+          ▼
+ SceneRenderer (+ particles, text) ──▶ render ──▶ FrameCompositor: shot post → transition → screen → film → overlays/captions
+          ▲ depth world (export) / RealityKit depth (stage)                    ▲ OverlayLayout + OverlayRenderer, Captions
+```
+
+| Area | Files | What |
+|---|---|---|
+| Audio | `Audio/Audio.swift`, `AudioMixer.swift`, `WAV.swift` | clips (trim, fades, envelope), transcripts, timeline words, word snapping and search, transcript corrections, the mixer (export soundtrack), loudness, WAV |
+| Text & overlays | `Text/Overlay.swift`, `Text3D.swift`, `Captions.swift` | frame-space overlays (placement, projection for followers), the block font, caption pages / karaoke / SRT / VTT |
+| VFX | `VFX/Particles.swift`, `ParticleMesher.swift`, `Post.swift` | closed-form particles and their meshes; post settings (in the Look), screen effects, transitions, match cut |
+| Face | `Face/LipSync.swift`, `Face.swift`, `Resources/visemes.txt` | phonemizer (CMUdict + rules, Arabic, Italian), lip-sync keys; landmarks → channels (One Euro); the face rig |
+| Characters | `Character/CharacterBuilder.swift`, `PuppetRig.swift`, `BuiltinClips.swift` | the builder, puppet skeletons for retargeting, the ten built-in humanoid clips |
+| AI | `AI/ScriptCompiler.swift`, `ScriptReference.swift`, `Bridge.swift` | actions → commands with preview, the action reference, HTTP parsing / pairing / routing / LAN policy, compact summaries |
+| Projects | `Project/ProjectPackage.swift` | zip reader, `.loweypack`, archive, copy scene |
+| Samples | `Samples/EnigmaStory.swift`, `IslandSample.swift` | the narrated Enigma story and the welcome island — both Scene Scripts |
+
+**LoweyRender** adds `FrameCompositor` (Core Image stages, shared by stage and export), `OverlayRenderer` (CoreGraphics
+titles, shapes, captions), `StagePost` (ARView post-process: depth → `loweyInverseDepth` kernel → compositor), the depth
+world (`SceneRenderer.depthPass`, `loweyDepth` shader), particle and text content, and an exporter that composites,
+renders both shots of a transition and interleaves AAC audio.
+
+**App** adds `Audio/` (decoder, playback locked to the picture, voice recorder, `SpeechService`, placeholder voice),
+`Face/` (Vision capture, iPhone link, companion screen), `Bridge/` (Network.framework server, endpoints, approvals),
+`EditorModel+Audio/+Story/+Character/+AI`, the timeline's audio/words/effects lanes and multi-select layer, panels
+(audio, transcript, character builder, post, effects & captions, transitions, bridge, proposals), the tour, menu-bar
+commands, diagnostics and thermal handling.
+
+**Laptop** (`tools/lowey`): `client.py` (bridge client), `mcp_server.py` (lowey-mcp), `link.py` (lowey-link), Blender
+generators. `/skills`: four Claude skills.

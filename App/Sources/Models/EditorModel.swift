@@ -82,6 +82,9 @@ final class EditorModel {
     private(set) var lastSaved: Date?
     /// Screen-space overlay shapes (lasso polygon, scatter circle).
     var lassoPoints: [CGPoint] = []
+    /// Where the Apple Pencil hovers (brush preview), and how high (0…1).
+    var hoverPoint: CGPoint?
+    var hoverHeight: Double = 0
     var scatterPreview: (center: CGPoint, radius: CGFloat)?
 
     // MARK: Animation state (see EditorModel+Animation.swift)
@@ -95,6 +98,8 @@ final class EditorModel {
     /// Timeline zoom: points per second.
     var timelineZoom: Double = 90
     var selectedKeys: Set<KeyRef> = []
+    /// Timeline "Select" mode: dragging on empty lanes draws a selection box and taps add to the selection.
+    var keyBoxSelect = false
     var expandedObjects: Set<ObjectID> = []
     var presetDuration: Double?
     var presetStrength: Double = 1
@@ -117,6 +122,52 @@ final class EditorModel {
     var virtualCameraScale: Double = 1
     var exportProgress: Double?
     var exportResults: [URL] = []
+
+    // MARK: Audio & narration state (see EditorModel+Audio.swift)
+
+    var selectedAudio: String?
+    var showAudio = false
+    var showTranscript = false
+    /// Keys, cuts and the playhead snap to spoken words.
+    var snapToWords = true
+    var isRecordingVoice = false
+    var transcribing: String?
+    var transcriptLanguage = "en-US"
+    /// Selected words in the transcript panel (indices into `timeline.words`).
+    var wordSelection: ClosedRange<Int>?
+    @ObservationIgnored lazy var audioPlayback = AudioPlayback(folder: audioFolder)
+    @ObservationIgnored let voiceRecorder = VoiceRecorder()
+    @ObservationIgnored var recordingStart: Double = 0
+    /// Waveform peaks per audio file (100 per second), decoded once.
+    var waveforms: [String: [Float]] = [:]
+    @ObservationIgnored var decodedAudio: [String: PCMAudio] = [:]
+
+    // MARK: Story, VFX & post state (see EditorModel+Story.swift)
+
+    /// Post-processing in the live view (off = the plain render, for speed while blocking out).
+    var previewPost = true {
+        didSet { updateStagePost() }
+    }
+
+    /// Screen effects (shake, flash…) in the live view.
+    var previewEffects = true
+    @ObservationIgnored var overlayImages: [String: CGImage] = [:]
+
+    // MARK: Character & face state (see EditorModel+Character.swift)
+
+    var showCharacterBuilder = false
+    /// A Scene Script waiting for your decision (AI proposes, you decide).
+    var proposal: ScriptProposal?
+    var showBridge = false
+    /// The character the builder edits (nil = a new one).
+    var characterBuilderTarget: ObjectID?
+    var faceActive = false
+    var faceStatus: String?
+    @ObservationIgnored var faceCapture: FaceCapture?
+    @ObservationIgnored var faceLink: FaceLinkReceiver?
+    @ObservationIgnored let facePerformer = FacePerformer()
+    @ObservationIgnored var thermalObserver: NSObjectProtocol?
+    @ObservationIgnored var captionCache: (factor: Double, revision: Int, pages: [CaptionPage])?
     private(set) var displayRevision = 0
 
     @ObservationIgnored var displayed: AnimatedScene
@@ -191,6 +242,29 @@ final class EditorModel {
         renderer.onContentChanged = { [weak self] in self?.refreshSelectionOverlay() }
         refreshGuide()
         refreshSelectionOverlay()
+        applyThermalQuality()
+        thermalObserver = NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil,
+                                                                 queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyThermalQuality() }
+        }
+    }
+
+    /// Thermal-aware preview: when the iPad gets hot, the stage renders fewer pixels and skips depth effects
+    /// (exports are unaffected — they render offscreen at full quality).
+    func applyThermalQuality() {
+        guard let stage else { return }
+        let state = ProcessInfo.processInfo.thermalState
+        let full = stage.window?.screen.scale ?? 2
+        let scale: CGFloat = switch state {
+        case .critical: 1
+        case .serious: max(full * 0.66, 1)
+        default: full
+        }
+        if stage.contentScaleFactor != scale {
+            stage.contentScaleFactor = scale
+            Diagnostics.shared.log("Thermal \(state.rawValue): preview scale \(scale)")
+        }
+        updateStagePost()
     }
 
     // MARK: Perform / undo / redo
@@ -246,6 +320,7 @@ final class EditorModel {
         selectedKeys = selectedKeys.filter { key in timeline.track(key.track)?.key(at: key.time) != nil }
         refreshSelectionOverlay()
         scheduleAutosave()
+        if app.bridge.isOn { app.bridge.notify("scene", ["revision": String(session.revision)]) }
     }
 
     // MARK: Autosave (debounced, off the main thread, atomic)
@@ -283,6 +358,7 @@ final class EditorModel {
 
     private func cameraMoved(_ viewpoint: Viewpoint) {
         if projection != viewpoint.projection { projection = viewpoint.projection }
+        updateStagePost()
         refreshGuide()
         refreshSelectionOverlay(moveOnly: true)
         viewpointSaveTask?.cancel()
@@ -433,6 +509,7 @@ final class EditorModel {
         if mode != .animate, performPhase != .idle { cancelPerform() }
         if mode != .camera, virtualCameraActive { stopVirtualCamera() }
         updateLookThrough()
+        updateStagePost()
         if mode != .build { tool = .select }
         eyedropperActive = false
         refreshSelectionOverlay()

@@ -48,3 +48,42 @@ void loweySurface(realitykit::surface_parameters params)
     params.surface().set_metallic(metallic * (1.0h - fog));
     params.surface().set_opacity(opacity);
 }
+
+// ---------------------------------------------------------------------------------------------
+// Depth for post-processing (lens blur, ink outlines) — Phase 3.
+//
+// Everything post-processing needs from depth is linear in 1/distance (the circle of confusion is
+// |1/focus − 1/d| × lens), so depth is stored as v = min(0.5 / d, 1): 0 = infinitely far, 1 = 0.5 m.
+// The export renders a second "depth world" with this unlit shader; the live stage converts RealityKit's
+// own depth buffer with `loweyInverseDepth`. Both produce the same v, so preview and export blur alike.
+
+[[visible]]
+void loweyDepth(realitykit::surface_parameters params)
+{
+    float3 world = params.geometry().world_position();
+    float3 viewPosition = (params.uniforms().world_to_view() * float4(world, 1.0)).xyz;
+    float distance = max(-viewPosition.z, 0.0001);
+    half v = half(min(0.5 / distance, 1.0));
+    params.surface().set_base_color(half3(v, v, v));
+    params.surface().set_emissive_color(half3(v, v, v));
+    params.surface().set_opacity(1.0h);
+}
+
+struct LoweyDepthParams {
+    float near;
+    float far;
+};
+
+/// Reverse-Z depth buffer (1 at the near plane, 0 at the far plane) → v = 0.5 / distance.
+kernel void loweyInverseDepth(depth2d<float, access::read> depth [[texture(0)]],
+                              texture2d<half, access::write> output [[texture(1)]],
+                              constant LoweyDepthParams& p [[buffer(0)]],
+                              uint2 gid [[thread_position_in_grid]])
+{
+    if (gid.x >= output.get_width() || gid.y >= output.get_height()) { return; }
+    uint2 source = uint2(float2(gid) * float2(depth.get_width(), depth.get_height()) / float2(output.get_width(), output.get_height()));
+    float z = depth.read(source);
+    float inverseDistance = (z * (p.far - p.near) + p.near) / (p.near * p.far);
+    half v = half(clamp(0.5 * inverseDistance, 0.0, 1.0));
+    output.write(half4(v, v, v, 1.0h), gid);
+}

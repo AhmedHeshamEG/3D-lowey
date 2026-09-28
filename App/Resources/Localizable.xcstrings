@@ -1,0 +1,36 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Animate" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تحريك" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Anima" } }
+      }
+    },
+    "Build" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "بناء" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Costruisci" } }
+      }
+    },
+    "Camera" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "كاميرا" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Camera" } }
+      }
+    },
+    "Export" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تصدير" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esporta" } }
+      }
+    },
+    "Look" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المظهر" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aspetto" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

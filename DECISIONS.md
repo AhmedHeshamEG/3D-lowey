@@ -226,3 +226,110 @@ JavaScriptCore doesn't exist on Linux, so its tests live in the app test bundle.
 **D52 — 3D export is written in LoweyCore (GLB + USDZ).** Blockout and drawn objects export from their exact recipes;
 library models and prefab instances are read back from their loaded meshes (geometry only — textures aren't carried).
 USDZ is an uncompressed zip with 64-byte-aligned entries around a USD text layer with `UsdPreviewSurface` materials.
+
+## Phase 3 — story, voice, VFX, AI, polish
+
+**D53 — Keyframe multi-select is one gesture layer over all lanes, with the logic in Core (`KeySelection`).** Procreate
+Dreams-style: long-press-drag (or the Select toggle + drag) draws a box across rows and time; the Pick menu selects all /
+after / before / at the playhead / in the loop / invert; a band on the ruler stretches or squashes the selected keys'
+timing; Compose mode moves several bars together. One recogniser for every lane (instead of one per row) is what makes a
+box that spans tracks possible. Selecting never changes the document; moves and stretches are one undo step each.
+
+**D54 — Audio lives in the timeline (`audio`, `transcripts`) and is mixed in Core.** Clips reference files in the
+project's `audio/` folder. `AudioMixer` (pure Swift) mixes exactly what the preview plays (volume × fades × envelope, soft
+limiting), so exports are deterministic and tested on Linux; the app only decodes (AVAudioFile → 48 kHz float) and plays
+(one `AVAudioPlayerNode` per clip). During playback the picture follows the audio clock (host-time anchor), so sound and
+picture never drift. Schema v3 (additive).
+
+**D55 — Word timing: SpeechAnalyzer + SpeechTranscriber with `.audioTimeRange` (no Whisper).** Verified against Apple's
+documentation (Speech, iPadOS 26). Audio is converted to `SpeechAnalyzer.bestAvailableAudioFormat` first; the model is
+installed on first use with `AssetInventory.assetInstallationRequest`. Recogniser runs holding several words are split by
+length inside their range. Words are stored in *file* time per clip, so trimming or moving the clip keeps them in place.
+Corrections replace words and keep (or share) their timing. English, Arabic and Italian are offered first when supported.
+
+**D56 — Syncing to words = snapping + word-addressed times.** Keys, the playhead, audio clips and effects snap to word
+edges; transcript phrases carry presets, camera moves, cuts and markers. Scene Scripts address time as
+`{"word": "Enigma"}`, so AI-built shots land on the voice by construction.
+
+**D57 — Overlays are scene objects in frame space.** `ObjectKind.overlay` (titles, labels, arrows, the X, the question
+mark…) with x/y in −1…1 of the frame, so presets, keys, Perform, stagger and scripts animate them with no new machinery.
+Size is relative to the frame's short side (the same overlay reads the same in 16:9 and 9:16; titles shrink to fit narrow
+frames). An overlay can follow a 3D object (projected through the shot camera). One CoreGraphics renderer draws them for the
+stage and for export.
+
+**D58 — 3D text: a built-in 5×7 block font meshed in Core ("Blocky"), system fonts through RealityKit otherwise.** The
+block font is low-poly by design, exact in bounds and in 3D export, and tested; `MeshResource.generateText` covers smooth
+styles and every script (Arabic).
+
+**D59 — Particles are a pure function of time.** Each particle's life is computed in closed form from its index and a seed
+(ballistic motion with drag, swirl, colour over life). Scrubbing, loops and export are exact; the same frame is the same
+pixels (tested). Meshes are octahedra (diamonds, streaks, tumbling cards) grouped into ≤ 8 colour bands — a few draw calls
+per effect. RealityKit's `ParticleEmitterComponent` isn't used: it simulates with the display clock and can't be evaluated
+at an arbitrary time.
+
+**D60 — One compositor for preview and export (Core Image).** Order: shot (lens blur → ink outlines → bloom → grade →
+chromatic aberration → retro) → transition → screen effects (shake, zoom blur, glitch, speed lines, flash) → film (texture,
+vignette, grain) → overlays and captions. The stage runs it in ARView's post-process callback, the exporter on every
+rendered frame. When nothing needs it the stage switches the pass off (no cost).
+
+**D61 — Depth for lens blur and outlines is stored as v = 0.5 / distance.** The circle of confusion is linear in
+1/distance, so this is the natural encoding. Export renders a second "depth world" (every surface the unlit `loweyDepth`
+shader, sky off) at half resolution; the stage converts RealityKit's reverse-Z depth buffer with the `loweyInverseDepth`
+compute kernel. Both give the same v, so blur matches. This resolves the Phase 2 limitation (D50).
+`Phase3Tests.testDepthPassEncodesInverseDistance` checks the export path against known distances.
+
+**D62 — Transitions are centred on their cut and render both shots in export.** The exporter renders the outgoing camera
+into a second target and blends. The live preview shows the cut (two cameras live would halve the frame rate).
+
+**D63 — Lip sync from words with the CMU Pronouncing Dictionary, not audio analysis.** `scripts/make_visemes.py` turns
+CMUdict (BSD) into word → Rhubarb / Preston Blair mouth shapes (A–H, X), shipped as a Core resource; unknown English words
+use letter-to-sound rules, Italian is phonetic, Arabic letters map directly (short vowels assumed). Shapes become keys
+(`mouth`, stepped) plus eased `jawOpen` / `mouthWide`, so lip sync is editable like any animation. The voice's loudness is
+the fallback for words without known sounds.
+
+**D64 — Faces are channels on the character root, applied by a face rig inside the evaluator.** `jawOpen`,
+`blinkLeft/Right`, `brows`, `smile`, `mouthWide`, `lookX/Y`, `headYaw/Pitch/Roll`, `mouth`. Parts carry a `faceRole`
+("eye.L", "mouth.D"…); the rig scales eyes, lifts brows, swaps mouth shapes (Toonsquid-style) and turns the head after
+clips. Keys, lip sync, live face capture and the iPhone companion all write the same channels; live values are evaluator
+overrides, recorded by Perform like any slider.
+
+**D65 — Face capture: Vision landmarks on the iPad; ARKit blend shapes from an optional iPhone.** The iPad Air has no
+TrueDepth camera. Ratios (eye openness, brow height, mouth opening relative to eye distance) against a calibrated neutral
+face, smoothed with a One Euro filter. The same app on an iPhone is the companion (device family 1,2; iPhones only show the
+companion screen) and streams newline-delimited JSON over Bonjour (`_loweyface._tcp`) — no entitlements beyond local network.
+
+**D66 — Hesham's character is a puppet built from parts on the Humanoid standard.** The builder makes low-poly parts
+under joints named with humanoid bones. `PuppetRig` turns the joints into a skeleton (arms straightened to a T-pose for
+retargeting only), so every humanoid clip — the ten built-in ones and any imported Mixamo-style clip — plays on it through
+the existing retargeter; poses are written back onto the joint objects. The recipe is stored on the character so it can
+be reopened and rebuilt (the root keeps its id and animation).
+
+**D67 — AI speaks "actions", compiled in Core.** Scene Script v2 adds friendly actions (names instead of ids, word times,
+presets, camera moves, characters, look…) that `ScriptCompiler` turns into ordinary commands against the current document —
+one undo step, with a plain-language preview. Errors name the action and what exists, so a model can correct itself. The
+same language is served by the bridge, used by lowey-mcp and the skills, and by the app's own samples (the narrated Enigma
+story and the welcome island are scripts).
+
+**D68 — The LAN Bridge: HTTP/1.1 + WebSocket on Network.framework; parsing, auth and routing in Core.** Off by default;
+answers only private and link-local addresses; pairing with a 6-digit code (ten wrong guesses change it); bearer tokens.
+Scripts from the bridge wait for Hesham's approval on the iPad (preview sheet) unless he turns on auto-apply.
+
+**D69 — lowey-mcp and lowey-link are Python (official MCP Python SDK 2.x).** The laptop already runs Python for Blender;
+the SDK makes each tool a typed function. Tools map 1:1 onto actions; replies are a few lines (token-cheap). Tested in CI
+against a fake bridge.
+
+**D70 — Projects travel as `.loweypack` (a stored zip).** Core writes and reads it (with CRC checks), so packaging is
+tested on Linux; library assets are embedded first. Archive moves projects to `Projects/Archive`.
+
+**D71 — Diagnostics stay on the iPad.** A rotating log, MetricKit diagnostic payloads (crashes, hangs) delivered on the
+next launch, an "ended unexpectedly" marker, and "Export diagnostics" (a zip Hesham chooses to share). No telemetry.
+
+**D72 — Thermal-aware preview.** At `.serious` the stage renders at ⅔ scale and skips depth effects; at `.critical`, 1×.
+Exports render offscreen and are unaffected.
+
+**D73 — Performance pass: what was done and what was deliberately not.** Done: particles as a few banded meshes (D59),
+shared meshes and materials for repeated objects (D21), the post pass switched off when unused (D60), overlays redrawn
+only when they change, thermal-aware preview (D72). Not done yet: distance LODs and texture compression for imported
+models, and `MeshInstancesComponent` for thousands of static copies — the 60 fps budget scene (~300 low-poly objects,
+3 characters, 2 particle systems) has to be profiled on the iPad Air first ("profile before optimizing"); CI simulators
+can't measure GPU frame times. Show FPS & stats is in the scene menu for that.

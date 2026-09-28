@@ -23,8 +23,23 @@ extension EditorModel {
         let base = "\(ProjectStore.sanitize(baseScene.name)) \(formatter.string(from: Date()))"
         let exporter = VideoExporter(document: session.document, library: library, rigs: rigCache)
         let folder = rendersFolder
+        let clips = timeline.audio
+        let audioFolder = audioFolder
         exportTask = Task { [weak self] in
             do {
+                var settings = settings
+                let range = settings.range
+                if !clips.isEmpty {
+                    // The soundtrack is mixed exactly as the preview plays it (same gains, fades, envelopes).
+                    settings.audio = await Task.detached(priority: .userInitiated) {
+                        var sources: [String: PCMAudio] = [:]
+                        for file in Set(clips.map(\.file)) {
+                            sources[file] = try? AudioDecoder.decode(audioFolder.appendingPathComponent(file))
+                        }
+                        return AudioMixer.mix(clips, sources: sources, range: range, sampleRate: AudioDecoder.sampleRate)
+                    }.value
+                    settings.audioSampleRate = Int(AudioDecoder.sampleRate)
+                }
                 let urls = try await exporter.export(settings: settings, to: folder, baseName: base) { progress in
                     self?.exportProgress = progress
                 }
@@ -142,7 +157,10 @@ extension EditorModel {
     }
 
     func availableClips(for asset: LibraryAsset) -> [ClipRef] {
-        rigCache.availableClips(for: asset, library: library)
+        var clips = rigCache.availableClips(for: asset, library: library)
+        // Humanoids also get the built-in clips (idle, walk, talk, wave…).
+        if asset.rig == .humanoid { clips += BuiltinClips.names.map { ClipRef(asset: BuiltinClips.assetID, name: $0) } }
+        return clips
     }
 
     func clipTrack(for id: ObjectID) -> ClipTrack? {
@@ -151,7 +169,7 @@ extension EditorModel {
 
     /// Plays a clip from the playhead to the end (looping); it crossfades from what played before.
     func addClip(_ clip: ClipRef) {
-        guard let character = selectedCharacter?.object.id else { return }
+        guard let character = selectedCharacter?.object.id ?? selectedPuppet else { return }
         let duration = max(timeline.duration - time, 1)
         updateTimeline("Play \(clip.name)") { timeline in
             var track = timeline.clipTracks.first { $0.target == character } ?? ClipTrack(id: UUID().uuidString.lowercased(), target: character)
@@ -189,7 +207,7 @@ extension EditorModel {
     }
 
     func setIK(_ change: @escaping (inout IKSettings) -> Void) {
-        guard let character = selectedCharacter?.object.id else { return }
+        guard let character = selectedCharacter?.object.id ?? selectedPuppet else { return }
         updateTimeline("Character IK") { timeline in
             if let index = timeline.clipTracks.firstIndex(where: { $0.target == character }) {
                 change(&timeline.clipTracks[index].ik)

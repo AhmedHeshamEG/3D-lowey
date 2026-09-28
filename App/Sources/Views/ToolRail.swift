@@ -69,6 +69,16 @@ struct AddMenu: View {
     private let columns = [GridItem(.adaptive(minimum: 84), spacing: 10)]
 
     var body: some View {
+        ScrollView {
+            content
+        }
+        .frame(width: 340)
+        .frame(maxHeight: 640)
+        .fixedSize(horizontal: false, vertical: true)
+        .panelStyle()
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(title: "Blockout")
             LazyVGrid(columns: columns, spacing: 10) {
@@ -84,10 +94,9 @@ struct AddMenu: View {
                 tile("Sun", icon: "sun.max.fill") { editor.addLight(.directional) }
                 tile("Camera", icon: "video.fill") { editor.addCamera() }
             }
+            AddStorySection(editor: editor) { title, icon, action in AnyView(tile(title, icon: icon, action: action)) }
         }
         .padding(18)
-        .frame(width: 340)
-        .panelStyle()
     }
 
     private func tile(_ title: String, icon: String, action: @escaping () -> Void) -> some View {

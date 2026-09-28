@@ -16,12 +16,25 @@ public struct AnimatedScene: Sendable {
 /// result, which is what makes preview and export identical and makes everything unit-testable.
 public enum Animator {
     /// Evaluates `document` at `time`. `rigs` supplies skeletons and clips for characters.
-    public static func evaluate(_ document: Document, at time: Double, rigs: [AssetID: RigAsset] = [:]) -> AnimatedScene {
+    /// `overrides` are live values (a slider or your face being performed) applied on top of the keys, before
+    /// behaviours, clips and faces — so a performed face moves the character's eyes and mouth like keyed values do.
+    public static func evaluate(_ document: Document, at time: Double, rigs libraryRigs: [AssetID: RigAsset] = [:],
+                                overrides: [ObjectID: [PropertyKey: PropertyValue]] = [:]) -> AnimatedScene {
         let timeline = document.scene.timeline
+        // Built-in humanoid clips play on any humanoid (built characters and imported rigs).
+        let rigs = timeline.clipTracks.isEmpty ? libraryRigs : libraryRigs.merging(BuiltinClips.rigs) { library, _ in library }
         var scene = document.scene
         let palette = document.palette
         var animated = Set<ObjectID>()
         applyTracks(timeline, to: &scene, at: time, palette: palette, animated: &animated)
+        for (id, values) in overrides {
+            guard var object = scene.objects[id] else { continue }
+            for (key, value) in values {
+                object[key] = value
+            }
+            scene.objects[id] = object
+            animated.insert(id)
+        }
         if !timeline.behaviors.isEmpty {
             // Where a target was earlier (for `follow` with lag): keys only — no recursion into behaviours.
             let history: (ObjectID, Double) -> Vec3? = { id, earlier in
@@ -38,17 +51,25 @@ public enum Animator {
         }
         var poses: [ObjectID: [Transform]] = [:]
         for track in timeline.clipTracks {
-            guard let object = scene.objects[track.target], let assetID = object.kind.assetID, let character = rigs[assetID] else { continue }
+            guard let object = scene.objects[track.target] else { continue }
             let sampleTime = steppedTime(time, for: track.target, in: scene, timeline: timeline)
             let world = scene.worldTransform(of: track.target)
             let snapshot = scene
-            if let pose = ClipMixer.pose(track: track, character: character, rigs: rigs, at: sampleTime, world: world, targetPosition: { id in
-                snapshot.objects[id] != nil ? snapshot.worldTransform(of: id).position : nil
-            }) {
-                poses[track.target] = pose
+            let target: (ObjectID) -> Vec3? = { id in snapshot.objects[id] != nil ? snapshot.worldTransform(of: id).position : nil }
+            if let assetID = object.kind.assetID, let character = rigs[assetID] {
+                if let pose = ClipMixer.pose(track: track, character: character, rigs: rigs, at: sampleTime, world: world, targetPosition: target) {
+                    poses[track.target] = pose
+                    animated.insert(track.target)
+                }
+            } else if object[.rigStandard] != nil, let puppet = PuppetRig.build(track.target, in: document.scene),
+                      let pose = ClipMixer.pose(track: track, character: puppet.rig, rigs: rigs, at: sampleTime, world: world, targetPosition: target) {
+                // Built characters: the pose moves their joint objects.
+                puppet.apply(pose, to: &scene, animated: &animated)
                 animated.insert(track.target)
             }
         }
+        // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
+        FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
         let camera = timeline.cutCamera(at: time).flatMap { scene.objects[$0] != nil ? $0 : nil }
             ?? scene.activeCamera.flatMap { scene.objects[$0] != nil ? $0 : nil }
         return AnimatedScene(time: time, scene: scene, animated: animated, camera: camera, poses: poses)

@@ -89,6 +89,10 @@ struct EditorView: View {
 
             PerformOverlay(editor: editor)
 
+            if app.showTour {
+                TourOverlay(editor: editor)
+            }
+
             if editor.showLibrary {
                 HStack {
                     Spacer()
@@ -112,6 +116,18 @@ struct EditorView: View {
         .background(KeyboardShortcuts(editor: editor))
         .sheet(isPresented: $editor.showScripts) {
             ScriptPanel(editor: editor)
+                .presentationDetents([.large])
+        }
+        .sheet(item: $editor.proposal) { proposal in
+            ProposalSheet(editor: editor, proposal: proposal)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $editor.showBridge) {
+            BridgePanel(bridge: app.bridge, editor: editor)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $editor.showCharacterBuilder) {
+            CharacterBuilderSheet(editor: editor, editing: editor.characterBuilderTarget)
                 .presentationDetents([.large])
         }
         .overlay(alignment: .bottomLeading) {
@@ -200,6 +216,19 @@ struct TopBar: View {
                     sceneName = editor.scene.name
                     renamingScene = true
                 }
+                Menu("Copy scene to…", systemImage: "doc.on.doc") {
+                    ForEach(app.projects.filter { $0.url != editor.projectURL }) { project in
+                        Button(project.info.name) {
+                            Task {
+                                await editor.saveNow(thumbnail: false)
+                                app.copyScene(editor.baseScene.id, from: editor.projectURL, to: project)
+                            }
+                        }
+                    }
+                }
+                Divider()
+                Button("AI & laptop bridge…", systemImage: "network") { editor.showBridge = true }
+                Button("Paste a Scene Script", systemImage: "doc.on.clipboard") { editor.importScriptFromClipboard() }
                 Divider()
                 Toggle("Show FPS & stats", isOn: $editor.showStatistics)
             } label: {
@@ -250,7 +279,7 @@ struct ModeSwitcher: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: item.systemImage)
-                        if item == mode { Text(item.title) }
+                        if item == mode { Text(LocalizedStringKey(item.title)) }
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .padding(.horizontal, item == mode ? 14 : 12)
@@ -298,6 +327,9 @@ struct KeyboardShortcuts: View {
             shortcut("k", modifiers: .command) { editor.keySelection() }
             shortcut(.leftArrow, modifiers: .option) { editor.step(frames: -1) }
             shortcut(.rightArrow, modifiers: .option) { editor.step(frames: 1) }
+            shortcut(.leftArrow, modifiers: [.option, .shift]) { editor.nudgeSelectedKeys(frames: -1) }
+            shortcut(.rightArrow, modifiers: [.option, .shift]) { editor.nudgeSelectedKeys(frames: 1) }
+            shortcut("a", modifiers: [.command, .option]) { editor.selectKeys(.all) }
             shortcut("r", modifiers: [.command, .shift]) { if editor.mode == .animate { editor.armPerform() } }
         }
         .opacity(0)

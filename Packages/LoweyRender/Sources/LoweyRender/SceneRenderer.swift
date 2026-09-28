@@ -56,6 +56,12 @@ public final class SceneRenderer {
 
     /// Editor helpers (light bulbs, camera boxes). Off for export renderers.
     public var showsHelpers = true
+    /// Depth world: every surface writes its distance (v = 0.5 / d) instead of its colour (lens blur, outlines).
+    public var depthPass = false {
+        didSet { environment.depthPass = depthPass }
+    }
+
+    private var particleEntities: [ObjectID: [ModelEntity]] = [:]
     /// Hides one object (the camera you are looking through).
     public var hiddenObject: ObjectID? {
         didSet {
@@ -120,6 +126,7 @@ public final class SceneRenderer {
             nodes[id] = nil
             contents[id] = nil
             contentKeys[id] = nil
+            particleEntities[id] = nil
         }
         // Additions and updates, parents before children.
         let dirty: Set<ObjectID> = lookChanged ? Set(scene.objects.keys) : changes.objects
@@ -162,6 +169,7 @@ public final class SceneRenderer {
             contentKeys[id] = key
         } else if contentKeys[id] != key || contents[id] == nil {
             contents[id]?.removeFromParent()
+            particleEntities[id] = nil
             let content = buildContent(for: object, key: key, document: document, depth: 0)
             content.name = "content"
             node.addChild(content)
@@ -175,6 +183,7 @@ public final class SceneRenderer {
     private enum MeshKey: Hashable {
         case primitive(PrimitiveShape, ShadingStyle)
         case drawing(DrawingRecipe, ShadingStyle)
+        case blockText(TextRecipe)
     }
 
     /// Everything that determines an object's content entity (transform excluded).
@@ -186,6 +195,8 @@ public final class SceneRenderer {
         var light: [PropertyKey: PropertyValue]
         var prefabVersion: Int
         var assetState: Int
+        /// Characters of 3D text shown (typewriter).
+        var revealed: Int
 
         func differsOnlyInSurface(from other: ContentKey) -> Bool {
             var copy = self
@@ -234,6 +245,11 @@ public final class SceneRenderer {
         if let assetID = object.kind.assetID {
             assetState = assets.cachedPrototype(assetID) != nil ? 2 : (failedAssets.contains(assetID) ? 3 : 1)
         }
+        var revealed = 0
+        if case let .text(recipe) = object.kind {
+            let reveal = min(max(object[.reveal]?.floatValue ?? 1, 0), 1)
+            revealed = Int((Double(recipe.text.count) * reveal).rounded(.down))
+        }
         return ContentKey(
             kind: object.kind,
             shading: effectiveShading(object, look: look),
@@ -241,7 +257,8 @@ public final class SceneRenderer {
             tinted: object.color != nil,
             light: lightProperties,
             prefabVersion: prefabVersion,
-            assetState: assetState
+            assetState: assetState,
+            revealed: revealed
         )
     }
 
@@ -299,6 +316,108 @@ public final class SceneRenderer {
             icon.generateCollisionShapes(recursive: false)
             icon.isEnabled = showsHelpers
             return icon
+
+        case let .text(recipe):
+            var shown = recipe
+            shown.text = String(recipe.text.prefix(key.revealed))
+            if shown.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return Entity() }
+            if recipe.coreMeshable { return meshEntity(.blockText(shown), surface: key.surface) }
+            return systemText(shown, surface: key.surface)
+
+        case .overlay:
+            // Drawn by the compositor in frame space; nothing in the world.
+            return Entity()
+
+        case .particles:
+            // Filled every frame by `applyParticles`.
+            let container = Entity()
+            if showsHelpers {
+                let icon = ModelEntity(mesh: .generateSphere(radius: 0.08), materials: [MaterialFactory.shared.helper(color: .systemOrange, opacity: 0.6)])
+                icon.components.set(LoweyHelperComponent())
+                icon.generateCollisionShapes(recursive: false)
+                container.addChild(icon)
+            }
+            return container
+        }
+    }
+
+    /// Smooth outline text in any script (Arabic included) through the system fonts.
+    private func systemText(_ recipe: TextRecipe, surface: SurfaceKey?) -> Entity {
+        let size = CGFloat(max(recipe.size, 0.01))
+        let font: UIFont = switch recipe.style {
+        case .rounded:
+            UIFont.systemFont(ofSize: size, weight: .heavy).withDesign(.rounded)
+        case .serif:
+            UIFont.systemFont(ofSize: size, weight: .bold).withDesign(.serif)
+        case .mono:
+            UIFont.monospacedSystemFont(ofSize: size, weight: .bold)
+        case .bold, .blocky:
+            UIFont.systemFont(ofSize: size, weight: .black)
+        }
+        let alignment: CTTextAlignment = switch recipe.alignment {
+        case .left: .left
+        case .center: .center
+        case .right: .right
+        }
+        let mesh = MeshResource.generateText(recipe.text, extrusionDepth: Float(recipe.size * recipe.depth), font: font,
+                                             containerFrame: .zero, alignment: alignment, lineBreakMode: .byWordWrapping)
+        let material = depthPass ? MaterialFactory.shared.depthMaterial
+            : MaterialFactory.shared.material(for: surface ?? SurfaceKey(color: .blockout, fog: fog))
+        let model = ModelEntity(mesh: mesh, materials: [material])
+        // Base-centred like every Lowey object: stand the text on the ground, centred on its pivot.
+        let bounds = mesh.bounds
+        let xOffset: Float = switch recipe.alignment {
+        case .left: -bounds.min.x
+        case .center: -bounds.center.x
+        case .right: -bounds.max.x
+        }
+        model.position = SIMD3<Float>(xOffset, -bounds.min.y, -bounds.center.z)
+        model.collision = CollisionComponent(shapes: [ShapeResource.generateBox(size: pointwiseMax(bounds.extents, SIMD3<Float>(repeating: 0.02)))
+                .offsetBy(translation: bounds.center)])
+        let container = Entity()
+        container.addChild(model)
+        return container
+    }
+
+    // MARK: Particles
+
+    /// Rebuilds particle meshes for `time` (after `sync`). Particles are a pure function of time, so this is
+    /// exact while scrubbing and in export. Colours are grouped into a few bands, one mesh + material each.
+    public func applyParticles(_ scene: CoreScene, timeline: Timeline, time: Double) {
+        guard !depthPass else { return }
+        for (id, object) in scene.objects {
+            guard case let .particles(recipe) = object.kind, let content = contents[id] else { continue }
+            let visible = scene.isEffectivelyVisible(id)
+            let track = timeline.track(for: id, .emission)
+            let amount = max(object.transform.scale.x, 0)
+            let particles = visible ? ParticleSimulator.particles(recipe, at: time, amount: amount) { birth in
+                track?.value(at: birth)?.floatValue ?? object[.emission]?.floatValue ?? 1
+            } : []
+            let bands = ParticleMesher.bands(particles, recipe: recipe)
+            var entities = particleEntities[id] ?? []
+            while entities.count < bands.count {
+                let entity = ModelEntity()
+                entity.name = "particles"
+                content.addChild(entity)
+                entities.append(entity)
+            }
+            for (index, entity) in entities.enumerated() {
+                guard index < bands.count, let resource = try? MeshUpload.resource(from: bands[index].mesh) else {
+                    entity.isEnabled = false
+                    continue
+                }
+                let band = bands[index]
+                var material = UnlitMaterial(color: band.color.uiColor)
+                if band.opacity < 0.999 { material.blending = .transparent(opacity: .init(floatLiteral: Float(band.opacity))) }
+                entity.model = ModelComponent(mesh: resource, materials: [material])
+                entity.isEnabled = true
+            }
+            // Undo the object's scale for the particles themselves (scale = amount), keep rotation and position.
+            let inverse = SIMD3<Float>(repeating: 1) / pointwiseMax(object.transform.scale.simd, SIMD3<Float>(repeating: 0.001))
+            for entity in entities {
+                entity.scale = inverse
+            }
+            particleEntities[id] = entities
         }
     }
 
@@ -307,6 +426,7 @@ public final class SceneRenderer {
         let data: MeshData = switch key {
         case let .primitive(shape, shading): PrimitiveMesh.make(shape, shading: shading)
         case let .drawing(recipe, shading): DrawingMesher.mesh(for: recipe).shaded(shading)
+        case let .blockText(recipe): BlockFont.mesh(for: recipe)
         }
         guard !data.isEmpty, let resource = try? MeshUpload.resource(from: data), let bounds = data.bounds else { return nil }
         meshCache[key] = (resource, bounds)
@@ -315,7 +435,8 @@ public final class SceneRenderer {
 
     private func meshEntity(_ key: MeshKey, surface: SurfaceKey?) -> Entity {
         guard let (resource, bounds) = mesh(key) else { return placeholder(color: .systemRed) }
-        let material = MaterialFactory.shared.material(for: surface ?? SurfaceKey(color: .blockout, fog: fog))
+        let material = depthPass ? MaterialFactory.shared.depthMaterial
+            : MaterialFactory.shared.material(for: surface ?? SurfaceKey(color: .blockout, fog: fog))
         let entity = ModelEntity(mesh: resource, materials: [material])
         let size = bounds.size.simd
         let padded = SIMD3<Float>(max(size.x, 0.02), max(size.y, 0.02), max(size.z, 0.02))
@@ -356,7 +477,9 @@ public final class SceneRenderer {
         var slot = 0
         AssetLoader.visitModels(clone) { entity in
             guard var model = entity.components[ModelComponent.self] else { return }
-            if let surface {
+            if depthPass {
+                model.materials = Array(repeating: MaterialFactory.shared.depthMaterial, count: max(model.materials.count, 1))
+            } else if let surface {
                 // Tinted: one Lowey material for the whole model.
                 model.materials = Array(repeating: MaterialFactory.shared.material(for: surface), count: max(model.materials.count, 1))
             } else {

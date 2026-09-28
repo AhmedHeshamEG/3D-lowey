@@ -18,6 +18,67 @@ final class SmokeTests: XCTestCase {
         add(attachment)
     }
 
+    /// Phase 3: build a character, see its voice & face tools, add an effect and captions, open the AI bridge.
+    @MainActor
+    func testCharacterEffectsAndBridge() throws {
+        executionTimeAllowance = 470
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
+        app.launch()
+        let newProject = button(app, "new-project")
+        XCTAssertTrue(newProject.waitForExistence(timeout: 20))
+        newProject.tap()
+        let name = app.textFields["project-name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Phase three")
+        button(app, "preset-goldenHour").tap()
+        button(app, "Create").tap()
+        XCTAssertTrue(app.otherElements["stage"].waitForExistence(timeout: 20))
+
+        // A character from the builder.
+        button(app, "Add").tap()
+        let character = button(app, "add-character")
+        XCTAssertTrue(character.waitForExistence(timeout: 5))
+        character.tap()
+        let done = button(app, "character-done")
+        XCTAssertTrue(done.waitForExistence(timeout: 10), "the character builder opens")
+        sleep(2)
+        screenshot(app, "p3-01-character-builder")
+        done.tap()
+        let inspectorName = app.textFields["inspector-name"]
+        XCTAssertTrue(inspectorName.waitForExistence(timeout: 10))
+        XCTAssertEqual(inspectorName.value as? String, "Me")
+        screenshot(app, "p3-02-character-in-scene")
+
+        // Animate: voice & face tools, a flash, captions.
+        button(app, "mode-animate").tap()
+        XCTAssertTrue(button(app, "lip-sync").waitForExistence(timeout: 10), "lip sync is offered for the character")
+        XCTAssertTrue(button(app, "face-camera").exists)
+        let flash = button(app, "effect-flash")
+        if !flash.isHittable { app.swipeUp() }
+        if flash.waitForExistence(timeout: 5), flash.isHittable { flash.tap() }
+        screenshot(app, "p3-03-animate-character")
+
+        // The AI & laptop bridge.
+        button(app, "scene-menu").tap()
+        let bridgeItem = app.buttons["AI & laptop bridge…"].firstMatch
+        XCTAssertTrue(bridgeItem.waitForExistence(timeout: 5))
+        bridgeItem.tap()
+        let toggle = app.switches["bridge-toggle"].firstMatch
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        // Tap the switch knob until it reads on; never tap again once it is on (a second tap turns it back off).
+        for _ in 0 ..< 3 where toggle.value as? String != "1" {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            let isOn = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+            _ = XCTWaiter.wait(for: [isOn], timeout: 3)
+        }
+        let pairLine = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'lowey-link pair'")).firstMatch
+        let code = app.staticTexts["bridge-code"].waitForExistence(timeout: 8) || pairLine.waitForExistence(timeout: 2)
+        screenshot(app, "p3-04-bridge")
+        XCTAssertTrue(code, "the pairing code shows")
+    }
+
     @MainActor
     func testCreateBuildUndoReopen() throws {
         executionTimeAllowance = 470
@@ -116,6 +177,7 @@ final class SmokeTests: XCTestCase {
 
     @MainActor
     func testSampleProjectOpensAllScenes() throws {
+        executionTimeAllowance = 470
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-sample"]
         app.launch()
@@ -126,7 +188,7 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(stage.waitForExistence(timeout: 20))
         sleep(3)
         screenshot(app, "sample-scene-1")
-        for index in 2 ... 4 {
+        for index in 2 ... 5 {
             button(app, "scene-menu").tap()
             let item = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(index) ·")).firstMatch
             XCTAssertTrue(item.waitForExistence(timeout: 5))

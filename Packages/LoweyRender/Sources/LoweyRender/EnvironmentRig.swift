@@ -61,11 +61,12 @@ public final class EnvironmentRig {
         }
 
         // Ground.
+        sky.isEnabled = !backdropHidden && !depthPass
         ground.isEnabled = look.ground.visible && !backdropHidden
         let groundScale = Float(max(look.ground.size, 1))
         ground.scale = SIMD3<Float>(groundScale, 1, groundScale)
         let groundKey = SurfaceKey(color: look.ground.color, roughness: 0.95, fog: fog)
-        ground.model?.materials = [MaterialFactory.shared.material(for: groundKey)]
+        ground.model?.materials = [depthPass ? MaterialFactory.shared.depthMaterial : MaterialFactory.shared.material(for: groundKey)]
 
         // Sky (+ ambient light from the same gradient) only when sky/fog changed.
         if previous?.sky != look.sky || previous?.fog != look.fog || previous?.lighting.ambientIntensity != look.lighting.ambientIntensity
@@ -118,8 +119,19 @@ public final class EnvironmentRig {
     /// Hides the sky dome and ground (transparent-background exports keep only the objects).
     public var backdropHidden = false {
         didSet {
-            sky.isEnabled = !backdropHidden
+            sky.isEnabled = !backdropHidden && !depthPass
             ground.isEnabled = !backdropHidden && (lastLook?.ground.visible ?? true)
+        }
+    }
+
+    /// Depth world (post-processing): no sky (far = 0), the ground writes its distance.
+    public var depthPass = false {
+        didSet {
+            sky.isEnabled = !backdropHidden && !depthPass
+            if let look = lastLook {
+                lastLook = nil
+                apply(look)
+            }
         }
     }
 

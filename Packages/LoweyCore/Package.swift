@@ -16,7 +16,9 @@ let package = Package(
     targets: [
         .target(
             name: "LoweyCore",
-            path: "Sources/LoweyCore"
+            path: "Sources/LoweyCore",
+            // Word → mouth shapes (from the CMU Pronouncing Dictionary, BSD; see THIRD_PARTY.md).
+            resources: [.copy("Resources/visemes.txt")]
         ),
         .testTarget(
             name: "LoweyCoreTests",

@@ -96,6 +96,9 @@ public struct IDFactory: Sendable {
         counter = 0
     }
 
+    /// Sequential factories make deterministic samples and tests.
+    public var isSequential: Bool { prefix != nil }
+
     public mutating func next<ID: LoweyIdentifier>(_: ID.Type = ID.self) -> ID {
         guard let prefix else { return ID.make() }
         counter += 1

@@ -9,9 +9,17 @@ struct TimelineDrawer: View {
     @Bindable var editor: EditorModel
     /// Visible window: first second shown and zoom (points per second).
     @State private var visibleStart: Double = 0
+    /// Live offset of the selected keys while they're dragged.
     @State private var keyDrag: Double?
-    @State private var composeDrag: (id: ObjectID, delta: Double)?
-    @State private var panStart: Double?
+    @State private var composeDrag: (ids: Set<ObjectID>, delta: Double)?
+    @State private var laneDrag: LaneDrag?
+    /// Selection box in the lanes' coordinate space, and the keys it would pick.
+    @State private var marquee: CGRect?
+    @State private var marqueeKeys: Set<KeyRef> = []
+    /// A long press on the lanes arms the selection box for the drag that follows.
+    @State private var marqueeArmed = false
+    /// Live position of a dragged end of the selection band (stretching the selected keys).
+    @State private var stretch: (edge: StretchEdge, time: Double)?
     @State private var zoomStart: Double?
     @State private var showSettings = false
     @State private var renamingMarker: Marker?
@@ -20,6 +28,8 @@ struct TimelineDrawer: View {
     static let labelWidth: CGFloat = 150
     static let rowHeight: CGFloat = 30
     static let rulerHeight: CGFloat = 30
+    static let audioRowHeight: CGFloat = 38
+    static let wordsRowHeight: CGFloat = 24
 
     private var timeline: Timeline { editor.timeline }
     private var pps: Double { editor.timelineZoom }
@@ -40,7 +50,7 @@ struct TimelineDrawer: View {
                     .frame(height: Self.rulerHeight)
                     ScrollView(.vertical, showsIndicators: true) {
                         VStack(spacing: 1) {
-                            if !timeline.cuts.isEmpty || editor.mode == .camera {
+                            if showsCutRow {
                                 cutRow(width: width)
                             }
                             ForEach(rows, id: \.self) { row in
@@ -53,7 +63,13 @@ struct TimelineDrawer: View {
                                     .frame(maxWidth: .infinity, minHeight: 60)
                             }
                         }
+                        .coordinateSpace(name: Self.lanesSpace)
+                        .overlay(alignment: .topLeading) { marqueeView }
+                        .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
+                        .simultaneousGesture(laneDragGesture, including: editor.timelineMode == .compose ? .subviews : .all)
+                        .simultaneousGesture(marqueeLongPress, including: editor.timelineMode == .compose ? .subviews : .all)
                     }
+                    .scrollDisabled(marqueeArmed || marquee != nil)
                 }
                 .overlay(alignment: .topLeading) { playhead(width: width, height: geometry.size.height) }
                 .gesture(zoomGesture(width: width))
@@ -66,6 +82,8 @@ struct TimelineDrawer: View {
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: $showSettings) { TimelineSettingsSheet(editor: editor).presentationDetents([.medium]) }
+        .sheet(isPresented: $editor.showAudio) { AudioSheet(editor: editor).presentationDetents([.medium, .large]) }
+        .sheet(isPresented: $editor.showTranscript) { TranscriptPanel(editor: editor).presentationDetents([.medium, .large]) }
         .alert("Marker", isPresented: Binding(get: { renamingMarker != nil }, set: { if !$0 { renamingMarker = nil } })) {
             TextField("Name (a word from the script)", text: $markerName)
             Button("Save") {
@@ -115,6 +133,7 @@ struct TimelineDrawer: View {
                     }
                 }
             }
+            IconButton(systemName: "waveform", label: "Audio and words", isOn: editor.showAudio, size: 36) { editor.showAudio = true }
             IconButton(systemName: "flag", label: "Add marker", size: 36) { editor.addMarker() }
             Menu {
                 Button("Loop starts here", systemImage: "arrow.right.to.line") { editor.setLoopStart() }
@@ -151,6 +170,7 @@ struct TimelineDrawer: View {
         Toggle(isOn: $editor.autoKey) { Text("Auto-key").font(.system(size: 13, weight: .semibold)) }
             .toggleStyle(.button)
             .accessibilityIdentifier("auto-key")
+        selectControls
         if !editor.selectedKeys.isEmpty {
             Menu {
                 ForEach(EasingChoice.allCases) { choice in
@@ -169,6 +189,8 @@ struct TimelineDrawer: View {
                 Button("Reverse", systemImage: "arrow.uturn.backward") { editor.reverseKeys() }
                 Button("Twice as fast", systemImage: "hare") { editor.retimeKeys(0.5) }
                 Button("Twice as slow", systemImage: "tortoise") { editor.retimeKeys(2) }
+                Button("One frame earlier", systemImage: "chevron.left") { editor.nudgeSelectedKeys(frames: -1) }
+                Button("One frame later", systemImage: "chevron.right") { editor.nudgeSelectedKeys(frames: 1) }
                 Divider()
                 Button("Delete keys", systemImage: "trash", role: .destructive) { editor.deleteSelectedKeys() }
             } label: {
@@ -180,10 +202,33 @@ struct TimelineDrawer: View {
         }
     }
 
+    /// Select mode (box select, taps add) and the Select menu — Procreate Dreams-style multi-select.
+    @ViewBuilder private var selectControls: some View {
+        Toggle(isOn: $editor.keyBoxSelect) {
+            Label("Select", systemImage: "rectangle.dashed").font(.system(size: 13, weight: .semibold))
+        }
+        .toggleStyle(.button)
+        .accessibilityIdentifier("key-select-mode")
+        Menu {
+            ForEach(KeyQuery.allCases) { query in
+                if query != .loop || timeline.loop != nil {
+                    Button(query.title, systemImage: query.systemImage) { editor.selectKeys(query) }
+                }
+            }
+        } label: {
+            Label(editor.selection.isEmpty ? "Pick" : "Pick in selection", systemImage: "checklist").pillLabel()
+        }
+        .accessibilityIdentifier("key-select-menu")
+    }
+
     @ViewBuilder private var composeControls: some View {
-        Text("Drag a bar to move that animation in time")
+        Text(editor.keyBoxSelect ? "Tap bars to pick several, then drag one to move them together" : "Drag a bar to move that animation in time")
             .font(.system(size: 12))
             .foregroundStyle(Theme.secondaryText)
+        Toggle(isOn: $editor.keyBoxSelect) {
+            Label("Select", systemImage: "rectangle.dashed").font(.system(size: 13, weight: .semibold))
+        }
+        .toggleStyle(.button)
         if !editor.selection.isEmpty, editor.selectionHasAnimation {
             PillButton(title: "Clear animation", systemName: "xmark.bin", destructive: true) { editor.clearAnimation() }
         }
@@ -270,6 +315,7 @@ struct TimelineDrawer: View {
                     t += step
                 }
             }
+            selectionBand(width: width)
             ForEach(timeline.markers) { marker in
                 if x(marker.time) >= -4, x(marker.time) <= width {
                     MarkerFlag(marker: marker)
@@ -288,7 +334,9 @@ struct TimelineDrawer: View {
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
                     editor.pause()
-                    editor.setTime(time(at: value.location.x))
+                    let before = editor.time
+                    editor.setTime(editor.wordSnapped(time(at: value.location.x), tolerance: 8 / pps))
+                    if editor.time != before { editor.audioPlayback.scrub(timeline.audio, at: editor.time) }
                 }
         )
         .accessibilityIdentifier("timeline-ruler")
@@ -310,12 +358,20 @@ struct TimelineDrawer: View {
     enum Row: Hashable {
         case object(ObjectID)
         case track(TrackID)
+        /// An audio clip (waveform).
+        case audio(String)
+        /// Spoken words of the voiceover, as chips you can tap.
+        case words
+        /// Screen effects (flash, shake…), draggable in time.
+        case effects
     }
 
     private var rows: [Row] {
         let animated = timeline.animatedObjects
         let wanted = animated.union(editor.selection)
-        var result: [Row] = []
+        var result: [Row] = timeline.audio.map { .audio($0.id) }
+        if !timeline.transcripts.isEmpty { result.append(.words) }
+        if !timeline.effects.isEmpty { result.append(.effects) }
         for id in editor.baseScene.orderedIDs() where wanted.contains(id) {
             result.append(.object(id))
             if editor.expandedObjects.contains(id) {
@@ -335,6 +391,17 @@ struct TimelineDrawer: View {
             }
             .frame(height: Self.rowHeight)
             .background(editor.selection.contains(id) ? Theme.accent.opacity(0.08) : Color.clear)
+        case let .audio(id):
+            if let clip = editor.audioClip(id) {
+                AudioRow(editor: editor, clip: clip, width: width, x: x, pps: pps)
+                    .frame(height: Self.audioRowHeight)
+            }
+        case .words:
+            wordsRow(width: width)
+                .frame(height: Self.wordsRowHeight)
+        case .effects:
+            EffectsRow(editor: editor, width: width, x: x, pps: pps)
+                .frame(height: Self.wordsRowHeight)
         case let .track(trackID):
             if let track = timeline.track(trackID) {
                 HStack(spacing: 0) {
@@ -418,13 +485,13 @@ struct TimelineDrawer: View {
 
     private func keyLane(_ tracks: [Track], width: CGFloat, color: Color) -> some View {
         let keys = tracks.flatMap { track in track.keyframes.map { KeyRef(track: track.id, time: $0.time) } }
-        let selected = editor.selectedKeys
-        let offset = keyDrag ?? 0
+        let selected = editor.selectedKeys.union(marqueeKeys)
+        let preview = previewTime
         return Canvas { context, size in
             let y = size.height / 2
             for key in keys {
                 let isSelected = selected.contains(key)
-                let px = x(key.time + (isSelected ? offset : 0))
+                let px = x(isSelected ? preview(key.time) : key.time)
                 guard px > -8, px < size.width + 8 else { continue }
                 var diamond = Path()
                 diamond.move(to: CGPoint(x: px, y: y - 6))
@@ -438,47 +505,13 @@ struct TimelineDrawer: View {
         }
         .frame(width: width)
         .contentShape(Rectangle())
-        .gesture(
-            SpatialTapGesture().onEnded { value in
-                if let hit = nearestKey(keys, at: value.location.x) {
-                    editor.selectedKeys = editor.selectedKeys.contains(hit) ? editor.selectedKeys.subtracting([hit]) : editor.selectedKeys.union([hit])
-                    editor.setTime(hit.time)
-                } else {
-                    editor.selectedKeys = []
-                    editor.setTime(time(at: value.location.x))
-                }
-            }
-        )
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 6)
-                .onChanged { value in
-                    if keyDrag == nil, panStart == nil {
-                        if let hit = nearestKey(keys, at: value.startLocation.x) {
-                            if !editor.selectedKeys.contains(hit) { editor.selectedKeys = [hit] }
-                            keyDrag = 0
-                        } else {
-                            panStart = visibleStart
-                        }
-                    }
-                    if keyDrag != nil {
-                        keyDrag = Double(value.translation.width) / pps
-                    } else if let panStart {
-                        visibleStart = max(0, panStart - Double(value.translation.width) / pps)
-                    }
-                }
-                .onEnded { _ in
-                    if let delta = keyDrag { editor.moveSelectedKeys(by: delta) }
-                    keyDrag = nil
-                    panStart = nil
-                }
-        )
     }
 
     private func composeBar(_ id: ObjectID, tracks: [Track], width: CGFloat) -> some View {
         let times = tracks.flatMap { $0.keyframes.map(\.time) }
         let start = times.min()
         let end = times.max()
-        let delta = composeDrag?.id == id ? composeDrag?.delta ?? 0 : 0
+        let delta = composeDrag?.ids.contains(id) == true ? composeDrag?.delta ?? 0 : 0
         return ZStack(alignment: .leading) {
             spans(id, width: width)
             if let start, let end {
@@ -488,17 +521,312 @@ struct TimelineDrawer: View {
                     .offset(x: x(start + delta))
                     .gesture(
                         DragGesture(minimumDistance: 2)
-                            .onChanged { value in composeDrag = (id, Double(value.translation.width) / pps) }
+                            .onChanged { value in composeDrag = (composeGroup(for: id), Double(value.translation.width) / pps) }
                             .onEnded { value in
-                                editor.shiftAnimation(of: [id], by: Double(value.translation.width) / pps)
+                                editor.shiftAnimation(of: composeGroup(for: id), by: Double(value.translation.width) / pps)
                                 composeDrag = nil
                             }
                     )
-                    .onTapGesture { editor.select(id) }
+                    .onTapGesture { editor.select(id, additive: editor.keyBoxSelect) }
             }
         }
         .frame(width: width, alignment: .leading)
         .clipped()
+    }
+
+    /// Dragging a selected bar moves every selected animated object together.
+    private func composeGroup(for id: ObjectID) -> Set<ObjectID> {
+        guard editor.selection.contains(id), editor.selection.count > 1 else { return [id] }
+        let animated = timeline.animatedObjects
+        return Set(editor.selection.filter { animated.contains($0) }).union([id])
+    }
+
+    // MARK: Multi-select (one gesture layer over every lane)
+
+    static let lanesSpace = "timeline-lanes"
+
+    enum LaneDrag {
+        case moveKeys
+        case pan(start: Double)
+        case marquee(origin: CGPoint)
+        case ignore
+    }
+
+    enum StretchEdge {
+        case start, end
+    }
+
+    private var showsCutRow: Bool { !timeline.cuts.isEmpty || editor.mode == .camera }
+
+    /// Vertical layout of the rows inside the lanes (mirrors the VStack: fixed heights, 1 pt spacing).
+    private var slots: [(row: Row?, minY: CGFloat, height: CGFloat)] {
+        var result: [(row: Row?, minY: CGFloat, height: CGFloat)] = []
+        var y: CGFloat = 0
+        if showsCutRow {
+            result.append((nil, y, Self.rowHeight))
+            y += Self.rowHeight + 1
+        }
+        for row in rows {
+            let height: CGFloat = switch row {
+            case .track: Self.rowHeight - 4
+            case .audio: Self.audioRowHeight
+            case .words, .effects: Self.wordsRowHeight
+            case .object: Self.rowHeight
+            }
+            result.append((row, y, height))
+            y += height + 1
+        }
+        return result
+    }
+
+    private func trackIDs(for row: Row) -> [TrackID] {
+        switch row {
+        case let .object(id): timeline.tracks.filter { $0.target == id }.map(\.id)
+        case let .track(id): [id]
+        case .audio, .words, .effects: []
+        }
+    }
+
+    private func row(at y: CGFloat) -> Row? {
+        slots.first { y >= $0.minY && y < $0.minY + $0.height + 1 }?.row
+    }
+
+    /// The key under a point in the lanes' space (within 14 pt).
+    private func key(at point: CGPoint) -> KeyRef? {
+        guard point.x >= Self.labelWidth, let row = row(at: point.y) else { return nil }
+        let keys = KeySelection.all(in: timeline, tracks: Set(trackIDs(for: row)))
+        return nearestKey(Array(keys), at: point.x - Self.labelWidth)
+    }
+
+    /// Audio and word rows handle their own touches.
+    private func isOwnGestureRow(at y: CGFloat) -> Bool {
+        switch row(at: y) {
+        case .audio, .words, .effects: true
+        default: false
+        }
+    }
+
+    private var laneTap: some Gesture {
+        SpatialTapGesture(coordinateSpace: .named(Self.lanesSpace)).onEnded { value in
+            guard value.location.x >= Self.labelWidth, !isOwnGestureRow(at: value.location.y) else { return }
+            if let hit = key(at: value.location) {
+                if editor.keyBoxSelect {
+                    editor.selectedKeys = editor.selectedKeys.contains(hit) ? editor.selectedKeys.subtracting([hit]) : editor.selectedKeys.union([hit])
+                } else {
+                    editor.selectedKeys = [hit]
+                }
+                editor.setTime(hit.time)
+            } else {
+                if !editor.keyBoxSelect { editor.selectedKeys = [] }
+                editor.setTime(max(0, time(at: value.location.x - Self.labelWidth)))
+            }
+        }
+    }
+
+    private var laneDragGesture: some Gesture {
+        DragGesture(minimumDistance: 6, coordinateSpace: .named(Self.lanesSpace))
+            .onChanged { value in
+                if laneDrag == nil {
+                    laneDrag = beginLaneDrag(at: value.startLocation)
+                }
+                switch laneDrag {
+                case .moveKeys:
+                    let earliest = editor.selectedKeys.map(\.time).min() ?? 0
+                    keyDrag = max(Double(value.translation.width) / pps, -earliest)
+                case let .pan(start):
+                    visibleStart = max(0, start - Double(value.translation.width) / pps)
+                case let .marquee(origin):
+                    updateMarquee(from: origin, to: value.location)
+                case .ignore, nil:
+                    break
+                }
+            }
+            .onEnded { _ in
+                switch laneDrag {
+                case .moveKeys:
+                    if let delta = keyDrag { editor.moveSelectedKeys(by: delta) }
+                case .marquee:
+                    commitMarquee()
+                default:
+                    break
+                }
+                keyDrag = nil
+                laneDrag = nil
+            }
+    }
+
+    /// Long press, then drag: a selection box even outside Select mode.
+    private var marqueeLongPress: some Gesture {
+        LongPressGesture(minimumDuration: 0.35)
+            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.lanesSpace)))
+            .onChanged { value in
+                guard case let .second(true, drag) = value else { return }
+                if !marqueeArmed, laneDrag == nil {
+                    marqueeArmed = true
+                    Haptics.select()
+                }
+                if marqueeArmed, let drag {
+                    updateMarquee(from: drag.startLocation, to: drag.location)
+                }
+            }
+            .onEnded { _ in
+                if marqueeArmed { commitMarquee() }
+                marqueeArmed = false
+            }
+    }
+
+    private func beginLaneDrag(at start: CGPoint) -> LaneDrag {
+        if marqueeArmed { return .ignore }
+        guard start.x >= Self.labelWidth, !isOwnGestureRow(at: start.y) else { return .ignore }
+        if let hit = key(at: start) {
+            if !editor.selectedKeys.contains(hit) {
+                editor.selectedKeys = editor.keyBoxSelect ? editor.selectedKeys.union([hit]) : [hit]
+            }
+            keyDrag = 0
+            return .moveKeys
+        }
+        if editor.keyBoxSelect { return .marquee(origin: start) }
+        return .pan(start: visibleStart)
+    }
+
+    private func updateMarquee(from origin: CGPoint, to location: CGPoint) {
+        let rect = CGRect(x: min(origin.x, location.x), y: min(origin.y, location.y),
+                          width: abs(location.x - origin.x), height: abs(location.y - origin.y))
+        marquee = rect
+        let start = time(at: max(rect.minX, Self.labelWidth) - Self.labelWidth)
+        let end = time(at: max(rect.maxX, Self.labelWidth) - Self.labelWidth)
+        var tracks = Set<TrackID>()
+        for slot in slots {
+            guard let row = slot.row, slot.minY + slot.height >= rect.minY, slot.minY <= rect.maxY else { continue }
+            tracks.formUnion(trackIDs(for: row))
+        }
+        marqueeKeys = tracks.isEmpty ? [] : KeySelection.keys(in: TimeRange(start: start, end: end), tracks: tracks, timeline: timeline)
+    }
+
+    private func commitMarquee() {
+        if marquee != nil {
+            editor.selectKeys(marqueeKeys, additive: editor.keyBoxSelect)
+        }
+        marquee = nil
+        marqueeKeys = []
+    }
+
+    @ViewBuilder private var marqueeView: some View {
+        if let marquee {
+            Rectangle()
+                .fill(Theme.accent.opacity(0.12))
+                .overlay(Rectangle().stroke(Theme.accent, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+                .frame(width: marquee.width, height: marquee.height)
+                .offset(x: marquee.minX, y: marquee.minY)
+                .allowsHitTesting(false)
+        }
+    }
+
+    /// Where a selected key is drawn while the selection is dragged or stretched.
+    private var previewTime: (Double) -> Double {
+        if let keyDrag {
+            return { $0 + keyDrag }
+        }
+        if let stretch, let span = KeySelection.span(of: editor.selectedKeys) {
+            let target = stretchTarget(span: span, stretch: stretch)
+            return { KeySelection.stretchedTime($0, from: span, to: target) }
+        }
+        return { $0 }
+    }
+
+    private func stretchTarget(span: TimeRange, stretch: (edge: StretchEdge, time: Double)) -> TimeRange {
+        switch stretch.edge {
+        case .start: TimeRange(start: max(0, min(stretch.time, span.end)), end: span.end)
+        case .end: TimeRange(start: span.start, end: max(stretch.time, span.start))
+        }
+    }
+
+    /// A band on the ruler over the selected keys; drag either end to stretch or squash their timing.
+    @ViewBuilder
+    private func selectionBand(width: CGFloat) -> some View {
+        if editor.timelineMode != .compose, editor.selectedKeys.count > 1, let span = KeySelection.span(of: editor.selectedKeys), span.duration > 0 {
+            let shown = stretch.map { stretchTarget(span: span, stretch: $0) } ?? TimeRange(start: previewTime(span.start), end: previewTime(span.end))
+            ZStack(alignment: .topLeading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.35))
+                    .frame(width: max(CGFloat(shown.duration * pps), 4), height: 5)
+                    .offset(x: x(shown.start), y: Self.rulerHeight - 7)
+                    .allowsHitTesting(false)
+                stretchHandle(.start, at: shown.start, span: span)
+                stretchHandle(.end, at: shown.end, span: span)
+            }
+            .frame(width: width, height: Self.rulerHeight, alignment: .topLeading)
+        }
+    }
+
+    private func stretchHandle(_ edge: StretchEdge, at handleTime: Double, span: TimeRange) -> some View {
+        Circle()
+            .fill(Color.white)
+            .overlay(Circle().stroke(Color.black.opacity(0.4), lineWidth: 1))
+            .frame(width: 16, height: 16)
+            .frame(width: 34, height: Self.rulerHeight)
+            .contentShape(Rectangle())
+            .offset(x: x(handleTime) - 17, y: 4)
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 1)
+                    .onChanged { value in
+                        let base = edge == .start ? span.start : span.end
+                        stretch = (edge, editor.timeline.snapped(base + Double(value.translation.width) / pps))
+                    }
+                    .onEnded { _ in
+                        if let stretch { editor.stretchSelectedKeys(to: stretchTarget(span: span, stretch: stretch)) }
+                        stretch = nil
+                    }
+            )
+            .accessibilityLabel(edge == .start ? "Stretch selected keys from the start" : "Stretch selected keys from the end")
+    }
+
+    // MARK: Words
+
+    private func wordsRow(width: CGFloat) -> some View {
+        let words = editor.words
+        let current = WordSnap.word(at: editor.time, in: words)?.id
+        return HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Image(systemName: "text.bubble").font(.system(size: 11))
+                Text("Words").font(.system(size: 12, weight: .semibold))
+                Spacer()
+            }
+            .foregroundStyle(Theme.secondaryText)
+            .padding(.leading, 10)
+            .frame(width: Self.labelWidth)
+            .contentShape(Rectangle())
+            .onTapGesture { editor.showTranscript = true }
+            Canvas { context, size in
+                var lastEnd: CGFloat = -1000
+                for word in words {
+                    let start = x(word.start)
+                    let end = x(word.end)
+                    guard end > 0, start < size.width else { continue }
+                    let rect = CGRect(x: start, y: 3, width: max(end - start - 1, 2), height: size.height - 6)
+                    let isCurrent = word.id == current
+                    context.fill(Path(roundedRect: rect, cornerRadius: 4),
+                                 with: .color(isCurrent ? Theme.accent.opacity(0.9) : Color.yellow.opacity(0.22)))
+                    // Labels only where there's room (zoom in to read every word).
+                    if start > lastEnd + 2 {
+                        let label = context.resolve(Text(word.text).font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(isCurrent ? .black : .white.opacity(0.85)))
+                        let labelSize = label.measure(in: CGSize(width: 200, height: size.height))
+                        context.draw(label, at: CGPoint(x: start + 3, y: size.height / 2), anchor: .leading)
+                        lastEnd = start + labelSize.width + 3
+                    }
+                }
+            }
+            .frame(width: width)
+            .contentShape(Rectangle())
+            .gesture(SpatialTapGesture().onEnded { value in
+                let tapped = time(at: value.location.x)
+                if let word = words.min(by: { abs(($0.start + $0.end) / 2 - tapped) < abs(($1.start + $1.end) / 2 - tapped) }) {
+                    editor.jump(to: word)
+                }
+            })
+            .accessibilityIdentifier("words-lane")
+        }
     }
 
     // MARK: Camera cuts

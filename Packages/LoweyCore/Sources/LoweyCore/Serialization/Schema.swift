@@ -51,7 +51,9 @@ public struct SchemaCoder: Sendable {
     /// v2 (Phase 2): timelines gain markers, loop, cuts, behaviours and clip tracks; the library
     /// gains scripts. The shape is backward compatible, but older apps must refuse v2 files rather
     /// than silently drop animation when they re-save them.
-    public static let currentVersion = 2
+    /// v3 (Phase 3): timelines gain audio clips, transcripts, screen effects, transitions and captions;
+    /// looks gain post-processing; new object kinds (text, overlays, particles, characters).
+    public static let currentVersion = 3
 
     public var migrations: [Migration]
     public var currentVersion: Int
@@ -141,7 +143,11 @@ public struct SchemaCoder: Sendable {
         // v1 → v2: new fields are optional with defaults; nothing to rewrite.
         Migration(kind: .scene, from: 1) { $0 },
         Migration(kind: .project, from: 1) { $0 },
-        Migration(kind: .library, from: 1) { $0 }
+        Migration(kind: .library, from: 1) { $0 },
+        // v2 → v3: additive again (optional fields with defaults).
+        Migration(kind: .scene, from: 2) { $0 },
+        Migration(kind: .project, from: 2) { $0 },
+        Migration(kind: .library, from: 2) { $0 }
     ]
 
     private static func liftTransform(_ object: JSONValue) -> JSONValue {

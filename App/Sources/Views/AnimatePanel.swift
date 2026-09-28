@@ -28,10 +28,16 @@ struct AnimatePanel: View {
                     if editor.selectionIsGenerator {
                         PillButton(title: "Grow it in (one by one)", systemName: "sparkles", prominent: true) { editor.growGenerator() }
                     }
-                    if let character = editor.selectedCharacter { CharacterSection(editor: editor, object: character.object, asset: character.asset) }
+                    if let character = editor.selectedCharacter {
+                        CharacterSection(editor: editor, object: character.object, asset: character.asset)
+                        FaceSection(editor: editor, character: character.object.id)
+                    } else if let puppet = editor.selectedPuppet {
+                        PuppetSection(editor: editor, character: puppet)
+                    }
                     behaviorSection
                     motionSection
                 }
+                ScreenAndCaptionSection(editor: editor)
             }
             .padding(16)
         }
