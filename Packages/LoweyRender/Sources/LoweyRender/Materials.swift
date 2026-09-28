@@ -65,6 +65,8 @@ public final class MaterialFactory {
     }()
 
     private var depthCache: (any RealityKit.Material)?
+    /// True when the depth shader compiled (false = depth effects fall back to a flat, far depth).
+    public private(set) var depthShaderAvailable = false
 
     /// Unlit material writing v = 0.5 / distance (the depth world for lens blur and outlines).
     public var depthMaterial: any RealityKit.Material {
@@ -72,8 +74,11 @@ public final class MaterialFactory {
         var material: any RealityKit.Material = UnlitMaterial(color: .black)
         if let library = shaderLibrary {
             let shader = CustomMaterial.SurfaceShader(named: "loweyDepth", in: library)
-            if let custom = try? CustomMaterial(surfaceShader: shader, geometryModifier: nil, lightingModel: .unlit) {
-                material = custom
+            do {
+                material = try CustomMaterial(surfaceShader: shader, geometryModifier: nil, lightingModel: .unlit)
+                depthShaderAvailable = true
+            } catch {
+                logger.error("Depth material failed: \(error.localizedDescription)")
             }
         }
         depthCache = material

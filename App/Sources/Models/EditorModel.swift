@@ -82,6 +82,9 @@ final class EditorModel {
     private(set) var lastSaved: Date?
     /// Screen-space overlay shapes (lasso polygon, scatter circle).
     var lassoPoints: [CGPoint] = []
+    /// Where the Apple Pencil hovers (brush preview), and how high (0…1).
+    var hoverPoint: CGPoint?
+    var hoverHeight: Double = 0
     var scatterPreview: (center: CGPoint, radius: CGFloat)?
 
     // MARK: Animation state (see EditorModel+Animation.swift)
@@ -163,6 +166,7 @@ final class EditorModel {
     @ObservationIgnored var faceCapture: FaceCapture?
     @ObservationIgnored var faceLink: FaceLinkReceiver?
     @ObservationIgnored let facePerformer = FacePerformer()
+    @ObservationIgnored var thermalObserver: NSObjectProtocol?
     @ObservationIgnored var captionCache: (factor: Double, revision: Int, pages: [CaptionPage])?
     private(set) var displayRevision = 0
 
@@ -238,6 +242,29 @@ final class EditorModel {
         renderer.onContentChanged = { [weak self] in self?.refreshSelectionOverlay() }
         refreshGuide()
         refreshSelectionOverlay()
+        applyThermalQuality()
+        thermalObserver = NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil,
+                                                                 queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyThermalQuality() }
+        }
+    }
+
+    /// Thermal-aware preview: when the iPad gets hot, the stage renders fewer pixels and skips depth effects
+    /// (exports are unaffected — they render offscreen at full quality).
+    func applyThermalQuality() {
+        guard let stage else { return }
+        let state = ProcessInfo.processInfo.thermalState
+        let full = stage.window?.screen.scale ?? 2
+        let scale: CGFloat = switch state {
+        case .critical: 1
+        case .serious: max(full * 0.66, 1)
+        default: full
+        }
+        if stage.contentScaleFactor != scale {
+            stage.contentScaleFactor = scale
+            Diagnostics.shared.log("Thermal \(state.rawValue): preview scale \(scale)")
+        }
+        updateStagePost()
     }
 
     // MARK: Perform / undo / redo

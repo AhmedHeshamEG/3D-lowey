@@ -89,6 +89,10 @@ struct EditorView: View {
 
             PerformOverlay(editor: editor)
 
+            if app.showTour {
+                TourOverlay(editor: editor)
+            }
+
             if editor.showLibrary {
                 HStack {
                     Spacer()
@@ -212,6 +216,16 @@ struct TopBar: View {
                     sceneName = editor.scene.name
                     renamingScene = true
                 }
+                Menu("Copy scene to…", systemImage: "doc.on.doc") {
+                    ForEach(app.projects.filter { $0.url != editor.projectURL }) { project in
+                        Button(project.info.name) {
+                            Task {
+                                await editor.saveNow(thumbnail: false)
+                                app.copyScene(editor.baseScene.id, from: editor.projectURL, to: project)
+                            }
+                        }
+                    }
+                }
                 Divider()
                 Button("AI & laptop bridge…", systemImage: "network") { editor.showBridge = true }
                 Button("Paste a Scene Script", systemImage: "doc.on.clipboard") { editor.importScriptFromClipboard() }
@@ -265,7 +279,7 @@ struct ModeSwitcher: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: item.systemImage)
-                        if item == mode { Text(item.title) }
+                        if item == mode { Text(LocalizedStringKey(item.title)) }
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .padding(.horizontal, item == mode ? 14 : 12)

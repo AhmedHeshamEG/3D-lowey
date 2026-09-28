@@ -23,6 +23,7 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     private let stroke = StrokeGestureRecognizer()
     private let twist = UIRotationGestureRecognizer()
     private let pencilRoll = PencilRollRecognizer()
+    private let hover = UIHoverGestureRecognizer()
     private var twistKey = UUID().uuidString
     private var pinchKey = UUID().uuidString
     private var panKey = UUID().uuidString
@@ -81,6 +82,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         stroke.delegate = self
         twist.addTarget(self, action: #selector(handleTwist(_:)))
         twist.delegate = self
+        hover.addTarget(self, action: #selector(handleHover(_:)))
+        stage.addGestureRecognizer(hover)
         pencilRoll.configure()
         pencilRoll.onRoll = { [weak self] delta in self?.handlePencilRoll(delta) }
         pencilRoll.delegate = self
@@ -129,6 +132,25 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     private var operatesCamera: Bool {
         guard let editor else { return false }
         return editor.mode == .camera && editor.lookThrough && editor.editedCamera != nil && editor.stage?.lookThrough != nil
+    }
+
+    // MARK: Pencil hover
+
+    /// Apple Pencil hovering above the screen: preview where the stroke will land and how thick it will be.
+    @objc private func handleHover(_ recognizer: UIHoverGestureRecognizer) {
+        guard let editor else { return }
+        switch recognizer.state {
+        case .began, .changed:
+            // Only the Pencil reports a height; a trackpad pointer doesn't need the preview.
+            guard recognizer.zOffset > 0 || editor.tool == .draw else {
+                editor.hoverPoint = nil
+                return
+            }
+            editor.hoverPoint = recognizer.location(in: stage)
+            editor.hoverHeight = Double(recognizer.zOffset)
+        default:
+            editor.hoverPoint = nil
+        }
     }
 
     // MARK: Taps

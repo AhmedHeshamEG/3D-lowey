@@ -63,6 +63,14 @@ struct StageOverlay: View {
                     FramingGuide(framing: editor.cameraFraming, size: geometry.size, safeZones: editor.showSafeZones)
                 }
                 OverlaySelection(editor: editor)
+                if let hover = editor.hoverPoint, editor.mode == .build {
+                    // Pencil hover preview: the brush (Draw tool) or a pointer, shrinking as the Pencil comes closer.
+                    let radius = editor.tool == .draw ? max(6, 40 * CGFloat(editor.draw.width / 0.05)) * 0.3 : 6
+                    Circle()
+                        .stroke(Theme.accent.opacity(0.9), lineWidth: 1.5)
+                        .frame(width: radius * 2 * (1 + CGFloat(editor.hoverHeight)), height: radius * 2 * (1 + CGFloat(editor.hoverHeight)))
+                        .position(hover)
+                }
             }
         }
         .allowsHitTesting(false)

@@ -348,7 +348,9 @@ public final class FrameCompositor: @unchecked Sendable {
     private func noise(_ extent: CGRect, frame: Int, scale: CGFloat = 1) -> CIImage {
         let offsetX = CGFloat((frame &* 173) % 997)
         let offsetY = CGFloat((frame &* 389) % 991)
-        let random = CIFilter.randomGenerator().outputImage ?? CIImage(color: .gray)
+        // CIRandomGenerator's alpha is random too; Core Image un-premultiplies before colour matrices, so a tiny alpha
+        // would blow a pixel up to pure white. Opaque noise only.
+        let random = (CIFilter.randomGenerator().outputImage ?? CIImage(color: .gray)).settingAlphaOne(in: .infinite)
         return random.transformed(by: CGAffineTransform(translationX: offsetX, y: offsetY).scaledBy(x: scale, y: scale))
             .transformed(by: CGAffineTransform(translationX: extent.minX, y: extent.minY)).cropped(to: extent)
     }

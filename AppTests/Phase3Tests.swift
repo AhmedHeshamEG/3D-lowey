@@ -127,6 +127,7 @@ final class Phase3Tests: XCTestCase {
         }
         let image = try target.image(transparent: false)
         attach(image, name: "depth-pass")
+        XCTAssertTrue(MaterialFactory.shared.depthShaderAvailable, "the loweyDepth shader compiled")
         let bytes = target.bytes()
         func v(atX x: Int) -> Double {
             let index = (50 * 300 + x) * 4
@@ -176,7 +177,7 @@ final class Phase3Tests: XCTestCase {
         scene.objects[root]?[.mouth] = .enumeration("D")
         scene.objects[root]?[.brows] = .float(0.8)
         for (index, preset) in [ParticleRecipe.Preset.fire, .magic].enumerated() {
-            var fx = SceneObject(id: ObjectID(raw: "fx-\(index)"), name: preset.title, kind: .particles(.preset(preset)),
+            var fx = SceneObject(id: ObjectID(raw: "particles-\(index)"), name: preset.title, kind: .particles(.preset(preset)),
                                  transform: LoweyCore.Transform(position: Vec3(index == 0 ? -1.2 : 1.2, 0, 0.5)))
             fx[.visible] = .bool(true)
             scene.objects[fx.id] = fx

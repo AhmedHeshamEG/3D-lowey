@@ -1,6 +1,77 @@
 # Changelog
 
-All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8).
+All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0).
+
+## [1.0.0] — Phase 3: Story, voice, VFX, AI, polish
+
+### Timeline — keyframe multi-select (Procreate Dreams-style)
+- Box-select keys across rows and time: long-press and drag, or switch on **Select** and drag. Taps add/remove in Select mode.
+- **Pick** menu: all keys, everything after / before the playhead, keys at the playhead, keys in the loop, invert, none
+  (scoped to the selected objects when something is selected).
+- A band over the selected keys on the ruler: drag either end to **stretch or squash** their timing (proportions kept).
+- Move many keys together (the earliest stops at 0), nudge by a frame (menu, ⌥⇧← / ⌥⇧→), ⌘⌥A selects all keys.
+- Compose mode: pick several bars and slide them together.
+
+### Audio & narration
+- Voiceover, sound-effect and music clips: waveforms in the timeline, drag to move, volume, fade in/out, mute, trim to
+  the playhead, split, delete; "duck music under the voice" from the transcript. Import from Files or record a voiceover
+  while the animation plays.
+- Playback follows the sound's clock (no drift). Exports carry the mixed soundtrack (AAC in .mp4/.mov; soundtrack.wav next
+  to PNG sequences) — mixed exactly as previewed.
+- Word timing with Apple's on-device SpeechAnalyzer (no Whisper): the model downloads once; English, Arabic, Italian first.
+- Words lane in the timeline, transcript panel (tap a word to jump; long-press + tap to pick a phrase; fix words and keep
+  their timing), snapping of keys, the playhead, sounds and effects to words, phrase actions (animate here, camera move,
+  cut, marker, loop).
+
+### Lip sync, face, your character
+- Lip sync from the voiceover's words (CMU Pronouncing Dictionary + rules; Arabic and Italian), with the voice's loudness as
+  fallback: stepped mouth shapes plus jaw and width keys — editable like any animation.
+- Face performance from the iPad's front camera (Vision landmarks): blinks, brows, mouth, smile, eyes, head turn — live on
+  the character, recorded with Perform. Optional iPhone companion (Face ID / ARKit) streaming over the local network.
+- Character builder: head, hair, eyes, body, top, bottom, extras, colours → a low-poly character on the Humanoid standard
+  with swappable mouth shapes; edit it later; save it to the library.
+- Built-in humanoid clips (Idle, Walk, Run, Talk, Wave, Point, Type, Nod, Shrug, Celebrate) that play on built characters
+  and imported humanoids; imported humanoid clips play on built characters too.
+
+### Text, overlays, captions
+- 2D overlays in frame space: titles, labels, arrows (draw themselves), highlights, the big X, question / exclamation
+  marks, ticks, shapes, images; drag / pinch / twist on the stage; presets animate them (typewriter types, arrows draw);
+  labels can follow a 3D object.
+- 3D text: Blocky (built-in low-poly font) plus Rounded, Bold, Serif, Mono (any script).
+- Captions from the transcript: Punchy (karaoke highlight), Subtitle, Pill, Outline; top / middle / bottom; burn-in on
+  export; .srt and .vtt export. Portrait frames get shorter lines.
+
+### VFX & post
+- Particles: fire, sparks, smoke, dust, magic, rain, snow, confetti, embers, explosion — amount, size, speed, spread,
+  colour; animate emission; bursts at a time. Deterministic (scrub and export exactly).
+- Post (in the Look): glow, vignette, grain, exposure, contrast, colour, warmth, ink outlines, colour fringe, retro/PS1,
+  paper / collage / old-film textures, depth of field from the camera (now rendered). One-tap finishes: Clean, Cinematic,
+  Dreamy, Retro, Ink outlines, Collage, Old film. Identical in the live view and in exports.
+- Screen effects on the timeline: flash, shake, speed lines, zoom blur, glitch. Transitions on cuts: fade, dip to black,
+  wipe, zoom-through. Match-cut helper.
+
+### AI layer & laptop link
+- Scene Script v2: friendly actions (names, spoken-word times, presets, cameras, characters, look…) → preview → apply as
+  one undo step. Paste from the clipboard, open a file, or send from the laptop. JSON Schema updated.
+- LAN Bridge (off by default, pairing code, local network only): scene / assets / transcript / look queries, scripts
+  (with approval on the iPad), snapshots, renders, file and audio import, undo, WebSocket events.
+- `tools/lowey`: **lowey-mcp** (MCP server: 16 tools, 4 resources, 5 prompts) and **lowey-link** (pair, push, pull renders,
+  watch a folder, Blender / text-to-3D generators, send scripts). Claude skills in `/skills`: script-breakdown,
+  shot-planner, scene-builder, camera-director.
+
+### Projects & polish
+- Share a project as one `.loweypack` file and import it; archive / restore; copy a scene to another project.
+- Welcome island sample (golden-hour fly-through) and a 60-second tour; the Enigma sample gains "5 · The story (narrated)"
+  with a placeholder voice.
+- Menu-bar commands with shortcuts (modes ⌘1–5, transcript ⇧⌘T, audio ⇧⌘U, record ⌥⌘R, bridge ⇧⌘B, markers ⌘M…),
+  Apple Pencil hover preview, localisation scaffold (Arabic, Italian), thermal-aware preview, local diagnostics log and
+  "Export diagnostics".
+
+### Engineering
+- Schema v3 (additive). New Core areas: `Audio/`, `Text/`, `VFX/`, `Face/`, `Character/`, `AI/`, `Project/ProjectPackage`.
+- LoweyRender: `FrameCompositor`, `OverlayRenderer`, `StagePost`, depth world + `loweyDepth` / `loweyInverseDepth` shaders,
+  particle meshes, text meshes; exporter composites, renders transitions and writes audio.
+- Tests: Core (~180, Linux), render and speech tests on the simulator (`Phase3Tests`), laptop tools (pytest) in CI.
 
 ## [0.8.0] — Phase 2: Motion, camera, characters, export
 

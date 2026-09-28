@@ -362,6 +362,8 @@ struct TimelineDrawer: View {
         case audio(String)
         /// Spoken words of the voiceover, as chips you can tap.
         case words
+        /// Screen effects (flash, shake…), draggable in time.
+        case effects
     }
 
     private var rows: [Row] {
@@ -369,6 +371,7 @@ struct TimelineDrawer: View {
         let wanted = animated.union(editor.selection)
         var result: [Row] = timeline.audio.map { .audio($0.id) }
         if !timeline.transcripts.isEmpty { result.append(.words) }
+        if !timeline.effects.isEmpty { result.append(.effects) }
         for id in editor.baseScene.orderedIDs() where wanted.contains(id) {
             result.append(.object(id))
             if editor.expandedObjects.contains(id) {
@@ -395,6 +398,9 @@ struct TimelineDrawer: View {
             }
         case .words:
             wordsRow(width: width)
+                .frame(height: Self.wordsRowHeight)
+        case .effects:
+            EffectsRow(editor: editor, width: width, x: x, pps: pps)
                 .frame(height: Self.wordsRowHeight)
         case let .track(trackID):
             if let track = timeline.track(trackID) {
@@ -564,7 +570,7 @@ struct TimelineDrawer: View {
             let height: CGFloat = switch row {
             case .track: Self.rowHeight - 4
             case .audio: Self.audioRowHeight
-            case .words: Self.wordsRowHeight
+            case .words, .effects: Self.wordsRowHeight
             case .object: Self.rowHeight
             }
             result.append((row, y, height))
@@ -577,7 +583,7 @@ struct TimelineDrawer: View {
         switch row {
         case let .object(id): timeline.tracks.filter { $0.target == id }.map(\.id)
         case let .track(id): [id]
-        case .audio, .words: []
+        case .audio, .words, .effects: []
         }
     }
 
@@ -595,7 +601,7 @@ struct TimelineDrawer: View {
     /// Audio and word rows handle their own touches.
     private func isOwnGestureRow(at y: CGFloat) -> Bool {
         switch row(at: y) {
-        case .audio, .words: true
+        case .audio, .words, .effects: true
         default: false
         }
     }

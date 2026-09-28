@@ -155,6 +155,15 @@ private struct State {
         if let label { report.append(label) }
     }
 
+    /// Operations that make objects share the script's one id source (no collisions with deterministic ids).
+    mutating func withOperations<T>(_ body: (inout Operations, Scene) -> T) -> T {
+        operations.ids = context.ids
+        let current = scene
+        let result = body(&operations, current)
+        context.ids = operations.ids
+        return result
+    }
+
     func fail(_ message: String) -> ScriptError { ScriptError(action: 0, message: message) }
 
     // MARK: Values
@@ -307,6 +316,14 @@ private struct State {
         ObjectFactory.uniqueName(string(action, "name") ?? fallback, in: scene)
     }
 
+    /// Generators name their group themselves; the script's name wins.
+    mutating func nameGroup(_ group: ObjectID, _ action: JSONValue, fallback: String) throws {
+        if let wanted = string(action, "name"), scene.objects[group]?.name != wanted {
+            try run(.rename(group, wanted), label: nil)
+        }
+        remember(action, group, name: string(action, "name") ?? fallback)
+    }
+
     mutating func remember(_ action: JSONValue, _ id: ObjectID, name: String) {
         created[string(action, "name") ?? name] = id
         created[name] = id
@@ -378,7 +395,8 @@ private struct State {
             created[new] = id
         case "group":
             let ids = try targets(action["target"])
-            guard let (command, group) = operations.group(ids, in: scene, name: string(action, "name") ?? "Group") else { throw fail("nothing to group") }
+            let groupName = string(action, "name") ?? "Group"
+            guard let (command, group) = withOperations({ $0.group(ids, in: $1, name: groupName) }) else { throw fail("nothing to group") }
             try run(command, label: "Group \(ids.count) objects")
             remember(action, group, name: string(action, "name") ?? "Group")
         case "array":
@@ -389,17 +407,18 @@ private struct State {
             } else {
                 .line(count: count, step: vec3(action["step"]) ?? Vec3(1.5, 0, 0))
             }
-            guard let (command, group) = operations.array(id, layout: layout, in: scene) else { throw fail("can't array that") }
+            guard let (command, group) = withOperations({ $0.array(id, layout: layout, in: $1) }) else { throw fail("can't array that") }
             try run(command, label: "Array of \(count)")
-            remember(action, group, name: string(action, "name") ?? "Array")
+            try nameGroup(group, action, fallback: "Array")
         case "scatter":
             let id = try target(action["target"])
             var settings = ScatterSettings(count: Int(number(action, "count") ?? 20), radius: number(action, "radius") ?? 5)
             settings.seed = UInt64(number(action, "seed") ?? 1)
             let center = try point(action["at"]) ?? context.focus
-            guard let (command, group) = operations.scatter(id, center: center, settings: settings, in: scene) else { throw fail("can't scatter that") }
+            guard let (command, group) = withOperations({ $0.scatter(id, center: center, settings: settings, in: $1) })
+            else { throw fail("can't scatter that") }
             try run(command, label: "Scatter \(settings.count)")
-            remember(action, group, name: string(action, "name") ?? "Scatter")
+            try nameGroup(group, action, fallback: "Scatter")
         case "length", "duration":
             var copy = timeline
             if let seconds = number(action, "seconds") ?? number(action, "value") { copy.duration = max(seconds, 1) }

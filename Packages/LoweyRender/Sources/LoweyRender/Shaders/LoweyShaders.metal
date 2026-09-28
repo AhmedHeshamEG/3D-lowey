@@ -65,7 +65,7 @@ void loweyDepth(realitykit::surface_parameters params)
     float distance = max(-viewPosition.z, 0.0001);
     half v = half(min(0.5 / distance, 1.0));
     params.surface().set_base_color(half3(v, v, v));
-    params.surface().set_emissive_color(half3(0.0h));
+    params.surface().set_emissive_color(half3(v, v, v));
     params.surface().set_opacity(1.0h);
 }
 

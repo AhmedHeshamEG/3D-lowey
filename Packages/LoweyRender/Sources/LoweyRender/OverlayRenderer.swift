@@ -294,7 +294,8 @@ public enum OverlayRenderer {
         }
         for (lineNumber, line) in page.lines.enumerated() {
             let texts = line.map { settings.uppercase ? $0.text.uppercased() : $0.text }
-            let space = NSAttributedString(string: " ", attributes: [.font: font]).size().width
+            // Punchy words pop and wear a thick outline: give them more room so they never touch.
+            let space = NSAttributedString(string: " ", attributes: [.font: font]).size().width * (settings.style == .punchy ? 1.6 : 1)
             let widths = texts.map { NSAttributedString(string: $0, attributes: [.font: font]).size().width }
             let pillPadding: CGFloat = settings.style == .pill ? fontSize * 0.28 : 0
             let total = widths.reduce(0, +) + space * CGFloat(max(texts.count - 1, 0)) + pillPadding * 2 * CGFloat(texts.count)
@@ -325,7 +326,7 @@ public enum OverlayRenderer {
                 let attributed = NSAttributedString(string: text, attributes: attributes)
                 if active, settings.style == .punchy {
                     // The spoken word pops a little.
-                    let grow: CGFloat = 1.12
+                    let grow: CGFloat = 1.07
                     context.saveGState()
                     context.translateBy(x: x + widths[index] / 2, y: y + font.lineHeight / 2)
                     context.scaleBy(x: grow, y: grow)

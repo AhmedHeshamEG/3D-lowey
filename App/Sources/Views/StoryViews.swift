@@ -301,6 +301,53 @@ struct ScreenAndCaptionSection: View {
     }
 }
 
+/// Timeline lane with the screen effects: drag a chip to retime it, tap to jump there, long-press to delete.
+struct EffectsRow: View {
+    @Bindable var editor: EditorModel
+    let width: CGFloat
+    let x: (Double) -> CGFloat
+    let pps: Double
+    @State private var drag: (id: String, delta: Double)?
+
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Image(systemName: "bolt.fill").font(.system(size: 11))
+                Text("Effects").font(.system(size: 12, weight: .semibold))
+                Spacer()
+            }
+            .foregroundStyle(Theme.secondaryText)
+            .padding(.leading, 10)
+            .frame(width: TimelineDrawer.labelWidth)
+            ZStack(alignment: .leading) {
+                ForEach(editor.timeline.effects) { effect in
+                    let offset = drag?.id == effect.id ? drag?.delta ?? 0 : 0
+                    Label(effect.kind.title, systemImage: effect.kind.systemImage)
+                        .font(.system(size: 10, weight: .semibold))
+                        .lineLimit(1)
+                        .padding(.horizontal, 5)
+                        .frame(width: max(CGFloat(effect.duration * pps), 18), height: TimelineDrawer.wordsRowHeight - 4, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(Color.pink.opacity(0.45)))
+                        .offset(x: x(effect.start + offset))
+                        .gesture(DragGesture(minimumDistance: 3)
+                            .onChanged { value in drag = (effect.id, Double(value.translation.width) / pps) }
+                            .onEnded { value in
+                                let start = editor.wordSnapped(max(0, effect.start + Double(value.translation.width) / pps), tolerance: 8 / pps)
+                                editor.updateScreenEffect(effect.id) { $0.start = start }
+                                drag = nil
+                            })
+                        .onTapGesture { editor.setTime(effect.start) }
+                        .contextMenu {
+                            Button("Delete", systemImage: "trash", role: .destructive) { editor.removeScreenEffect(effect.id) }
+                        }
+                }
+            }
+            .frame(width: width, alignment: .leading)
+            .clipped()
+        }
+    }
+}
+
 /// Camera panel: how the cut at the playhead hands over, and the match-cut helper.
 struct TransitionSection: View {
     @Bindable var editor: EditorModel
