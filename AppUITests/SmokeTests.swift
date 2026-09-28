@@ -175,6 +175,27 @@ final class SmokeTests: XCTestCase {
         screenshot(app, "07-reopened")
     }
 
+    /// The first-launch tour, every card, including the one that plays the island's camera shot.
+    @MainActor
+    func testTourRunsToTheEnd() throws {
+        executionTimeAllowance = 470
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-ui-testing-sample", "-ui-testing-tour"]
+        app.launch()
+        let next = button(app, "tour-next")
+        XCTAssertTrue(next.waitForExistence(timeout: 90), "the tour opens on the welcome island")
+        for step in 1 ... 8 {
+            XCTAssertTrue(next.waitForExistence(timeout: 15), "card \(step) shows")
+            sleep(2)
+            screenshot(app, "tour-\(step)")
+            next.tap()
+        }
+        XCTAssertTrue(app.otherElements["stage"].waitForExistence(timeout: 15), "the editor is there after the tour")
+        XCTAssertFalse(next.waitForExistence(timeout: 3), "the tour closed")
+        XCTAssertEqual(app.state, .runningForeground, "no crash")
+        screenshot(app, "tour-done")
+    }
+
     @MainActor
     func testSampleProjectOpensAllScenes() throws {
         executionTimeAllowance = 470

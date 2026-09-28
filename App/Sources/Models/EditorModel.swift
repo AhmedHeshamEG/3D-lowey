@@ -121,6 +121,8 @@ final class EditorModel {
     var virtualCameraActive = false
     var virtualCameraScale: Double = 1
     var exportProgress: Double?
+    /// The export is holding until the app is back in front (it resumes by itself).
+    var exportWaiting = false
     var exportResults: [URL] = []
 
     // MARK: Audio & narration state (see EditorModel+Audio.swift)

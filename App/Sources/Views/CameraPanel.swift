@@ -44,7 +44,8 @@ struct CameraPanel: View {
         .panelStyle()
         .onAppear(perform: loadLens)
         .onChange(of: editor.editedCamera) { _, _ in loadLens() }
-        .onChange(of: editor.time) { _, _ in if !editor.isPlaying { loadLens() } }
+        // Reads the playhead only while paused: during playback this panel isn't re-evaluated every frame.
+        .onChange(of: editor.isPlaying ? nil : editor.time) { _, time in if time != nil { loadLens() } }
     }
 
     private func loadLens() {

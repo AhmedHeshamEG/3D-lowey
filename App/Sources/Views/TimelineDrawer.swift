@@ -71,7 +71,9 @@ struct TimelineDrawer: View {
                     }
                     .scrollDisabled(marqueeArmed || marquee != nil)
                 }
-                .overlay(alignment: .topLeading) { playhead(width: width, height: geometry.size.height) }
+                .overlay(alignment: .topLeading) {
+                    PlayheadLine(editor: editor, visibleStart: visibleStart, pps: pps, width: width, height: geometry.size.height)
+                }
                 .gesture(zoomGesture(width: width))
                 .onAppear { fit(width: width) }
             }
@@ -111,11 +113,7 @@ struct TimelineDrawer: View {
     private var header: some View {
         HStack(spacing: 10) {
             transport
-            Text(Self.format(editor.time))
-                .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Theme.text)
-                .frame(minWidth: 70, alignment: .leading)
-                .accessibilityIdentifier("timeline-time")
+            TimelineClock(editor: editor)
             Picker("Mode", selection: $editor.timelineMode) {
                 ForEach(TimelineMode.allCases) { mode in
                     Text(mode.title).tag(mode)
@@ -340,16 +338,6 @@ struct TimelineDrawer: View {
                 }
         )
         .accessibilityIdentifier("timeline-ruler")
-    }
-
-    private func playhead(width: CGFloat, height: CGFloat) -> some View {
-        let px = x(editor.time)
-        return Rectangle()
-            .fill(Theme.accent)
-            .frame(width: 2, height: height)
-            .offset(x: Self.labelWidth + px - 1)
-            .opacity(px >= 0 && px <= width ? 1 : 0)
-            .allowsHitTesting(false)
     }
 
     // MARK: Rows
@@ -785,7 +773,6 @@ struct TimelineDrawer: View {
 
     private func wordsRow(width: CGFloat) -> some View {
         let words = editor.words
-        let current = WordSnap.word(at: editor.time, in: words)?.id
         return HStack(spacing: 0) {
             HStack(spacing: 6) {
                 Image(systemName: "text.bubble").font(.system(size: 11))
@@ -797,35 +784,16 @@ struct TimelineDrawer: View {
             .frame(width: Self.labelWidth)
             .contentShape(Rectangle())
             .onTapGesture { editor.showTranscript = true }
-            Canvas { context, size in
-                var lastEnd: CGFloat = -1000
-                for word in words {
-                    let start = x(word.start)
-                    let end = x(word.end)
-                    guard end > 0, start < size.width else { continue }
-                    let rect = CGRect(x: start, y: 3, width: max(end - start - 1, 2), height: size.height - 6)
-                    let isCurrent = word.id == current
-                    context.fill(Path(roundedRect: rect, cornerRadius: 4),
-                                 with: .color(isCurrent ? Theme.accent.opacity(0.9) : Color.yellow.opacity(0.22)))
-                    // Labels only where there's room (zoom in to read every word).
-                    if start > lastEnd + 2 {
-                        let label = context.resolve(Text(word.text).font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(isCurrent ? .black : .white.opacity(0.85)))
-                        let labelSize = label.measure(in: CGSize(width: 200, height: size.height))
-                        context.draw(label, at: CGPoint(x: start + 3, y: size.height / 2), anchor: .leading)
-                        lastEnd = start + labelSize.width + 3
+            WordsLaneCanvas(editor: editor, words: words, visibleStart: visibleStart, pps: pps)
+                .frame(width: width)
+                .contentShape(Rectangle())
+                .gesture(SpatialTapGesture().onEnded { value in
+                    let tapped = time(at: value.location.x)
+                    if let word = words.min(by: { abs(($0.start + $0.end) / 2 - tapped) < abs(($1.start + $1.end) / 2 - tapped) }) {
+                        editor.jump(to: word)
                     }
-                }
-            }
-            .frame(width: width)
-            .contentShape(Rectangle())
-            .gesture(SpatialTapGesture().onEnded { value in
-                let tapped = time(at: value.location.x)
-                if let word = words.min(by: { abs(($0.start + $0.end) / 2 - tapped) < abs(($1.start + $1.end) / 2 - tapped) }) {
-                    editor.jump(to: word)
-                }
-            })
-            .accessibilityIdentifier("words-lane")
+                })
+                .accessibilityIdentifier("words-lane")
         }
     }
 
@@ -1181,5 +1149,74 @@ struct PerformValueSlider: View {
     private var currentTitle: String {
         guard let key = editor.performSliderKey else { return "Perform: touch" }
         return "Perform: \(options.first { $0.key == key }?.title ?? key.rawValue)"
+    }
+}
+
+// MARK: Per-frame pieces
+
+// These read the playhead. Keeping them in their own small views means playback redraws only them,
+// not every row and key of the timeline (SwiftUI re-evaluates whichever body reads `editor.time`).
+
+/// The time readout in the header.
+struct TimelineClock: View {
+    let editor: EditorModel
+
+    var body: some View {
+        Text(TimelineDrawer.format(editor.time))
+            .font(.system(size: 14, weight: .semibold, design: .monospaced))
+            .foregroundStyle(Theme.text)
+            .frame(minWidth: 70, alignment: .leading)
+            .accessibilityIdentifier("timeline-time")
+    }
+}
+
+/// The playhead line over the lanes.
+struct PlayheadLine: View {
+    let editor: EditorModel
+    let visibleStart: Double
+    let pps: Double
+    let width: CGFloat
+    let height: CGFloat
+
+    var body: some View {
+        let px = CGFloat((editor.time - visibleStart) * pps)
+        Rectangle()
+            .fill(Theme.accent)
+            .frame(width: 2, height: height)
+            .offset(x: TimelineDrawer.labelWidth + px - 1)
+            .opacity(px >= 0 && px <= width ? 1 : 0)
+            .allowsHitTesting(false)
+    }
+}
+
+/// The spoken words as chips, the one under the playhead lit.
+struct WordsLaneCanvas: View {
+    let editor: EditorModel
+    let words: [TimelineWord]
+    let visibleStart: Double
+    let pps: Double
+
+    var body: some View {
+        let current = WordSnap.word(at: editor.time, in: words)?.id
+        Canvas { context, size in
+            var lastEnd: CGFloat = -1000
+            for word in words {
+                let start = CGFloat((word.start - visibleStart) * pps)
+                let end = CGFloat((word.end - visibleStart) * pps)
+                guard end > 0, start < size.width else { continue }
+                let rect = CGRect(x: start, y: 3, width: max(end - start - 1, 2), height: size.height - 6)
+                let isCurrent = word.id == current
+                context.fill(Path(roundedRect: rect, cornerRadius: 4),
+                             with: .color(isCurrent ? Theme.accent.opacity(0.9) : Color.yellow.opacity(0.22)))
+                // Labels only where there's room (zoom in to read every word).
+                if start > lastEnd + 2 {
+                    let label = context.resolve(Text(word.text).font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(isCurrent ? .black : .white.opacity(0.85)))
+                    let labelSize = label.measure(in: CGSize(width: 200, height: size.height))
+                    context.draw(label, at: CGPoint(x: start + 3, y: size.height / 2), anchor: .leading)
+                    lastEnd = start + labelSize.width + 3
+                }
+            }
+        }
     }
 }

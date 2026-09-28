@@ -282,6 +282,50 @@ final class Phase3Tests: XCTestCase {
         XCTAssertEqual(duration, seconds, accuracy: 0.15)
     }
 
+    // MARK: Exports that finish
+
+    /// The whole narrated story (the scene the device export got stuck on), both framings, start to end.
+    func testFullNarratedStoryExportsToTheEnd() async throws {
+        executionTimeAllowance = 470
+        let document = try story()
+        let duration = document.scene.timeline.duration
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("lowey-story-\(UUID().uuidString)")
+        let settings = VideoExportSettings(framings: [.landscape, .portrait], longSide: 320, range: TimeRange(start: 0, end: duration), fps: 10)
+        var progress: [Double] = []
+        let started = Date()
+        let urls = try await VideoExporter(document: document, library: nil, rigs: RigCache())
+            .export(settings: settings, to: folder, baseName: "Story") { progress.append($0) }
+        XCTAssertEqual(urls.count, 2)
+        XCTAssertEqual(progress.count, settings.frameCount, "every frame reported")
+        XCTAssertEqual(progress.last ?? 0, 1, accuracy: 1e-9)
+        for url in urls {
+            let seconds = try await AVURLAsset(url: url).load(.duration).seconds
+            XCTAssertEqual(seconds, duration, accuracy: 0.25, url.lastPathComponent)
+        }
+        print("Full story: \(settings.frameCount) frames × 2 framings in \(Int(Date().timeIntervalSince(started))) s")
+    }
+
+    /// iOS suspends the GPU in the background: the export holds, says so, and carries on when the app is back.
+    func testExportWaitsWhileTheAppIsAwayThenFinishes() async throws {
+        let (info, scenes) = try EnigmaSample.buildWithOpening()
+        let document = try Document(project: info, scene: XCTUnwrap(scenes.last))
+        let exporter = VideoExporter(document: document, library: nil, rigs: RigCache())
+        let app = AppPresence()
+        exporter.canRender = { app.inFront }
+        exporter.onWaiting = { app.waits.append($0) }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            app.inFront = true
+        }
+        let started = Date()
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("lowey-away-\(UUID().uuidString)")
+        let settings = VideoExportSettings(framings: [.landscape], longSide: 160, range: TimeRange(start: 0, end: 0.5), fps: 10)
+        let urls = try await exporter.export(settings: settings, to: folder, baseName: "Away") { _ in }
+        XCTAssertEqual(app.waits, [true, false], "it said it was waiting, then that it resumed")
+        XCTAssertGreaterThanOrEqual(Date().timeIntervalSince(started), 0.9, "nothing rendered while away")
+        XCTAssertTrue(try FileManager.default.fileExists(atPath: XCTUnwrap(urls.first).path))
+    }
+
     /// Word timing with Apple's on-device SpeechAnalyzer (no Whisper): a synthesized sentence is transcribed with word times.
     func testSpeechAnalyzerGivesWordTimes() async throws {
         guard SpeechTranscriber.isAvailable else { throw XCTSkip("SpeechTranscriber isn't available on this simulator") }
@@ -349,4 +393,11 @@ final class Phase3Tests: XCTestCase {
         add.lifetime = .keepAlways
         self.add(add)
     }
+}
+
+/// Stands in for the app's foreground state in the export tests.
+@MainActor
+private final class AppPresence {
+    var inFront = false
+    var waits: [Bool] = []
 }

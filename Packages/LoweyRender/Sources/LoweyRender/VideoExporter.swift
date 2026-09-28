@@ -92,6 +92,11 @@ public final class VideoExporter {
     private var captionPages: [Framing: [CaptionPage]] = [:]
     /// Loads overlay images (files in the project's assets folder).
     public var overlayImage: (String) -> CGImage? = { _ in nil }
+    /// Whether the GPU may be used now. iOS suspends GPU work in the background (screen locked, another app in
+    /// front): the export waits for the app to come back instead of stalling on a frame that never finishes.
+    public var canRender: @MainActor () -> Bool = { true }
+    /// Called with true while the export waits for the app to come back, false when it resumes.
+    public var onWaiting: @MainActor (Bool) -> Void = { _ in }
 
     public init(document: Document, library: LibraryProviding?, rigs: RigCache) {
         self.document = document
@@ -320,6 +325,7 @@ public final class VideoExporter {
         guard !settings.framings.isEmpty else { throw ExportError.nothingToExport }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let session = try await makeSession(transparent: settings.transparent)
+        session.canRender = canRender
         let rigs = rigCache.rigs(for: document, library: world.library)
         _ = prepare(at: settings.range.start, rigs: rigs, first: true)
         await world.waitForAssets()
@@ -352,6 +358,7 @@ public final class VideoExporter {
         let frames = settings.frameCount
         let step = 1 / Double(max(settings.fps, 1))
         // Settle textures and lighting once before frame 0.
+        try await waitUntilRenderable()
         let first = prepare(at: settings.range.start, rigs: rigs, first: false)
         for output in outputs {
             for _ in 0 ..< 3 {
@@ -361,6 +368,7 @@ public final class VideoExporter {
         do {
             for frame in 0 ..< frames {
                 try Task.checkCancellation()
+                try await waitUntilRenderable()
                 let time = settings.range.start + Double(frame) * step
                 let animated = prepare(at: time, rigs: rigs, first: false)
                 for output in outputs {
@@ -389,6 +397,17 @@ public final class VideoExporter {
             try await output.writer?.finish()
         }
         return outputs.map(\.url)
+    }
+
+    /// Holds the export while the app can't use the GPU (it resumes by itself when the app is back in front).
+    private func waitUntilRenderable() async throws {
+        guard !canRender() else { return }
+        logger.notice("Export waiting: the app is not in front")
+        onWaiting(true)
+        defer { onWaiting(false) }
+        while !canRender() {
+            try await Task.sleep(for: .milliseconds(250))
+        }
     }
 
     private struct Output {
@@ -502,6 +521,11 @@ final class RenderSession {
     /// Transparent frames: RealityRenderer always writes opaque pixels, so the frame is rendered over black and
     /// over white; alpha = 1 − (white − black) and the over-black colour is the premultiplied colour.
     var transparent = false
+    /// Whether the GPU may be used (false in the background); a stalled frame waits for this before retrying.
+    var canRender: @MainActor () -> Bool = { true }
+    /// How long one frame may take before it counts as stalled.
+    var frameDeadline: Duration = .seconds(15)
+    private let logger = Logger(subsystem: "com.hesham.lowey", category: "export")
 
     func render(camera pose: OffscreenRenderer.Camera, target: RenderTarget, world: SceneRenderer, deltaTime: Double) async throws {
         target.matte = nil
@@ -528,16 +552,66 @@ final class RenderSession {
         camera.position = pose.position
         camera.orientation = pose.orientation
         world.environment.follow(camera: Vec3(pose.position))
+        var attempts = 0
+        while true {
+            do {
+                try await renderWithDeadline(target: target, deltaTime: attempts == 0 ? deltaTime : 0)
+                return
+            } catch RenderStall.timedOut {
+                attempts += 1
+                logger.error("A frame did not finish in time (attempt \(attempts))")
+                if attempts >= 3 {
+                    throw ExportError.writer("the renderer stopped responding. Keep 3D-lowey in front while it exports")
+                }
+                // Usually the app went to the background mid-frame: wait until it's back, then render again.
+                while !canRender() {
+                    try await Task.sleep(for: .milliseconds(250))
+                }
+            }
+        }
+    }
+
+    /// One `updateAndRender`, resumed by its completion or by the deadline, whichever comes first (never both).
+    private func renderWithDeadline(target: RenderTarget, deltaTime: Double) async throws {
+        let gate = ResumeGate()
+        let deadline = frameDeadline
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let watchdog = Task {
+                try? await Task.sleep(for: deadline)
+                if !Task.isCancelled, gate.claim() { continuation.resume(throwing: RenderStall.timedOut) }
+            }
             do {
                 try renderer.updateAndRender(
                     deltaTime: deltaTime, cameraOutput: target.output, whenScheduled: nil,
-                    onComplete: { _ in continuation.resume() }, actionsBeforeRender: [], actionsAfterRender: []
+                    onComplete: { _ in
+                        watchdog.cancel()
+                        if gate.claim() { continuation.resume() }
+                    }, actionsBeforeRender: [], actionsAfterRender: []
                 )
             } catch {
-                continuation.resume(throwing: error)
+                watchdog.cancel()
+                if gate.claim() { continuation.resume(throwing: error) }
             }
         }
+    }
+}
+
+enum RenderStall: Error {
+    case timedOut
+}
+
+/// Lets exactly one of several racing callbacks resume a continuation.
+final class ResumeGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var claimed = false
+
+    /// True for the first caller only.
+    func claim() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        if claimed { return false }
+        claimed = true
+        return true
     }
 }
 
