@@ -97,10 +97,12 @@ public final class MaterialFactory {
     }
 
     /// Packs fog density + glow into the shader's single custom float4:
-    /// rgb = fog color, w = round(glow × 100) + density (density < 1).
-    static func customValue(fog: FogUniform, emissiveIntensity: Double) -> SIMD4<Float> {
+    /// rgb = fog color, w = round(glow × 100) + density (density < 1), negative when the surface glows in its own
+    /// base colour (imported models, which have no glow colour).
+    static func customValue(fog: FogUniform, emissiveIntensity: Double, selfGlow: Bool = false) -> SIMD4<Float> {
         let glow = (min(max(emissiveIntensity, 0), 100) * 100).rounded()
-        return SIMD4<Float>(Float(fog.color.r), Float(fog.color.g), Float(fog.color.b), Float(glow + fog.density))
+        let packed = Float(glow + fog.density)
+        return SIMD4<Float>(Float(fog.color.r), Float(fog.color.g), Float(fog.color.b), selfGlow ? -packed : packed)
     }
 
     public func material(for key: SurfaceKey) -> any RealityKit.Material {
@@ -135,15 +137,17 @@ public final class MaterialFactory {
         }
     }
 
-    /// Converts an imported asset's material so it receives fog, keeping its textures.
-    /// `identity` must uniquely identify the source material (asset id + slot path).
-    public func converted(_ material: any RealityKit.Material, identity: String, fog: FogUniform) -> any RealityKit.Material {
+    /// Converts an imported asset's material so it receives fog, keeping its textures. `glow` > 0 makes it glow in
+    /// its own colours. `identity` must uniquely identify the source material (asset id + slot path).
+    public func converted(_ material: any RealityKit.Material, identity: String, fog: FogUniform, glow: Double = 0) -> any RealityKit.Material {
         guard let shader = surfaceShader, !(material is UnlitMaterial) else { return material }
-        let key = "\(identity)|\(fog.color.hex)|\(fog.density)"
+        let key = "\(identity)|\(fog.color.hex)|\(fog.density)|\(glow)"
         if let cached = convertedCache[key] { return cached }
         do {
             var custom = try CustomMaterial(from: material, surfaceShader: shader, geometryModifier: nil)
-            custom.custom.value = Self.customValue(fog: fog, emissiveIntensity: 1)
+            custom.custom.value = glow > 0
+                ? Self.customValue(fog: fog, emissiveIntensity: glow, selfGlow: true)
+                : Self.customValue(fog: fog, emissiveIntensity: 1)
             convertedCache[key] = custom
             return custom
         } catch {

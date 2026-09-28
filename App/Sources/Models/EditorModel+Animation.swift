@@ -17,6 +17,14 @@ enum TimelineMode: String, CaseIterable, Identifiable {
         case .keyframe: "Keyframe"
         }
     }
+
+    var systemImage: String {
+        switch self {
+        case .compose: "rectangle.split.3x1"
+        case .perform: "record.circle"
+        case .keyframe: "diamond"
+        }
+    }
 }
 
 /// Ways to pick many keys at once (the timeline's Select menu).
@@ -603,9 +611,30 @@ extension EditorModel {
 
     // MARK: Perform (motion capture by touch)
 
-    /// Objects that performing moves: the selection (top level).
+    /// What performing moves: looking through a camera in Camera mode, that camera (fly it with the usual
+    /// gestures and the path records); otherwise the selection (top level).
     var performTargets: [ObjectID] {
-        operations.topLevel(selection, in: baseScene).filter { !baseScene.isEffectivelyLocked($0) }
+        if let camera = performedCamera { return [camera] }
+        return operations.topLevel(selection, in: baseScene).filter { !baseScene.isEffectivelyLocked($0) }
+    }
+
+    /// The camera being flown, when Camera mode is looking through one and nothing else is selected.
+    var performedCamera: ObjectID? {
+        guard mode == .camera, lookThrough, let camera = editedCamera, selection.allSatisfy({ $0 == camera }) else { return nil }
+        return camera
+    }
+
+    /// A camera gesture (or the iPad's motion) starts moving the camera while recording: start its takes.
+    func beginCameraTake(_ camera: ObjectID) {
+        guard performPhase == .recording, !performTouching else { return }
+        performTouching = true
+        for property in [PropertyKey.position, .rotation] {
+            let channel = PerformChannel(object: camera, property: property)
+            performChannels.insert(channel)
+            var take = takes[channel] ?? PerformTake(object: camera, property: property)
+            take.begin()
+            takes[channel] = take
+        }
     }
 
     func armPerform() {
@@ -614,7 +643,8 @@ extension EditorModel {
             return
         }
         guard !performTargets.isEmpty || virtualCameraActive else {
-            app.show("Select what to perform first, or use the iPad as camera")
+            app.show(mode == .camera ? "Look through a camera to fly it, or select what to perform"
+                : "Select what to perform first, or use the iPad as camera")
             return
         }
         pause()

@@ -140,6 +140,7 @@ extension EditorModel {
     private func setCameraWorld(_ world: CoreTransform, gesture: String) {
         guard let camera = editedCamera, let object = displayed.scene.objects[camera] else { return }
         if performPhase == .recording, performTargets.contains(camera) {
+            beginCameraTake(camera)
             performOverride[camera] = world
             refreshDisplay()
             return
@@ -224,16 +225,7 @@ extension EditorModel {
         var pose = start
         pose.position = start.position + start.rotation.act(delta.position * virtualCameraScale)
         pose.rotation = (start.rotation * delta.rotation).normalized
-        if performPhase == .recording, !performTouching {
-            performTouching = true
-            for property in [PropertyKey.position, .rotation] {
-                let channel = PerformChannel(object: camera, property: property)
-                performChannels.insert(channel)
-                var take = takes[channel] ?? PerformTake(object: camera, property: property)
-                take.begin()
-                takes[channel] = take
-            }
-        }
+        beginCameraTake(camera)
         performOverride[camera] = pose
         if !isPlaying { refreshDisplay() }
     }

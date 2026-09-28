@@ -15,12 +15,30 @@ public struct FrameLook: Sendable {
     public var screen: ScreenState
     /// Frame number (grain and film texture change per frame, deterministically).
     public var frame: Int
+    /// Halo strength (0…1) around glowing things: set when anything in the shot glows.
+    public var glow: Double
 
-    public init(post: PostSettings, lens: CameraLens? = nil, screen: ScreenState = ScreenState(), frame: Int = 0) {
+    public init(post: PostSettings, lens: CameraLens? = nil, screen: ScreenState = ScreenState(), frame: Int = 0, glow: Double = 0) {
         self.post = post
         self.lens = lens
         self.screen = screen
         self.frame = frame
+        self.glow = glow
+    }
+
+    /// How much halo a scene's glowing objects ask for (the strongest glow; 4 and above is the full halo).
+    public static func glow(in scene: LoweyCore.Scene) -> Double {
+        var strongest = 0.0
+        for object in scene.objects.values where object.kind.hasSurface && object.isVisible {
+            strongest = max(strongest, object.emissiveIntensity)
+        }
+        return min(strongest / 4, 1)
+    }
+
+    /// Whether anything in the document glows at some point (fixed or keyed).
+    public static func mayGlow(_ document: Document) -> Bool {
+        document.scene.objects.values.contains { $0.emissiveIntensity > 0 }
+            || document.scene.timeline.tracks.contains { $0.property == .emissiveIntensity && $0.keyframes.contains { ($0.value.floatValue ?? 0) > 0 } }
     }
 }
 
@@ -47,6 +65,39 @@ public final class FrameCompositor: @unchecked Sendable {
 
     // MARK: 1. Shot
 
+    /// A halo around glowing things: only what is nearly at full brightness spreads (per channel, so a red glow
+    /// casts a red halo), blurred and screened back on. Lit surfaces don't reach the threshold; glowing ones do.
+    func glowHalo(_ image: CIImage, strength: Double, height: CGFloat) -> CIImage {
+        let extent = image.extent
+        let threshold: CGFloat = 0.9
+        let gain = 1 / (1 - threshold)
+        let highlights = CIFilter.colorMatrix()
+        highlights.inputImage = image
+        highlights.rVector = CIVector(x: gain, y: 0, z: 0, w: 0)
+        highlights.gVector = CIVector(x: 0, y: gain, z: 0, w: 0)
+        highlights.bVector = CIVector(x: 0, y: 0, z: gain, w: 0)
+        highlights.aVector = CIVector(x: 0, y: 0, z: 0, w: 1)
+        highlights.biasVector = CIVector(x: -threshold * gain, y: -threshold * gain, z: -threshold * gain, w: 0)
+        let clamp = CIFilter.colorClamp()
+        clamp.inputImage = highlights.outputImage
+        clamp.minComponents = CIVector(x: 0, y: 0, z: 0, w: 1)
+        clamp.maxComponents = CIVector(x: 1, y: 1, z: 1, w: 1)
+        let blur = CIFilter.gaussianBlur()
+        blur.inputImage = clamp.outputImage?.clampedToExtent()
+        blur.radius = Float(height * 0.035)
+        let level = CIFilter.colorMatrix()
+        level.inputImage = blur.outputImage?.cropped(to: extent)
+        let amount = CGFloat(min(max(strength, 0), 1)) * 1.4
+        level.rVector = CIVector(x: amount, y: 0, z: 0, w: 0)
+        level.gVector = CIVector(x: 0, y: amount, z: 0, w: 0)
+        level.bVector = CIVector(x: 0, y: 0, z: amount, w: 0)
+        level.aVector = CIVector(x: 0, y: 0, z: 0, w: 1)
+        let screen = CIFilter.screenBlendMode()
+        screen.inputImage = level.outputImage
+        screen.backgroundImage = image
+        return screen.outputImage?.cropped(to: extent) ?? image
+    }
+
     /// Post-processes one rendered shot. `depth` holds v = 0.5 / distance in its red channel (any size).
     public func shot(_ image: CIImage, depth: CIImage?, look: FrameLook) -> CIImage {
         let post = look.post
@@ -59,6 +110,9 @@ public final class FrameCompositor: @unchecked Sendable {
         }
         if post.outline > 0, let scaledDepth {
             result = outline(result, depth: scaledDepth, strength: post.outline, color: post.outlineColor, height: height)
+        }
+        if look.glow > 0 {
+            result = glowHalo(result, strength: look.glow, height: height)
         }
         if post.bloom > 0 {
             let bloom = CIFilter.bloom()

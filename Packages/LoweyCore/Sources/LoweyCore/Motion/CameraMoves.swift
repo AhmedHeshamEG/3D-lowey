@@ -3,7 +3,7 @@ import Foundation
 /// Camera move presets. Each generates editable keys on the camera (position, rotation, field of view),
 /// starting from where the camera is at `start` and framed around a subject point.
 public enum CameraMove: String, Codable, Sendable, CaseIterable, Identifiable {
-    case pushIn, pullOut, punchIn, orbit, dolly, truck, crane, whipPan, shake, reveal
+    case pushIn, pullOut, punchIn, snapZoom, orbit, dolly, truck, crane, whipPan, shake, reveal
 
     public var id: String { rawValue }
 
@@ -12,6 +12,7 @@ public enum CameraMove: String, Codable, Sendable, CaseIterable, Identifiable {
         case .pushIn: "Push in"
         case .pullOut: "Pull out"
         case .punchIn: "Punch in"
+        case .snapZoom: "Snap zoom"
         case .orbit: "Orbit"
         case .dolly: "Dolly"
         case .truck: "Truck"
@@ -25,6 +26,7 @@ public enum CameraMove: String, Codable, Sendable, CaseIterable, Identifiable {
     public var defaultDuration: Double {
         switch self {
         case .punchIn: 0.25
+        case .snapZoom: 0.45
         case .whipPan: 0.35
         case .shake: 0.8
         case .pushIn, .pullOut: 2.5
@@ -90,6 +92,31 @@ public enum CameraMoves {
         case .punchIn:
             let zoomed = max(fov * (1 - 0.4 * min(s, 2) / 1.2), 5)
             return [(.fieldOfView, [k(0, .float(fov), .easeOut), k(d, .float(zoomed))])]
+
+        case .snapZoom:
+            // The explainer "snap": the camera shoots at the subject, overshoots a touch, settles, and the
+            // stop lands with a small jolt. Two keys for the rush, a few more for the landing.
+            let rush = distance * 0.55 * min(s, 1.6)
+            let direction = toSubject.normalized
+            let landed = eye + direction * rush
+            let overshoot = eye + direction * (rush * 1.06)
+            let seed = Noise.seed(camera.id.raw)
+            var rotations: [Keyframe] = [k(0, .quat(startLocal.rotation), .linear), k(d * 0.3, .quat(startLocal.rotation), .linear)]
+            for index in 1 ... 4 {
+                let amount = 1.6 * s * (1 - Double(index) / 5)
+                let euler = Vec3(Noise.lattice(Int64(index), seed: seed) * amount, Noise.lattice(Int64(index), seed: seed &+ 5) * amount, 0)
+                let jolt = (world.rotation * Quat(eulerDegrees: euler)).normalized
+                rotations.append(k(d * (0.3 + 0.14 * Double(index)), .quat(pose(landed, jolt).rotation), .linear))
+            }
+            rotations.append(k(d, .quat(startLocal.rotation)))
+            return [
+                (.position, [
+                    k(0, .vec3(startLocal.position), .easeIn),
+                    k(d * 0.3, .vec3(pose(overshoot, world.rotation).position), .easeOut),
+                    k(d * 0.6, .vec3(pose(landed, world.rotation).position))
+                ]),
+                (.rotation, rotations)
+            ]
 
         case .truck:
             let end = eye + right * (2 * s)

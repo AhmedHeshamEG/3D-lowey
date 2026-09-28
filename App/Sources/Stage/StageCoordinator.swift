@@ -129,9 +129,11 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         return pair.isSubset(of: twoFinger)
     }
 
+    /// Recording a performance of objects. Flying the camera while recording goes through the camera
+    /// gestures instead (look through it, press Record, and your usual moves become the camera's path).
     private var isRecordingPerform: Bool {
         guard let editor else { return false }
-        return editor.performPhase == .recording && !editor.performTargets.isEmpty
+        return editor.performPhase == .recording && !editor.performTargets.isEmpty && !operatesCamera
     }
 
     /// Camera mode, looking through the shot camera: gestures operate that camera.

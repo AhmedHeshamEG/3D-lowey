@@ -151,7 +151,7 @@ def apply_preset(target: str | list[str], preset: str, at: Any = "now", duration
 
 @mcp.tool()
 def camera_move(move: str, subject: str | None = None, at: Any = "now", duration: float | None = None, camera: str | None = None) -> str:
-    """Camera move on the shot camera: pushIn, pullOut, punchIn, orbit, dolly, truck, crane, whipPan, shake, reveal."""
+    """Camera move on the shot camera: pushIn, pullOut, punchIn, snapZoom, orbit, dolly, truck, crane, whipPan, shake, reveal."""
     return _script(f"{move}", [_clean({"do": "cameraMove", "move": move, "subject": subject, "at": at, "duration": duration,
                                        "camera": camera})])
 

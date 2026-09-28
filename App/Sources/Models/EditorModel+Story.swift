@@ -322,7 +322,9 @@ extension EditorModel {
         for placement in overlays {
             if let name = placement.recipe.image, let image = overlayImage(name) { images[name] = image }
         }
-        stage.post = StagePost(look: FrameLook(post: previewPost ? look.post : PostSettings(), lens: lens, screen: screen, frame: timeline.frame(for: time)),
+        let glow = previewPost ? FrameLook.glow(in: displayed.scene) : 0
+        stage.post = StagePost(look: FrameLook(post: previewPost ? look.post : PostSettings(), lens: lens, screen: screen, frame: timeline.frame(for: time),
+                                               glow: glow),
                                frameRect: frameRect, overlays: overlays, caption: caption, reduced: reduced, images: images)
     }
 }

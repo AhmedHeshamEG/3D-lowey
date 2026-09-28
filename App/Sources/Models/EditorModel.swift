@@ -106,6 +106,10 @@ final class EditorModel {
     /// Timeline "Select" mode: dragging on empty lanes draws a selection box and taps add to the selection.
     var keyBoxSelect = false
     var expandedObjects: Set<ObjectID> = []
+    /// Timeline group rows whose children are folded away.
+    var collapsedGroups: Set<ObjectID> = []
+    /// First second shown in the timeline (scrolled by drags, flicks and zoom).
+    var timelineStart: Double = 0
     var presetDuration: Double?
     var presetStrength: Double = 1
     var stagger = StaggerPanelSettings()
@@ -294,6 +298,8 @@ final class EditorModel {
 
     func endGesture() {
         session.endCoalescing()
+        // Fingers up while recording a flown camera: that take pauses until the next touch.
+        if performPhase == .recording, performedCamera != nil { performTouching = false }
     }
 
     var canUndo: Bool { session.canUndo }

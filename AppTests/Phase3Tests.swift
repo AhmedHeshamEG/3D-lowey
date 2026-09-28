@@ -169,6 +169,49 @@ final class Phase3Tests: XCTestCase {
         XCTAssertGreaterThan(difference(sharp[0], styled[0]), 0.002, "the finish changed the frame")
     }
 
+    // MARK: Glow
+
+    /// Glow is a halo, not just a brighter surface: the same sphere lights up the dark around it when it glows.
+    func testGlowCastsAHalo() async throws {
+        func document(glow: Double) -> Document {
+            var scene = CoreScene(id: "glow", name: "Glow")
+            var look = Look.default.applying(.night)
+            look.post = PostSettings()
+            scene.look = look
+            var sphere = SceneObject(id: "orb", name: "Orb", kind: .primitive(.sphere), transform: LoweyCore.Transform(position: Vec3(0, 0.5, 0)))
+            sphere[.color] = .color(.rgba(RGBA(1, 0.35, 0.2)))
+            sphere[.emissiveIntensity] = .float(glow)
+            var cam = SceneObject(id: "cam", name: "Camera", kind: .camera,
+                                  transform: LoweyCore.Transform(position: Vec3(0, 1, 3.5), rotation: Quat(angle: -0.14, axis: .unitX)))
+            cam[.fieldOfView] = .float(40)
+            scene.objects = [sphere.id: sphere, cam.id: cam]
+            scene.roots = [sphere.id, cam.id]
+            scene.activeCamera = cam.id
+            return Document(project: ProjectInfo(id: "p", name: "Glow"), scene: scene)
+        }
+        let plain = try await VideoExporter(document: document(glow: 0), library: nil, rigs: RigCache()).images(at: 0, framings: [.landscape], longSide: 480)
+        let glowing = try await VideoExporter(document: document(glow: 4), library: nil, rigs: RigCache()).images(at: 0, framings: [.landscape], longSide: 480)
+        attach(plain[0], name: "glow-off")
+        attach(glowing[0], name: "glow-on")
+        // A band just outside the sphere's silhouette (left and right of it): dark without glow, lit by the halo.
+        func ring(_ image: CGImage) -> Double {
+            let bytes = pixels(image)
+            let width = image.width
+            let height = image.height
+            var sum = 0.0
+            var count = 0.0
+            for y in stride(from: height * 35 / 100, to: height * 65 / 100, by: 3) {
+                for x in [width * 30 / 100, width * 32 / 100, width * 68 / 100, width * 70 / 100] {
+                    let index = (y * width + x) * 4
+                    sum += Double(bytes[index]) + Double(bytes[index + 1]) + Double(bytes[index + 2])
+                    count += 3
+                }
+            }
+            return sum / count / 255
+        }
+        XCTAssertGreaterThan(ring(glowing[0]), ring(plain[0]) + 0.03, "the glow spills into the dark around the sphere")
+    }
+
     // MARK: Particles, characters
 
     func testParticlesAndCharacterRender() async throws {

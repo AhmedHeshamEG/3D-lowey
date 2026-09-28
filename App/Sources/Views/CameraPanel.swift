@@ -213,6 +213,7 @@ struct CameraPanel: View {
         case .pushIn: "arrow.down.forward.and.arrow.up.backward"
         case .pullOut: "arrow.up.backward.and.arrow.down.forward"
         case .punchIn: "plus.magnifyingglass"
+        case .snapZoom: "scope"
         case .orbit: "rotate.3d"
         case .dolly: "arrow.forward"
         case .truck: "arrow.left.and.right"

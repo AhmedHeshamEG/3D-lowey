@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import LoweyCore
 import RealityKit
@@ -44,11 +45,36 @@ public final class StageView: ARView {
     /// Whether the post-processing pass is installed (it waits for the view to be on screen).
     public var isPostProcessing: Bool { renderCallbacks.postProcess != nil }
 
-    /// Installs or removes the post-processing pass. RealityKit traps when render callbacks change before the
-    /// view is in a window (opening a scene with a look straight into a new stage did exactly that, e.g. the
-    /// welcome island on first launch), so until then this waits for `didMoveToWindow`.
+    /// RealityKit traps (EXC_BREAKPOINT in the `renderCallbacks` setter) when render callbacks are installed before the
+    /// view has rendered. Opening a scene with a look straight into a new stage did exactly that (the welcome island
+    /// on first launch), so the pass waits until the scene has updated a couple of times.
+    private var renderReady = false
+    private var updatesSeen = 0
+    private var readiness: (any Cancellable)?
+
+    private func watchForFirstFrames() {
+        guard readiness == nil, !renderReady else { return }
+        readiness = scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in
+            MainActor.assumeIsolated { self?.sceneUpdated() }
+        }
+    }
+
+    private func sceneUpdated() {
+        updatesSeen += 1
+        guard updatesSeen >= 2, !renderReady else { return }
+        readiness?.cancel()
+        readiness = nil
+        renderReady = true
+        // Outside RealityKit's own update pass.
+        Task { @MainActor [weak self] in self?.updatePostCallback() }
+    }
+
+    /// Installs or removes the post-processing pass (once the view renders; see `renderReady`).
     private func updatePostCallback() {
-        guard window != nil else { return }
+        guard window != nil, renderReady else {
+            watchForFirstFrames()
+            return
+        }
         let active = post.map { !$0.isEmpty } ?? false
         if active, renderCallbacks.postProcess == nil {
             // Runs on RealityKit's render thread: capture only the thread-safe processor.

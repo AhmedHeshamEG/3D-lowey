@@ -131,7 +131,7 @@ public final class VideoExporter {
     /// Anything beyond the plain render (post, overlays, captions, effects, transitions)?
     var compositing: Bool {
         !post.isNeutral || depthWorld != nil || !timeline.effects.isEmpty || timeline.cuts.contains { ($0.transition?.kind ?? .cut) != .cut }
-            || document.scene.objects.values.contains { $0.kind.isOverlay } || burnsCaptions
+            || document.scene.objects.values.contains { $0.kind.isOverlay } || burnsCaptions || FrameLook.mayGlow(document)
     }
 
     private var burnsCaptions: Bool {
@@ -208,7 +208,7 @@ public final class VideoExporter {
         try await session.render(camera: mainCamera, target: target, world: world, deltaTime: deltaTime)
         guard compositing else { return }
         let look = FrameLook(post: post, lens: lens(mainID, in: animated), screen: ScreenEffects.state(at: time, effects: timeline.effects, fps: timeline.fps),
-                             frame: frame)
+                             frame: frame, glow: FrameLook.glow(in: animated.scene))
         var picture = try await shot(target: target, camera: mainCamera, look: look, session: session)
         if let transition {
             let key = "\(target.width)x\(target.height)"

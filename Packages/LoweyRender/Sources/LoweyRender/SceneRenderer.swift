@@ -197,6 +197,8 @@ public final class SceneRenderer {
         var assetState: Int
         /// Characters of 3D text shown (typewriter).
         var revealed: Int
+        /// Glow of an imported model (it glows in its own colours; primitives carry glow in `surface`).
+        var assetGlow: Double = 0
 
         func differsOnlyInSurface(from other: ContentKey) -> Bool {
             var copy = self
@@ -258,7 +260,8 @@ public final class SceneRenderer {
             light: lightProperties,
             prefabVersion: prefabVersion,
             assetState: assetState,
-            revealed: revealed
+            revealed: revealed,
+            assetGlow: object.kind.assetID != nil ? (object.emissiveIntensity * 20).rounded() / 20 : 0
         )
     }
 
@@ -483,8 +486,9 @@ public final class SceneRenderer {
                 // Tinted: one Lowey material for the whole model.
                 model.materials = Array(repeating: MaterialFactory.shared.material(for: surface), count: max(model.materials.count, 1))
             } else {
+                let glow = (object.emissiveIntensity * 20).rounded() / 20
                 model.materials = model.materials.enumerated().map { index, material in
-                    MaterialFactory.shared.converted(material, identity: "\(assetID.raw)#\(slot)#\(index)", fog: fog)
+                    MaterialFactory.shared.converted(material, identity: "\(assetID.raw)#\(slot)#\(index)", fog: fog, glow: glow)
                 }
             }
             slot += 1

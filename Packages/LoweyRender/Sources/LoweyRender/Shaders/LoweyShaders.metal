@@ -30,10 +30,15 @@ void loweySurface(realitykit::surface_parameters params)
     half opacity = half(material.opacity_scale()) * baseSample.a;
 
     float4 custom = params.uniforms().custom_parameter();
-    float packed = max(custom.w, 0.0);
+    // Negative w = "self glow": an imported model glowing in its own colours (it has no glow colour of its own).
+    bool selfGlow = custom.w < 0.0;
+    float packed = abs(custom.w);
     float glow = floor(packed) / 100.0;
     float density = fract(packed);
     emissive *= half(max(glow, 1.0));
+    if (selfGlow) {
+        emissive += baseColor * half(glow);
+    }
 
     // Distance fog (exponential), computed from the view-space distance.
     float3 world = params.geometry().world_position();
