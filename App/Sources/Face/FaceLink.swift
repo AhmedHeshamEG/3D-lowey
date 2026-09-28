@@ -79,15 +79,15 @@ final class FaceLinkReceiver {
                         for (key, value) in values {
                             channels[PropertyKey(key)] = value
                         }
-                        onChannels?(channels)
+                        self.onChannels?(channels)
                     }
                 }
                 if complete || error != nil {
                     connection.cancel()
-                    connections.removeAll { $0 === connection }
-                    onStatus?("iPhone disconnected")
+                    self.connections.removeAll { $0 === connection }
+                    self.onStatus?("iPhone disconnected")
                 } else {
-                    receive(on: connection, buffer: pending)
+                    self.receive(on: connection, buffer: pending)
                 }
             }
         }

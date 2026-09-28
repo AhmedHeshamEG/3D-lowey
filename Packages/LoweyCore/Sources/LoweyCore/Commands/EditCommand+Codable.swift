@@ -101,20 +101,44 @@ extension EditCommand: Codable {
     }
 }
 
-/// A Scene Script: a named list of commands applied as one undoable step.
+/// A Scene Script: a named list of commands and/or friendly actions (v2), applied as one undoable step.
+/// Commands are the raw vocabulary; actions are compiled by `ScriptCompiler` (names, spoken words, presets…).
 public struct SceneScript: Codable, Hashable, Sendable {
-    public static let currentVersion = 1
+    public static let currentVersion = 2
 
     public var version: Int
     public var title: String
     public var commands: [EditCommand]
+    /// v2 actions (`{"do": "add", …}`) — see `ScriptCompiler`.
+    public var actions: [JSONValue]
 
-    public init(title: String, commands: [EditCommand], version: Int = SceneScript.currentVersion) {
+    public init(title: String, commands: [EditCommand] = [], actions: [JSONValue] = [], version: Int = SceneScript.currentVersion) {
         self.version = version
         self.title = title
         self.commands = commands
+        self.actions = actions
     }
 
-    /// The single command that applies the whole script (one undo step).
+    /// The single command that applies the raw commands (one undo step). Scripts with actions go through `ScriptCompiler`.
     public var asCommand: EditCommand { .batch(title, commands) }
+
+    private enum CodingKeys: String, CodingKey {
+        case version, title, commands, actions
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? "Script"
+        commands = try c.decodeIfPresent([EditCommand].self, forKey: .commands) ?? []
+        actions = try c.decodeIfPresent([JSONValue].self, forKey: .actions) ?? []
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(version, forKey: .version)
+        try c.encode(title, forKey: .title)
+        if !commands.isEmpty || actions.isEmpty { try c.encode(commands, forKey: .commands) }
+        if !actions.isEmpty { try c.encode(actions, forKey: .actions) }
+    }
 }
