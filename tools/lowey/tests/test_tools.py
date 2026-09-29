@@ -143,6 +143,29 @@ def test_pair_with_only_the_code(bridge_host, monkeypatch):
     assert isinstance(client.discover(timeout=0.3), list), "discovery never raises (no network is fine)"
 
 
+def test_finds_the_ipad_again_after_its_address_changed(bridge_host, monkeypatch):
+    """The saved address stopped answering (Wi-Fi gave the iPad a new one): Bonjour finds it, the config remembers it."""
+    from lowey_tools import client
+    monkeypatch.delenv("LOWEY_HOST", raising=False)
+    client.save_config({"host": "127.0.0.1:9", "token": TOKEN})
+    monkeypatch.setattr(client, "discover", lambda timeout=3.0: [bridge_host])
+    assert client.Bridge().scene()["scene"] == "Desk"
+    assert json.loads(pathlib.Path(client.CONFIG).read_text())["host"] == bridge_host
+
+
+def test_pair_without_a_code_uses_the_default(bridge_host, monkeypatch):
+    from lowey_tools import client, link
+    importlib = __import__("importlib")
+    importlib.reload(link)
+    monkeypatch.setattr(link, "discover", lambda: [bridge_host])
+    sent = []
+    original = client.Bridge.pair
+    monkeypatch.setattr(client.Bridge, "pair", lambda self, code: sent.append(code) or original(self, code))
+    assert link.main(["pair"]) == 1, "the fake iPad's code isn't the default"
+    assert sent == [client.DEFAULT_CODE]
+    assert link.main(["pair", "123456", bridge_host]) == 0, "address and code in any order"
+
+
 def test_errors_are_readable(tmp_path, monkeypatch):
     monkeypatch.setenv("LOWEY_CONFIG", str(tmp_path / "none.json"))
     monkeypatch.delenv("LOWEY_HOST", raising=False)
@@ -191,3 +214,18 @@ def test_media_and_manim_reach_the_shot(bridge_host, tmp_path, monkeypatch):
         stream = container.streams.video[0]
         assert stream.codec_context.name == "prores"
         assert "a" in stream.codec_context.pix_fmt, "the movie keeps its alpha"
+
+
+def test_public_mcp_secret_is_stable_until_rotated(tmp_path, monkeypatch):
+    monkeypatch.setattr("lowey_tools.client.CONFIG", tmp_path / "config.json")
+    from lowey_tools import remote
+    first = remote.mcp_secret()
+    assert len(first) >= 20 and remote.mcp_secret() == first
+    assert remote.mcp_secret(rotate=True) != first
+    assert remote.QUICK_TUNNEL.search("INF |  https://calm-fox-12.trycloudflare.com  |").group(0).endswith(".trycloudflare.com")
+
+
+def test_public_https_url_and_ip_csr():
+    from lowey_tools import public
+    assert public.url_for("203.0.113.7", 443, "/s/mcp") == "https://203.0.113.7/s/mcp"
+    assert public.url_for("2001:db8::1", 8443, "/s/mcp") == "https://[2001:db8::1]:8443/s/mcp"

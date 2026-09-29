@@ -20,7 +20,7 @@ final class AppModel {
     var showTour = false
     /// The gestures & shortcuts page.
     var showGestures = false
-    /// The AI & laptop bridge (off until switched on).
+    /// The AI & laptop bridge (starts with the app unless switched off).
     @ObservationIgnored lazy var bridge = BridgeModel(app: self)
 
     private var toastTask: Task<Void, Never>?
@@ -31,6 +31,8 @@ final class AppModel {
     static let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
     /// A UI test that walks through the first-launch tour.
     static let isTestingTour = ProcessInfo.processInfo.arguments.contains("-ui-testing-tour")
+    /// Unit / render tests hosted in the app: no bridge (no network listener, no notification prompt).
+    static let isHostingTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
     init() {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -47,6 +49,8 @@ final class AppModel {
         guard !started else { return }
         started = true
         Diagnostics.shared.start()
+        // The iPad never auto-locks while 3D-lowey is on screen.
+        ScreenAwake.hold("app", true)
         if Diagnostics.shared.previousSessionCrashed, !Self.isUITesting {
             show("3D-lowey quit unexpectedly last time — your work was autosaved. ⋯ → Export diagnostics if it keeps happening.")
         }
@@ -60,6 +64,7 @@ final class AppModel {
             showTour = !Self.isUITesting || Self.isTestingTour
         }
         refreshArchived()
+        if !Self.isUITesting, !Self.isHostingTests { bridge.restoreIfWanted() }
     }
 
     // MARK: Projects

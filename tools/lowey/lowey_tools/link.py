@@ -1,7 +1,8 @@
 """lowey-link — the laptop companion for 3D-lowey.
 
-  lowey-link pair 123456                   pair with the iPad (code from: scene menu → AI & laptop bridge); finds it
-  lowey-link pair 192.168.1.20 123456      ...or give its address
+  lowey-link pair                          pair with the iPad (finds it; the code is 000000 unless you changed it)
+  lowey-link pair 123456                   ...with the code shown in the AI & laptop bridge panel
+  lowey-link pair 192.168.1.20 123456      ...or give its address too
   lowey-link status                        what's open on the iPad
   lowey-link push model.glb tree.usdz      send files to the iPad's library
   lowey-link audio voiceover.m4a           add a voiceover to the open scene (--role music|sfx)
@@ -26,7 +27,7 @@ import sys
 import tempfile
 import time
 
-from .client import Bridge, BridgeError, describe, discover, load_config, normalize_host, save_config
+from .client import DEFAULT_CODE, Bridge, BridgeError, describe, discover, load_config, normalize_host, save_config
 
 MODEL_TYPES = {".glb", ".gltf", ".usdz", ".obj"}
 GENERATORS = pathlib.Path(__file__).parent / "generators"
@@ -73,8 +74,8 @@ def run_generator(name: str, args: list[str], out_dir: pathlib.Path) -> pathlib.
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="lowey-link", description="Laptop companion for 3D-lowey")
     sub = parser.add_subparsers(dest="command", required=True)
-    pair = sub.add_parser("pair", help="pair with the iPad: lowey-link pair <code>  (or <address> <code>)")
-    pair.add_argument("target", nargs="+", metavar="[address] code")
+    pair = sub.add_parser("pair", help="pair with the iPad: lowey-link pair [address] [code]  (code 000000 by default)")
+    pair.add_argument("target", nargs="*", metavar="[address] [code]")
     sub.add_parser("status")
     push = sub.add_parser("push")
     push.add_argument("files", nargs="+", type=pathlib.Path)
@@ -109,10 +110,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if options.command == "pair":
             if len(options.target) > 2:
-                parser.error("pair takes a code, or an address and a code")
-            code = options.target[-1]
-            if len(options.target) == 2:
-                host = normalize_host(options.target[0])
+                parser.error("pair takes an address and/or a code")
+            # A code is six digits; anything else (with a dot or a colon) is the iPad's address.
+            codes = [part for part in options.target if part.isdigit() and len(part) == 6]
+            addresses = [part for part in options.target if part not in codes]
+            code = codes[0] if codes else DEFAULT_CODE
+            if addresses:
+                host = normalize_host(addresses[0])
             else:
                 print("Looking for your iPad (Bridge on)...")
                 found = discover()

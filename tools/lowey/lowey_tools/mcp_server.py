@@ -290,7 +290,29 @@ def sync_to_voiceover() -> str:
 
 
 def main() -> None:
-    mcp.run(transport="stdio")
+    import argparse
+
+    from .remote import DEFAULT_HTTP_PORT, mcp_secret, serve
+
+    parser = argparse.ArgumentParser(prog="lowey-mcp", description="3D-lowey MCP server (stdio by default).")
+    parser.add_argument("--http", action="store_true", help="serve over HTTP on localhost: http://127.0.0.1:PORT/mcp")
+    parser.add_argument("--public", action="store_true",
+                        help="HTTPS on this laptop's public IP with a free Let's Encrypt certificate (for claude.ai connectors)")
+    parser.add_argument("--ip", help="with --public: the public IP to certify and serve (IPv4 or IPv6; found automatically)")
+    parser.add_argument("--https-port", type=int, default=443, help="with --public (default 443)")
+    parser.add_argument("--staging", action="store_true", help="with --public: Let's Encrypt staging (test certificates)")
+    parser.add_argument("--tunnel", action="store_true", help="public URL through a Cloudflare quick tunnel instead")
+    parser.add_argument("--own-tunnel", action="store_true", help="public mode behind your own tunnel (named Cloudflare tunnel, ngrok)")
+    parser.add_argument("--port", type=int, default=DEFAULT_HTTP_PORT, help="local port for --http / --tunnel")
+    parser.add_argument("--new-secret", action="store_true", help="rotate the secret in the public URL")
+    args = parser.parse_args()
+    if args.public:
+        from . import public
+        public.serve(mcp, path=f"/{mcp_secret(args.new_secret)}/mcp", port=args.https_port, ip=args.ip, staging=args.staging)
+    elif args.http or args.tunnel or args.own_tunnel:
+        serve(mcp, port=args.port, public=args.tunnel or args.own_tunnel, rotate_secret=args.new_secret, own_tunnel=args.own_tunnel)
+    else:
+        mcp.run(transport="stdio")
 
 
 if __name__ == "__main__":

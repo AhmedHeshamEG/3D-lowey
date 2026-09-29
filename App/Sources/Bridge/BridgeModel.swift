@@ -12,6 +12,7 @@ final class BridgeModel {
     @ObservationIgnored unowned let app: AppModel
     @ObservationIgnored let auth: BridgeAuth
     @ObservationIgnored private var server: BridgeServer?
+    @ObservationIgnored private let keeper = BackgroundKeeper()
     var isOn = false
     var status = "Off"
     /// Apply scripts without asking (they're still one undo step each).
@@ -20,17 +21,79 @@ final class BridgeModel {
     }
 
     var pairedCount: Int { auth.pairedTokens.count }
-    var code: String { auth.code }
+    /// Shown so SwiftUI redraws when the code changes (a one-time code after a pairing).
+    private(set) var code: String
+    /// The code stays the same (default "000000", or what you set) unless one-time codes are on.
+    var oneTimeCode = UserDefaults.standard.bool(forKey: "bridge.oneTimeCode") {
+        didSet {
+            UserDefaults.standard.set(oneTimeCode, forKey: "bridge.oneTimeCode")
+            auth.setOneTime(oneTimeCode, permanentCode: permanentCode)
+            code = auth.code
+        }
+    }
+
+    private var permanentCode: String { UserDefaults.standard.string(forKey: "bridge.code") ?? BridgeAuth.defaultCode }
     var address: String { "\(BridgeServer.localAddress() ?? "this iPad's IP"):\(BridgeServer.httpPort.rawValue)" }
 
     init(app: AppModel) {
         self.app = app
         let saved = Set(UserDefaults.standard.stringArray(forKey: "bridge.tokens") ?? [])
-        auth = BridgeAuth(tokens: saved)
+        let oneTime = UserDefaults.standard.bool(forKey: "bridge.oneTimeCode")
+        let permanent = UserDefaults.standard.string(forKey: "bridge.code") ?? BridgeAuth.defaultCode
+        auth = BridgeAuth(code: oneTime ? BridgeAuth.makeCode() : permanent, oneTime: oneTime, tokens: saved)
+        code = auth.code
+        // Save a new device's token at once (before, it was saved on the next status call, and lost if the app quit).
+        auth.onPaired = { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                self.saveTokens()
+                self.code = self.auth.code
+                self.app.show("A laptop paired with the bridge")
+            }
+        }
+    }
+
+    /// Sets the permanent pairing code (six digits).
+    @discardableResult
+    func setPermanentCode(_ newCode: String) -> Bool {
+        guard BridgeAuth.isValid(newCode) else { return false }
+        UserDefaults.standard.set(newCode, forKey: "bridge.code")
+        if !oneTimeCode { auth.setCode(newCode) }
+        code = auth.code
+        return true
+    }
+
+    /// On unless you switched it off: the bridge starts with the app.
+    private var wantsOn: Bool {
+        get { UserDefaults.standard.object(forKey: "bridge.on") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "bridge.on") }
     }
 
     func toggle(_ on: Bool) {
+        wantsOn = on
         if on { start() } else { stop() }
+    }
+
+    /// At launch: the bridge starts unless you switched it off.
+    func restoreIfWanted() {
+        if wantsOn { start() }
+    }
+
+    /// The app came back to the front: iOS may have torn the listeners down while it was away, so start them afresh.
+    func resume() {
+        keeper.stop()
+        BridgeNotice.clear()
+        guard wantsOn else { return }
+        if let server, server.isHealthy { return }
+        stop()
+        start()
+    }
+
+    /// The app left the screen (home, another app, screen locked): keep running so the laptop still gets answers.
+    func enterBackground() {
+        guard isOn else { return }
+        keeper.start()
+        BridgeNotice.showOn(address: address)
     }
 
     func start() {
@@ -41,7 +104,8 @@ final class BridgeModel {
             try server.start()
             self.server = server
             isOn = true
-            status = "On — pair from the laptop with the code"
+            status = "On — keeps answering in the background and with the screen locked"
+            BridgeNotice.requestPermission()
         } catch {
             status = "Couldn't start: \(error.localizedDescription)"
         }
@@ -52,10 +116,13 @@ final class BridgeModel {
         server = nil
         isOn = false
         status = "Off"
+        keeper.stop()
+        BridgeNotice.clear()
     }
 
     func forgetDevices() {
         auth.reset()
+        code = auth.code
         saveTokens()
     }
 
@@ -160,6 +227,7 @@ final class BridgeModel {
             }
             let source = request.headers["x-lowey-client"] ?? "AI"
             if !autoApply {
+                if UIApplication.shared.applicationState != .active { BridgeNotice.proposal(script.title) }
                 let accepted = await editor.propose(script, preview: preview, source: source)
                 guard accepted else {
                     return .json(ScriptReply(applied: false, preview: preview.lines, report: preview.report, created: [:],
@@ -184,6 +252,10 @@ final class BridgeModel {
                 var longSide: Int?
                 var camera: Bool?
                 var time: Double?
+            }
+            // iOS doesn't let an app draw while it's in the background.
+            guard UIApplication.shared.applicationState == .active else {
+                return .error(503, "3D-lowey is in the background on the iPad — bring it to the front for snapshots")
             }
             let options = (try? request.json(Options.self)) ?? Options()
             if let time = options.time { editor.setTime(time) }

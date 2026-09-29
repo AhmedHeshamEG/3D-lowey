@@ -28,7 +28,7 @@ extension EditorModel {
         exporter.mediaURL = { [weak self] file in self?.mediaURL(file) }
         exporter.onWaiting = { [weak self] waiting in self?.exportWaiting = waiting }
         // A long export must not be cut off by auto-lock (a locked iPad can't render).
-        UIApplication.shared.isIdleTimerDisabled = true
+        ScreenAwake.hold("export", true)
         let folder = rendersFolder
         let clips = timeline.audio
         let audioFolder = audioFolder
@@ -61,7 +61,7 @@ extension EditorModel {
             self?.exportProgress = nil
             self?.exportWaiting = false
             self?.exportTask = nil
-            UIApplication.shared.isIdleTimerDisabled = false
+            ScreenAwake.hold("export", false)
         }
     }
 

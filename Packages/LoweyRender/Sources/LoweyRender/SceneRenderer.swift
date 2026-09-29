@@ -57,8 +57,12 @@ public final class SceneRenderer {
     /// Fired after asynchronous content (a model finishing loading) appears, so overlays can refresh.
     public var onContentChanged: (() -> Void)?
 
-    /// Editor helpers (light bulbs, camera boxes). Off for export renderers.
-    public var showsHelpers = true
+    /// Editor helpers (light bulbs, camera boxes). Off for export renderers, and on the stage while it shows the shot
+    /// (looking through a camera, Export): the video never has other cameras or light bulbs in it.
+    public var showsHelpers = true {
+        didSet { if showsHelpers != oldValue { Self.setHelpers(root, enabled: showsHelpers) } }
+    }
+
     /// Depth world: every surface writes its distance (v = 0.5 / d) instead of its colour (lens blur, outlines).
     public var depthPass = false {
         didSet { environment.depthPass = depthPass }
@@ -357,12 +361,11 @@ public final class SceneRenderer {
         case .particles:
             // Filled every frame by `applyParticles`.
             let container = Entity()
-            if showsHelpers {
-                let icon = ModelEntity(mesh: .generateSphere(radius: 0.08), materials: [MaterialFactory.shared.helper(color: .systemOrange, opacity: 0.6)])
-                icon.components.set(LoweyHelperComponent())
-                icon.generateCollisionShapes(recursive: false)
-                container.addChild(icon)
-            }
+            let icon = ModelEntity(mesh: .generateSphere(radius: 0.08), materials: [MaterialFactory.shared.helper(color: .systemOrange, opacity: 0.6)])
+            icon.components.set(LoweyHelperComponent())
+            icon.generateCollisionShapes(recursive: false)
+            icon.isEnabled = showsHelpers
+            container.addChild(icon)
             return container
         }
     }
@@ -819,6 +822,17 @@ public final class SceneRenderer {
         let clone = root.clone(recursive: true)
         Self.stripHelpers(clone)
         return clone
+    }
+
+    /// Shows or hides every object helper (camera boxes, light bulbs, particle emitters) in the world.
+    static func setHelpers(_ entity: Entity, enabled: Bool) {
+        for child in entity.children {
+            if child.components[LoweyHelperComponent.self] != nil {
+                child.isEnabled = enabled
+            } else {
+                setHelpers(child, enabled: enabled)
+            }
+        }
     }
 
     static func stripHelpers(_ entity: Entity) {

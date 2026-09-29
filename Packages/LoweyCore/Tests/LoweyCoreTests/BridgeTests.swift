@@ -52,13 +52,40 @@ final class BridgeTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode([String: String].self, from: file.body)["file"], "a b.mp4")
         let missing = await router.handle(HTTPRequest(method: "GET", path: "/v1/nope", query: ["token": token]), from: "10.0.0.2")
         XCTAssertEqual(missing.status, 404)
-        // Ten wrong guesses change the code.
+        // Ten wrong guesses pause pairing for a minute; the permanent code stays.
+        let now = Date()
         for _ in 0 ..< 10 {
-            _ = auth.pair(code: "999999")
+            _ = auth.pair(code: "999999", now: now)
         }
-        XCTAssertNotEqual(auth.code, "123456")
+        XCTAssertEqual(auth.code, "123456")
+        XCTAssertNil(auth.pair(code: "123456", now: now.addingTimeInterval(5)))
+        XCTAssertNotNil(auth.pair(code: "123456", now: now.addingTimeInterval(61)))
         auth.reset()
         XCTAssertTrue(auth.pairedTokens.isEmpty)
+        XCTAssertEqual(auth.code, "123456")
+    }
+
+    func testPairingCodes() {
+        let auth = BridgeAuth()
+        XCTAssertEqual(auth.code, "000000", "permanent by default")
+        XCTAssertNotNil(auth.pair(code: "000000"))
+        XCTAssertNotNil(auth.pair(code: "000000"), "a permanent code pairs every laptop")
+        XCTAssertFalse(auth.setCode("12a456"))
+        XCTAssertTrue(auth.setCode("111111"))
+        XCTAssertEqual(auth.code, "111111")
+        auth.setOneTime(true)
+        let first = auth.code
+        XCTAssertNotNil(auth.pair(code: first))
+        XCTAssertNil(auth.pair(code: first), "a one-time code works once") // (1 in a million: same code again)
+        // Ten wrong one-time guesses change the code.
+        let current = auth.code
+        for _ in 0 ..< 10 {
+            _ = auth.pair(code: current == "999999" ? "888888" : "999999")
+        }
+        XCTAssertNotEqual(auth.code, current)
+        auth.setOneTime(false, permanentCode: "111111")
+        XCTAssertEqual(auth.code, "111111")
+        XCTAssertEqual(auth.pairedTokens.count, 3)
     }
 
     func testSummariesAreCompact() throws {

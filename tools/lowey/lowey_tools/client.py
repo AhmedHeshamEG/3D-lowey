@@ -1,25 +1,29 @@
 """Talks to the 3D-lowey Bridge on the iPad (local network only).
 
-The iPad shows its address and a 6-digit code (scene menu → "AI & laptop bridge…").
-`lowey-link pair <code>` finds the iPad on the network (or `lowey-link pair <ip:port> <code>`) and stores a token in
-~/.lowey/config.json; everything else reuses it.
+The iPad shows its address and a 6-digit code (scene menu → "AI & laptop bridge…"; "000000" unless changed).
+`lowey-link pair` finds the iPad on the network (or `lowey-link pair <ip:port> <code>`) and stores a token in
+~/.lowey/config.json; everything else reuses it. If the iPad's address changed (Wi-Fi gave it a new one), the client finds
+it again by Bonjour and remembers the new address.
 Environment overrides: LOWEY_HOST (e.g. 192.168.1.20:7717), LOWEY_TOKEN.
 """
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import pathlib
 import socket
 import struct
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from typing import Any
 
 CONFIG = pathlib.Path(os.environ.get("LOWEY_CONFIG", pathlib.Path.home() / ".lowey" / "config.json"))
 DEFAULT_PORT = 7717
+DEFAULT_CODE = "000000"
+# Connecting to an iPad on the same Wi-Fi takes milliseconds; if it hasn't answered in this long it isn't there
+# (asleep, bridge off, new address). Replies can take much longer: a script waits for Hesham's OK on the iPad.
+CONNECT_TIMEOUT = 2.5
 
 
 class BridgeError(RuntimeError):
@@ -82,35 +86,65 @@ def normalize_host(host: str) -> str:
 class Bridge:
     def __init__(self, host: str | None = None, token: str | None = None, timeout: float = 200):
         config = load_config()
+        # Only an address from the config may be looked up again (one given explicitly is used as is).
+        self.rediscover = host is None and not os.environ.get("LOWEY_HOST")
         self.host = normalize_host(host or config.get("host") or "")
         self.token = token or config.get("token")
         self.timeout = timeout
         if not self.host or self.host.startswith(":"):
-            raise BridgeError("No iPad yet. Run: lowey-link pair <ipad-address> <code>")
+            raise BridgeError("No iPad yet. Run: lowey-link pair")
 
     # -- plumbing -------------------------------------------------------------------------------------------------
     def request(self, method: str, path: str, body: bytes | None = None, query: dict[str, Any] | None = None,
                 content_type: str = "application/json") -> tuple[bytes, str]:
-        url = f"http://{self.host}{path}"
+        target = path
         if query:
-            url += "?" + urllib.parse.urlencode({k: v for k, v in query.items() if v is not None})
-        request = urllib.request.Request(url, data=body, method=method)
-        request.add_header("Content-Type", content_type)
-        request.add_header("X-Lowey-Client", os.environ.get("LOWEY_CLIENT", "Claude (lowey-mcp)"))
-        if self.token:
-            request.add_header("Authorization", f"Bearer {self.token}")
+            target += "?" + urllib.parse.urlencode({k: v for k, v in query.items() if v is not None})
         try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                return response.read(), response.headers.get("Content-Type", "")
-        except urllib.error.HTTPError as error:
-            detail = error.read().decode("utf-8", "replace")
+            status, data, kind = self._send(method, target, body, content_type)
+        except OSError as error:
+            if not (self.rediscover and self._find_again()):
+                raise BridgeError(f"Can't reach the iPad at {self.host} ({error}). Is 3D-lowey open with the bridge on, "
+                                  "on the same Wi-Fi?") from None
+            try:
+                status, data, kind = self._send(method, target, body, content_type)
+            except OSError as again:
+                raise BridgeError(f"Can't reach the iPad at {self.host} ({again}).") from None
+        if status >= 400:
+            detail = data.decode("utf-8", "replace")
             try:
                 detail = json.loads(detail).get("error", detail)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, AttributeError):
                 pass
-            raise BridgeError(f"{error.code}: {detail}") from None
-        except urllib.error.URLError as error:
-            raise BridgeError(f"Can't reach the iPad at {self.host} ({error.reason}). Is the bridge on, same Wi-Fi?") from None
+            raise BridgeError(f"{status}: {detail}")
+        return data, kind
+
+    def _send(self, method: str, target: str, body: bytes | None, content_type: str) -> tuple[int, bytes, str]:
+        """One request on a plain socket: no proxy lookups (slow on Windows), a short connect, a long wait for the reply."""
+        name, _, port = self.host.rpartition(":")
+        connection = http.client.HTTPConnection(name.strip("[]"), int(port), timeout=CONNECT_TIMEOUT)
+        try:
+            connection.connect()
+            connection.sock.settimeout(self.timeout)
+            headers = {"Content-Type": content_type, "X-Lowey-Client": os.environ.get("LOWEY_CLIENT", "Claude (lowey-mcp)")}
+            if self.token:
+                headers["Authorization"] = f"Bearer {self.token}"
+            connection.request(method, target, body=body, headers=headers)
+            response = connection.getresponse()
+            return response.status, response.read(), response.getheader("Content-Type", "")
+        finally:
+            connection.close()
+
+    def _find_again(self) -> bool:
+        """The saved address didn't answer: ask Bonjour where the iPad is now and remember it."""
+        found = [host for host in discover(timeout=1.5) if host != self.host]
+        if not found:
+            return False
+        self.host = found[0]
+        config = load_config()
+        config["host"] = self.host
+        save_config(config)
+        return True
 
     def get(self, path: str, **query: Any) -> Any:
         data, kind = self.request("GET", path, query=query or None)

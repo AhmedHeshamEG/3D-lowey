@@ -59,6 +59,8 @@ struct BridgePanel: View {
     @Bindable var bridge: BridgeModel
     let editor: EditorModel
     @State private var importing = false
+    @State private var editingCode = false
+    @State private var newCode = ""
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -79,12 +81,36 @@ struct BridgePanel: View {
                         Text("lowey-link pair \(bridge.address) \(bridge.code)")
                             .font(.system(size: 17, weight: .semibold, design: .monospaced))
                             .textSelection(.enabled)
-                        Text("Pairing code").font(.system(size: 12)).foregroundStyle(Theme.secondaryText)
-                        Text(bridge.code).font(.system(size: 40, weight: .heavy, design: .rounded)).tracking(6)
-                            .accessibilityIdentifier("bridge-code")
+                        Text(bridge.oneTimeCode ? "Pairing code (works once)" : "Pairing code (always the same)")
+                            .font(.system(size: 12)).foregroundStyle(Theme.secondaryText)
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(bridge.code).font(.system(size: 40, weight: .heavy, design: .rounded)).tracking(6)
+                                .accessibilityIdentifier("bridge-code")
+                            Spacer()
+                            if !bridge.oneTimeCode {
+                                PillButton(title: "Change", systemName: "pencil") {
+                                    newCode = bridge.code
+                                    editingCode = true
+                                }
+                            }
+                        }
+                        Toggle("New code after every pairing", isOn: $bridge.oneTimeCode)
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("A laptop pairs once and stays paired; the code only matters for a new laptop.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.secondaryText)
                     }
                     .padding(14)
                     .background(RoundedRectangle(cornerRadius: 16).fill(Theme.raised))
+                    .alert("Pairing code", isPresented: $editingCode) {
+                        TextField("6 digits", text: $newCode).keyboardType(.numberPad)
+                        Button("Save") {
+                            if !bridge.setPermanentCode(newCode) { editor.app.show("The code must be 6 digits") }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("Six digits, kept until you change it.")
+                    }
                     Toggle("Apply AI scripts without asking", isOn: $bridge.autoApply)
                         .font(.system(size: 14, weight: .semibold))
                     Text("Off: every script from Claude (or any AI) waits for your OK here, with a preview.")

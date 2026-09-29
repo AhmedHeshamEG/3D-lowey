@@ -379,3 +379,8 @@ overlays stay for graphics that belong to the frame (transparent Manim). Card te
 **D85 — Timeline rows scroll under our own gesture.** A SwiftUI `ScrollView` loses its pan to a `DragGesture` on its
 content (iPadOS 18+), and the lanes need that drag. The lanes decide once per drag: keys, box, time or rows.
 
+
+**D86 — The bridge keeps the app alive with silent audio.** iOS suspends a background app within seconds; a VPN-style
+status icon needs a Network Extension (paid developer account), and Live Activities don't show on iPad. The app is
+sideloaded, so it uses the audio background mode: while the bridge is on and the app is away it plays silence mixed with
+other audio, and posts a quiet "Bridge on" notification. Drawing (snapshots, export) still waits for the foreground.

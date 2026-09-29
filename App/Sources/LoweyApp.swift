@@ -27,6 +27,8 @@ struct LoweyApp: App {
         .commands { LoweyCommands(app: app) }
         .onChange(of: phase) { _, phase in
             if phase == .background { Diagnostics.shared.markClean() } else if phase == .active { Diagnostics.shared.markRunning() }
+            guard UIDevice.current.userInterfaceIdiom != .phone else { return }
+            if phase == .active { app.bridge.resume() } else if phase == .background { app.bridge.enterBackground() }
         }
     }
 }

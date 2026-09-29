@@ -161,20 +161,34 @@ public enum NetworkPolicy {
 
 // MARK: - Pairing
 
-/// A 6-digit code shown on the iPad; a client trades it for a token. Wrong guesses are limited.
+/// A 6-digit code shown on the iPad; a client trades it for a token (kept, so pairing happens once per laptop).
+/// The code is permanent by default (the same every time, "000000" until changed); `oneTime` makes a new one after
+/// every pairing. Wrong guesses are limited: ten in a row pause pairing for a minute (a one-time code changes instead).
 public final class BridgeAuth: @unchecked Sendable {
+    public static let defaultCode = "000000"
     private let lock = NSLock()
     public private(set) var code: String
+    /// A new code after each successful pairing.
+    public private(set) var oneTime: Bool
     private var tokens: Set<String>
     private var failures = 0
+    private var lockedUntil: Date?
+    /// Called after a device paired (to save the tokens right away).
+    public var onPaired: (@Sendable () -> Void)?
 
-    public init(code: String = BridgeAuth.makeCode(), tokens: Set<String> = []) {
-        self.code = code
+    public init(code: String = BridgeAuth.defaultCode, oneTime: Bool = false, tokens: Set<String> = []) {
+        self.code = Self.isValid(code) ? code : Self.defaultCode
+        self.oneTime = oneTime
         self.tokens = tokens
     }
 
     public static func makeCode() -> String {
         String(format: "%06d", Int.random(in: 0 ... 999_999))
+    }
+
+    /// Six digits.
+    public static func isValid(_ code: String) -> Bool {
+        code.count == 6 && code.allSatisfy { $0.isASCII && $0.isNumber }
     }
 
     public var pairedTokens: Set<String> {
@@ -183,21 +197,53 @@ public final class BridgeAuth: @unchecked Sendable {
         return tokens
     }
 
-    /// A token for the right code; nil otherwise. After 10 wrong codes the code changes.
-    public func pair(code attempt: String) -> String? {
+    /// Sets the permanent code (six digits); false if it isn't one.
+    @discardableResult
+    public func setCode(_ newCode: String) -> Bool {
+        let trimmed = newCode.trimmingCharacters(in: .whitespaces)
+        guard Self.isValid(trimmed) else { return false }
         lock.lock()
         defer { lock.unlock() }
+        code = trimmed
+        failures = 0
+        lockedUntil = nil
+        return true
+    }
+
+    /// One-time codes: a fresh random code now and after every pairing. Permanent: back to `permanentCode`.
+    public func setOneTime(_ on: Bool, permanentCode: String = BridgeAuth.defaultCode) {
+        lock.lock()
+        oneTime = on
+        code = on ? Self.makeCode() : (Self.isValid(permanentCode) ? permanentCode : Self.defaultCode)
+        failures = 0
+        lockedUntil = nil
+        lock.unlock()
+    }
+
+    /// A token for the right code; nil otherwise.
+    public func pair(code attempt: String, now: Date = Date()) -> String? {
+        lock.lock()
+        if let lockedUntil, now < lockedUntil {
+            lock.unlock()
+            return nil
+        }
         guard attempt.trimmingCharacters(in: .whitespaces) == code else {
             failures += 1
             if failures >= 10 {
-                code = Self.makeCode()
                 failures = 0
+                if oneTime { code = Self.makeCode() } else { lockedUntil = now.addingTimeInterval(60) }
             }
+            lock.unlock()
             return nil
         }
         failures = 0
+        lockedUntil = nil
         let token = UUID().uuidString.lowercased() + UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: "")
         tokens.insert(token)
+        if oneTime { code = Self.makeCode() }
+        let paired = onPaired
+        lock.unlock()
+        paired?()
         return token
     }
 
@@ -208,12 +254,12 @@ public final class BridgeAuth: @unchecked Sendable {
         return tokens.contains(token)
     }
 
-    /// Forget every paired device and show a new code.
+    /// Forget every paired device (a one-time code also changes).
     public func reset() {
         lock.lock()
         defer { lock.unlock() }
         tokens = []
-        code = Self.makeCode()
+        if oneTime { code = Self.makeCode() }
     }
 }
 
