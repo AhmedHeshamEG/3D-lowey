@@ -191,3 +191,18 @@ def test_media_and_manim_reach_the_shot(bridge_host, tmp_path, monkeypatch):
         stream = container.streams.video[0]
         assert stream.codec_context.name == "prores"
         assert "a" in stream.codec_context.pix_fmt, "the movie keeps its alpha"
+
+
+def test_public_mcp_secret_is_stable_until_rotated(tmp_path, monkeypatch):
+    monkeypatch.setattr("lowey_tools.client.CONFIG", tmp_path / "config.json")
+    from lowey_tools import remote
+    first = remote.mcp_secret()
+    assert len(first) >= 20 and remote.mcp_secret() == first
+    assert remote.mcp_secret(rotate=True) != first
+    assert remote.QUICK_TUNNEL.search("INF |  https://calm-fox-12.trycloudflare.com  |").group(0).endswith(".trycloudflare.com")
+
+
+def test_public_https_url_and_ip_csr():
+    from lowey_tools import public
+    assert public.url_for("203.0.113.7", 443, "/s/mcp") == "https://203.0.113.7/s/mcp"
+    assert public.url_for("2001:db8::1", 8443, "/s/mcp") == "https://[2001:db8::1]:8443/s/mcp"
