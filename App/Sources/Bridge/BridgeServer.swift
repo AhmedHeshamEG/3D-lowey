@@ -22,6 +22,11 @@ final class BridgeServer {
     }
 
     var isRunning: Bool { listener != nil }
+    /// Both listeners are still accepting (iOS can cancel them while the app is in the background).
+    var isHealthy: Bool {
+        guard let listener, let eventsListener else { return false }
+        return listener.state == .ready && eventsListener.state == .ready
+    }
 
     func start() throws {
         guard listener == nil else { return }

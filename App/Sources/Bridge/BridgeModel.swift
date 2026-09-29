@@ -20,17 +20,70 @@ final class BridgeModel {
     }
 
     var pairedCount: Int { auth.pairedTokens.count }
-    var code: String { auth.code }
+    /// Shown so SwiftUI redraws when the code changes (a one-time code after a pairing).
+    private(set) var code: String
+    /// The code stays the same (default "000000", or what you set) unless one-time codes are on.
+    var oneTimeCode = UserDefaults.standard.bool(forKey: "bridge.oneTimeCode") {
+        didSet {
+            UserDefaults.standard.set(oneTimeCode, forKey: "bridge.oneTimeCode")
+            auth.setOneTime(oneTimeCode, permanentCode: permanentCode)
+            code = auth.code
+        }
+    }
+
+    private var permanentCode: String { UserDefaults.standard.string(forKey: "bridge.code") ?? BridgeAuth.defaultCode }
     var address: String { "\(BridgeServer.localAddress() ?? "this iPad's IP"):\(BridgeServer.httpPort.rawValue)" }
 
     init(app: AppModel) {
         self.app = app
         let saved = Set(UserDefaults.standard.stringArray(forKey: "bridge.tokens") ?? [])
-        auth = BridgeAuth(tokens: saved)
+        let oneTime = UserDefaults.standard.bool(forKey: "bridge.oneTimeCode")
+        let permanent = UserDefaults.standard.string(forKey: "bridge.code") ?? BridgeAuth.defaultCode
+        auth = BridgeAuth(code: oneTime ? BridgeAuth.makeCode() : permanent, oneTime: oneTime, tokens: saved)
+        code = auth.code
+        // Save a new device's token at once (before, it was saved on the next status call, and lost if the app quit).
+        auth.onPaired = { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                saveTokens()
+                code = auth.code
+                app.show("A laptop paired with the bridge")
+            }
+        }
+    }
+
+    /// Sets the permanent pairing code (six digits).
+    @discardableResult
+    func setPermanentCode(_ newCode: String) -> Bool {
+        guard BridgeAuth.isValid(newCode) else { return false }
+        UserDefaults.standard.set(newCode, forKey: "bridge.code")
+        if !oneTimeCode { auth.setCode(newCode) }
+        code = auth.code
+        return true
+    }
+
+    /// Whether the bridge was on when the app last ran (it comes back on by itself).
+    private var wantsOn: Bool {
+        get { UserDefaults.standard.bool(forKey: "bridge.on") }
+        set { UserDefaults.standard.set(newValue, forKey: "bridge.on") }
     }
 
     func toggle(_ on: Bool) {
+        wantsOn = on
         if on { start() } else { stop() }
+    }
+
+    /// At launch: the bridge comes back if it was on.
+    func restoreIfWanted() {
+        if wantsOn { start() }
+    }
+
+    /// The app came back to the front: iOS may have torn the listeners down while it was away, so start them afresh.
+    func resume() {
+        guard wantsOn else { return }
+        if let server, server.isHealthy { return }
+        stop()
+        start()
     }
 
     func start() {
@@ -41,7 +94,9 @@ final class BridgeModel {
             try server.start()
             self.server = server
             isOn = true
-            status = "On — pair from the laptop with the code"
+            status = "On — the iPad stays awake while the bridge is on"
+            // A locked iPad can't answer the laptop: no auto-lock while the bridge is on.
+            ScreenAwake.hold("bridge", true)
         } catch {
             status = "Couldn't start: \(error.localizedDescription)"
         }
@@ -52,10 +107,12 @@ final class BridgeModel {
         server = nil
         isOn = false
         status = "Off"
+        ScreenAwake.hold("bridge", false)
     }
 
     func forgetDevices() {
         auth.reset()
+        code = auth.code
         saveTokens()
     }
 

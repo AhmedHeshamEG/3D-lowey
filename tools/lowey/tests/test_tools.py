@@ -143,6 +143,29 @@ def test_pair_with_only_the_code(bridge_host, monkeypatch):
     assert isinstance(client.discover(timeout=0.3), list), "discovery never raises (no network is fine)"
 
 
+def test_finds_the_ipad_again_after_its_address_changed(bridge_host, monkeypatch):
+    """The saved address stopped answering (Wi-Fi gave the iPad a new one): Bonjour finds it, the config remembers it."""
+    from lowey_tools import client
+    monkeypatch.delenv("LOWEY_HOST", raising=False)
+    client.save_config({"host": "127.0.0.1:9", "token": TOKEN})
+    monkeypatch.setattr(client, "discover", lambda timeout=3.0: [bridge_host])
+    assert client.Bridge().scene()["scene"] == "Desk"
+    assert json.loads(pathlib.Path(client.CONFIG).read_text())["host"] == bridge_host
+
+
+def test_pair_without_a_code_uses_the_default(bridge_host, monkeypatch):
+    from lowey_tools import client, link
+    importlib = __import__("importlib")
+    importlib.reload(link)
+    monkeypatch.setattr(link, "discover", lambda: [bridge_host])
+    sent = []
+    original = client.Bridge.pair
+    monkeypatch.setattr(client.Bridge, "pair", lambda self, code: sent.append(code) or original(self, code))
+    assert link.main(["pair"]) == 1, "the fake iPad's code isn't the default"
+    assert sent == [client.DEFAULT_CODE]
+    assert link.main(["pair", "123456", bridge_host]) == 0, "address and code in any order"
+
+
 def test_errors_are_readable(tmp_path, monkeypatch):
     monkeypatch.setenv("LOWEY_CONFIG", str(tmp_path / "none.json"))
     monkeypatch.delenv("LOWEY_HOST", raising=False)

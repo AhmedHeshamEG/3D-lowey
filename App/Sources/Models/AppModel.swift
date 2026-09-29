@@ -60,6 +60,7 @@ final class AppModel {
             showTour = !Self.isUITesting || Self.isTestingTour
         }
         refreshArchived()
+        if !Self.isUITesting { bridge.restoreIfWanted() }
     }
 
     // MARK: Projects

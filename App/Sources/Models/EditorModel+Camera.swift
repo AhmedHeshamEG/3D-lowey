@@ -20,6 +20,11 @@ extension EditorModel {
     /// Camera mode shows the shot through its camera, framed exactly like the export.
     func updateLookThrough() {
         guard let stage else { return }
+        defer {
+            // Showing the shot (through a camera, or Export): no camera boxes or light bulbs in the picture.
+            let helpers = stage.lookThrough == nil && mode != .export
+            if renderer.showsHelpers != helpers { renderer.showsHelpers = helpers }
+        }
         guard mode == .camera, lookThrough, let id = shotCamera ?? editedCamera, let object = displayed.scene.objects[id] else {
             if stage.lookThrough != nil { stage.setLookThrough(nil) }
             if renderer.hiddenObject != nil { renderer.hiddenObject = nil }

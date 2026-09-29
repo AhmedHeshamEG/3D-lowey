@@ -3,6 +3,23 @@
 All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
 Phase 4 = v1.1 → v1.3).
 
+## [1.4.1] — Joystick, bridge that stays up, clean shots
+
+- **Joystick, one layout in every mode.** The stick works on the ground (red X and blue Z, drawn inside the pad the way
+  they lie from where you look), the green slider on the vertical (Y): Move slides / lifts, Rotate tips the object
+  (stick) and spins it (slider). Analog: gentle near the middle, full speed at the rim, and speeds are per second (the
+  pad assumed 60 frames a second, so on a 120 Hz screen or when frames dropped it jumped). No snap jump when you let go
+  of a joystick turn. Stick and slider together are one undo step.
+- **Cameras, light bulbs and particle emitters no longer show in the shot**: hidden while looking through a camera and
+  in Export (exports never had them).
+- **The bridge stays up.** It comes back on by itself if it was on, keeps the iPad from auto-locking while on, restarts
+  its listeners when the app returns to the front, and saves a laptop's pairing at once (it was saved on the next status
+  call, so a pairing could be lost).
+- **Pairing code**: permanent by default (000000 until you change it, *Change* in the bridge panel), or *New code after
+  every pairing*. `lowey-link pair` with no code uses 000000. Ten wrong codes pause pairing for a minute.
+- **lowey-mcp / lowey-link answer fast or fail fast**: 2.5 s to connect (a sleeping iPad used to hang a call for up to
+  200 s), no proxy lookups, and if the iPad's address changed they find it again by Bonjour and remember it.
+
 ## [1.4.0] — Polish: feel, face, media
 
 ### Feel
