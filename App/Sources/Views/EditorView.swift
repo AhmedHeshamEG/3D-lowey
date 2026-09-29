@@ -6,6 +6,8 @@ import SwiftUI
 struct EditorView: View {
     @Bindable var editor: EditorModel
     @Environment(AppModel.self) private var app
+    /// What the person set a squeeze to do in Settings → Apple Pencil (“Ignore” means leave it alone).
+    @Environment(\.preferredPencilSqueezeAction) private var squeezeAction
 
     var body: some View {
         ZStack {
@@ -27,6 +29,15 @@ struct EditorView: View {
             }
 
             PerformOverlay(editor: editor)
+
+            if editor.faceActive {
+                // Character Animator's camera panel: see what the tracker sees while you perform.
+                FacePreviewPanel(editor: editor, monitor: editor.faceMonitor)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(.leading, editor.mode == .build && !editor.focusMode ? 96 : 16)
+                    .padding(.top, editor.focusMode ? 12 : 72)
+                    .transition(.scale(scale: 0.9, anchor: .topLeading).combined(with: .opacity))
+            }
 
             if editor.focusMode {
                 FocusRestoreButton(editor: editor)
@@ -66,7 +77,13 @@ struct EditorView: View {
         .animation(.spring(duration: 0.3), value: editor.showLibrary)
         .animation(.spring(duration: 0.25), value: editor.railPanel)
         .animation(.spring(duration: 0.25), value: editor.selection.isEmpty)
+        .animation(.spring(duration: 0.3), value: editor.faceActive)
         .background(KeyboardShortcuts(editor: editor))
+        // Squeeze the Apple Pencil Pro: play / pause, from any mode, with the interface hidden too.
+        .onPencilSqueeze { phase in
+            guard case .ended = phase, squeezeAction != .ignore else { return }
+            editor.togglePlay()
+        }
         .sheet(isPresented: $editor.showScripts) {
             ScriptPanel(editor: editor)
                 .presentationDetents([.large])
@@ -228,6 +245,16 @@ struct TopBar: View {
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
 
     var body: some View {
+        // One container: the bar's glass shapes are drawn together (cheaper over the live view, and they blend).
+        GlassEffectContainer(spacing: 10) { bar }
+            .alert("Rename scene", isPresented: $renamingScene) {
+                TextField("Name", text: $sceneName)
+                Button("Rename") { editor.renameScene(sceneName) }
+                Button("Cancel", role: .cancel) {}
+            }
+    }
+
+    private var bar: some View {
         HStack(spacing: 10) {
             IconButton(systemName: "house.fill", label: "Home") { app.closeEditor() }
             Menu {
@@ -288,18 +315,28 @@ struct TopBar: View {
                 .panelStyle(cornerRadius: 24)
             }
             .accessibilityIdentifier("scene-menu")
+            UndoRedo(editor: editor)
             if editor.isSaving {
                 ProgressView().controlSize(.small)
             }
             Spacer()
-            IconButton(systemName: "arrow.up.left.and.arrow.down.right", label: "Hide interface") { editor.focusMode = true }
+            IconButton(systemName: "arrow.up.left.and.arrow.down.right", label: "Hide interface", size: 44) { editor.focusMode = true }
             ModeSwitcher(mode: $editor.mode)
         }
-        .alert("Rename scene", isPresented: $renamingScene) {
-            TextField("Name", text: $sceneName)
-            Button("Rename") { editor.renameScene(sceneName) }
-            Button("Cancel", role: .cancel) {}
+    }
+}
+
+/// Undo and redo together in one small capsule, where every Apple app keeps them (two- and three-finger taps work too).
+struct UndoRedo: View {
+    let editor: EditorModel
+
+    var body: some View {
+        HStack(spacing: 0) {
+            IconButton(systemName: "arrow.uturn.backward", label: "Undo", isEnabled: editor.canUndo, size: 44) { editor.undo() }
+            IconButton(systemName: "arrow.uturn.forward", label: "Redo", isEnabled: editor.canRedo, size: 44) { editor.redo() }
         }
+        .padding(.horizontal, 2)
+        .panelStyle(cornerRadius: 24)
     }
 }
 

@@ -140,7 +140,8 @@ extension EditorModel {
 
     /// Re-evaluates the timeline at the playhead and updates the stage.
     func refreshDisplay(_ changes: ChangeSet? = nil) {
-        rigs = rigCache.rigs(for: session.document, library: library)
+        // Rigs only matter to clip tracks (the cache answers at once when there are none).
+        if !timeline.clipTracks.isEmpty || !rigs.isEmpty { rigs = rigCache.rigs(for: session.document, library: library) }
         var animated = Animator.evaluate(session.document, at: time, rigs: rigs, overrides: propertyOverride)
         applyPerformOverrides(&animated)
         var set = changes ?? ChangeSet()
@@ -152,6 +153,7 @@ extension EditorModel {
         renderer.applyPoses(animated.poses, rigs: rigs)
         renderer.applyClipFallback(timeline, at: time, skipping: Set(animated.poses.keys))
         renderer.applyParticles(animated.scene, timeline: timeline, time: time)
+        renderer.applyCards(animated.scene, time: time)
         updateLookThrough()
         updateStagePost()
         // During playback SwiftUI panels refresh a few times a second, not every frame.
@@ -274,8 +276,10 @@ extension EditorModel {
         time = next
         if audioPlayback.isPlaying { audioPlayback.updateGains(timeline.audio, at: next) }
         if performPhase == .recording { recordPerformSample() }
+        let before = previousAnimated
         refreshDisplay()
-        refreshSelectionOverlay()
+        // The selection box only needs measuring when something that moves it is animated.
+        if selectionMoves(before.union(previousAnimated)) { refreshSelectionOverlay() }
     }
 
     // MARK: Timeline settings

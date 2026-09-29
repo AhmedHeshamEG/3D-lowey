@@ -32,8 +32,8 @@ final class BlobCharacterTests: XCTestCase {
                      "mouth.teeth", "mouth.tongue", "hand.L", "hand.R", "hover", "hat"] {
             XCTAssertNotNil(role(part, in: scene, under: root), "has \(part)")
         }
-        // At rest: his smirk and curl show, the open-mouth layers wait.
-        for (part, shown) in [("mouth.lips", true), ("mouth.curl", true), ("mouth.inside", false), ("mouth.teeth", false)] {
+        // At rest: a calm closed mouth (the smirk is the smug face), the open-mouth layers wait.
+        for (part, shown) in [("mouth.lips", true), ("mouth.curl", false), ("mouth.inside", false), ("mouth.teeth", false)] {
             XCTAssertEqual(role(part, in: scene, under: root).flatMap { scene.objects[$0]?[.visible]?.boolValue } ?? true, shown, part)
         }
         XCTAssertTrue(scene.subtree(of: root).contains { scene.objects[$0]?.name == "Beret" }, "his beret")

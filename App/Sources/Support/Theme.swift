@@ -19,10 +19,17 @@ enum Theme {
     static let touch: CGFloat = 48
 }
 
+extension EnvironmentValues {
+    /// Inside a glass panel: controls draw no glass of their own (glass on glass is muddy, and every glass layer over the
+    /// live 3D view is re-blurred every frame).
+    @Entry var insideGlass = false
+}
+
 extension View {
     /// Floating panel look: the system's Liquid Glass, tinted dark so text stays legible over any scene.
     func panelStyle(cornerRadius: CGFloat = Theme.corner) -> some View {
-        glassEffect(.regular.tint(Theme.glassTint), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        environment(\.insideGlass, true)
+            .glassEffect(.regular.tint(Theme.glassTint), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 
     /// A floating control on glass (round buttons, pills that sit on the stage).
@@ -39,26 +46,38 @@ struct IconButton: View {
     var isEnabled = true
     var size: CGFloat = Theme.touch
     let action: () -> Void
+    @Environment(\.insideGlass) private var insideGlass
 
     var body: some View {
         Button(action: {
             Haptics.tap()
             action()
         }) {
-            Image(systemName: systemName)
-                .font(.system(size: size * 0.4, weight: .semibold))
-                .frame(width: size, height: size)
-                .foregroundStyle(isOn ? Color.black : Theme.text)
-                .background(Circle().fill(isOn ? Theme.accent : Theme.raised))
-                .contentShape(Circle())
-                .glassEffect(.regular.tint(isOn ? Theme.accent.opacity(0.6) : Theme.glassTint).interactive(), in: Circle())
+            if insideGlass {
+                // On a panel: a plain icon; only the chosen one gets a filled circle.
+                icon
+                    .background(Circle().fill(isOn ? Theme.accent : Color.clear))
+                    .contentShape(Circle())
+            } else {
+                icon
+                    .background(Circle().fill(isOn ? Theme.accent : Color.clear))
+                    .contentShape(Circle())
+                    .glassEffect(.regular.tint(isOn ? Theme.accent.opacity(0.6) : Theme.glassTint).interactive(), in: Circle())
+            }
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.35)
+        .opacity(isEnabled ? 1 : 0.3)
         .accessibilityLabel(label)
         .accessibilityIdentifier(label)
-        .hoverEffect(.lift)
+        .hoverEffect(.highlight)
+    }
+
+    private var icon: some View {
+        Image(systemName: systemName)
+            .font(.system(size: size * 0.4, weight: isOn ? .semibold : .medium))
+            .frame(width: size, height: size)
+            .foregroundStyle(isOn ? Color.black : Theme.text)
     }
 }
 

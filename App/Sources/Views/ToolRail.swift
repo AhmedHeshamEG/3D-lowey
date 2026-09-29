@@ -15,21 +15,22 @@ struct ToolRail: View {
                 editor.libraryPurpose = .place
                 editor.showLibrary.toggle()
             }
-            Divider().frame(width: 30).overlay(Theme.panelStroke)
+            Divider().frame(width: 28).overlay(Theme.panelStroke)
             ForEach(Tool.allCases) { tool in
                 IconButton(systemName: tool.systemImage, label: tool.title, isOn: editor.tool == tool) {
                     editor.tool = tool
                 }
             }
-            Divider().frame(width: 30).overlay(Theme.panelStroke)
-            if editor.tool == .select {
+            // Move / turn / size only matter with something selected.
+            if editor.tool == .select, !editor.selection.isEmpty {
+                Divider().frame(width: 28).overlay(Theme.panelStroke)
                 ForEach(GizmoMode.allCases, id: \.self) { mode in
                     IconButton(systemName: icon(for: mode), label: "Gizmo \(mode.rawValue)", isOn: editor.gizmoMode == mode, size: 40) {
                         editor.gizmoMode = mode
                     }
                 }
-                Divider().frame(width: 30).overlay(Theme.panelStroke)
             }
+            Divider().frame(width: 28).overlay(Theme.panelStroke)
             Button {
                 editor.railPanel = editor.railPanel == .color ? nil : .color
             } label: {
@@ -44,12 +45,10 @@ struct ToolRail: View {
             IconButton(systemName: "list.bullet.indent", label: "Outliner", isOn: editor.showOutliner) {
                 editor.showOutliner.toggle()
             }
-            Divider().frame(width: 30).overlay(Theme.panelStroke)
-            IconButton(systemName: "arrow.uturn.backward", label: "Undo", isEnabled: editor.canUndo) { editor.undo() }
-            IconButton(systemName: "arrow.uturn.forward", label: "Redo", isEnabled: editor.canRedo) { editor.redo() }
         }
-        .padding(8)
-        .panelStyle(cornerRadius: 34)
+        .padding(6)
+        .panelStyle(cornerRadius: 30)
+        .animation(.snappy(duration: 0.25), value: editor.selection.isEmpty)
     }
 
     private func icon(for mode: GizmoMode) -> String {

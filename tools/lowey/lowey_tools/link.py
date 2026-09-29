@@ -1,6 +1,7 @@
 """lowey-link — the laptop companion for 3D-lowey.
 
-  lowey-link pair 192.168.1.20 123456      pair with the iPad (code from: scene menu → AI & laptop bridge)
+  lowey-link pair 123456                   pair with the iPad (code from: scene menu → AI & laptop bridge); finds it
+  lowey-link pair 192.168.1.20 123456      ...or give its address
   lowey-link status                        what's open on the iPad
   lowey-link push model.glb tree.usdz      send files to the iPad's library
   lowey-link audio voiceover.m4a           add a voiceover to the open scene (--role music|sfx)
@@ -9,7 +10,7 @@
   lowey-link generate tree --seed 3        run a laptop-side generator (Blender) and push the result
   lowey-link generate text "a red fox"     run your text-to-3D command (LOWEY_TEXT_TO_3D) and push the result
   lowey-link script shot.json              send a Scene Script (preview + approval on the iPad)
-  lowey-link media graph.png clip.mov --at 3   put pictures / videos in the shot (videos play from --at seconds)
+  lowey-link media graph.png clip.mov --at 3   pictures / videos as cards in the shot (--overlay: flat over the frame)
   lowey-link manim scene.py Graph --at 3   render a Manim scene (transparent) and put it in the shot at 3 s
 """
 from __future__ import annotations
@@ -25,7 +26,7 @@ import sys
 import tempfile
 import time
 
-from .client import Bridge, BridgeError, describe, load_config, normalize_host, save_config
+from .client import Bridge, BridgeError, describe, discover, load_config, normalize_host, save_config
 
 MODEL_TYPES = {".glb", ".gltf", ".usdz", ".obj"}
 GENERATORS = pathlib.Path(__file__).parent / "generators"
@@ -72,9 +73,8 @@ def run_generator(name: str, args: list[str], out_dir: pathlib.Path) -> pathlib.
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="lowey-link", description="Laptop companion for 3D-lowey")
     sub = parser.add_subparsers(dest="command", required=True)
-    pair = sub.add_parser("pair")
-    pair.add_argument("host")
-    pair.add_argument("code")
+    pair = sub.add_parser("pair", help="pair with the iPad: lowey-link pair <code>  (or <address> <code>)")
+    pair.add_argument("target", nargs="+", metavar="[address] code")
     sub.add_parser("status")
     push = sub.add_parser("push")
     push.add_argument("files", nargs="+", type=pathlib.Path)
@@ -93,6 +93,7 @@ def main(argv: list[str] | None = None) -> int:
     media = sub.add_parser("media")
     media.add_argument("files", nargs="+", type=pathlib.Path)
     media.add_argument("--at", type=float)
+    media.add_argument("--overlay", action="store_true", help="flat over the frame instead of a card in the world")
     manim = sub.add_parser("manim")
     manim.add_argument("script", type=pathlib.Path)
     manim.add_argument("scene")
@@ -107,8 +108,21 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if options.command == "pair":
-            host = normalize_host(options.host)
-            token = Bridge(host=host, token=None).pair(options.code)
+            if len(options.target) > 2:
+                parser.error("pair takes a code, or an address and a code")
+            code = options.target[-1]
+            if len(options.target) == 2:
+                host = normalize_host(options.target[0])
+            else:
+                print("Looking for your iPad (Bridge on)...")
+                found = discover()
+                if not found:
+                    print("Couldn't find it. Is the Bridge on and the laptop on the same Wi-Fi? "
+                          "Or give the address it shows: lowey-link pair 192.168.1.20 " + code, file=sys.stderr)
+                    return 1
+                host = found[0]
+                print(f"Found {host}")
+            token = Bridge(host=host, token=None).pair(code)
             config = load_config()
             config.update({"host": host, "token": token})
             save_config(config)
@@ -145,14 +159,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{made.name}: {bridge.import_file(made)}")
         elif options.command == "media":
             for path in options.files:
-                print(f"{path.name}: {bridge.import_media(path, at=options.at)}")
+                print(f"{path.name}: {bridge.import_media(path, at=options.at, placement='overlay' if options.overlay else 'card')}")
         elif options.command == "manim":
             from .manim_render import render
 
             with tempfile.TemporaryDirectory() as folder:
                 video = render(options.script, options.scene, pathlib.Path(folder), quality=options.quality, fps=options.fps,
                                transparent=not options.opaque)
-                print(f"{video.name}: {bridge.import_media(video, at=options.at)}")
+                placement = "card" if options.opaque else "overlay"
+                print(f"{video.name}: {bridge.import_media(video, at=options.at, placement=placement)}")
         elif options.command == "script":
             payload = json.loads(options.file.read_text(encoding="utf-8"))
             print(describe(bridge.script(payload.get("title", options.file.stem), payload.get("actions", []), dry_run=options.dry_run)))

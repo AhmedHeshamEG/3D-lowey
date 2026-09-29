@@ -57,6 +57,8 @@ public final class GridEntity: Entity {
 @MainActor
 public final class SelectionBoxEntity: Entity {
     private let edges = Entity()
+    /// What's on screen now: the box is rebuilt only when the bounds really change (not on every camera move or frame).
+    private var shown: Bounds?
 
     public required init() {
         super.init()
@@ -66,6 +68,11 @@ public final class SelectionBoxEntity: Entity {
     }
 
     public func show(_ bounds: Bounds?) {
+        if let bounds, let shown, isEnabled, bounds.min.isApproximately(shown.min, tolerance: 1e-5),
+           bounds.max.isApproximately(shown.max, tolerance: 1e-5) {
+            return
+        }
+        shown = bounds
         for child in Array(edges.children) {
             child.removeFromParent()
         }
@@ -164,16 +171,13 @@ public final class GizmoEntity: Entity {
                     mode: .default, filter: CollisionFilter(group: PickGroup.gizmo, mask: .all)
                 ))
             case .rotate:
-                if let ring = try? MeshUpload.resource(from: PrimitiveMesh.make(.torus).transformed(
-                    LoweyCore.Transform(position: Vec3(0, -0.12 * 2.2, 0), scale: Vec3(2.2, 2.2, 2.2))
-                )) {
-                    let entity = ModelEntity(mesh: ring, materials: [material])
-                    handle.addChild(entity)
+                // A thin ring around the axis. Rings are picked by their drawn line on screen (`StageView.pickRotationRing`),
+                // not by collision boxes: three boxes around three rings overlap and grabbed the wrong axis.
+                let ring = PrimitiveMesh.torus(segments: 64, sides: 6, major: Self.ringRadius, minor: 0.022)
+                    .transformed(LoweyCore.Transform(position: Vec3(0, -0.022, 0)))
+                if let resource = try? MeshUpload.resource(from: ring) {
+                    handle.addChild(ModelEntity(mesh: resource, materials: [material]))
                 }
-                handle.components.set(CollisionComponent(
-                    shapes: [ShapeResource.generateBox(size: SIMD3<Float>(2.4, 0.3, 2.4))],
-                    mode: .default, filter: CollisionFilter(group: PickGroup.gizmo, mask: .all)
-                ))
             case .scale:
                 let shaft = ModelEntity(mesh: .generateCylinder(height: 0.8, radius: 0.02), materials: [material])
                 shaft.position = SIMD3<Float>(0, 0.4, 0)
@@ -203,6 +207,9 @@ public final class GizmoEntity: Entity {
         }
     }
 
+    /// Radius of the rotate rings (gizmo units; the gizmo scales to stay the same size on screen).
+    public static let ringRadius: Float = 0.95
+
     /// The handle an entity belongs to.
     public static func handle(for entity: Entity) -> GizmoHandle? {
         var current: Entity? = entity
@@ -217,6 +224,10 @@ public final class GizmoEntity: Entity {
 /// The translucent surface you draw on.
 @MainActor
 public final class GuideEntity: Entity {
+    /// The surface on screen (rebuilt only when it changes, not on every camera move).
+    private var shown: GuideSurface?
+    private var hasShown = false
+
     public required init() {
         super.init()
         name = "Guide"
@@ -224,6 +235,9 @@ public final class GuideEntity: Entity {
     }
 
     public func show(_ surface: GuideSurface?) {
+        if hasShown, surface == shown { return }
+        hasShown = true
+        shown = surface
         for child in Array(children) {
             child.removeFromParent()
         }

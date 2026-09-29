@@ -49,7 +49,11 @@ final class EditorModel {
     }
 
     var gizmoMode: GizmoMode = .move {
-        didSet { stage?.gizmo.mode = gizmoMode }
+        didSet {
+            stage?.gizmo.mode = gizmoMode
+            // Rotate rings sit on the rotation pivot, the move / scale handles on the base.
+            refreshSelectionOverlay()
+        }
     }
 
     var snap = SnapSettings()
@@ -74,7 +78,12 @@ final class EditorModel {
     /// Video overlay frames for the live stage (nearest frame, never waits).
     @ObservationIgnored lazy var videoPreview: VideoFrames = {
         let frames = VideoFrames(exact: false)
-        frames.onFrame = { [weak self] in self?.updateStagePost() }
+        frames.onFrame = { [weak self] in
+            guard let self else { return }
+            // A frame arrived: cards in the world and overlays in the frame show it.
+            renderer.applyCards(displayed.scene, time: time)
+            updateStagePost()
+        }
         return frames
     }()
 
@@ -188,6 +197,11 @@ final class EditorModel {
     @ObservationIgnored var faceCapture: FaceCapture?
     @ObservationIgnored var faceLink: FaceLinkReceiver?
     @ObservationIgnored let facePerformer = FacePerformer()
+    /// The face preview's picture and dots (its own observable, so camera frames redraw only the preview).
+    let faceMonitor = FaceMonitor()
+    /// Live face values are drawn once per screen frame, however many arrive (camera 30/s, iPhone 45/s).
+    @ObservationIgnored let faceClock = PlaybackClock()
+    @ObservationIgnored var faceDirty = false
     @ObservationIgnored var thermalObserver: NSObjectProtocol?
     @ObservationIgnored var captionCache: (factor: Double, revision: Int, pages: [CaptionPage])?
     private(set) var displayRevision = 0
@@ -206,6 +220,8 @@ final class EditorModel {
     @ObservationIgnored var exportTask: Task<Void, Never>?
     @ObservationIgnored var virtualCamera: VirtualCameraController?
     @ObservationIgnored var lastRevisionBump: CFTimeInterval = 0
+    /// Euler angles as typed in the inspector (see `eulerDegrees(of:)`).
+    @ObservationIgnored var eulerMemory: [ObjectID: Vec3] = [:]
 
     func bumpDisplayRevision() {
         displayRevision &+= 1
@@ -245,6 +261,7 @@ final class EditorModel {
         saver = DocumentSaver(store: app.projectStore)
         renderer.library = app.library
         renderer.load(document)
+        renderer.mediaImage = { [weak self] key in self?.overlayImage(key) }
         refreshDisplay()
         app.library.onPrefabChanged = { [weak self] id in self?.renderer.prefabChanged(id) }
         let url = projectURL
@@ -382,8 +399,9 @@ final class EditorModel {
     private func cameraMoved(_ viewpoint: Viewpoint) {
         if projection != viewpoint.projection { projection = viewpoint.projection }
         updateStagePost()
-        refreshGuide()
-        refreshSelectionOverlay(moveOnly: true)
+        // The selection box and gizmo don't depend on the camera (the stage keeps the gizmo's size itself); measuring
+        // the selection on every camera frame was a large part of the orbit cost.
+        if tool == .draw { refreshGuide() }
         viewpointSaveTask?.cancel()
         viewpointSaveTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(0.6))
@@ -512,6 +530,24 @@ final class EditorModel {
         return Vec3(bounds.center.x, bounds.min.y, bounds.center.z)
     }
 
+    /// What the selection turns around: one object turns around its own origin (its pivot), several around the middle of
+    /// their origins (Blender's median point). Unlike the middle of the bounding box, it stays put while things turn,
+    /// so rotating never makes an object drift.
+    var rotationPivot: Vec3? {
+        let roots = selection.filter { id in !scene.ancestors(of: id).contains { selection.contains($0) } }
+        guard !roots.isEmpty else { return nil }
+        let sum = roots.reduce(Vec3.zero) { $0 + scene.worldTransform(of: $1).position }
+        return sum * (1 / Double(roots.count))
+    }
+
+    /// Whether anything that moves the selection is animated (it, a parent or a part).
+    func selectionMoves(_ animated: Set<ObjectID>) -> Bool {
+        guard !selection.isEmpty, !animated.isEmpty else { return false }
+        return selection.contains { id in
+            animated.contains(id) || scene.ancestors(of: id).contains(where: animated.contains) || scene.subtree(of: id).contains(where: animated.contains)
+        }
+    }
+
     func refreshSelectionOverlay(moveOnly: Bool = false) {
         guard let stage else { return }
         let showGizmo = (mode == .build || mode == .animate) && tool == .select && !selection.isEmpty && performPhase == .idle
@@ -522,7 +558,8 @@ final class EditorModel {
             stage.showSelection(nil, pivot: nil, gizmoVisible: false)
             return
         }
-        stage.showSelection(selection.isEmpty ? nil : selectionBounds, pivot: selectionPivot, gizmoVisible: showGizmo)
+        let pivot = gizmoMode == .rotate ? rotationPivot : selectionPivot
+        stage.showSelection(selection.isEmpty ? nil : selectionBounds, pivot: pivot, gizmoVisible: showGizmo)
     }
 
     // MARK: Mode & tool
@@ -781,9 +818,44 @@ final class EditorModel {
         perform(operations.translate(selection, by: delta, in: scene), coalesceKey: gesture)
     }
 
-    func rotateSelection(by angle: Double, axis: CoreAxis, gesture: String) {
-        guard let pivot = selectionBounds?.center else { return }
+    /// Turns the selection around a world axis through `pivot` (default: `rotationPivot`, fixed for the whole gesture).
+    func rotateSelection(by angle: Double, axis: CoreAxis, around pivot: Vec3? = nil, gesture: String) {
+        guard let pivot = pivot ?? rotationPivot, abs(angle) > 1e-9 else { return }
         perform(operations.rotate(selection, by: Quat(angle: angle, axis: axis.unit), around: pivot, in: scene), coalesceKey: gesture)
+    }
+
+    // MARK: Rotation numbers (inspector)
+
+    /// The Euler angles last typed or shown per object. A rotation has many Euler spellings (X 100° is also
+    /// X 80°, Y 180°, Z 180°); showing the one you typed keeps the numbers from jumping around.
+    func eulerDegrees(of object: SceneObject) -> Vec3 {
+        let rotation = object.transform.rotation
+        if let remembered = eulerMemory[object.id], Quat(eulerDegrees: remembered).isApproximately(rotation, tolerance: 1e-7) {
+            return remembered
+        }
+        var euler = rotation.eulerDegrees
+        // Near the last numbers when the rotation changed elsewhere (a gizmo turn): no sudden 180° swaps.
+        if let remembered = eulerMemory[object.id] {
+            let alternative = Vec3(180 - euler.x, euler.y + 180, euler.z + 180).map(Self.wrapDegrees)
+            if alternative.distance(to: remembered) < euler.distance(to: remembered) { euler = alternative }
+        }
+        let rounded = euler.map { ($0 * 1000).rounded() / 1000 }
+        eulerMemory[object.id] = rounded
+        return rounded
+    }
+
+    func setEulerDegrees(_ euler: Vec3, of id: ObjectID) {
+        guard var transform = scene.objects[id]?.transform else { return }
+        eulerMemory[id] = euler
+        transform.rotation = Quat(eulerDegrees: euler)
+        setTransform(id, transform)
+    }
+
+    static func wrapDegrees(_ value: Double) -> Double {
+        var angle = value.truncatingRemainder(dividingBy: 360)
+        if angle > 180 { angle -= 360 }
+        if angle <= -180 { angle += 360 }
+        return angle
     }
 
     func scaleSelection(by factor: Vec3, gesture: String) {

@@ -48,7 +48,7 @@ public enum FaceExpression: String, Codable, Sendable, CaseIterable, Identifiabl
         case .neutral: break
         case .happy: mouth = "smile"; f[.smile] = 0.8; f[.brows] = 0.35; f[.eyeHappy] = 0.65; f[.squash] = 0.2
         case .laugh: mouth = "grin"; f[.jawOpen] = 0.6; f[.smile] = 1; f[.eyeHappy] = 1; f[.brows] = 0.55; f[.squash] = 0.35
-        case .smug: f[.smile] = 0.3; f[.brows] = 0.15; f[.browAngle] = 0.35; f[.blinkLeft] = 0.35; f[.blinkRight] = 0.35
+        case .smug: mouth = "smirk"; f[.smile] = 0.3; f[.brows] = 0.15; f[.browAngle] = 0.35; f[.blinkLeft] = 0.35; f[.blinkRight] = 0.35
         case .surprised: mouth = "E"; f[.jawOpen] = 0.4; f[.brows] = 1; f[.eyeWide] = 0.8; f[.squash] = 0.5
         case .shocked: mouth = "D"; f[.jawOpen] = 1; f[.brows] = 1; f[.eyeWide] = 1; f[.squash] = 0.8
         case .scared: mouth = "G"; f[.smile] = -0.5; f[.brows] = 0.8; f[.browAngle] = -0.9; f[.eyeWide] = 0.7; f[.squash] = -0.35
@@ -140,8 +140,11 @@ public enum BlobRig {
         var teeth = 0.0
         var tongueUp = 0.0
         var bite = 0.0
-        /// 1 = his smirk (the rest mouth).
+        /// 1 = his smirk with its curl (the smug face).
         var smirk = 0.0
+
+        /// The rest mouth ("X", Rhubarb's idle): a short, level, relaxed line. Neutral, so every expression reads.
+        static let rest = MouthPose(wide: 0.62, smile: 0.06)
 
         static func named(_ name: String) -> MouthPose {
             switch name {
@@ -156,7 +159,8 @@ public enum BlobRig {
             case "smile": MouthPose(wide: 1.2, smile: 1)
             case "grin": MouthPose(open: 0.6, wide: 1.3, smile: 1, teeth: 1)
             case "frown": MouthPose(smile: -1)
-            default: MouthPose(smirk: 1)
+            case "smirk": MouthPose(smirk: 1)
+            default: rest
             }
         }
     }
@@ -226,7 +230,7 @@ public enum BlobRig {
             var pose = MouthPose.named(name)
             pose.smile = min(max(pose.smile + target(.smile, t), -1.2), 1.2)
             pose.open = max(pose.open, target(.jawOpen, t))
-            if pose.open > 0.05 || abs(pose.smile) > 0.05 { pose.smirk *= 0.3 }
+            if pose.open > 0.05 || abs(pose.smile) > 0.45 { pose.smirk *= 0.3 }
             return pose
         }
         let mouthMoves = tracks[.mouth] != nil || tracks[.smile] != nil || tracks[.jawOpen] != nil
@@ -286,6 +290,19 @@ public enum BlobRig {
                 } else {
                     updated[.visible] = .bool(false)
                 }
+            case "hand.L", "hand.R":
+                // Body tracking: the hand leaves its rest spot (out and up); the rubber-hose arm follows.
+                let left = role == "hand.L"
+                let xKey: PropertyKey = left ? .handLeftX : .handRightX
+                let yKey: PropertyKey = left ? .handLeftY : .handRightY
+                guard live[xKey] != nil || live[yKey] != nil || tracks[xKey] != nil || tracks[yKey] != nil else { continue }
+                let out = min(max(target(xKey, time), -1), 1)
+                let up = min(max(target(yKey, time), -1), 1)
+                let side: Double = left ? -1 : 1
+                updated.transform.position = part.transform.position + Vec3(side * out * handReach.x, up * handReach.y, max(up, 0) * 0.06)
+                // A raised hand turns palm-forward instead of hanging at the side.
+                let lift = min(max(up, 0), 1)
+                updated.transform.rotation = (part.transform.rotation * Quat(angle: -side * 0.78 * lift, axis: .unitZ)).normalized
             case "hover":
                 // The glow stays on the ground under him and tightens as he floats up.
                 let lift = scene.worldTransform(of: root).position.y - document.scene.worldTransform(of: root).position.y
@@ -302,6 +319,9 @@ public enum BlobRig {
             }
         }
     }
+
+    /// How far a tracked hand travels at full reach (character metres: sideways, up).
+    static let handReach = (x: 0.26, y: 0.42)
 
     // MARK: Blinks
 
@@ -336,7 +356,8 @@ public enum BlobRig {
         let n = 24
         var upper: [Vec2] = []
         var lower: [Vec2] = []
-        let tilt = side * -0.07
+        // Level eyes: the neutral face has no attitude (expressions bring it).
+        let tilt = 0.0
         for index in 0 ... n {
             let u = -1 + 2 * Double(index) / Double(n)
             let arc = (1 - u * u).squareRoot()
@@ -355,8 +376,8 @@ public enum BlobRig {
     static func browRecipe(side: Double, raise: Double, angle: Double, arch: Double, origin: Vec3) -> DrawingRecipe {
         let x0 = side * BlobCharacter.brow.x
         let y0 = BlobCharacter.brow.y + 0.05 * raise
-        // Rest shape (inner end first): a soft arc, the outer end lower (his hopeful look).
-        let rest: [(Double, Double)] = [(-0.1, 0.004), (-0.045, 0.034), (0.03, 0.036), (0.105, -0.018)]
+        // Rest shape (inner end first): a soft, level arc, both ends at the same height (calm, no attitude).
+        let rest: [(Double, Double)] = [(-0.1, 0.0), (-0.035, 0.026), (0.035, 0.026), (0.1, 0.0)]
         let points = rest.enumerated().map { index, point -> (Double, Double) in
             let t = Double(index) / Double(rest.count - 1) // 0 inner … 1 outer
             let tiltY = angle * 0.045 * (0.5 - t) * -2 // angry: inner down, outer up
@@ -389,7 +410,7 @@ public enum BlobRig {
         }
         var layers: [String: DrawingRecipe] = [:]
         let closed = open < 0.04
-        // The line: his smirk at rest, blending into the drawn mouth as it moves.
+        // The line: the smirk (smug face) blends into the drawn mouth; at rest it's the plain drawn line.
         let smirkLine = BlobCharacter.smirkLine.map { ($0.x + BlobCharacter.smirkShift, $0.y) }
         let line: [(Double, Double)] = closed ? blend(resample(smirkLine, n + 1), upper, pose.smirk) : upper + lower.reversed().dropFirst()
         let lineWidth = closed ? 0.0085 : 0.0075

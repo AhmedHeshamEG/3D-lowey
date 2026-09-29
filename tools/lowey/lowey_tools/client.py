@@ -1,7 +1,8 @@
 """Talks to the 3D-lowey Bridge on the iPad (local network only).
 
 The iPad shows its address and a 6-digit code (scene menu → "AI & laptop bridge…").
-`lowey-link pair <ip:port> <code>` stores a token in ~/.lowey/config.json; everything else reuses it.
+`lowey-link pair <code>` finds the iPad on the network (or `lowey-link pair <ip:port> <code>`) and stores a token in
+~/.lowey/config.json; everything else reuses it.
 Environment overrides: LOWEY_HOST (e.g. 192.168.1.20:7717), LOWEY_TOKEN.
 """
 from __future__ import annotations
@@ -9,6 +10,9 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import socket
+import struct
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -31,6 +35,38 @@ def load_config() -> dict[str, str]:
     if os.environ.get("LOWEY_TOKEN"):
         config["token"] = os.environ["LOWEY_TOKEN"]
     return config
+
+
+def discover(timeout: float = 3.0) -> list[str]:
+    """iPads with the bridge on, found by Bonjour (`_lowey._tcp`), as "ip:port". Standard library only: one mDNS
+    question asking for a direct answer, repeated until `timeout`."""
+    labels = b"".join(bytes([len(part)]) + part for part in b"_lowey._tcp.local".split(b".")) + b"\0"
+    # Header (id 0, one question), then PTR, class IN with the "answer me directly" bit.
+    query = struct.pack(">HHHHHH", 0, 0, 1, 0, 0, 0) + labels + struct.pack(">HH", 12, 0x8001)
+    found: list[str] = []
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    try:
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+        sock.settimeout(0.4)
+        sock.bind(("", 0))
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            sock.sendto(query, ("224.0.0.251", 5353))
+            try:
+                while True:
+                    data, (ip, _) = sock.recvfrom(9000)
+                    address = f"{ip}:{DEFAULT_PORT}"
+                    if b"_lowey" in data and address not in found:
+                        found.append(address)
+            except (socket.timeout, TimeoutError):
+                pass
+            if found:
+                break
+    except OSError:
+        return found
+    finally:
+        sock.close()
+    return found
 
 
 def save_config(config: dict[str, str]) -> None:
@@ -134,9 +170,10 @@ class Bridge:
                                content_type="application/octet-stream")
         return json.loads(data)
 
-    def import_media(self, path: pathlib.Path, at: float | None = None) -> dict:
-        """A picture or video (a clip, a Manim render) into the open scene's frame, playing from `at` seconds."""
-        query: dict[str, Any] = {"name": path.name}
+    def import_media(self, path: pathlib.Path, at: float | None = None, placement: str = "card") -> dict:
+        """A picture or video (a clip, a Manim render) into the open scene, playing from `at` seconds.
+        placement "card": a thin card standing in the 3D world; "overlay": flat over the frame (transparent graphics)."""
+        query: dict[str, Any] = {"name": path.name, "as": placement}
         if at is not None:
             query["at"] = at
         data, _ = self.request("POST", "/v1/media/import", body=path.read_bytes(), query=query, content_type="application/octet-stream")

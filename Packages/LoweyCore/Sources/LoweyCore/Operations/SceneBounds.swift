@@ -28,6 +28,8 @@ public struct SceneBounds: Sendable {
             return recipe.coreMeshable ? (BlockFont.mesh(for: recipe).bounds ?? recipe.estimatedBounds) : recipe.estimatedBounds
         case let .particles(recipe):
             return ParticleSimulator.bounds(recipe)
+        case let .card(recipe):
+            return recipe.bounds
         case .group, .overlay:
             return nil
         }

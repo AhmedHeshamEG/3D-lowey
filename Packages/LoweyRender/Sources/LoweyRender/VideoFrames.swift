@@ -62,6 +62,8 @@ public final class VideoFrames {
             let slack = CMTime(seconds: 1.0 / 30, preferredTimescale: 6000)
             generator.requestedTimeToleranceBefore = slack
             generator.requestedTimeToleranceAfter = slack
+            // The stage never needs more than this; smaller frames decode and upload much faster.
+            generator.maximumSize = CGSize(width: 1280, height: 1280)
         }
         generators[url] = generator
         return generator
