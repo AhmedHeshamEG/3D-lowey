@@ -31,6 +31,8 @@ final class AppModel {
     static let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
     /// A UI test that walks through the first-launch tour.
     static let isTestingTour = ProcessInfo.processInfo.arguments.contains("-ui-testing-tour")
+    /// Unit / render tests hosted in the app: no bridge (no network listener, no notification prompt).
+    static let isHostingTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
     init() {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -62,7 +64,7 @@ final class AppModel {
             showTour = !Self.isUITesting || Self.isTestingTour
         }
         refreshArchived()
-        if !Self.isUITesting { bridge.restoreIfWanted() }
+        if !Self.isUITesting, !Self.isHostingTests { bridge.restoreIfWanted() }
     }
 
     // MARK: Projects
