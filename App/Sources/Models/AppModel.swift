@@ -20,7 +20,7 @@ final class AppModel {
     var showTour = false
     /// The gestures & shortcuts page.
     var showGestures = false
-    /// The AI & laptop bridge (off until switched on).
+    /// The AI & laptop bridge (starts with the app unless switched off).
     @ObservationIgnored lazy var bridge = BridgeModel(app: self)
 
     private var toastTask: Task<Void, Never>?
@@ -47,6 +47,8 @@ final class AppModel {
         guard !started else { return }
         started = true
         Diagnostics.shared.start()
+        // The iPad never auto-locks while 3D-lowey is on screen.
+        ScreenAwake.hold("app", true)
         if Diagnostics.shared.previousSessionCrashed, !Self.isUITesting {
             show("3D-lowey quit unexpectedly last time — your work was autosaved. ⋯ → Export diagnostics if it keeps happening.")
         }

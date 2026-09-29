@@ -74,6 +74,8 @@ targets:
           - _lowey._tcp
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        # The laptop bridge keeps answering in the background / with the screen locked (BackgroundKeeper).
+        UIBackgroundModes: [audio]
         NSSpeechRecognitionUsageDescription: "3D-lowey finds when each word is spoken, on the device, so shots can be synced to your voiceover."
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: org.khronos.gltf

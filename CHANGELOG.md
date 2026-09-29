@@ -12,9 +12,13 @@ Phase 4 = v1.1 → v1.3).
   of a joystick turn. Stick and slider together are one undo step.
 - **Cameras, light bulbs and particle emitters no longer show in the shot**: hidden while looking through a camera and
   in Export (exports never had them).
-- **The bridge stays up.** It comes back on by itself if it was on, keeps the iPad from auto-locking while on, restarts
-  its listeners when the app returns to the front, and saves a laptop's pairing at once (it was saved on the next status
-  call, so a pairing could be lost).
+- **The bridge stays up.** It starts with the app (unless you switch it off) and keeps answering when 3D-lowey is in the
+  background or the screen is locked (it plays silence, mixed with your music, which is how iOS lets an app keep
+  running). A "Bridge on" notification shows while the app is away, and one tells you when Claude proposes a change.
+  Snapshots need the app on screen (iOS doesn't let a background app draw). It restarts its listeners when the app
+  returns to the front and saves a laptop's pairing at once (it was saved on the next status call, so a pairing could
+  be lost).
+- **The iPad no longer auto-locks while 3D-lowey is on screen.**
 - **Pairing code**: permanent by default (000000 until you change it, *Change* in the bridge panel), or *New code after
   every pairing*. `lowey-link pair` with no code uses 000000. Ten wrong codes pause pairing for a minute.
 - **lowey-mcp / lowey-link answer fast or fail fast**: 2.5 s to connect (a sleeping iPad used to hang a call for up to

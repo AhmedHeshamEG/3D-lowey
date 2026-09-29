@@ -12,6 +12,7 @@ final class BridgeModel {
     @ObservationIgnored unowned let app: AppModel
     @ObservationIgnored let auth: BridgeAuth
     @ObservationIgnored private var server: BridgeServer?
+    @ObservationIgnored private let keeper = BackgroundKeeper()
     var isOn = false
     var status = "Off"
     /// Apply scripts without asking (they're still one undo step each).
@@ -62,9 +63,9 @@ final class BridgeModel {
         return true
     }
 
-    /// Whether the bridge was on when the app last ran (it comes back on by itself).
+    /// On unless you switched it off: the bridge starts with the app.
     private var wantsOn: Bool {
-        get { UserDefaults.standard.bool(forKey: "bridge.on") }
+        get { UserDefaults.standard.object(forKey: "bridge.on") as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: "bridge.on") }
     }
 
@@ -73,17 +74,26 @@ final class BridgeModel {
         if on { start() } else { stop() }
     }
 
-    /// At launch: the bridge comes back if it was on.
+    /// At launch: the bridge starts unless you switched it off.
     func restoreIfWanted() {
         if wantsOn { start() }
     }
 
     /// The app came back to the front: iOS may have torn the listeners down while it was away, so start them afresh.
     func resume() {
+        keeper.stop()
+        BridgeNotice.clear()
         guard wantsOn else { return }
         if let server, server.isHealthy { return }
         stop()
         start()
+    }
+
+    /// The app left the screen (home, another app, screen locked): keep running so the laptop still gets answers.
+    func enterBackground() {
+        guard isOn else { return }
+        keeper.start()
+        BridgeNotice.showOn(address: address)
     }
 
     func start() {
@@ -94,9 +104,8 @@ final class BridgeModel {
             try server.start()
             self.server = server
             isOn = true
-            status = "On — the iPad stays awake while the bridge is on"
-            // A locked iPad can't answer the laptop: no auto-lock while the bridge is on.
-            ScreenAwake.hold("bridge", true)
+            status = "On — keeps answering in the background and with the screen locked"
+            BridgeNotice.requestPermission()
         } catch {
             status = "Couldn't start: \(error.localizedDescription)"
         }
@@ -107,7 +116,8 @@ final class BridgeModel {
         server = nil
         isOn = false
         status = "Off"
-        ScreenAwake.hold("bridge", false)
+        keeper.stop()
+        BridgeNotice.clear()
     }
 
     func forgetDevices() {
@@ -217,6 +227,7 @@ final class BridgeModel {
             }
             let source = request.headers["x-lowey-client"] ?? "AI"
             if !autoApply {
+                if UIApplication.shared.applicationState != .active { BridgeNotice.proposal(script.title) }
                 let accepted = await editor.propose(script, preview: preview, source: source)
                 guard accepted else {
                     return .json(ScriptReply(applied: false, preview: preview.lines, report: preview.report, created: [:],
@@ -241,6 +252,10 @@ final class BridgeModel {
                 var longSide: Int?
                 var camera: Bool?
                 var time: Double?
+            }
+            // iOS doesn't let an app draw while it's in the background.
+            guard UIApplication.shared.applicationState == .active else {
+                return .error(503, "3D-lowey is in the background on the iPad — bring it to the front for snapshots")
             }
             let options = (try? request.json(Options.self)) ?? Options()
             if let time = options.time { editor.setTime(time) }
