@@ -3,6 +3,19 @@
 All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
 Phase 4 = v1.1 → v1.3).
 
+## [1.4.2] — Joystick speed, a calmer cartoon face
+
+- **Joystick speed back to how it was**, and now yours to set: scene menu → *Joystick speed…* (a slider, tortoise to
+  hare, with *Back to normal*). v1.4.1 made the pad count real time instead of frames; when the stage runs below 60
+  frames a second that made it about twice as fast as before (turns up to three times). Normal is the old feel.
+- **Squash & stretch that doesn't wreck the face.** The head used to squash by how far the face *lagged behind* a new
+  expression, so the instant you keyed one the whole head, eyes and mouth included, was crushed to about half its
+  height and then shot up to 1.6×. Now it's a quick take: the head stretches a little (at most 10%) in the direction
+  the face is moving and is round again once it settles; a held expression keeps only a hint (2–3%). The hat follows
+  the same take.
+- **About half the bounce.** Expressions overshoot about 14% and settle (it was about 30%, a wobble). The *Cartoon*
+  slider still goes from none to rubbery.
+
 ## [1.4.1] — Joystick, bridge that stays up, clean shots
 
 - **Joystick, one layout in every mode.** The stick works on the ground (red X and blue Z, drawn inside the pad the way

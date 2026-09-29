@@ -88,10 +88,12 @@ final class BlobCharacterTests: XCTestCase {
         let peak = stride(from: 1.02, through: 1.5, by: 0.02).map(browHeight).max() ?? 0
         XCTAssertGreaterThan(peak, settled + 0.004, "…past where they end up (overshoot)")
         XCTAssertEqual(browHeight(2.8), settled, accuracy: 0.002, "and they settle")
-        // The hit stretches the head, then it's back to round.
-        let stretch = stride(from: 1.02, through: 1.4, by: 0.02).map { Animator.evaluate(document, at: $0).scene.objects[head]?.transform.scale.y ?? 1 }.max()
-        XCTAssertGreaterThan(stretch ?? 1, 1.08, "squash & stretch on the hit")
-        XCTAssertEqual(Animator.evaluate(document, at: 3).scene.objects[head]?.transform.scale.y ?? 0, 1 + 0.22 * 0.5, accuracy: 0.01)
+        // The hit stretches the head a little (a take, never a new head shape), then it's back to nearly round.
+        let heights = stride(from: 0.9, through: 1.6, by: 0.02).map { Animator.evaluate(document, at: $0).scene.objects[head]?.transform.scale.y ?? 1 }
+        XCTAssertGreaterThan(heights.max() ?? 1, 1.04, "squash & stretch on the hit")
+        XCTAssertLessThanOrEqual(heights.max() ?? 1, 1.1 + 1e-9, "…but only a little")
+        XCTAssertGreaterThanOrEqual(heights.min() ?? 1, 0.95, "it never crushes the face on the way")
+        XCTAssertEqual(Animator.evaluate(document, at: 3).scene.objects[head]?.transform.scale.y ?? 0, 1 + 0.04 * 0.5, accuracy: 0.005)
     }
 
     func testHappyEyesAreCrescentsAndLipSyncOpensTheMouth() throws {

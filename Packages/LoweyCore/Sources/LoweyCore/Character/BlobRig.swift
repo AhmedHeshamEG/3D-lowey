@@ -126,7 +126,8 @@ public enum BlobRig {
 
     static func springs(cartoon: Double) -> (face: Spring, mouth: Spring) {
         let c = min(max(cartoon, 0), 1)
-        return (Spring(omega: 15, zeta: 0.85 - 0.6 * c), Spring(omega: 34, zeta: 0.9 - 0.45 * c))
+        // About half the old bounce: at the default (0.8) a pose overshoots ~14% and settles, instead of wobbling.
+        return (Spring(omega: 15, zeta: 0.85 - 0.4 * c), Spring(omega: 34, zeta: 0.95 - 0.3 * c))
     }
 
     // MARK: Mouth poses
@@ -242,9 +243,21 @@ public enum BlobRig {
                               teeth: mouthPart(\.teeth), tongueUp: mouthPart(\.tongueUp), bite: mouthPart(\.bite), smirk: mouthPart(\.smirk))
         mouth.smirk = min(max(mouth.smirk, 0), 1)
 
-        // The overshoot drives squash & stretch: a hard hit stretches the head, then it settles.
-        let hit = 0.9 * (wide.now - wide.target) + 0.6 * (brows.now - brows.target) + 0.5 * (smileChannel.now - smileChannel.target)
-        let stretch = 0.22 * squashChannel.now + hit
+        /// How fast the face is changing (its springs' speed), signed: opening up (wide eyes, brows up, smile, a keyed
+        /// stretch) is positive, closing down is negative. Zero once the springs have settled.
+        func takeStretch(_ spring: Spring, cartoon: Double) -> Double {
+            let keys: [(PropertyKey, Double)] = [(.eyeWide, 0.5), (.brows, 0.4), (.smile, 0.25), (.squash, 0.3)]
+            guard keys.contains(where: { tracks[$0.0] != nil && live[$0.0] == nil }) else { return 0 }
+            func drive(_ t: Double) -> Double {
+                keys.reduce(0) { $0 + $1.1 * target($1.0, t) }
+            }
+            let h = 1.0 / 60
+            let speed = (spring.filter(at: time, step: 1.0 / 120, drive) - spring.filter(at: max(time - h, 0), step: 1.0 / 120, drive)) / h
+            return speed * 0.012 * min(max(cartoon, 0), 1)
+        }
+        // Squash & stretch as a quick take, not a new head shape: the head stretches a little in the direction the face
+        // is moving (how fast the springs travel), then it's round again. A held expression keeps only a hint of it.
+        let stretch = min(max(0.04 * squashChannel.now + takeStretch(faceSpring, cartoon: character[.cartoon]?.floatValue ?? 0.8), -0.08), 0.1)
         var mouthLayerCache: [String: DrawingRecipe]?
 
         for id in scene.subtree(of: root) where id != root {
@@ -253,16 +266,15 @@ public enum BlobRig {
             var updated = part
             switch role {
             case "head":
-                let k = min(max(stretch, -0.45), 0.6)
+                let k = abs(stretch) < 1.0 / 512 ? 0 : stretch
                 let angles = Vec3(-target(.headPitch, time), target(.headYaw, time), target(.headRoll, time))
                 guard abs(k) > 1e-6 || angles.length > 1e-6 else { continue }
                 updated.transform.rotation = (rest.transform.rotation * Quat(eulerDegrees: angles)).normalized
                 updated.transform.scale = Vec3(1 / (1 + k).squareRoot(), 1 + k, 1 / (1 + k).squareRoot())
             case "hat":
                 // Follow-through: the hat lags the head's squash and wobbles back.
-                let lag = min(max(stretch, -0.5), 0.5)
-                guard abs(lag) > 1e-6 else { continue }
-                updated.transform.rotation = (rest.transform.rotation * Quat(angle: -lag * 0.35, axis: .unitZ)).normalized
+                guard abs(stretch) > 1.0 / 512 else { continue }
+                updated.transform.rotation = (rest.transform.rotation * Quat(angle: -stretch * 1.2, axis: .unitZ)).normalized
             case "eye.L", "eye.R":
                 let blink = role == "eye.L" ? blinkL : blinkR
                 let side: Double = role == "eye.L" ? -1 : 1
