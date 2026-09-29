@@ -56,7 +56,8 @@ final class Phase4Tests: XCTestCase {
             attach(frame[0], name: "blob-face-\(expression.rawValue)")
             sheet.append(frame[0])
         }
-        XCTAssertGreaterThan(Self.difference(sheet[0], sheet[4]), 0.005, "shocked doesn't look like neutral")
+        // The face is a small part of this dark frame (and squash is a small take since v1.4.2), so the margin is small.
+        XCTAssertGreaterThan(Self.difference(sheet[0], sheet[4]), 0.003, "shocked doesn't look like neutral")
         var hit = close
         var hitIDs = IDFactory.sequential("h")
         hit.scene.timeline = FaceExpression.neutral.keyed(on: root, at: 0, in: hit.scene.timeline, ids: &hitIDs)
