@@ -115,6 +115,30 @@ public final class FrameCompositor: @unchecked Sendable {
         return screen.outputImage?.cropped(to: extent) ?? image
     }
 
+    /// Live stage only: bloom worked out at a quarter of the size (a wide blur is all low frequencies) and screened back
+    /// on. It looks like `CIBloom` at a fraction of the cost; exports keep the full-resolution filter.
+    func previewBloom(_ image: CIImage, amount: Double, height: CGFloat) -> CIImage {
+        let extent = image.extent
+        let shrink = CIFilter.lanczosScaleTransform()
+        shrink.inputImage = image
+        shrink.scale = 0.25
+        shrink.aspectRatio = 1
+        let blur = CIFilter.gaussianBlur()
+        blur.inputImage = shrink.outputImage?.clampedToExtent()
+        blur.radius = Float(height * 0.025 * (0.5 + amount) * 0.25)
+        let level = CIFilter.colorMatrix()
+        level.inputImage = blur.outputImage?.transformed(by: CGAffineTransform(scaleX: 4, y: 4)).cropped(to: extent)
+        let gain = CGFloat(min(max(amount, 0), 2)) * 0.55
+        level.rVector = CIVector(x: gain, y: 0, z: 0, w: 0)
+        level.gVector = CIVector(x: 0, y: gain, z: 0, w: 0)
+        level.bVector = CIVector(x: 0, y: 0, z: gain, w: 0)
+        level.aVector = CIVector(x: 0, y: 0, z: 0, w: 1)
+        let screen = CIFilter.screenBlendMode()
+        screen.inputImage = level.outputImage
+        screen.backgroundImage = image
+        return screen.outputImage?.cropped(to: extent) ?? image
+    }
+
     /// Post-processes one rendered shot. `depth` holds v = 0.5 / distance in its red channel (any size).
     public func shot(_ image: CIImage, depth: CIImage?, look: FrameLook) -> CIImage {
         let post = look.post
@@ -131,7 +155,9 @@ public final class FrameCompositor: @unchecked Sendable {
         if look.glow > 0 {
             result = glowHalo(result, strength: look.glow, height: height)
         }
-        if post.bloom > 0 {
+        if post.bloom > 0, previewHalos {
+            result = previewBloom(result, amount: post.bloom, height: height)
+        } else if post.bloom > 0 {
             let bloom = CIFilter.bloom()
             bloom.inputImage = result.clampedToExtent()
             bloom.radius = Float(height * 0.025 * (0.5 + post.bloom))

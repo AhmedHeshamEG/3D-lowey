@@ -142,52 +142,64 @@ struct InspectorPanel: View {
 
     // MARK: Actions
 
+    /// The three things done most (duplicate, hide, delete) as buttons; everything else in one menu.
     private var actions: some View {
         let object = editor.singleSelection
-        let columns = [GridItem(.adaptive(minimum: 132), spacing: 8)]
-        return VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "Actions")
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
-                PillButton(title: "Duplicate", systemName: "plus.square.on.square") { editor.duplicateSelection() }
-                Menu {
-                    let step = editor.arrayStep
-                    Button("Row of 5") { editor.array(.line(count: 5, step: Vec3(step, 0, 0))) }
-                    Button("Row of 10") { editor.array(.line(count: 10, step: Vec3(step, 0, 0))) }
-                    Button("Grid 3 × 3") { editor.array(.grid(columns: 3, rows: 3, spacingX: step, spacingZ: step)) }
-                    Button("Grid 5 × 5") { editor.array(.grid(columns: 5, rows: 5, spacingX: step, spacingZ: step)) }
-                    Button("Circle of 8") { editor.array(.circle(count: 8, radius: max(step * 1.5, 1), faceCenter: true)) }
-                    Button("Circle of 12") { editor.array(.circle(count: 12, radius: max(step * 2, 1.5), faceCenter: true)) }
-                } label: {
-                    Label("Array", systemImage: "square.grid.3x3").pillLabel()
+        return HStack(spacing: 8) {
+            ActionIcon(systemName: "plus.square.on.square", label: "Duplicate") { editor.duplicateSelection() }
+            if let object {
+                ActionIcon(systemName: object.isVisible ? "eye.slash" : "eye", label: object.isVisible ? "Hide" : "Show") {
+                    editor.toggleVisible(object.id)
                 }
-                PillButton(title: "Scatter", systemName: "circle.hexagongrid") { editor.tool = .scatter }
-                PillButton(title: "To ground", systemName: "arrow.down.to.line") { editor.dropSelectionToGround() }
-                if editor.selection.count > 1 {
-                    PillButton(title: "Group", systemName: "square.on.square.dashed") { editor.groupSelection() }
-                }
-                if object?.kind == .group {
-                    PillButton(title: "Ungroup", systemName: "square.dashed") { editor.ungroupSelection() }
-                }
-                if case .primitive = object?.kind {
-                    PillButton(title: "Swap…", systemName: "arrow.triangle.swap") { editor.beginSwap() }
-                }
-                PillButton(title: "Save to library", systemName: "tray.and.arrow.down") {
-                    prefabName = object?.name ?? ""
-                    showPrefabSheet = true
-                }
-                if object?.kind.prefabID != nil {
-                    PillButton(title: "Unpack", systemName: "shippingbox") { editor.unpackSelection() }
-                }
-                if let object {
-                    PillButton(title: object.isLocked ? "Unlock" : "Lock", systemName: object.isLocked ? "lock.open" : "lock") {
-                        editor.toggleLock(object.id)
-                    }
-                    PillButton(title: object.isVisible ? "Hide" : "Show", systemName: object.isVisible ? "eye.slash" : "eye") {
-                        editor.toggleVisible(object.id)
-                    }
-                }
-                PillButton(title: "Delete", systemName: "trash", destructive: true) { editor.deleteSelection() }
             }
+            Menu {
+                Section {
+                    Menu("Array", systemImage: "square.grid.3x3") {
+                        let step = editor.arrayStep
+                        Button("Row of 5") { editor.array(.line(count: 5, step: Vec3(step, 0, 0))) }
+                        Button("Row of 10") { editor.array(.line(count: 10, step: Vec3(step, 0, 0))) }
+                        Button("Grid 3 × 3") { editor.array(.grid(columns: 3, rows: 3, spacingX: step, spacingZ: step)) }
+                        Button("Grid 5 × 5") { editor.array(.grid(columns: 5, rows: 5, spacingX: step, spacingZ: step)) }
+                        Button("Circle of 8") { editor.array(.circle(count: 8, radius: max(step * 1.5, 1), faceCenter: true)) }
+                        Button("Circle of 12") { editor.array(.circle(count: 12, radius: max(step * 2, 1.5), faceCenter: true)) }
+                    }
+                    Button("Scatter", systemImage: "circle.hexagongrid") { editor.tool = .scatter }
+                    Button("To the ground", systemImage: "arrow.down.to.line") { editor.dropSelectionToGround() }
+                }
+                Section {
+                    if editor.selection.count > 1 {
+                        Button("Group", systemImage: "square.on.square.dashed") { editor.groupSelection() }
+                    }
+                    if object?.kind == .group {
+                        Button("Ungroup", systemImage: "square.dashed") { editor.ungroupSelection() }
+                    }
+                    if case .primitive = object?.kind {
+                        Button("Swap for a model…", systemImage: "arrow.triangle.swap") { editor.beginSwap() }
+                    }
+                    Button("Save to library…", systemImage: "tray.and.arrow.down") {
+                        prefabName = object?.name ?? ""
+                        showPrefabSheet = true
+                    }
+                    if object?.kind.prefabID != nil {
+                        Button("Unpack", systemImage: "shippingbox") { editor.unpackSelection() }
+                    }
+                    if let object {
+                        Button(object.isLocked ? "Unlock" : "Lock", systemImage: object.isLocked ? "lock.open" : "lock") {
+                            editor.toggleLock(object.id)
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.text)
+                    .frame(width: 44, height: 40)
+                    .background(Capsule().fill(Theme.raised))
+            }
+            .accessibilityLabel("More actions")
+            .accessibilityIdentifier("more-actions")
+            Spacer(minLength: 0)
+            ActionIcon(systemName: "trash", label: "Delete", destructive: true) { editor.deleteSelection() }
         }
     }
 
@@ -225,7 +237,34 @@ struct InspectorPanel: View {
         case .text: "textformat"
         case .overlay: "square.on.square.intersection.dashed"
         case .particles: "sparkles"
+        case .card: "photo.on.rectangle"
         }
+    }
+}
+
+/// A quiet icon action inside a panel (no glass of its own: the panel is the glass).
+struct ActionIcon: View {
+    let systemName: String
+    let label: String
+    var destructive = false
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            Image(systemName: systemName)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(destructive ? Theme.danger : Theme.text)
+                .frame(width: 44, height: 40)
+                .background(Capsule().fill(Theme.raised))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityIdentifier(label)
+        .hoverEffect(.highlight)
     }
 }
 
@@ -256,21 +295,40 @@ struct TransformEditor: View {
     let editor: EditorModel
     let object: SceneObject
     @State private var uniformScale = true
+    /// Numbers are for fine-tuning; most moves happen on the stage, so they stay folded until asked for.
+    @AppStorage("inspector.transformOpen") private var open = false
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy(duration: 0.25)) { open.toggle() }
+            } label: {
+                HStack {
+                    SectionHeader(title: "Position, rotation, size")
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Theme.secondaryText)
+                        .rotationEffect(.degrees(open ? 90 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("transform-toggle")
+            if open { fields }
+        }
+    }
+
+    private var fields: some View {
         let transform = object.transform
-        let euler = transform.rotation.eulerDegrees
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "Transform")
+        let euler = editor.eulerDegrees(of: object)
+        return VStack(alignment: .leading, spacing: 8) {
             VectorRow(label: "Position", value: transform.position, step: 0.1) { value in
                 var t = transform
                 t.position = value
                 editor.setTransform(object.id, t)
             }
             VectorRow(label: "Rotation", value: euler, step: 15) { value in
-                var t = transform
-                t.rotation = Quat(eulerDegrees: value)
-                editor.setTransform(object.id, t)
+                editor.setEulerDegrees(value, of: object.id)
             }
             VectorRow(label: "Scale", value: transform.scale, step: 0.1) { value in
                 var t = transform

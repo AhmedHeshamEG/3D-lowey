@@ -95,6 +95,8 @@ public final class VideoExporter {
     /// Where a media file of the project lives (video overlays: clips, Manim renders).
     public var mediaURL: (String) -> URL? = { _ in nil }
     private let videoFrames = VideoFrames(exact: true)
+    /// The exact pictures and video frames the cards show this frame (loaded before the frame is shown).
+    private var cardFrames: [String: CGImage] = [:]
     /// Whether the GPU may be used now. iOS suspends GPU work in the background (screen locked, another app in
     /// front): the export waits for the app to come back instead of stalling on a frame that never finishes.
     public var canRender: @MainActor () -> Bool = { true }
@@ -107,6 +109,7 @@ public final class VideoExporter {
         device = MTLCreateSystemDefaultDevice()
         world.showsHelpers = false
         world.library = library
+        world.mediaImage = { [weak self] key in self?.cardFrames[key] }
         if Self.needsDepth(document) {
             let depth = SceneRenderer()
             depth.showsHelpers = false
@@ -171,6 +174,21 @@ public final class VideoExporter {
         return OffscreenRenderer.Camera(position: pose.eye.simd, orientation: pose.rotation.simd, fieldOfView: Float(pose.fieldOfView))
     }
 
+    /// Loads the exact video frames and pictures the cards show at `time` (never the nearest one), then shows the scene.
+    func prepareFrame(at time: Double, rigs: [AssetID: RigAsset], first: Bool) async -> AnimatedScene {
+        var frames: [String: CGImage] = [:]
+        for object in document.scene.objects.values {
+            guard case let .card(recipe) = object.kind, let key = recipe.frameKey(at: time) else { continue }
+            if recipe.video != nil, let (file, _) = VideoFrameKey.parse(key) {
+                if let url = mediaURL(file), let image = await videoFrames.frame(key, url: url) { frames[key] = image }
+            } else if let image = overlayImage(key) {
+                frames[key] = image
+            }
+        }
+        cardFrames = frames
+        return prepare(at: time, rigs: rigs, first: first)
+    }
+
     /// Shows the scene at `time` in the export world.
     func prepare(at time: Double, rigs: [AssetID: RigAsset], first: Bool) -> AnimatedScene {
         let animated = Animator.evaluate(document, at: time, rigs: rigs)
@@ -183,6 +201,7 @@ public final class VideoExporter {
         world.applyPoses(animated.poses, rigs: rigs)
         world.applyClipFallback(document.scene.timeline, at: time, skipping: Set(animated.poses.keys))
         world.applyParticles(animated.scene, timeline: timeline, time: time)
+        world.applyCards(animated.scene, time: time)
         if let depthWorld {
             if first {
                 depthWorld.load(evaluated)
@@ -324,10 +343,10 @@ public final class VideoExporter {
     public func images(at time: Double, framings: [Framing], longSide: Int, transparent: Bool = false) async throws -> [CGImage] {
         let session = try await makeSession(transparent: transparent)
         let rigs = rigCache.rigs(for: document, library: world.library)
-        let animated = prepare(at: time, rigs: rigs, first: true)
+        let animated = await prepareFrame(at: time, rigs: rigs, first: true)
         await world.waitForAssets()
         await depthWorld?.waitForAssets()
-        _ = prepare(at: time, rigs: rigs, first: false)
+        _ = await prepareFrame(at: time, rigs: rigs, first: false)
         var result: [CGImage] = []
         let frame = timeline.frame(for: time)
         for framing in framings {
@@ -351,7 +370,7 @@ public final class VideoExporter {
         let session = try await makeSession(transparent: settings.transparent)
         session.canRender = canRender
         let rigs = rigCache.rigs(for: document, library: world.library)
-        _ = prepare(at: settings.range.start, rigs: rigs, first: true)
+        _ = await prepareFrame(at: settings.range.start, rigs: rigs, first: true)
         await world.waitForAssets()
         await depthWorld?.waitForAssets()
 
@@ -383,7 +402,7 @@ public final class VideoExporter {
         let step = 1 / Double(max(settings.fps, 1))
         // Settle textures and lighting once before frame 0.
         try await waitUntilRenderable()
-        let first = prepare(at: settings.range.start, rigs: rigs, first: false)
+        let first = await prepareFrame(at: settings.range.start, rigs: rigs, first: false)
         for output in outputs {
             for _ in 0 ..< 3 {
                 try await renderFrame(first, framing: output.framing, target: output.target, session: session, frame: 0, deltaTime: step)
@@ -394,7 +413,7 @@ public final class VideoExporter {
                 try Task.checkCancellation()
                 try await waitUntilRenderable()
                 let time = settings.range.start + Double(frame) * step
-                let animated = prepare(at: time, rigs: rigs, first: false)
+                let animated = await prepareFrame(at: time, rigs: rigs, first: false)
                 for output in outputs {
                     try await renderFrame(animated, framing: output.framing, target: output.target, session: session,
                                           frame: timeline.frame(for: time), deltaTime: step)

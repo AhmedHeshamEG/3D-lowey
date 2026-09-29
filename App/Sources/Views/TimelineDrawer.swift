@@ -9,8 +9,11 @@ struct TimelineDrawer: View {
     @Bindable var editor: EditorModel
     /// Flicks keep gliding.
     @State private var momentum = TimelineMomentum()
-    /// A sideways drag is scrolling time (the list doesn't scroll meanwhile).
-    @State private var panning = false
+    /// Rows scroll up and down under our own drag (a SwiftUI ScrollView lost its scrolling to the lanes' drag gesture:
+    /// with several tracks you couldn't reach the lower ones). Flicks glide here too.
+    @State private var rowScroll: CGFloat = 0
+    @State private var viewportHeight: CGFloat = 0
+    @State private var rowMomentum = TimelineMomentum()
     /// Pinch: the moment under the fingers stays under the fingers.
     @State private var zoomAnchor: (time: Double, x: CGFloat)?
     @State private var laneWidth: CGFloat = 0
@@ -58,7 +61,8 @@ struct TimelineDrawer: View {
                         ruler(width: width)
                     }
                     .frame(height: Self.rulerHeight)
-                    ScrollView(.vertical, showsIndicators: true) {
+                    let lanesHeight = max(geometry.size.height - Self.rulerHeight, 0)
+                    ZStack(alignment: .topLeading) {
                         VStack(spacing: 1) {
                             if showsCutRow {
                                 cutRow(width: width)
@@ -73,13 +77,20 @@ struct TimelineDrawer: View {
                                     .frame(maxWidth: .infinity, minHeight: 60)
                             }
                         }
-                        .coordinateSpace(name: Self.lanesSpace)
+                        .fixedSize(horizontal: false, vertical: true)
                         .overlay(alignment: .topLeading) { marqueeView }
-                        .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
-                        .simultaneousGesture(laneDragGesture)
-                        .simultaneousGesture(marqueeLongPress, including: editor.timelineMode == .compose ? .subviews : .all)
+                        .offset(y: -scrollOffset)
                     }
-                    .scrollDisabled(marqueeArmed || marquee != nil || panning)
+                    .frame(width: geometry.size.width, height: lanesHeight, alignment: .topLeading)
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .coordinateSpace(name: Self.lanesSpace)
+                    .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
+                    .simultaneousGesture(laneDragGesture)
+                    .simultaneousGesture(marqueeLongPress, including: editor.timelineMode == .compose ? .subviews : .all)
+                    .overlay(alignment: .topTrailing) { scrollIndicator }
+                    .onAppear { viewportHeight = lanesHeight }
+                    .onChange(of: lanesHeight) { _, height in viewportHeight = height }
                 }
                 .overlay(alignment: .topLeading) {
                     PlayheadLine(editor: editor, visibleStart: visibleStart, pps: pps, width: width, height: geometry.size.height)
@@ -90,7 +101,10 @@ struct TimelineDrawer: View {
                     fit(width: width)
                 }
                 .onChange(of: width) { _, newWidth in laneWidth = newWidth }
-                .onDisappear { momentum.stop() }
+                .onDisappear {
+                    momentum.stop()
+                    rowMomentum.stop()
+                }
             }
         }
         .panelStyle()
@@ -139,6 +153,7 @@ struct TimelineDrawer: View {
                     }
                 }
             }
+            IconButton(systemName: "flag", label: "Add marker", size: 36) { editor.addMarker() }
             IconButton(systemName: "waveform", label: "Audio and words", isOn: editor.showAudio, size: 36) { editor.showAudio = true }
             moreMenu
         }
@@ -147,7 +162,6 @@ struct TimelineDrawer: View {
     /// Everything that isn't needed every second, in one place.
     private var moreMenu: some View {
         Menu {
-            Button("Add marker", systemImage: "flag") { editor.addMarker() }
             Section("Loop") {
                 Button("Loop starts here", systemImage: "arrow.right.to.line") { editor.setLoopStart() }
                 Button("Loop ends here", systemImage: "arrow.left.to.line") { editor.setLoopEnd() }
@@ -155,10 +169,6 @@ struct TimelineDrawer: View {
             }
             Section {
                 Button("Show the whole timeline", systemImage: "arrow.left.and.right") { fit(width: laneWidth) }
-                Button("Go to start", systemImage: "backward.end") {
-                    editor.pause()
-                    editor.setTime(editor.playRange.start)
-                }
                 if editor.selection.count > 1 {
                     Button("Group the selection", systemImage: "folder.badge.plus") { editor.groupSelection() }
                 }
@@ -176,7 +186,11 @@ struct TimelineDrawer: View {
     }
 
     private var transport: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 2) {
+            IconButton(systemName: "backward.end.fill", label: "To start", size: 34) {
+                editor.pause()
+                editor.setTime(editor.playRange.start)
+            }
             IconButton(systemName: "chevron.left", label: "Previous frame", size: 34) { editor.step(frames: -1) }
             IconButton(systemName: editor.isPlaying ? "pause.fill" : "play.fill", label: editor.isPlaying ? "Pause" : "Play",
                        isOn: editor.isPlaying, size: 42) { editor.togglePlay() }
@@ -242,9 +256,6 @@ struct TimelineDrawer: View {
     }
 
     @ViewBuilder private var composeControls: some View {
-        Text(editor.keyBoxSelect ? "Tap bars to pick several, then drag one to move them together" : "Drag a bar to move that animation in time")
-            .font(.system(size: 12))
-            .foregroundStyle(Theme.secondaryText)
         Toggle(isOn: $editor.keyBoxSelect) {
             Label("Select", systemImage: "rectangle.dashed").font(.system(size: 13, weight: .semibold))
         }
@@ -609,6 +620,8 @@ struct TimelineDrawer: View {
     enum LaneDrag {
         case moveKeys
         case pan(start: Double)
+        /// Up and down: scrolling the rows.
+        case scrollRows(start: CGFloat)
         case marquee(origin: CGPoint)
         case ignore
     }
@@ -669,10 +682,39 @@ struct TimelineDrawer: View {
         }
     }
 
+    // MARK: Row scrolling
+
+    /// Height of all rows (the lanes' content).
+    private var contentHeight: CGFloat {
+        if rows.isEmpty { return (showsCutRow ? Self.rowHeight + 1 : 0) + 60 }
+        return slots.last.map { $0.minY + $0.height + 1 } ?? 0
+    }
+
+    private var maxScroll: CGFloat { max(contentHeight - viewportHeight, 0) }
+
+    /// The rows' scroll position, kept inside the content (folding rows away never leaves it past the end).
+    private var scrollOffset: CGFloat { min(max(rowScroll, 0), maxScroll) }
+
+    /// A point in the lanes' viewport, as the same point in the rows' own space.
+    private func toContent(_ point: CGPoint) -> CGPoint { CGPoint(x: point.x, y: point.y + scrollOffset) }
+
+    /// A thin bar at the right edge while there are more rows than fit.
+    @ViewBuilder private var scrollIndicator: some View {
+        if maxScroll > 0.5, viewportHeight > 20 {
+            let bar = max(viewportHeight * viewportHeight / max(contentHeight, 1), 24)
+            Capsule()
+                .fill(Color.white.opacity(0.35))
+                .frame(width: 3, height: bar)
+                .offset(x: -3, y: (viewportHeight - bar) * scrollOffset / maxScroll)
+                .allowsHitTesting(false)
+        }
+    }
+
     private var laneTap: some Gesture {
-        SpatialTapGesture(coordinateSpace: .named(Self.lanesSpace)).onEnded { value in
-            guard value.location.x >= Self.labelWidth, !isOwnGestureRow(at: value.location.y) else { return }
-            if let hit = key(at: value.location) {
+        SpatialTapGesture(coordinateSpace: .named(Self.lanesSpace)).onEnded { tap in
+            let location = toContent(tap.location)
+            guard location.x >= Self.labelWidth, !isOwnGestureRow(at: location.y) else { return }
+            if let hit = key(at: location) {
                 if editor.keyBoxSelect {
                     editor.selectedKeys = editor.selectedKeys.contains(hit) ? editor.selectedKeys.subtracting([hit]) : editor.selectedKeys.union([hit])
                 } else {
@@ -681,7 +723,7 @@ struct TimelineDrawer: View {
                 editor.setTime(hit.time)
             } else {
                 if !editor.keyBoxSelect { editor.selectedKeys = [] }
-                editor.setTime(max(0, time(at: value.location.x - Self.labelWidth)))
+                editor.setTime(max(0, time(at: location.x - Self.labelWidth)))
             }
         }
     }
@@ -691,7 +733,8 @@ struct TimelineDrawer: View {
             .onChanged { value in
                 if laneDrag == nil {
                     momentum.stop()
-                    laneDrag = beginLaneDrag(at: value.startLocation, translation: value.translation)
+                    rowMomentum.stop()
+                    laneDrag = beginLaneDrag(at: toContent(value.startLocation), translation: value.translation)
                 }
                 switch laneDrag {
                 case .moveKeys:
@@ -699,8 +742,10 @@ struct TimelineDrawer: View {
                     keyDrag = max(Double(value.translation.width) / pps, -earliest)
                 case let .pan(start):
                     visibleStart = max(0, start - Double(value.translation.width) / pps)
+                case let .scrollRows(start):
+                    rowScroll = min(max(start - value.translation.height, 0), maxScroll)
                 case let .marquee(origin):
-                    updateMarquee(from: origin, to: value.location)
+                    updateMarquee(from: origin, to: toContent(value.location))
                 case .ignore, nil:
                     break
                 }
@@ -720,12 +765,19 @@ struct TimelineDrawer: View {
                         editor.timelineStart = next
                         return moved
                     }
+                case .scrollRows:
+                    let limit = maxScroll
+                    rowMomentum.start(velocity: -Double(value.velocity.height), pointsPerSecond: 1) { delta in
+                        let next = min(max(rowScroll + CGFloat(delta), 0), limit)
+                        let moved = next != rowScroll
+                        rowScroll = next
+                        return moved
+                    }
                 default:
                     break
                 }
                 keyDrag = nil
                 laneDrag = nil
-                panning = false
             }
     }
 
@@ -740,7 +792,7 @@ struct TimelineDrawer: View {
                     Haptics.select()
                 }
                 if marqueeArmed, let drag {
-                    updateMarquee(from: drag.startLocation, to: drag.location)
+                    updateMarquee(from: toContent(drag.startLocation), to: toContent(drag.location))
                 }
             }
             .onEnded { _ in
@@ -753,7 +805,11 @@ struct TimelineDrawer: View {
     /// selected keys move; in Select mode it draws a box; sideways scrolls time; up and down scrolls the rows.
     private func beginLaneDrag(at start: CGPoint, translation: CGSize) -> LaneDrag {
         if marqueeArmed { return .ignore }
-        guard start.x >= Self.labelWidth, !isOwnGestureRow(at: start.y) else { return .ignore }
+        let vertical = abs(translation.height) > abs(translation.width)
+        // Names column, waveforms and words: up and down still scrolls the rows.
+        guard start.x >= Self.labelWidth, !isOwnGestureRow(at: start.y) else {
+            return vertical ? .scrollRows(start: scrollOffset) : .ignore
+        }
         if editor.timelineMode != .compose {
             if let hit = key(at: start), editor.selectedKeys.contains(hit) {
                 keyDrag = 0
@@ -763,8 +819,7 @@ struct TimelineDrawer: View {
         } else if startsOnSelectedBar(start) {
             return .ignore
         }
-        guard abs(translation.width) >= abs(translation.height) else { return .ignore }
-        panning = true
+        if vertical { return .scrollRows(start: scrollOffset) }
         return .pan(start: visibleStart)
     }
 

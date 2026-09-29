@@ -130,6 +130,19 @@ def test_mcp_tools_build_scripts(bridge_host, monkeypatch):
     assert "run_script" in mcp_server.plan_shots("Nobody could.")
 
 
+def test_pair_with_only_the_code(bridge_host, monkeypatch):
+    """`lowey-link pair 123456` finds the iPad itself (Bonjour); when nothing answers it says what to do."""
+    from lowey_tools import client, link
+    importlib = __import__("importlib")
+    importlib.reload(link)
+    monkeypatch.setattr(link, "discover", lambda: [])
+    assert link.main(["pair", "123456"]) == 1
+    monkeypatch.setattr(link, "discover", lambda: [bridge_host])
+    assert link.main(["pair", "123456"]) == 0
+    assert json.loads(pathlib.Path(client.CONFIG).read_text())["host"] == bridge_host
+    assert isinstance(client.discover(timeout=0.3), list), "discovery never raises (no network is fine)"
+
+
 def test_errors_are_readable(tmp_path, monkeypatch):
     monkeypatch.setenv("LOWEY_CONFIG", str(tmp_path / "none.json"))
     monkeypatch.delenv("LOWEY_HOST", raising=False)
@@ -155,6 +168,9 @@ def test_media_and_manim_reach_the_shot(bridge_host, tmp_path, monkeypatch):
     assert link.main(["media", str(picture), "--at", "2.5"]) == 0
     assert RECEIVED[-1][0] == "/v1/media/import" and "name=chart.png" in RECEIVED[-1][1] and "at=2.5" in RECEIVED[-1][1]
     assert RECEIVED[-1][2] == b"PNG"
+    assert "as=card" in RECEIVED[-1][1], "pictures stand in the world as cards by default"
+    assert link.main(["media", str(picture), "--overlay"]) == 0
+    assert "as=overlay" in RECEIVED[-1][1]
 
     # Manim: the command asks for transparent PNG frames at 30 fps in a private media folder…
     command = manim_render.manim_command(pathlib.Path("scene.py"), "Graph", tmp_path / "m", "high", 30, True)

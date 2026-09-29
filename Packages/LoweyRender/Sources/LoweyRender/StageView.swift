@@ -253,11 +253,44 @@ public final class StageView: ARView {
 
     /// The gizmo handle under a screen point.
     public func pickGizmo(at point: CGPoint) -> GizmoHandle? {
+        if gizmo.mode == .rotate {
+            return pickRotationRing(at: point).map { GizmoHandle(kind: .rotate, axis: $0.axis) }
+        }
         guard gizmo.isEnabled, let ray = worldRay(at: point) else { return nil }
         let hits = scene.raycast(origin: ray.origin.simd, direction: ray.direction.simd, length: 2000,
                                  query: .nearest, mask: PickGroup.gizmo, relativeTo: nil)
         guard let hit = hits.first else { return nil }
         return GizmoEntity.handle(for: hit.entity)
+    }
+
+    /// The rotate ring under a screen point, and the point of the ring you grabbed. Each ring is traced on screen and the
+    /// closest one within `tolerance` points wins; where rings cross, the half facing you wins (like grabbing a real one).
+    public func pickRotationRing(at point: CGPoint, tolerance: CGFloat = 28) -> (axis: CoreAxis, grab: Vec3)? {
+        guard gizmo.isEnabled, gizmo.mode == .rotate else { return nil }
+        let center = Vec3(gizmo.position)
+        let radius = Double(GizmoEntity.ringRadius * gizmo.scale.x)
+        let eye = Self.cameraPose(for: viewpoint).eye
+        var best: (axis: CoreAxis, grab: Vec3, distance: CGFloat, front: Bool)?
+        for axis in CoreAxis.allCases {
+            let normal = axis.unit
+            let u = (abs(normal.y) > 0.9 ? Vec3.unitX : Vec3.unitY).cross(normal).normalized
+            let v = normal.cross(u)
+            for index in 0 ..< 120 {
+                let angle = Double(index) / 120 * 2 * .pi
+                let world = center + (u * cos(angle) + v * sin(angle)) * radius
+                guard let screen = screenPoint(of: world) else { continue }
+                let distance = hypot(screen.x - point.x, screen.y - point.y)
+                guard distance < tolerance else { continue }
+                let front = (world - center).dot(eye - center) >= 0
+                let better: Bool = if let current = best {
+                    (front && !current.front) || (front == current.front && distance < current.distance)
+                } else {
+                    true
+                }
+                if better { best = (axis, world, distance, front) }
+            }
+        }
+        return best.map { ($0.axis, $0.grab) }
     }
 
     /// Screen position of a world point (nil if behind the camera).

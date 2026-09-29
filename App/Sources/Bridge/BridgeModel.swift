@@ -251,7 +251,8 @@ final class BridgeModel {
         }
     }
 
-    /// A picture or video (a clip, a Manim render) into the open scene's frame: ?name=graph.mov&at=seconds
+    /// A picture or video (a clip, a Manim render) into the open scene: ?name=graph.mov&at=seconds&as=card|overlay
+    /// (card: standing in the world, the default; overlay: flat over the frame, for transparent graphics).
     private func importMedia(_ request: HTTPRequest) async -> HTTPResponse {
         await withEditor { editor in
             guard let name = request.query["name"], !name.contains("/"), !name.contains(".."), !request.body.isEmpty else {
@@ -266,7 +267,8 @@ final class BridgeModel {
                 return .error(500, error.localizedDescription)
             }
             let at = request.query["at"].flatMap(Double.init)
-            guard let id = await editor.importMedia(url, at: at) else { return .error(422, "Couldn't add \(name)") }
+            let placement = EditorModel.MediaPlacement(rawValue: request.query["as"] ?? "card") ?? .card
+            guard let id = await editor.importMedia(url, at: at, as: placement) else { return .error(422, "Couldn't add \(name)") }
             try? FileManager.default.removeItem(at: folder)
             notify("scene")
             return .json(["added": name, "id": id.raw, "name": editor.baseScene.objects[id]?.name ?? name])

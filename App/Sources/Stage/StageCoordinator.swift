@@ -35,6 +35,9 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         case orbit
         case moveObjects(planeY: Double, last: Vec3)
         case gizmo(GizmoHandle, pivot: Vec3, lastPoint: CGPoint, accumulated: Double)
+        /// Turning on a rotate ring: the pivot and grab are fixed for the whole drag; `applied` is what was turned so far
+        /// (snapped in steps when rotation snapping is on, while the finger moves freely).
+        case turn(RingDrag)
         case lasso
         case scatter(center: Vec3)
         /// Perform mode: moving the selection while the timeline records.
@@ -46,7 +49,25 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         case none
     }
 
+    /// One drag on a rotate ring (see `ringAngle`).
+    private struct RingDrag {
+        var axis: CoreAxis
+        var pivot: Vec3
+        var start: CGPoint
+        /// The ring's screen direction at the grabbed point (turning forwards) and its radius on screen.
+        var tangent: CGVector
+        var radius: CGFloat
+        /// Seen face-on enough to turn by circling the pivot; edge-on, by sliding along the ring.
+        var circular: Bool
+        var total: Double = 0
+        var applied: Double = 0
+    }
+
     private var drag: DragKind = .none
+    /// Two fingers that landed on the selection move it (twist turns, pinch sizes) instead of the camera.
+    private var twoFingerOnSelection: Bool?
+    private var twoFingerActive = Set<ObjectIdentifier>()
+    private var twoFingerRotation: (pivot: Vec3, total: Double, applied: Double)?
     private var gestureKey = UUID().uuidString
     private var strokeGuide: GuideSurface?
     private var strokeTargetMesh: MeshData?
@@ -265,9 +286,12 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         case .draw:
             return .orbit
         case .select:
-            if let handle = stage.pickGizmo(at: point), let pivot = editor.selectionPivot {
-                let center = handle.kind == .rotate ? (editor.selectionBounds?.center ?? pivot) : pivot
-                return .gizmo(handle, pivot: center, lastPoint: point, accumulated: 0)
+            if editor.gizmoMode == .rotate, let (axis, grab) = stage.pickRotationRing(at: point), let pivot = editor.rotationPivot,
+               let ring = ringDrag(axis: axis, pivot: pivot, grab: grab, start: point, stage: stage) {
+                return .turn(ring)
+            }
+            if editor.gizmoMode != .rotate, let handle = stage.pickGizmo(at: point), let pivot = editor.selectionPivot {
+                return .gizmo(handle, pivot: pivot, lastPoint: point, accumulated: 0)
             }
             if let (id, hit) = stage.pickObject(at: point), editor.selection.contains(where: { $0 == id || editor.scene.isAncestor($0, of: id) }),
                !editor.selection.contains(where: { editor.scene.isEffectivelyLocked($0) }) {
@@ -313,8 +337,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
                 if step != 0 { editor.translateSelection(by: handle.axis.unit * step, gesture: gestureKey) }
                 drag = .gizmo(handle, pivot: pivot + handle.axis.unit * step, lastPoint: point, accumulated: total)
             case .rotate:
-                editor.rotateSelection(by: result, axis: handle.axis, gesture: gestureKey)
-                drag = .gizmo(handle, pivot: pivot, lastPoint: point, accumulated: accumulated + result)
+                // Rings are handled by `.turn`; a rotate handle here would come from an old gizmo.
+                break
             case .scale:
                 let factor = max(0.2, 1 + result)
                 var vector = Vec3.one
@@ -326,6 +350,17 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
                 editor.scaleSelection(by: Vec3(factor, factor, factor), gesture: gestureKey)
                 drag = .gizmo(handle, pivot: pivot, lastPoint: point, accumulated: accumulated)
             }
+
+        case var .turn(ring):
+            ring.total = ringAngle(ring, at: point, stage: stage)
+            let step = editor.snap.rotation ? editor.snap.rotationStep * .pi / 180 : 0
+            let wanted = step > 0 ? (ring.total / step).rounded() * step : ring.total
+            if abs(wanted - ring.applied) > 1e-9 {
+                editor.rotateSelection(by: wanted - ring.applied, axis: ring.axis, around: ring.pivot, gesture: gestureKey)
+                if step > 0 { Haptics.select() }
+                ring.applied = wanted
+            }
+            drag = .turn(ring)
 
         case .lasso:
             if let last = editor.lassoPoints.last, hypot(last.x - point.x, last.y - point.y) > 4 {
@@ -368,12 +403,11 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         switch drag {
         case .moveObjects:
             editor.finishTransform(gesture: gestureKey)
-        case let .gizmo(handle, _, _, _):
-            if handle.kind == .rotate {
-                editor.snapRotation(gesture: gestureKey)
-            } else {
-                editor.finishTransform(gesture: gestureKey)
-            }
+        case .gizmo:
+            editor.finishTransform(gesture: gestureKey)
+        case .turn:
+            // Snapping happened during the turn (in steps of the whole turn, from where it started).
+            editor.endGesture()
         case .lasso:
             if !cancelled { selectInLasso(editor: editor, stage: stage) }
             editor.lassoPoints = []
@@ -387,6 +421,44 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             break
         }
         editor.endGesture()
+    }
+
+    // MARK: Rotate rings
+
+    private func ringDrag(axis: CoreAxis, pivot: Vec3, grab: Vec3, start: CGPoint, stage: StageView) -> RingDrag? {
+        guard let center = stage.screenPoint(of: pivot), let grabScreen = stage.screenPoint(of: grab) else { return nil }
+        // Turning forwards (right-hand rule about the axis) moves the grabbed point along axis × (grab − pivot).
+        let arm = grab - pivot
+        let forward = axis.unit.cross(arm).normalized
+        guard let ahead = stage.screenPoint(of: grab + forward * max(arm.length * 0.05, 1e-3)) else { return nil }
+        var tangent = CGVector(dx: ahead.x - grabScreen.x, dy: ahead.y - grabScreen.y)
+        let length = hypot(tangent.dx, tangent.dy)
+        guard length > 1e-6 else { return nil }
+        tangent = CGVector(dx: tangent.dx / length, dy: tangent.dy / length)
+        let toCamera = (stage.viewpoint.eye - pivot).normalized
+        let facing = abs(axis.unit.dot(toCamera))
+        let radius = max(hypot(grabScreen.x - center.x, grabScreen.y - center.y), 30)
+        return RingDrag(axis: axis, pivot: pivot, start: start, tangent: tangent, radius: radius, circular: facing > 0.45)
+    }
+
+    /// How far the ring has turned (radians) with the finger at `point`.
+    private func ringAngle(_ ring: RingDrag, at point: CGPoint, stage: StageView) -> Double {
+        if ring.circular, let center = stage.screenPoint(of: ring.pivot) {
+            // Face-on: the angle the finger swept around the pivot on screen (unwrapped, so several turns add up).
+            let a0 = atan2(Double(ring.start.y - center.y), Double(ring.start.x - center.x))
+            let a1 = atan2(Double(point.y - center.y), Double(point.x - center.x))
+            var swept = a1 - a0
+            let previous = ring.total
+            // Continue from the last value (no jump when crossing ±180°).
+            let toCamera = (stage.viewpoint.eye - ring.pivot).normalized
+            let sign: Double = ring.axis.unit.dot(toCamera) > 0 ? -1 : 1
+            swept *= sign
+            let turns = ((previous - swept) / (2 * .pi)).rounded()
+            return swept + turns * 2 * .pi
+        }
+        // Edge-on: slide along the ring's direction where it was grabbed; one ring radius of travel is one radian.
+        let moved = Double((point.x - ring.start.x) * ring.tangent.dx + (point.y - ring.start.y) * ring.tangent.dy)
+        return moved / Double(ring.radius)
     }
 
     /// Converts a screen drag into movement along / rotation around a gizmo axis.
@@ -456,8 +528,42 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
 
     // MARK: Two fingers
 
+    /// Whether this two-finger gesture works on the selection (decided once, by where the fingers first came down).
+    private func onSelection(_ recognizer: UIGestureRecognizer) -> Bool {
+        let id = ObjectIdentifier(recognizer)
+        switch recognizer.state {
+        case .began:
+            twoFingerActive.insert(id)
+            if twoFingerOnSelection == nil { twoFingerOnSelection = touchesSelection(at: recognizer.location(in: stage)) }
+        case .ended, .cancelled, .failed:
+            twoFingerActive.remove(id)
+        default:
+            break
+        }
+        let result = twoFingerOnSelection ?? false
+        if twoFingerActive.isEmpty, recognizer.state != .began, recognizer.state != .changed {
+            twoFingerOnSelection = nil
+            twoFingerRotation = nil
+        }
+        return result
+    }
+
+    /// Two fingers on a selected, unlocked object (Build or Animate, Select tool): they hold the object, not the camera.
+    private func touchesSelection(at point: CGPoint) -> Bool {
+        guard let editor, let stage, editor.mode == .build || editor.mode == .animate, editor.tool == .select,
+              !editor.selection.isEmpty, editor.performPhase == .idle, !operatesCamera, editor.selectedOverlay == nil,
+              !editor.selection.contains(where: { editor.scene.isEffectivelyLocked($0) }),
+              let (id, _) = stage.pickObject(at: point) else { return false }
+        return editor.selection.contains { $0 == id || editor.scene.isAncestor($0, of: id) }
+    }
+
     @objc private func handleTwoFingerPan(_ recognizer: UIPanGestureRecognizer) {
         guard let stage else { return }
+        if onSelection(recognizer) {
+            // Holding the object: the camera stays where it is.
+            recognizer.setTranslation(.zero, in: stage)
+            return
+        }
         if operatesCamera, let editor {
             if recognizer.state == .began { panKey = UUID().uuidString }
             if recognizer.state == .ended || recognizer.state == .cancelled { editor.endGesture() }
@@ -481,6 +587,7 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     }
 
     @objc private func handlePinch(_ recognizer: UIPinchGestureRecognizer) {
+        let holdsSelection = onSelection(recognizer)
         if isRecordingPerform, let editor {
             switch recognizer.state {
             case .began: editor.performTouchBegan([.scale])
@@ -497,6 +604,18 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
                 return
             }
             editor.scaleOverlay(overlay, by: Double(recognizer.scale), gesture: pinchKey)
+            recognizer.scale = 1
+            return
+        }
+        if holdsSelection, let editor {
+            // Pinch on the object: it grows or shrinks (from its base), like in Reality Composer.
+            if recognizer.state == .began { pinchKey = UUID().uuidString }
+            if recognizer.state == .ended || recognizer.state == .cancelled {
+                editor.finishTransform(gesture: pinchKey)
+                return
+            }
+            let factor = min(max(Double(recognizer.scale), 0.5), 2)
+            if abs(factor - 1) > 1e-4 { editor.scaleSelection(by: Vec3(factor, factor, factor), gesture: pinchKey) }
             recognizer.scale = 1
             return
         }
@@ -522,6 +641,7 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
 
     @objc private func handleTwist(_ recognizer: UIRotationGestureRecognizer) {
         guard let editor else { return }
+        let holdsSelection = onSelection(recognizer)
         if isRecordingPerform {
             switch recognizer.state {
             case .began: editor.performTouchBegan([.rotation])
@@ -548,6 +668,31 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
                 return
             }
             editor.rollCamera(by: Double(recognizer.rotation), gesture: twistKey)
+            recognizer.rotation = 0
+            return
+        }
+        if holdsSelection {
+            // Twist on the object: it turns about the vertical, the way your fingers turn (snapping in steps if on).
+            switch recognizer.state {
+            case .began:
+                twistKey = UUID().uuidString
+                twoFingerRotation = editor.rotationPivot.map { (pivot: $0, total: 0.0, applied: 0.0) }
+            case .changed:
+                guard var turn = twoFingerRotation else { break }
+                // Fingers turning clockwise on screen turn it clockwise seen from above (negative about +Y).
+                turn.total -= Double(recognizer.rotation)
+                let step = editor.snap.rotation ? editor.snap.rotationStep * .pi / 180 : 0
+                let wanted = step > 0 ? (turn.total / step).rounded() * step : turn.total
+                if abs(wanted - turn.applied) > 1e-9 {
+                    editor.rotateSelection(by: wanted - turn.applied, axis: .y, around: turn.pivot, gesture: twistKey)
+                    if step > 0 { Haptics.select() }
+                    turn.applied = wanted
+                }
+                twoFingerRotation = turn
+            default:
+                editor.endGesture()
+                twoFingerRotation = nil
+            }
             recognizer.rotation = 0
         }
     }

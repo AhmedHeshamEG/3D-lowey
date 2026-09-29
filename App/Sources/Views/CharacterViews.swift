@@ -222,12 +222,12 @@ struct FaceSection: View {
                     Circle().fill(Color.red).frame(width: 10, height: 10)
                     Text(editor.faceStatus ?? "Face on").font(.system(size: 13, weight: .semibold))
                     Spacer()
-                    PillButton(title: "Neutral", systemName: "face.smiling") { editor.facePerformer.recalibrate() }
+                    PillButton(title: "Set rest pose", systemName: "scope") { editor.setRestPose() }
                     PillButton(title: "Stop", systemName: "stop.fill") { editor.stopFaceCapture() }
                 }
                 Toggle("Mirror", isOn: Binding(get: { editor.facePerformer.mirror }, set: { editor.facePerformer.mirror = $0 }))
                     .font(.system(size: 13))
-                Text("Your face drives the character live. Press Record (Timeline → Perform) to capture a take.")
+                Text("Your face and hands drive the character live. Sit relaxed and tap Set rest pose; press Record (Timeline, Perform) to capture a take.")
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.secondaryText)
             } else {

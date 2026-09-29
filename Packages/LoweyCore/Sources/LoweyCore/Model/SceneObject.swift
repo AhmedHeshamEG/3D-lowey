@@ -81,6 +81,8 @@ public enum ObjectKind: Hashable, Sendable {
     case overlay(OverlayRecipe)
     /// A particle effect: fire, sparks, rain… (deterministic in time).
     case particles(ParticleRecipe)
+    /// A picture or video standing in the world as a thin card.
+    case card(CardRecipe)
 
     public var typeName: String {
         switch self {
@@ -94,6 +96,7 @@ public enum ObjectKind: Hashable, Sendable {
         case .text: "text"
         case .overlay: "overlay"
         case .particles: "particles"
+        case .card: "card"
         }
     }
 
@@ -116,7 +119,7 @@ public enum ObjectKind: Hashable, Sendable {
     /// Objects that render a surface (can take color, shading, glow).
     public var hasSurface: Bool {
         switch self {
-        case .primitive, .asset, .prefab, .drawing, .text: true
+        case .primitive, .asset, .prefab, .drawing, .text, .card: true
         case .group, .light, .camera, .overlay, .particles: false
         }
     }
@@ -124,7 +127,7 @@ public enum ObjectKind: Hashable, Sendable {
 
 extension ObjectKind: Codable {
     private enum Key: String, CodingKey {
-        case type, shape, asset, prefab, drawing, light, text, overlay, particles
+        case type, shape, asset, prefab, drawing, light, text, overlay, particles, card
     }
 
     public init(from decoder: Decoder) throws {
@@ -141,6 +144,7 @@ extension ObjectKind: Codable {
         case "text": self = try .text(container.decode(TextRecipe.self, forKey: .text))
         case "overlay": self = try .overlay(container.decode(OverlayRecipe.self, forKey: .overlay))
         case "particles": self = try .particles(container.decode(ParticleRecipe.self, forKey: .particles))
+        case "card": self = try .card(container.decode(CardRecipe.self, forKey: .card))
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown object type \(type)")
         }
@@ -159,6 +163,7 @@ extension ObjectKind: Codable {
         case let .text(recipe): try container.encode(recipe, forKey: .text)
         case let .overlay(recipe): try container.encode(recipe, forKey: .overlay)
         case let .particles(recipe): try container.encode(recipe, forKey: .particles)
+        case let .card(recipe): try container.encode(recipe, forKey: .card)
         }
     }
 }

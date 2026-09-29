@@ -11,13 +11,17 @@ public struct FaceLandmarks: Hashable, Sendable {
     public var innerLips: [Vec2]
     public var leftPupil: Vec2?
     public var rightPupil: Vec2?
+    /// Nose points: with them the head's turn, nod and tilt come from the face's own geometry (sure of their direction
+    /// in a mirrored picture), else from the tracker's angles.
+    public var nose: [Vec2]
     /// Radians (Vision's yaw / pitch / roll).
     public var yaw: Double
     public var pitch: Double
     public var roll: Double
 
     public init(leftEye: [Vec2], rightEye: [Vec2], leftBrow: [Vec2], rightBrow: [Vec2], outerLips: [Vec2], innerLips: [Vec2],
-                leftPupil: Vec2? = nil, rightPupil: Vec2? = nil, yaw: Double = 0, pitch: Double = 0, roll: Double = 0) {
+                leftPupil: Vec2? = nil, rightPupil: Vec2? = nil, nose: [Vec2] = [], yaw: Double = 0, pitch: Double = 0, roll: Double = 0) {
+        self.nose = nose
         self.leftEye = leftEye
         self.rightEye = rightEye
         self.leftBrow = leftBrow
@@ -52,7 +56,19 @@ public struct FaceMeasure: Hashable, Sendable, Codable {
 }
 
 /// Face capture → character channels (the Adobe Character Animator idea, on an iPad without TrueDepth).
+///
+/// Sides are as the picture shows them (y up): `blinkLeft` is the eye on the left of the picture, `lookX` > 0 looks to the
+/// picture's right, `headYaw` > 0 turns to the picture's right, `headRoll` > 0 tips the top of the head to the picture's
+/// left. Trackers' own "left eye" labels aren't trusted: in a mirrored selfie picture they swap.
 public enum FaceSolver {
+    /// The two eyes (and pupils) ordered left to right in the picture.
+    static func ordered(_ face: FaceLandmarks) -> (left: [Vec2], right: [Vec2], leftPupil: Vec2?, rightPupil: Vec2?) {
+        let swap = !face.leftEye.isEmpty && !face.rightEye.isEmpty && center(face.leftEye).x > center(face.rightEye).x
+        var pupils = [face.leftPupil, face.rightPupil]
+        if let a = face.leftPupil, let b = face.rightPupil, a.x > b.x { pupils = [b, a] }
+        return swap ? (face.rightEye, face.leftEye, pupils[0], pupils[1]) : (face.leftEye, face.rightEye, pupils[0], pupils[1])
+    }
+
     static func box(_ points: [Vec2]) -> (min: Vec2, max: Vec2)? {
         guard let first = points.first else { return nil }
         var lo = first
@@ -72,15 +88,16 @@ public enum FaceSolver {
 
     /// Ratios from landmarks (nil when a region is missing).
     public static func measure(_ face: FaceLandmarks) -> FaceMeasure? {
-        guard let leftEye = box(face.leftEye), let rightEye = box(face.rightEye), let outer = box(face.outerLips),
+        let eyes = ordered(face)
+        guard let leftEye = box(eyes.left), let rightEye = box(eyes.right), let outer = box(face.outerLips),
               let inner = box(face.innerLips), !face.leftBrow.isEmpty, !face.rightBrow.isEmpty else { return nil }
         func openness(_ eye: (min: Vec2, max: Vec2)) -> Double {
             let width = eye.max.x - eye.min.x
             return width > 1e-6 ? (eye.max.y - eye.min.y) / width : 0
         }
-        let eyeCenterY = (center(face.leftEye).y + center(face.rightEye).y) / 2
+        let eyeCenterY = (center(eyes.left).y + center(eyes.right).y) / 2
         let browY = (center(face.leftBrow).y + center(face.rightBrow).y) / 2
-        let eyeSpan = max(center(face.rightEye).x - center(face.leftEye).x, 1e-6)
+        let eyeSpan = max(center(eyes.right).x - center(eyes.left).x, 1e-6)
         let mouthCenter = center(face.outerLips)
         // Corners: the outer-lip points furthest left and right.
         let leftCorner = face.outerLips.min { $0.x < $1.x } ?? mouthCenter
@@ -95,6 +112,27 @@ public enum FaceSolver {
         )
     }
 
+    /// Head turn, nod and tilt in degrees. From the face's geometry when the nose is known: the nose sliding towards a
+    /// side of the eyes is a turn to that side, the eye line's slope is the tilt, the nose rising towards the eyes is
+    /// looking up. The zero point doesn't matter (the rest pose is subtracted), the directions do.
+    static func headAngles(_ face: FaceLandmarks) -> [PropertyKey: Double] {
+        let eyes = ordered(face)
+        guard !face.nose.isEmpty, !eyes.left.isEmpty, !eyes.right.isEmpty, !face.outerLips.isEmpty else {
+            return [.headYaw: face.yaw * 180 / .pi, .headPitch: face.pitch * 180 / .pi, .headRoll: face.roll * 180 / .pi]
+        }
+        let left = center(eyes.left)
+        let right = center(eyes.right)
+        let nose = center(face.nose)
+        let mouth = center(face.outerLips)
+        let span = max(hypot(right.x - left.x, right.y - left.y), 1e-6)
+        let middle = Vec2((left.x + right.x) / 2, (left.y + right.y) / 2)
+        let yaw = min(max((nose.x - middle.x) / span * 120, -70), 70)
+        let roll = atan2(right.y - left.y, right.x - left.x) * 180 / .pi
+        let drop = max(middle.y - mouth.y, 1e-6)
+        let pitch = -((middle.y - nose.y) / drop) * 150
+        return [.headYaw: yaw, .headPitch: pitch, .headRoll: roll]
+    }
+
     /// Channel values (the character's face properties) relative to a neutral face.
     public static func channels(_ face: FaceLandmarks, neutral: FaceMeasure) -> [PropertyKey: Double] {
         guard let now = measure(face) else { return [:] }
@@ -105,12 +143,13 @@ public enum FaceSolver {
             .brows: clamp((now.browHeight - neutral.browHeight) / max(neutral.browHeight * 0.25, 1e-6), -1, 1),
             .jawOpen: clamp((now.mouthOpen - neutral.mouthOpen) / 0.45),
             .mouthWide: clamp((now.mouthWidth - neutral.mouthWidth) / max(neutral.mouthWidth * 0.3, 1e-6), -1, 1),
-            .smile: clamp((now.smile - neutral.smile) / 0.12, -1, 1),
-            .headYaw: face.yaw * 180 / .pi,
-            .headPitch: face.pitch * 180 / .pi,
-            .headRoll: face.roll * 180 / .pi
+            .smile: clamp((now.smile - neutral.smile) / 0.12, -1, 1)
         ]
-        if let leftPupil = face.leftPupil, let rightPupil = face.rightPupil, let leftEye = box(face.leftEye), let rightEye = box(face.rightEye) {
+        for (key, value) in headAngles(face) {
+            result[key] = value
+        }
+        let eyes = ordered(face)
+        if let leftPupil = eyes.leftPupil, let rightPupil = eyes.rightPupil, let leftEye = box(eyes.left), let rightEye = box(eyes.right) {
             func look(_ pupil: Vec2, _ eye: (min: Vec2, max: Vec2)) -> (Double, Double) {
                 let w = max(eye.max.x - eye.min.x, 1e-6)
                 let h = max(eye.max.y - eye.min.y, 1e-6)

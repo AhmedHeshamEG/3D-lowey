@@ -230,11 +230,19 @@ public struct PropertyKey: RawRepresentable, Hashable, Sendable, Codable, Compar
     /// Eye look direction (−1…1).
     public static let lookX: PropertyKey = "lookX"
     public static let lookY: PropertyKey = "lookY"
+    /// Hands from body tracking (−1…1 each): sideways (out = +) and up from where the hand rests.
+    public static let handLeftX: PropertyKey = "handLeftX"
+    public static let handLeftY: PropertyKey = "handLeftY"
+    public static let handRightX: PropertyKey = "handRightX"
+    public static let handRightY: PropertyKey = "handRightY"
 
     /// Face channels a performance records.
     public static let faceChannels: [PropertyKey] = [
         .jawOpen, .mouthWide, .smile, .brows, .blinkLeft, .blinkRight, .headYaw, .headPitch, .headRoll, .lookX, .lookY
-    ]
+    ] + handChannels
+
+    /// Hand channels (body tracking): performed and recorded like the face.
+    public static let handChannels: [PropertyKey] = [.handLeftX, .handLeftY, .handRightX, .handRightY]
 
     /// Type and animatability of well-known keys.
     public var spec: PropertySpec? { PropertySpec.known[self] }
@@ -286,6 +294,10 @@ public struct PropertySpec: Sendable, Hashable {
         .headRoll: PropertySpec(type: .float, animatable: true, label: "Head tilt"),
         .lookX: PropertySpec(type: .float, animatable: true, label: "Look left/right"),
         .lookY: PropertySpec(type: .float, animatable: true, label: "Look up/down"),
+        .handLeftX: PropertySpec(type: .float, animatable: true, label: "Left hand out"),
+        .handLeftY: PropertySpec(type: .float, animatable: true, label: "Left hand up"),
+        .handRightX: PropertySpec(type: .float, animatable: true, label: "Right hand out"),
+        .handRightY: PropertySpec(type: .float, animatable: true, label: "Right hand up"),
         .eyeWide: PropertySpec(type: .float, animatable: true, label: "Eyes wide"),
         .eyeHappy: PropertySpec(type: .float, animatable: true, label: "Happy eyes"),
         .browAngle: PropertySpec(type: .float, animatable: true, label: "Brow angle"),

@@ -137,7 +137,7 @@ public enum PrimitiveMesh {
         return mesh
     }
 
-    static func torus(segments: Int, sides: Int, major: Float, minor: Float) -> MeshData {
+    public static func torus(segments: Int, sides: Int, major: Float, minor: Float) -> MeshData {
         var mesh = MeshData()
         for i in 0 ... segments {
             let u = Float(i) / Float(segments) * 2 * Float.pi

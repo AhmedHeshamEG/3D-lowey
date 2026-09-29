@@ -65,6 +65,21 @@ public final class SceneRenderer {
     }
 
     private var particleEntities: [ObjectID: [ModelEntity]] = [:]
+    /// Each card's picture plane, its texture and the image it shows (textures change only when the frame does).
+    private var cardFaces: [ObjectID: CardFace] = [:]
+    /// Pictures and video frames for cards: a file name in the project's assets, or a `VideoFrameKey`.
+    public var mediaImage: ((String) -> CGImage?)?
+
+    private final class CardFace {
+        let entity: ModelEntity
+        var texture: TextureResource?
+        var image: CGImage?
+
+        init(entity: ModelEntity) {
+            self.entity = entity
+        }
+    }
+
     /// Hides one object (the camera you are looking through).
     public var hiddenObject: ObjectID? {
         didSet {
@@ -130,6 +145,7 @@ public final class SceneRenderer {
             contents[id] = nil
             contentKeys[id] = nil
             particleEntities[id] = nil
+            cardFaces[id] = nil
         }
         // Additions and updates, parents before children.
         let dirty: Set<ObjectID> = lookChanged ? Set(scene.objects.keys) : changes.objects
@@ -173,6 +189,7 @@ public final class SceneRenderer {
         } else if contentKeys[id] != key || contents[id] == nil {
             contents[id]?.removeFromParent()
             particleEntities[id] = nil
+            cardFaces[id] = nil
             let content = buildContent(for: object, key: key, document: document, depth: 0)
             content.name = "content"
             node.addChild(content)
@@ -334,6 +351,9 @@ public final class SceneRenderer {
             // Drawn by the compositor in frame space; nothing in the world.
             return Entity()
 
+        case let .card(recipe):
+            return cardContent(recipe, id: depth == 0 ? object.id : nil, surface: key.surface)
+
         case .particles:
             // Filled every frame by `applyParticles`.
             let container = Entity()
@@ -383,6 +403,68 @@ public final class SceneRenderer {
         let container = Entity()
         container.addChild(model)
         return container
+    }
+
+    // MARK: Cards
+
+    /// A thin slab (the card, lit, in its colour) with the picture on its front (unlit, so it reads like the picture).
+    private func cardContent(_ recipe: CardRecipe, id: ObjectID?, surface: SurfaceKey?) -> Entity {
+        let size = recipe.cardSize
+        let container = Entity()
+        let frameMaterial = depthPass ? MaterialFactory.shared.depthMaterial
+            : MaterialFactory.shared.material(for: surface ?? SurfaceKey(color: RGBA(0.96, 0.95, 0.92), fog: fog))
+        let slab = ModelEntity(mesh: .generateBox(width: Float(size.width), height: Float(size.height), depth: Float(size.depth),
+                                                  cornerRadius: Float(min(size.depth * 0.45, 0.012))),
+                               materials: [frameMaterial])
+        slab.position = SIMD3<Float>(0, Float(size.height / 2), 0)
+        container.addChild(slab)
+        let picture = recipe.pictureSize
+        let face = ModelEntity(mesh: .generatePlane(width: Float(picture.width), height: Float(picture.height)),
+                               materials: [depthPass ? MaterialFactory.shared.depthMaterial : UnlitMaterial(color: UIColor(white: 0.18, alpha: 1))])
+        face.name = "picture"
+        face.position = SIMD3<Float>(0, Float(size.height / 2), Float(size.depth / 2) + 0.0015)
+        container.addChild(face)
+        container.components.set(CollisionComponent(shapes: [
+            ShapeResource.generateBox(size: SIMD3<Float>(Float(size.width), Float(size.height), Float(max(size.depth, 0.04))))
+                .offsetBy(translation: SIMD3<Float>(0, Float(size.height / 2), 0))
+        ]))
+        if let id, !depthPass { cardFaces[id] = CardFace(entity: face) }
+        return container
+    }
+
+    /// Shows each card's picture, or its video's frame at `time` (after `sync`). A texture is replaced only when the image
+    /// changes; a frame that isn't decoded yet keeps the last one on the card.
+    public func applyCards(_ scene: CoreScene, time: Double) {
+        guard !cardFaces.isEmpty, let mediaImage else { return }
+        for (id, face) in cardFaces {
+            guard let object = scene.objects[id], case let .card(recipe) = object.kind, let key = recipe.frameKey(at: time),
+                  let image = mediaImage(key), image !== face.image else { continue }
+            face.image = image
+            let fitted = Self.fitted(image, maxSide: recipe.video != nil ? 1280 : 2048)
+            if let texture = face.texture {
+                try? texture.replace(withImage: fitted, options: .init(semantic: .color))
+            } else if let texture = try? TextureResource(image: fitted, options: .init(semantic: .color)) {
+                face.texture = texture
+                var material = UnlitMaterial()
+                material.color = .init(tint: .white, texture: .init(texture))
+                face.entity.model?.materials = [material]
+            }
+        }
+    }
+
+    /// Big photos are drawn down to `maxSide` pixels (a 12 MP picture as a texture is 48 MB of memory for nothing).
+    static func fitted(_ image: CGImage, maxSide: Int) -> CGImage {
+        let longest = max(image.width, image.height)
+        guard longest > maxSide else { return image }
+        let scale = Double(maxSide) / Double(longest)
+        let width = max(Int(Double(image.width) * scale), 1)
+        let height = max(Int(Double(image.height) * scale), 1)
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return image }
+        context.interpolationQuality = .high
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return context.makeImage() ?? image
     }
 
     // MARK: Particles

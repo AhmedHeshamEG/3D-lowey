@@ -150,8 +150,8 @@ extension EditorModel {
     /// The character whose face is performed (the selected character).
     var faceTarget: ObjectID? { selectedPuppet ?? selectedCharacter?.object.id }
 
-    /// Live face (front camera or iPhone) → the character's face channels. While recording a Perform take, they
-    /// are captured like any performed value (one undo step, replaces the performed range).
+    /// Live face (front camera or iPhone) → the character's face channels (and hands). While recording a Perform take,
+    /// they are captured like any performed value (one undo step, replaces the performed range).
     func performFace(_ values: [PropertyKey: Double], detected: Bool) {
         guard let target = faceTarget else { return }
         for (key, value) in values {
@@ -165,7 +165,14 @@ extension EditorModel {
             }
         }
         performTouching = detected
-        if !isPlaying { refreshDisplay() }
+        // Drawn on the next screen frame (playback draws it anyway).
+        faceDirty = true
+    }
+
+    /// Character Animator's "Set Rest Pose": sit relaxed, look at the screen, tap. That pose becomes neutral.
+    func setRestPose() {
+        facePerformer.recalibrate()
+        app.show("Rest pose set. Relax: this is neutral now")
     }
 
     func startFaceCapture(useIPhone: Bool) {
@@ -174,21 +181,41 @@ extension EditorModel {
             return
         }
         stopFaceCapture()
+        facePerformer.recalibrate()
+        faceMonitor.clear()
+        faceMonitor.source = useIPhone ? "iPhone" : "Camera"
+        faceClock.onTick = { [weak self] _ in
+            guard let self, faceDirty else { return }
+            faceDirty = false
+            if !isPlaying { refreshDisplay() }
+        }
+        faceClock.start()
         if useIPhone {
             let receiver = FaceLinkReceiver()
             receiver.onStatus = { [weak self] message in self?.faceStatus = message }
             receiver.onChannels = { [weak self] channels in
                 guard let self else { return }
-                var values = channels
-                if facePerformer.mirror {
-                    let left = values[.blinkLeft]
-                    values[.blinkLeft] = values[.blinkRight]
-                    values[.blinkRight] = left
-                    values[.headYaw] = values[.headYaw].map { -$0 }
-                    values[.headRoll] = values[.headRoll].map { -$0 }
-                    values[.lookX] = values[.lookX].map { -$0 }
+                let now = CACurrentMediaTime()
+                var face = channels
+                var hands: [PropertyKey: Double] = [:]
+                for key in PropertyKey.handChannels {
+                    hands[key] = face.removeValue(forKey: key)
                 }
+                var values = facePerformer.channels(fromLink: face, at: now)
+                if !hands.isEmpty {
+                    let tracked = facePerformer.hands(hands, at: now)
+                    values.merge(tracked) { $1 }
+                    faceMonitor.leftHand = tracked[.handLeftY] ?? 0
+                    faceMonitor.rightHand = tracked[.handRightY] ?? 0
+                }
+                faceMonitor.faceFound = true
                 performFace(values, detected: true)
+            }
+            receiver.onPreview = { [weak self] dots, bones, picture in
+                guard let self else { return }
+                faceMonitor.dots = dots
+                faceMonitor.bones = bones
+                if let picture { faceMonitor.picture = picture }
             }
             receiver.start()
             faceLink = receiver
@@ -199,15 +226,8 @@ extension EditorModel {
                     app.show("Allow the camera in Settings to perform with your face")
                     return
                 }
-                let capture = FaceCapture { [weak self] face in
-                    guard let self else { return }
-                    guard let face else {
-                        performFace([:], detected: false)
-                        faceStatus = "Look at the iPad"
-                        return
-                    }
-                    faceStatus = "Reading your face"
-                    performFace(facePerformer.channels(for: face, at: CACurrentMediaTime()), detected: true)
+                let capture = FaceCapture { [weak self] sample in
+                    self?.faceSampleArrived(sample)
                 }
                 do {
                     try capture.start()
@@ -221,11 +241,41 @@ extension EditorModel {
         faceActive = true
     }
 
+    /// One analysed frame of the iPad's camera.
+    private func faceSampleArrived(_ sample: FaceSample) {
+        let now = CACurrentMediaTime()
+        faceMonitor.dots = sample.dots
+        if !sample.bones.isEmpty || sample.hands != nil { faceMonitor.bones = sample.bones }
+        if let picture = sample.preview { faceMonitor.picture = picture }
+        faceMonitor.faceFound = sample.face != nil
+        var values: [PropertyKey: Double] = [:]
+        if let face = sample.face {
+            values = facePerformer.channels(for: face, at: now)
+            faceStatus = "Reading your face"
+        } else {
+            faceStatus = "Look at the iPad"
+        }
+        if let hands = sample.hands {
+            let tracked = facePerformer.hands(hands, at: now)
+            values.merge(tracked) { $1 }
+            faceMonitor.leftHand = tracked[.handLeftY] ?? 0
+            faceMonitor.rightHand = tracked[.handRightY] ?? 0
+        }
+        guard !values.isEmpty || sample.face != nil else {
+            performFace([:], detected: false)
+            return
+        }
+        performFace(values, detected: sample.face != nil)
+    }
+
     func stopFaceCapture() {
         faceCapture?.stop()
         faceCapture = nil
         faceLink?.stop()
         faceLink = nil
+        faceClock.stop()
+        faceDirty = false
+        faceMonitor.clear()
         faceActive = false
         faceStatus = nil
         if let target = faceTarget {

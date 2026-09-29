@@ -182,10 +182,11 @@ def attach_to_word(word: str, action: dict[str, Any], occurrence: int = 1, offse
 
 
 @mcp.tool()
-def add_media(path: str, at: float | None = None) -> str:
+def add_media(path: str, at: float | None = None, overlay: bool = False) -> str:
     """Put a picture or video file from this laptop into the open shot (a screenshot, a clip, a chart).
-    Videos play from `at` seconds on the timeline (default: the playhead)."""
-    return json.dumps(bridge().import_media(pathlib.Path(path).expanduser(), at=at))
+    It stands in the 3D world as a thin card (move, turn and size it like any object); overlay=True lays it flat over
+    the frame instead. Videos play from `at` seconds on the timeline (default: the playhead)."""
+    return json.dumps(bridge().import_media(pathlib.Path(path).expanduser(), at=at, placement="overlay" if overlay else "card"))
 
 
 @mcp.tool()
@@ -198,7 +199,7 @@ def render_manim(script: str, scene: str, at: float | None = None, quality: str 
 
     with tempfile.TemporaryDirectory() as folder:
         video = render(pathlib.Path(script).expanduser(), scene, pathlib.Path(folder), quality=quality, transparent=transparent)
-        return json.dumps(bridge().import_media(video, at=at))
+        return json.dumps(bridge().import_media(video, at=at, placement="overlay" if transparent else "card"))
 
 
 @mcp.tool()
