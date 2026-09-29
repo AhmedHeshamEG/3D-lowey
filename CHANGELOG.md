@@ -3,6 +3,54 @@
 All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
 Phase 4 = v1.1 → v1.3).
 
+## [1.4.0] — Polish: feel, face, media
+
+### Feel
+- **Rotation that behaves.** Objects turn around their own pivot (several: the middle of their pivots) and never drift
+  while turning (the pivot used to be re-measured from the bounding box every frame). Rotate rings are thin and picked
+  by their drawn line, the ring facing you winning where they cross (overlapping hit boxes grabbed the wrong axis).
+  Face-on rings turn by circling, edge-on rings by sliding along them. Snapping happens in steps during the turn, with a
+  tick, instead of jumping at the end. The inspector keeps the angles you typed (X 100° stays 100°, not 80°/180°/180°).
+- **Two fingers on the selected object** hold it: twist turns it, pinch sizes it (Reality Composer). Elsewhere two
+  fingers still move the camera.
+- **Squeeze the Apple Pencil Pro** to play or pause, in any mode, with the interface hidden too (unless Squeeze is set
+  to Ignore in Settings).
+- **The timeline scrolls up and down again** with many rows (the lanes' drag swallowed the list's scrolling), flicks
+  glide, a thin bar shows where you are. To start and Add marker are back on the header.
+
+### Simpler, lighter chrome
+- Buttons on a panel draw no glass of their own (glass on glass); the top bar's glass is one group. Undo and redo sit in
+  the top bar; move / turn / size only show with something selected; the inspector keeps the numbers folded and has
+  three actions (duplicate, hide, delete) plus one menu for the rest.
+
+### Faster stage
+- The selection box is rebuilt only when the selection's size changes (it was rebuilt, and the selection re-measured,
+  on every camera move and every frame of playback). The drawing guide likewise.
+- Live bloom at quarter size (exports keep the full filter); video frames for the stage decode at 1280 px.
+- The stage renders at 1.75× (about a quarter fewer pixels); *Full-resolution stage* in the scene menu brings back
+  full density. Rigs are only looked up for clip tracks.
+
+### Face, hands and the phone
+- **Set rest pose** (Character Animator): sit relaxed and tap; head angles, gaze and dials are measured from there, so
+  looking at the iPad from below no longer leaves the character nodding.
+- **Hands**: body tracking (Vision) moves the blob's hands and the rubber-hose arms follow; recorded with the face.
+- **A camera preview** floats over the stage while you perform: the picture, green dots on the face, lines on the arms,
+  Set rest pose and stop. The iPhone companion shows its own preview and streams a small one to the iPad.
+- Sides are consistent: every source reports the mirror's sides (the iPhone used to mix mirrored blinks with unmirrored
+  turns); head turn, nod and tilt from the iPad camera come from the face's own geometry. The iPhone measures the head
+  against the phone, not against where tracking started. Live values draw once per screen frame.
+
+### Characters
+- **The neutral face is neutral**: a short level mouth, level brows, upright eyes. The smirk lives on as *Smug*.
+
+### Media
+- **Pictures and videos stand in the world as thin cards** (Add → Photo or video): a framed slab facing you, moved,
+  turned, sized and keyed like any object; videos play on them frame-exact in exports. Transparent Manim renders still
+  go over the frame. The bridge takes `?as=card|overlay`; `add_media(..., overlay=False)`, `lowey-link media --overlay`.
+
+### Laptop tools
+- `lowey-link pair 123456` finds the iPad by itself (Bonjour); `python -m lowey_tools` works when `Scripts` isn't on PATH.
+
 ## [1.3.1] — Smooth stage
 
 - The live stage works out the glow halo at quarter size (it blurred the whole screen at full size every frame whenever

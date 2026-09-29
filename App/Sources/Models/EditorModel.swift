@@ -292,7 +292,8 @@ final class EditorModel {
     func applyThermalQuality() {
         guard let stage else { return }
         let state = ProcessInfo.processInfo.thermalState
-        let full = stage.window?.screen.scale ?? 2
+        let screen = stage.window?.screen.scale ?? 2
+        let full = UserDefaults.standard.bool(forKey: AppSettings.fullResolutionStage) ? screen : min(screen, 1.75)
         let scale: CGFloat = switch state {
         case .critical: 1
         case .serious: max(full * 0.66, 1)

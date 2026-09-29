@@ -363,3 +363,19 @@ PyAV (ships with Manim), because the laptop is Windows (no HEVC-with-alpha encod
 **D81 — One skill, an orchestrator and modules.** `skills/lowey/SKILL.md` routes and holds the rules; each module does
 one job. Adding a capability is adding a module.
 
+## v1.4
+
+**D82 — Rotation pivots are origins.** One object turns around its own pivot; several around the mean of their pivots.
+Both stay fixed while turning (a bounding-box centre moves as the box turns). Rings are picked on screen by distance to
+the drawn ring, not by collision shapes.
+
+**D83 — Face channels use the mirror's sides.** `blinkLeft` is the eye on the left of the (mirrored) picture, turns and
+tilts likewise; trackers' left/right labels aren't trusted (they swap in mirrored pictures). The Mirror switch flips
+everything in one place. Rest pose (head, gaze, dials) is subtracted; blinks, jaw and hands are absolute.
+
+**D84 — Media cards are objects, overlays are graphics.** Pictures and videos default to a `card` object in the world;
+overlays stay for graphics that belong to the frame (transparent Manim). Card textures change only when the frame does.
+
+**D85 — Timeline rows scroll under our own gesture.** A SwiftUI `ScrollView` loses its pan to a `DragGesture` on its
+content (iPadOS 18+), and the lanes need that drag. The lanes decide once per drag: keys, box, time or rows.
+

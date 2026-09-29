@@ -10,9 +10,13 @@ Python for Blender scripts, and FastMCP/MCPServer makes each tool a plain functi
 cd tools/lowey
 pip install -e .
 # On the iPad: scene menu → "AI & laptop bridge…" → Bridge on. It shows the address and a 6-digit code.
-lowey-link pair 192.168.1.20 123456
+lowey-link pair 123456                 # finds the iPad on your Wi-Fi by itself
+lowey-link pair 192.168.1.20 123456    # ...or say where it is
 lowey-link status
 ```
+
+`'lowey-link' is not recognized` means the package isn't installed yet (run the `pip install` above), or Python's
+`Scripts` folder isn't on PATH: `python -m lowey_tools pair 123456` does the same thing.
 
 ## Claude Code / Claude Desktop
 
@@ -47,6 +51,7 @@ Paste it on the iPad (scene menu → *Paste a Scene Script*) or send it: `lowey-
 ```powershell
 lowey-link push fox.glb house.usdz          # into the iPad's library
 lowey-link audio enigma-voiceover.m4a       # onto the open scene's timeline
+lowey-link media chart.png clip.mov --at 3  # pictures / videos as cards standing in the shot (--overlay: over the frame)
 lowey-link watch C:\Blender\exports          # push every new model automatically
 lowey-link generate tree --seed 4 --kind round   # Blender generator → library
 $env:LOWEY_TEXT_TO_3D = 'python C:\ai\txt2mesh.py --prompt {prompt} --out {out}'

@@ -1,15 +1,20 @@
 # Manim renders and media
 
-Pictures and videos sit in the frame as overlays (move, scale, key them like any overlay). Videos play from a time on
-the timeline, hold their last frame when they end (or loop), and export frame-exact.
+Pictures and videos stand in the world as **cards**: a thin framed slab, one metre tall at scale 1, facing the camera
+where it was added. Move, turn, size and key them like any object; the camera can walk around them and a character can
+stand in front of one (a photo on a stand, a screen on the set). Transparent Manim renders go **over the frame** as
+overlays instead (graphics floating over the 3D world). Videos play from a time on the timeline, hold their last frame
+when they end (or loop), and export frame-exact, on cards and overlays alike.
 
 ## Tools
 
 - `render_manim(script, scene, at, quality="high", transparent=True)`: renders a Manim scene on the laptop with a
   transparent background and drops it into the shot from `at` seconds. Graphs, equations and diagrams then float over
   the 3D world.
-- `add_media(path, at)`: any picture or video file from the laptop (a screenshot, a chart, a clip).
-- CLI equivalents: `lowey-link manim scene.py Graph --at 3`, `lowey-link media chart.png`.
+- `add_media(path, at, overlay=False)`: any picture or video file from the laptop (a screenshot, a chart, a clip) as a
+  card in the world; `overlay=True` lays it flat over the frame. Move the card with a script afterwards (`set_property`
+  position / rotation / scale on the name it returns): put it beside the character, angled a little towards the camera.
+- CLI equivalents: `lowey-link manim scene.py Graph --at 3`, `lowey-link media chart.png` (`--overlay` for the frame).
 
 `at` is seconds; get it from the transcript word (`get_transcript` → the word's start, minus 0.1–0.2 s).
 

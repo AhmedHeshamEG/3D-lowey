@@ -243,10 +243,12 @@ struct TopBar: View {
     @State private var renamingScene = false
     @State private var sceneName = ""
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
+    @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
 
     var body: some View {
         // One container: the bar's glass shapes are drawn together (cheaper over the live view, and they blend).
         GlassEffectContainer(spacing: 10) { bar }
+            .onChange(of: fullResolution) { _, _ in editor.applyThermalQuality() }
             .alert("Rename scene", isPresented: $renamingScene) {
                 TextField("Name", text: $sceneName)
                 Button("Rename") { editor.renameScene(sceneName) }
@@ -292,6 +294,7 @@ struct TopBar: View {
                 Button("Paste a Scene Script", systemImage: "doc.on.clipboard") { editor.importScriptFromClipboard() }
                 Divider()
                 Toggle("Show FPS & stats", isOn: $editor.showStatistics)
+                Toggle("Full-resolution stage", isOn: $fullResolution)
                 Toggle("Pencil hover preview", isOn: $pencilHover)
                 Button("Gestures & shortcuts", systemImage: "hand.draw") { app.showGestures = true }
             } label: {
