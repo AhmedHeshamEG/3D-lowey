@@ -154,6 +154,52 @@ public final class MaterialFactory {
         }
     }
 
+    // MARK: Ground & grid
+
+    /// sRGB bytes packed into one float (exact: below 2^24), as the ground shader unpacks them.
+    static func packed(_ color: RGBA) -> Float {
+        func byte(_ value: Double) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
+        return Float(byte(color.r) * 65536 + byte(color.g) * 256 + byte(color.b))
+    }
+
+    /// The ground (`loweyGround`): lit, with fog, melting into the sky's colours at its rim. `horizon` and `bottom` are
+    /// the sky below the horizon as the sky image draws it (exposure and fog applied). Falls back to the plain surface.
+    public func groundMaterial(color: RGBA, fog: FogUniform, horizon: RGBA, bottom: RGBA, radius: Double) -> any RealityKit.Material {
+        let plain = material(for: SurfaceKey(color: color, roughness: 0.95, fog: fog))
+        guard let library = shaderLibrary, library.functionNames.contains("loweyGround") else { return plain }
+        var pbr = PhysicallyBasedMaterial()
+        pbr.baseColor = .init(tint: color.uiColor)
+        pbr.roughness = .init(floatLiteral: 0.95)
+        pbr.metallic = .init(floatLiteral: 0)
+        do {
+            var custom = try CustomMaterial(from: pbr, surfaceShader: CustomMaterial.SurfaceShader(named: "loweyGround", in: library),
+                                            geometryModifier: nil)
+            let rim = Float(min(max(radius, 1), 100_000).rounded())
+            custom.custom.value = SIMD4<Float>(Self.packed(horizon), Self.packed(bottom), Self.packed(fog.color), rim + Float(fog.density))
+            return custom
+        } catch {
+            logger.error("Ground material failed: \(error.localizedDescription) — plain ground")
+            return plain
+        }
+    }
+
+    /// The building grid (`loweyGrid`), nil when the shader isn't there (the grid then builds line meshes).
+    /// `pixelAngle` = 2·tan(fov/2) / view height in pixels.
+    public func gridMaterial(pixelAngle: Float) -> CustomMaterial? {
+        guard let library = shaderLibrary, library.functionNames.contains("loweyGrid") else { return nil }
+        do {
+            var custom = try CustomMaterial(surfaceShader: CustomMaterial.SurfaceShader(named: "loweyGrid", in: library),
+                                            geometryModifier: nil, lightingModel: .unlit)
+            custom.blending = .transparent(opacity: .init(floatLiteral: 1))
+            custom.faceCulling = .none
+            custom.custom.value = SIMD4<Float>(pixelAngle, 0, 0, 0)
+            return custom
+        } catch {
+            logger.error("Grid material failed: \(error.localizedDescription) — line grid")
+            return nil
+        }
+    }
+
     /// Unlit, possibly translucent material for helpers (grid, gizmos, selection box).
     public func helper(color: UIColor, opacity: Float = 1) -> UnlitMaterial {
         var material = UnlitMaterial(color: color)

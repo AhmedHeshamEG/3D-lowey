@@ -69,6 +69,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
     private var twoFingerActive = Set<ObjectIdentifier>()
     private var twoFingerRotation: (pivot: Vec3, total: Double, applied: Double)?
     private var gestureKey = UUID().uuidString
+    /// Scene menu → Speed: how far orbit, pan and zoom go per finger movement (1 = normal).
+    private var navigationSpeed: Double { AppSettings.navigationFactor }
     private var strokeGuide: GuideSurface?
     private var strokeTargetMesh: MeshData?
     private var strokePoints: [Vec3] = []
@@ -310,8 +312,9 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         switch drag {
         case .orbit:
             var viewpoint = stage.viewpoint
-            viewpoint.yaw -= Double(translation.x) * 0.3
-            viewpoint.pitch += Double(translation.y) * 0.3
+            let degreesPerPoint = 0.3 * navigationSpeed
+            viewpoint.yaw -= Double(translation.x) * degreesPerPoint
+            viewpoint.pitch += Double(translation.y) * degreesPerPoint
             stage.setViewpoint(viewpoint)
 
         case let .moveObjects(planeY, last):
@@ -386,7 +389,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             drag = .perform(planeY: planeY, last: hit.point)
 
         case .aimCamera:
-            editor.aimCamera(pan: -Double(translation.x) * 0.15, tilt: -Double(translation.y) * 0.15, gesture: gestureKey)
+            editor.aimCamera(pan: -Double(translation.x) * 0.15 * navigationSpeed, tilt: -Double(translation.y) * 0.15 * navigationSpeed,
+                             gesture: gestureKey)
 
         case let .moveOverlay(id, last):
             editor.moveOverlay(id, by: CGSize(width: point.x - last.x, height: point.y - last.y), gesture: gestureKey)
@@ -570,7 +574,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
             let translation = recognizer.translation(in: stage)
             recognizer.setTranslation(.zero, in: stage)
             // Truck / pedestal: move the camera sideways and up in its own frame.
-            editor.moveCamera(local: Vec3(-Double(translation.x) * 0.01, Double(translation.y) * 0.01, 0), gesture: panKey)
+            let step = 0.01 * navigationSpeed
+            editor.moveCamera(local: Vec3(-Double(translation.x) * step, Double(translation.y) * step, 0), gesture: panKey)
             return
         }
         guard recognizer.state == .changed || recognizer.state == .began else { return }
@@ -578,7 +583,8 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
         recognizer.setTranslation(.zero, in: stage)
         var viewpoint = stage.viewpoint
         let viewHeight = Double(max(stage.bounds.height, 1))
-        let metersPerPixel = 2 * viewpoint.distance * tan(viewpoint.fieldOfView * .pi / 360) / viewHeight
+        // 1× keeps the ground under your fingers; the speed setting scales it.
+        let metersPerPixel = 2 * viewpoint.distance * tan(viewpoint.fieldOfView * .pi / 360) / viewHeight * navigationSpeed
         let right = viewpoint.rotation.act(.unitX)
         let up = viewpoint.rotation.act(.unitY)
         viewpoint.target -= right * (Double(translation.x) * metersPerPixel)
@@ -626,13 +632,13 @@ final class StageCoordinator: NSObject, UIGestureRecognizerDelegate {
                 return
             }
             // Dolly: pinch out moves the camera forward.
-            editor.moveCamera(local: Vec3(0, 0, -Double(recognizer.scale - 1) * 3), gesture: pinchKey)
+            editor.moveCamera(local: Vec3(0, 0, -Double(recognizer.scale - 1) * 3 * navigationSpeed), gesture: pinchKey)
             recognizer.scale = 1
             return
         }
         guard let stage, recognizer.state == .changed || recognizer.state == .began else { return }
         var viewpoint = stage.viewpoint
-        viewpoint.distance /= Double(max(recognizer.scale, 0.01))
+        viewpoint.distance /= pow(Double(max(recognizer.scale, 0.01)), navigationSpeed)
         recognizer.scale = 1
         stage.setViewpoint(viewpoint)
     }

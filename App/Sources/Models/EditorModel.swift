@@ -180,6 +180,8 @@ final class EditorModel {
 
     /// Screen effects (shake, flash…) in the live view.
     var previewEffects = true
+    /// The view's heading in degrees (for the joystick's compass), updated as the camera turns.
+    var viewYaw: Double = 0
     @ObservationIgnored var overlayImages: [String: CGImage] = [:]
 
     // MARK: Character & face state (see EditorModel+Character.swift)
@@ -203,6 +205,10 @@ final class EditorModel {
     @ObservationIgnored let faceClock = PlaybackClock()
     @ObservationIgnored var faceDirty = false
     @ObservationIgnored var thermalObserver: NSObjectProtocol?
+    /// Automatic preview resolution (1 = as set): drops a step while the stage runs below ~40 fps, climbs back when smooth.
+    @ObservationIgnored var loadScale: CGFloat = 1
+    @ObservationIgnored var smoothWindows = 0
+    @ObservationIgnored var lastLoadDrop: CFTimeInterval = 0
     @ObservationIgnored var captionCache: (factor: Double, revision: Int, pages: [CaptionPage])?
     private(set) var displayRevision = 0
 
@@ -274,9 +280,11 @@ final class EditorModel {
         self.stage = stage
         stage.setViewpoint(scene.viewpoint, notify: false)
         projection = scene.viewpoint.projection
+        viewYaw = scene.viewpoint.yaw
         stage.showsGrid = showGrid && mode == .build
         stage.gizmo.mode = gizmoMode
         stage.onCameraChanged = { [weak self] viewpoint in self?.cameraMoved(viewpoint) }
+        stage.onFrameRate = { [weak self] rate in self?.stageFrameRate(rate) }
         renderer.onContentChanged = { [weak self] in self?.refreshSelectionOverlay() }
         refreshGuide()
         refreshSelectionOverlay()
@@ -287,6 +295,31 @@ final class EditorModel {
         }
     }
 
+    /// A heavy scene (many lights, big sets, the full look) can push the stage below a smooth rate. Rather than stutter,
+    /// the preview draws a step fewer pixels (down to 60 %), and goes back up once it has been smooth for a while.
+    /// Exports never change: they render offscreen at full quality.
+    func stageFrameRate(_ rate: Double) {
+        guard UIApplication.shared.applicationState == .active, mode != .export || exportTask == nil else { return }
+        let now = CACurrentMediaTime()
+        if rate < 40, loadScale > 0.6 {
+            loadScale = max(loadScale - 0.12, 0.6)
+            smoothWindows = 0
+            lastLoadDrop = now
+            Diagnostics.shared.log(String(format: "Stage at %.0f fps: preview scale ×%.2f", rate, loadScale))
+            applyThermalQuality()
+        } else if rate > 54, loadScale < 1 {
+            smoothWindows += 1
+            // Three smooth readings in a row, and not right after a drop (no see-sawing).
+            if smoothWindows >= 3, now - lastLoadDrop > 10 {
+                loadScale = min(loadScale + 0.12, 1)
+                smoothWindows = 0
+                applyThermalQuality()
+            }
+        } else {
+            smoothWindows = 0
+        }
+    }
+
     /// Thermal-aware preview: when the iPad gets hot, the stage renders fewer pixels and skips depth effects
     /// (exports are unaffected — they render offscreen at full quality).
     func applyThermalQuality() {
@@ -294,11 +327,12 @@ final class EditorModel {
         let state = ProcessInfo.processInfo.thermalState
         let screen = stage.window?.screen.scale ?? 2
         let full = UserDefaults.standard.bool(forKey: AppSettings.fullResolutionStage) ? screen : min(screen, 1.75)
-        let scale: CGFloat = switch state {
+        let heat: CGFloat = switch state {
         case .critical: 1
         case .serious: max(full * 0.66, 1)
         default: full
         }
+        let scale = max((heat * loadScale * 20).rounded() / 20, 1)
         if stage.contentScaleFactor != scale {
             stage.contentScaleFactor = scale
             Diagnostics.shared.log("Thermal \(state.rawValue): preview scale \(scale)")
@@ -399,6 +433,8 @@ final class EditorModel {
 
     private func cameraMoved(_ viewpoint: Viewpoint) {
         if projection != viewpoint.projection { projection = viewpoint.projection }
+        // The joystick's compass follows the view (only it reads this; a degree is below what shows).
+        if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
         updateStagePost()
         // The selection box and gizmo don't depend on the camera (the stage keeps the gizmo's size itself); measuring
         // the selection on every camera frame was a large part of the orbit cost.
@@ -437,6 +473,7 @@ final class EditorModel {
                 renderer.load(doc)
                 refreshDisplay()
                 stage?.setViewpoint(loaded.viewpoint, notify: false)
+                viewYaw = loaded.viewpoint.yaw
                 await saver.markSaved(0, for: projectURL)
                 refreshSelectionOverlay()
                 refreshGuide()
