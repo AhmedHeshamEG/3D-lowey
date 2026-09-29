@@ -45,9 +45,9 @@ final class BridgeModel {
         auth.onPaired = { [weak self] in
             Task { @MainActor in
                 guard let self else { return }
-                saveTokens()
-                code = auth.code
-                app.show("A laptop paired with the bridge")
+                self.saveTokens()
+                self.code = self.auth.code
+                self.app.show("A laptop paired with the bridge")
             }
         }
     }
