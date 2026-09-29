@@ -245,7 +245,8 @@ struct TopBar: View {
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
     @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
     @AppStorage(AppSettings.joystickSpeed) private var joystickSpeed = 1.0
-    @State private var tuningJoystick = false
+    @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
+    @State private var tuningSpeed = false
 
     var body: some View {
         // One container: the bar's glass shapes are drawn together (cheaper over the live view, and they blend).
@@ -258,28 +259,42 @@ struct TopBar: View {
             }
     }
 
-    /// A slider for the joystick's speed (moves, turns and sizes alike). Normal is the feel from before v1.4.1.
-    private var joystickSpeedPanel: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Joystick speed").font(.system(size: 15, weight: .bold))
+    /// Two speeds: moving around the scene with your fingers (orbit, pan, zoom) and the joystick. Normal = the old feel.
+    private var speedPanel: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            speedRow("Moving around", detail: "Orbit, pan and zoom with your fingers", systemImage: "hand.draw",
+                     value: $navigationSpeed, range: AppSettings.navigationSpeedRange)
+            Divider()
+            speedRow("Joystick", detail: "Moving, turning and sizing with the pad", systemImage: "gamecontroller",
+                     value: $joystickSpeed, range: AppSettings.joystickSpeedRange)
+        }
+        .padding(18)
+        .frame(width: 340)
+    }
+
+    private func speedRow(_ title: String, detail: String, systemImage: String, value: Binding<Double>,
+                          range: ClosedRange<Double>) -> some View {
+        let isNormal = abs(value.wrappedValue - 1) < 0.01
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage).foregroundStyle(Theme.accent)
+                Text(title).font(.system(size: 15, weight: .bold))
                 Spacer()
-                Text(abs(joystickSpeed - 1) < 0.01 ? "Normal" : String(format: "%.2g×", joystickSpeed))
+                Text(isNormal ? "Normal" : String(format: "%.2g×", value.wrappedValue))
                     .font(.system(size: 13, weight: .semibold).monospacedDigit())
                     .foregroundStyle(Theme.secondaryText)
             }
+            Text(detail).font(.system(size: 12)).foregroundStyle(Theme.secondaryText)
             HStack(spacing: 10) {
                 Image(systemName: "tortoise.fill").foregroundStyle(Theme.secondaryText)
-                Slider(value: $joystickSpeed, in: AppSettings.joystickSpeedRange)
-                    .accessibilityLabel("Joystick speed")
+                Slider(value: value, in: range)
+                    .accessibilityLabel("\(title) speed")
                 Image(systemName: "hare.fill").foregroundStyle(Theme.secondaryText)
             }
-            Button("Back to normal") { joystickSpeed = 1 }
+            Button("Back to normal") { value.wrappedValue = 1 }
                 .font(.system(size: 13, weight: .semibold))
-                .disabled(abs(joystickSpeed - 1) < 0.01)
+                .disabled(isNormal)
         }
-        .padding(18)
-        .frame(width: 320)
     }
 
     private var bar: some View {
@@ -322,7 +337,7 @@ struct TopBar: View {
                 Toggle("Show FPS & stats", isOn: $editor.showStatistics)
                 Toggle("Full-resolution stage", isOn: $fullResolution)
                 Toggle("Pencil hover preview", isOn: $pencilHover)
-                Button("Joystick speed…", systemImage: "gamecontroller") { tuningJoystick = true }
+                Button("Speed…", systemImage: "gauge.with.dots.needle.67percent") { tuningSpeed = true }
                 Button("Gestures & shortcuts", systemImage: "hand.draw") { app.showGestures = true }
             } label: {
                 HStack(spacing: 8) {
@@ -345,7 +360,7 @@ struct TopBar: View {
                 .panelStyle(cornerRadius: 24)
             }
             .accessibilityIdentifier("scene-menu")
-            .popover(isPresented: $tuningJoystick) { joystickSpeedPanel }
+            .popover(isPresented: $tuningSpeed) { speedPanel }
             UndoRedo(editor: editor)
             if editor.isSaving {
                 ProgressView().controlSize(.small)

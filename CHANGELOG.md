@@ -3,6 +3,24 @@
 All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
 Phase 4 = v1.1 → v1.3).
 
+## [1.4.3] — Moving-around speed, a smoother stage, a real ground, a nicer joystick
+
+- **Moving-around speed.** Scene menu → *Speed…* now has two sliders: *Moving around* (orbit, pan and pinch zoom with
+  your fingers, and a camera's moves in Camera mode) and *Joystick*. Normal is the feel it always had.
+- **Smoother in big scenes.** The live view now lights what you're looking at: the 8 nearest point / spot lights shine
+  and only the 2 nearest cast shadows (a set with twenty lamps across five rooms used to light and shadow-map every
+  room, every frame). Lens blur and ink outlines are worked out at a fraction of the size in the live view (the blur
+  was the heaviest thing on screen). When the stage still drops below about 40 frames a second it draws a step fewer
+  pixels until it's smooth, then climbs back. Exports are unchanged: full quality, every light.
+- **The ground.** It no longer ends in a hard line against the sky: towards its edge it melts into the exact colour of
+  the sky behind it, and a faint large-scale shading keeps a big floor from looking like one flat sheet. The building
+  grid is drawn per pixel: crisp, anti-aliased lines at any distance, no shimmer far away, and it fades out instead of
+  stopping at 20 m.
+- **Joystick, redesigned.** A shaded well with tick marks, X and Z labels on a compass that turns with the view as you
+  orbit (it used to update three times a second), the rim lighting up where and how hard you push, a glossy knob that
+  springs back, a green height slider that fills from its centre notch, the mode (MOVE / TURN / SIZE) and speed on top,
+  and a light tap when you grab it or hit full speed.
+
 ## [1.4.2] — Joystick speed, a calmer cartoon face
 
 - **Joystick speed back to how it was**, and now yours to set: scene menu → *Joystick speed…* (a slider, tortoise to

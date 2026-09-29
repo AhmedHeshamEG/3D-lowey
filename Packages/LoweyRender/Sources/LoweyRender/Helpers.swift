@@ -3,14 +3,49 @@ import LoweyCore
 import RealityKit
 import UIKit
 
-/// Ground grid for building (1 m cells, fading major lines, coloured axes).
+/// Ground grid for building (1 m cells, 5 m major lines, coloured axes). Drawn per pixel by the `loweyGrid` shader on one
+/// big quad: crisp, anti-aliased lines at any distance that fade out towards the horizon. Without the shader it falls
+/// back to thin line meshes.
 @MainActor
 public final class GridEntity: Entity {
+    private var shaded: ModelEntity?
+    private var pixelAngle: Float = 0
+
     public required init() {
         super.init()
         name = "Grid"
         components.set(LoweyHelperComponent())
-        build(extent: 20)
+        if let material = MaterialFactory.shared.gridMaterial(pixelAngle: 0.0012),
+           let resource = try? MeshUpload.resource(from: Self.quad(half: 400), name: "grid") {
+            let entity = ModelEntity(mesh: resource, materials: [material])
+            addChild(entity)
+            shaded = entity
+            pixelAngle = 0.0012
+        } else {
+            build(extent: 20)
+        }
+    }
+
+    /// The view's angle per pixel (2·tan(fov/2) / height in pixels): keeps lines about a pixel wide and soft.
+    public func setPixelAngle(_ value: Float) {
+        guard let shaded, value > 0, abs(value - pixelAngle) > pixelAngle * 0.02,
+              var material = shaded.model?.materials.first as? CustomMaterial else { return }
+        pixelAngle = value
+        material.custom.value = SIMD4<Float>(value, 0, 0, 0)
+        shaded.model?.materials = [material]
+    }
+
+    /// A flat square just above the ground (y = 1 mm).
+    static func quad(half: Float) -> MeshData {
+        var mesh = MeshData()
+        let up = SIMD3<Float>(0, 1, 0)
+        let a = mesh.addVertex(SIMD3<Float>(-half, 0.001, -half), normal: up, uv: SIMD2<Float>(0, 0))
+        let b = mesh.addVertex(SIMD3<Float>(half, 0.001, -half), normal: up, uv: SIMD2<Float>(1, 0))
+        let c = mesh.addVertex(SIMD3<Float>(half, 0.001, half), normal: up, uv: SIMD2<Float>(1, 1))
+        let d = mesh.addVertex(SIMD3<Float>(-half, 0.001, half), normal: up, uv: SIMD2<Float>(0, 1))
+        mesh.addTriangle(a, d, c)
+        mesh.addTriangle(a, c, b)
+        return mesh
     }
 
     private func build(extent: Int) {

@@ -156,6 +156,7 @@ public final class SceneRenderer {
         for id in scene.orderedIDs() where dirty.contains(id) || nodes[id] == nil {
             update(id, in: document)
         }
+        if lightBudget != nil, !lights.isEmpty { applyLightBudget() }
     }
 
     private func update(_ id: ObjectID, in document: Document) {
@@ -647,6 +648,87 @@ public final class SceneRenderer {
 
     // MARK: Lights
 
+    /// One scene light, for the live stage's light budget.
+    private final class LightSlot {
+        weak var light: Entity?
+        let radius: Float
+        let directional: Bool
+        /// Shadows as the object asks for them, and a way to switch them.
+        let wantsShadow: Bool
+        let setShadow: (Bool) -> Void
+        var shadowOn: Bool
+
+        init(light: Entity, radius: Float, directional: Bool, wantsShadow: Bool, setShadow: @escaping (Bool) -> Void) {
+            self.light = light
+            self.radius = radius
+            self.directional = directional
+            self.wantsShadow = wantsShadow
+            self.setShadow = setShadow
+            shadowOn = wantsShadow
+        }
+    }
+
+    private var lights: [LightSlot] = []
+    private var budgetView: (eye: SIMD3<Float>, forward: SIMD3<Float>)?
+
+    /// Live stage only (nil = every light shines, as in exports): how many point / spot lights shine at once and how
+    /// many of them cast shadows. The ones nearest to what you're looking at win. A big set with twenty lamps spread
+    /// over five rooms then lights (and shadow-maps) only the room you're in, instead of all of them every frame.
+    public var lightBudget: (lights: Int, shadows: Int)? {
+        didSet { applyLightBudget() }
+    }
+
+    /// Where the stage looks from (called on every camera move; cheap: a handful of lights, changes only on a switch).
+    public func budgetLights(eye: SIMD3<Float>, forward: SIMD3<Float>) {
+        budgetView = (eye, forward)
+        applyLightBudget()
+    }
+
+    private func applyLightBudget() {
+        lights.removeAll { $0.light == nil || $0.light?.parent == nil }
+        guard let budget = lightBudget, let view = budgetView else {
+            for slot in lights {
+                slot.light?.isEnabled = true
+                if slot.shadowOn != slot.wantsShadow {
+                    slot.setShadow(slot.wantsShadow)
+                    slot.shadowOn = slot.wantsShadow
+                }
+            }
+            return
+        }
+        var ranked: [(slot: LightSlot, score: Float)] = []
+        for slot in lights {
+            guard let light = slot.light, light.parent?.isEnabledInHierarchy == true else { continue }
+            if slot.directional {
+                ranked.append((slot, -1))
+                continue
+            }
+            let position = light.position(relativeTo: nil)
+            let offset = position - view.eye
+            let gap = max(simd_length(offset) - slot.radius, 0)
+            // Wholly behind the camera: it can't light anything in view.
+            let behind = simd_dot(offset, view.forward) < -slot.radius
+            ranked.append((slot, behind ? gap + 10000 : gap))
+        }
+        ranked.sort { $0.score < $1.score }
+        var shining = 0
+        var shadows = 0
+        for (slot, _) in ranked {
+            let on = slot.directional || shining < budget.lights
+            if !slot.directional, on { shining += 1 }
+            if slot.light?.isEnabled != on { slot.light?.isEnabled = on }
+            var shadow = false
+            if on, slot.wantsShadow, shadows < budget.shadows {
+                shadow = true
+                shadows += 1
+            }
+            if shadow != slot.shadowOn {
+                slot.setShadow(shadow)
+                slot.shadowOn = shadow
+            }
+        }
+    }
+
     private func lightContent(_ type: LightType, object: SceneObject, palette: Palette) -> Entity {
         let color = (object[.lightColor]?.colorValue?.resolved(in: palette) ?? .white).uiColor
         let intensity = Float(object[.lightIntensity]?.floatValue ?? 1)
@@ -660,6 +742,7 @@ public final class SceneRenderer {
             light.light.intensity = intensity * 12000
             light.light.attenuationRadius = max(range, 0.1)
             container.addChild(light)
+            lights.append(LightSlot(light: light, radius: max(range, 0.1), directional: false, wantsShadow: false) { _ in })
         case .spot:
             let light = SpotLight()
             let angle = Float(object[.spotAngle]?.floatValue ?? 40)
@@ -670,12 +753,18 @@ public final class SceneRenderer {
             light.light.innerAngleInDegrees = angle * 0.6
             if shadows { light.shadow = SpotLightComponent.Shadow() }
             container.addChild(light)
+            lights.append(LightSlot(light: light, radius: max(range, 0.1), directional: false, wantsShadow: shadows) { [weak light] on in
+                light?.shadow = on ? SpotLightComponent.Shadow() : nil
+            })
         case .directional:
             let light = DirectionalLight()
             light.light.color = color
             light.light.intensity = intensity * 2600
             if shadows { light.shadow = DirectionalLightComponent.Shadow(maximumDistance: 40, depthBias: 2) }
             container.addChild(light)
+            lights.append(LightSlot(light: light, radius: .infinity, directional: true, wantsShadow: shadows) { [weak light] on in
+                light?.shadow = on ? DirectionalLightComponent.Shadow(maximumDistance: 40, depthBias: 2) : nil
+            })
         }
         // Editor icon: a small glowing bulb in the light's colour.
         let icon = ModelEntity(mesh: .generateSphere(radius: 0.06), materials: [MaterialFactory.shared.helper(color: color)])

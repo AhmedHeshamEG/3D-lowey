@@ -149,7 +149,10 @@ public final class FrameCompositor: @unchecked Sendable {
         if post.depthOfField, let lens = look.lens, lens.aperture > 0, let scaledDepth {
             result = lensBlur(result, depth: scaledDepth, lens: lens, height: height)
         }
-        if post.outline > 0, let scaledDepth {
+        if post.outline > 0, previewHalos, let depth {
+            // Live stage: the lines are found in the (half-size) depth itself, then stretched over the picture.
+            result = previewOutline(result, depth: depth, strength: post.outline, color: post.outlineColor, height: height)
+        } else if post.outline > 0, let scaledDepth {
             result = outline(result, depth: scaledDepth, strength: post.outline, color: post.outlineColor, height: height)
         }
         if look.glow > 0 {
@@ -224,6 +227,23 @@ public final class FrameCompositor: @unchecked Sendable {
         clamp.minComponents = CIVector(x: 0, y: 0, z: 0, w: 1)
         clamp.maxComponents = CIVector(x: 1, y: 1, z: 1, w: 1)
         guard let mask = clamp.outputImage else { return image }
+        if previewHalos {
+            // Live stage: one soft copy at a quarter of the size, mixed in where the mask says (out of focus). It reads
+            // like the variable blur for a fraction of its cost, which at full size was the heaviest thing on screen.
+            let shrink = CIFilter.lanczosScaleTransform()
+            shrink.inputImage = image
+            shrink.scale = 0.25
+            shrink.aspectRatio = 1
+            let soft = CIFilter.gaussianBlur()
+            soft.inputImage = shrink.outputImage?.clampedToExtent()
+            soft.radius = Float(maxRadius * 0.25 * 0.6)
+            guard let blurred = soft.outputImage?.transformed(by: CGAffineTransform(scaleX: 4, y: 4)).cropped(to: image.extent) else { return image }
+            let mix = CIFilter.blendWithMask()
+            mix.inputImage = blurred
+            mix.backgroundImage = image
+            mix.maskImage = mask
+            return mix.outputImage?.cropped(to: image.extent) ?? image
+        }
         let blur = CIFilter.maskedVariableBlur()
         blur.inputImage = image.clampedToExtent()
         blur.mask = mask
@@ -257,6 +277,23 @@ public final class FrameCompositor: @unchecked Sendable {
         blend.inputImage = CIImage(color: CIColor(red: color.r, green: color.g, blue: color.b)).cropped(to: image.extent)
         blend.backgroundImage = image
         blend.maskImage = lines.cropped(to: image.extent)
+        return blend.outputImage ?? image
+    }
+
+    /// Live stage: ink outlines found at the depth image's own size (half the view), then stretched over the picture.
+    private func previewOutline(_ image: CIImage, depth: CIImage, strength: Double, color: RGBA, height: CGFloat) -> CIImage {
+        let factor = depth.extent.height / max(height, 1)
+        let edges = CIFilter.edges()
+        edges.inputImage = depth
+        edges.intensity = Float(6 + strength * 30)
+        let thicken = CIFilter.morphologyMaximum()
+        thicken.inputImage = edges.outputImage
+        thicken.radius = Float(max(height / 1080 * (0.6 + strength * 1.6) * factor, 0.5))
+        guard let lines = thicken.outputImage.map({ colorMatrix($0, gain: 1.6, bias: -0.12) }) else { return image }
+        let blend = CIFilter.blendWithMask()
+        blend.inputImage = CIImage(color: CIColor(red: color.r, green: color.g, blue: color.b)).cropped(to: image.extent)
+        blend.backgroundImage = image
+        blend.maskImage = fit(lines.cropped(to: depth.extent), to: image.extent)
         return blend.outputImage ?? image
     }
 

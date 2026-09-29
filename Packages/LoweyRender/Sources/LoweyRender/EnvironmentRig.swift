@@ -65,8 +65,10 @@ public final class EnvironmentRig {
         ground.isEnabled = look.ground.visible && !backdropHidden
         let groundScale = Float(max(look.ground.size, 1))
         ground.scale = SIMD3<Float>(groundScale, 1, groundScale)
-        let groundKey = SurfaceKey(color: look.ground.color, roughness: 0.95, fog: fog)
-        ground.model?.materials = [depthPass ? MaterialFactory.shared.depthMaterial : MaterialFactory.shared.material(for: groundKey)]
+        let below = Self.skyBelowHorizon(look)
+        ground.model?.materials = [depthPass ? MaterialFactory.shared.depthMaterial : MaterialFactory.shared.groundMaterial(
+            color: look.ground.color, fog: fog, horizon: below.horizon, bottom: below.bottom, radius: Double(groundScale)
+        )]
 
         // Sky (+ ambient light from the same gradient) only when sky/fog changed.
         if previous?.sky != look.sky || previous?.fog != look.fog || previous?.lighting.ambientIntensity != look.lighting.ambientIntensity
@@ -87,6 +89,22 @@ public final class EnvironmentRig {
             ambientExponent = Float(log2(max(look.lighting.ambientIntensity, 0.02))) + Float(look.lighting.exposure)
             rebuildEnvironment(for: look)
         }
+    }
+
+    /// The sky's horizon and bottom colours exactly as `skyImage` draws them (fog tint, exposure, clipped), for the
+    /// ground's rim to melt into.
+    static func skyBelowHorizon(_ look: Look) -> (horizon: RGBA, bottom: RGBA) {
+        var horizon = look.sky.horizon
+        var bottom = look.sky.bottom
+        if look.fog.enabled {
+            horizon = horizon.lerp(to: look.fog.color, 0.6)
+            bottom = bottom.lerp(to: look.fog.color, 0.8)
+        }
+        let exposure = pow(2, look.lighting.exposure)
+        func exposed(_ color: RGBA) -> RGBA {
+            RGBA(min(color.r * exposure, 1), min(color.g * exposure, 1), min(color.b * exposure, 1))
+        }
+        return (exposed(horizon), exposed(bottom))
     }
 
     private func exposureFactor(_ look: Look) -> Float {
@@ -176,7 +194,7 @@ public final class EnvironmentRig {
     /// Unit-radius flat disc (scaled by the ground size).
     static func groundDisc() -> MeshData {
         var mesh = MeshData()
-        let segments = 64
+        let segments = 128
         let up = SIMD3<Float>(0, 1, 0)
         let center = mesh.addVertex(.zero, normal: up, uv: SIMD2<Float>(0.5, 0.5))
         for segment in 0 ... segments {

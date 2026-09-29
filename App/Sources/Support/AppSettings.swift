@@ -10,4 +10,14 @@ enum AppSettings {
     /// How fast the on-screen joystick moves, turns and sizes things (1 = normal, the feel from before v1.4.1).
     static let joystickSpeed = "joystickSpeed"
     static let joystickSpeedRange = 0.25 ... 3.0
+    /// How fast your fingers move around the scene: orbit, pan and pinch zoom (and a camera's moves in Camera mode).
+    /// 1 = normal, the feel it always had.
+    static let navigationSpeed = "navigationSpeed"
+    static let navigationSpeedRange = 0.25 ... 3.0
+
+    /// The navigation speed setting, clamped (read when a gesture starts).
+    static var navigationFactor: Double {
+        let stored = UserDefaults.standard.object(forKey: navigationSpeed) as? Double ?? 1
+        return min(max(stored, navigationSpeedRange.lowerBound), navigationSpeedRange.upperBound)
+    }
 }

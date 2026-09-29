@@ -20,6 +20,10 @@ public final class StageView: ARView {
     private let helpers = Entity()
 
     public private(set) var viewpoint = Viewpoint.default
+    /// The stage's real frame rate, reported every two seconds (measured from RealityKit's own updates).
+    public var onFrameRate: ((Double) -> Void)?
+    private var pacing: (frames: Int, elapsed: Double) = (0, 0)
+    private var pacingSubscription: (any Cancellable)?
     /// Called whenever the camera moves (to refresh screen-space overlays, save the viewpoint…).
     public var onCameraChanged: ((Viewpoint) -> Void)?
 
@@ -109,12 +113,29 @@ public final class StageView: ARView {
         guide.show(nil)
         cameraEntity.name = "EditorCamera"
         anchor.addChild(cameraEntity)
+        // The live view lights what you look at: the 8 nearest point / spot lights, 2 of them with shadows.
+        renderer.lightBudget = (lights: 8, shadows: 2)
         renderer.environment.onEnvironmentChanged = { [weak self] resource, exponent in
             guard let self, let resource else { return }
             environment.lighting.resource = resource
             environment.lighting.intensityExponent = exponent
         }
         setViewpoint(.default)
+        pacingSubscription = scene.subscribe(to: SceneEvents.Update.self) { [weak self] event in
+            let delta = event.deltaTime
+            MainActor.assumeIsolated { self?.measure(delta) }
+        }
+    }
+
+    private func measure(_ delta: TimeInterval) {
+        // Skip stalls (a sheet opening, the app coming back): they aren't the stage's pace.
+        guard delta > 0, delta < 0.5 else { return }
+        pacing.frames += 1
+        pacing.elapsed += delta
+        guard pacing.elapsed >= 2 else { return }
+        let rate = Double(pacing.frames) / pacing.elapsed
+        pacing = (0, 0)
+        onFrameRate?(rate)
     }
 
     @available(*, unavailable)
@@ -155,6 +176,7 @@ public final class StageView: ARView {
             cameraEntity.transform = RealityKit.Transform(scale: .one, rotation: camera.orientation, translation: camera.position)
             cameraEntity.components.set(PerspectiveCameraComponent(near: 0.02, far: 3000, fieldOfViewInDegrees: camera.fieldOfView))
             renderer.environment.follow(camera: Vec3(camera.position))
+            renderer.budgetLights(eye: camera.position, forward: camera.orientation.act(SIMD3<Float>(0, 0, -1)))
         } else {
             setViewpoint(viewpoint, notify: false)
         }
@@ -175,7 +197,9 @@ public final class StageView: ARView {
         cameraEntity.components.set(PerspectiveCameraComponent(near: value.projection == .orthographic ? 1 : 0.02,
                                                                far: far, fieldOfViewInDegrees: Float(pose.fieldOfView)))
         renderer.environment.follow(camera: pose.eye)
+        renderer.budgetLights(eye: pose.eye.simd, forward: pose.rotation.simd.act(SIMD3<Float>(0, 0, -1)))
         updateGizmoScale()
+        updateGridPixelAngle()
         if notify { onCameraChanged?(value) }
     }
 
@@ -334,6 +358,23 @@ public final class StageView: ARView {
         }
         strokePreview.isEnabled = true
         strokePreview.model = ModelComponent(mesh: resource, materials: [SimpleMaterial(color: color, roughness: 0.7, isMetallic: false)])
+    }
+
+    /// Keeps the grid's lines about a pixel wide (they depend on the field of view and the drawable's height).
+    private func updateGridPixelAngle() {
+        let pixels = Double(bounds.height * contentScaleFactor)
+        guard pixels > 1 else { return }
+        let fieldOfView = Self.cameraPose(for: viewpoint).fieldOfView
+        grid.setPixelAngle(Float(2 * tan(fieldOfView * .pi / 360) / pixels))
+    }
+
+    override public func layoutSubviews() {
+        super.layoutSubviews()
+        updateGridPixelAngle()
+    }
+
+    override public var contentScaleFactor: CGFloat {
+        didSet { updateGridPixelAngle() }
     }
 
     public var showsGrid: Bool {
