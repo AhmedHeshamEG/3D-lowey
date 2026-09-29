@@ -19,6 +19,8 @@ struct JoystickPad: View {
     @State private var ticker = FrameTicker()
     /// Live values read by the per-frame step (a reference, so the ticker sees updates).
     @State private var input = JoystickInput()
+    /// The speed setting (scene menu → Joystick speed); 1 = normal.
+    @AppStorage(AppSettings.joystickSpeed) private var speedSetting = 1.0
 
     private let radius: CGFloat = 58
     private let travel: CGFloat = 30
@@ -166,6 +168,7 @@ struct JoystickPad: View {
         guard !(stickHeld && slideHeld) else { return }
         gestureKey = UUID().uuidString
         input.lastTimestamp = nil
+        input.speed = min(max(speedSetting, AppSettings.joystickSpeedRange.lowerBound), AppSettings.joystickSpeedRange.upperBound)
         ticker.start { timestamp in step(at: timestamp) }
     }
 
@@ -205,13 +208,13 @@ struct JoystickPad: View {
         let forward = Vec3(-sin(yaw), 0, -cos(yaw))
         switch editor.gizmoMode {
         case .move:
-            let speed = max(stage.viewpoint.distance * 0.6, 0.4)
+            let speed = max(stage.viewpoint.distance * 0.3, 0.2) * input.speed
             var delta = (right * x + forward * -y) * speed * dt
             delta.y = slide * speed * 0.6 * dt
             if delta.lengthSquared > 1e-12 { editor.translateSelection(by: delta, gesture: gestureKey) }
         case .rotate:
-            // Up to 180° a second at the rim.
-            let speed = Double.pi * dt
+            // Up to about 80° a second at the rim (normal speed).
+            let speed = 0.45 * Double.pi * input.speed * dt
             // Stick up leans the top away from you (about the axis to your right), right leans it right (about the
             // axis you look along). Real X / Z axes, so the numbers in the inspector stay clean.
             let (pitchAxis, pitchSign) = Self.nearestAxis(right)
@@ -221,7 +224,7 @@ struct JoystickPad: View {
             // Slider right: the side facing you turns to the right.
             if slide != 0 { editor.rotateSelection(by: slide * speed, axis: .y, gesture: gestureKey) }
         case .scale:
-            let factor = exp((-y + x) * 1.2 * dt)
+            let factor = exp((-y + x) * 0.6 * input.speed * dt)
             if abs(factor - 1) > 1e-9 { editor.scaleSelection(by: Vec3(factor, factor, factor), gesture: gestureKey) }
         }
     }
@@ -233,6 +236,7 @@ final class JoystickInput {
     var y = 0.0
     var slide = 0.0
     var lastTimestamp: CFTimeInterval?
+    var speed = 1.0
 }
 
 /// Calls a closure every display frame while running, with the frame's timestamp.
