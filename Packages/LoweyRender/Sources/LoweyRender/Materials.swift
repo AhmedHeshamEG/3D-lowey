@@ -190,7 +190,7 @@ public final class MaterialFactory {
         do {
             var custom = try CustomMaterial(surfaceShader: CustomMaterial.SurfaceShader(named: "loweyGrid", in: library),
                                             geometryModifier: nil, lightingModel: .unlit)
-            custom.blending = .transparent(opacity: 1)
+            custom.blending = .transparent(opacity: .init(floatLiteral: 1))
             custom.faceCulling = .none
             custom.custom.value = SIMD4<Float>(pixelAngle, 0, 0, 0)
             return custom
