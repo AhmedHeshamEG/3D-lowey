@@ -1,0 +1,56 @@
+# hmm. studio limits (STUDIO §3): files 500 lines, type bodies 350, functions 60, cyclomatic complexity 12, all errors.
+included:
+  - Sources
+  - Tests
+excluded:
+  - .build
+
+identifier_name:
+  min_length: 1
+  max_length: 60
+  excluded: [id, x, y, z, w, r, g, b, a, t, u, v, p, q, n]
+type_name:
+  min_length: 2
+  max_length: 50
+line_length:
+  warning: 150
+  error: 160
+  ignores_comments: true
+  ignores_urls: true
+file_length:
+  warning: 450
+  error: 500
+type_body_length:
+  warning: 300
+  error: 350
+function_body_length:
+  warning: 50
+  error: 60
+cyclomatic_complexity:
+  warning: 10
+  error: 12
+  ignores_case_statements: true
+large_tuple:
+  warning: 4
+  error: 5
+function_parameter_count:
+  warning: 8
+  error: 10
+nesting:
+  type_level: 3
+  function_level: 4
+
+disabled_rules:
+  - todo
+  - trailing_comma
+  - opening_brace
+  - multiple_closures_with_trailing_closure
+  - optional_data_string_conversion # String(decoding:as:) is the deliberate, lossless-enough choice for logs and tests
+
+opt_in_rules:
+  - empty_count
+  - first_where
+  - contains_over_first_not_nil
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - force_unwrapping
