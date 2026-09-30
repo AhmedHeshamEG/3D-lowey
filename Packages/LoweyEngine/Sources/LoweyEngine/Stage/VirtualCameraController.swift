@@ -7,8 +7,12 @@ import UIKit
 /// how the device moved since tracking started; the editor applies that motion to a scene camera
 /// (translation scaled up so a small room can film a big world) and records it through Perform.
 @MainActor
-final class VirtualCameraController: NSObject, ARSessionDelegate {
-    static var isSupported: Bool { ARWorldTrackingConfiguration.isSupported }
+public final class VirtualCameraController: NSObject, ARSessionDelegate {
+    override public init() {
+        super.init()
+    }
+
+    public static var isSupported: Bool { ARWorldTrackingConfiguration.isSupported }
 
     private let session = ARSession()
     private var origin: simd_float4x4?
@@ -16,10 +20,10 @@ final class VirtualCameraController: NSObject, ARSessionDelegate {
     private var roll = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 0, 1))
 
     /// Motion since `start()` as a local transform of the camera.
-    var onPose: ((CoreTransform) -> Void)?
-    var onFailure: ((String) -> Void)?
+    public var onPose: ((CoreTransform) -> Void)?
+    public var onFailure: ((String) -> Void)?
 
-    func start() {
+    public func start() {
         let orientation = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.effectiveGeometry.interfaceOrientation ?? .landscapeRight
         let angle: Float = switch orientation {
         case .portrait: .pi / 2
@@ -36,13 +40,13 @@ final class VirtualCameraController: NSObject, ARSessionDelegate {
         session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     }
 
-    func stop() {
+    public func stop() {
         session.pause()
         session.delegate = nil
         origin = nil
     }
 
-    nonisolated func session(_: ARSession, didUpdate frame: ARFrame) {
+    public nonisolated func session(_: ARSession, didUpdate frame: ARFrame) {
         let transform = frame.camera.transform
         let tracking: Bool = if case .normal = frame.camera.trackingState {
             true
@@ -54,7 +58,7 @@ final class VirtualCameraController: NSObject, ARSessionDelegate {
         }
     }
 
-    nonisolated func session(_: ARSession, didFailWithError error: Error) {
+    public nonisolated func session(_: ARSession, didFailWithError error: Error) {
         let message = "Camera tracking stopped: \(error.localizedDescription)"
         MainActor.assumeIsolated {
             self.onFailure?(message)

@@ -5,10 +5,10 @@ import os
 import QuartzCore
 
 /// Decodes audio files to float PCM at a fixed rate (mixing, waveforms, loudness).
-enum AudioDecoder {
-    static let sampleRate = 48000.0
+public enum AudioDecoder {
+    public static let sampleRate = 48000.0
 
-    enum DecodeError: Error, CustomStringConvertible {
+    public enum DecodeError: Error, CustomStringConvertible {
         case unreadable(String)
 
         var description: String {
@@ -19,7 +19,7 @@ enum AudioDecoder {
     }
 
     /// Up to two channels at `sampleRate`, deinterleaved.
-    static func decode(_ url: URL, sampleRate: Double = sampleRate) throws -> PCMAudio {
+    public static func decode(_ url: URL, sampleRate: Double = sampleRate) throws -> PCMAudio {
         let file = try AVAudioFile(forReading: url)
         let source = file.processingFormat
         let channels = min(Int(source.channelCount), 2)
@@ -67,7 +67,7 @@ enum AudioDecoder {
         return PCMAudio(sampleRate: sampleRate, channels: output)
     }
 
-    static func duration(of url: URL) -> Double? {
+    public static func duration(of url: URL) -> Double? {
         guard let file = try? AVAudioFile(forReading: url) else { return nil }
         return Double(file.length) / file.processingFormat.sampleRate
     }
@@ -76,28 +76,28 @@ enum AudioDecoder {
 /// Plays the timeline's audio in the editor, locked to the same clock as the picture.
 /// One player node (+ an EQ for gain above 1) per clip; gains follow fades and envelopes per frame.
 @MainActor
-final class AudioPlayback {
+public final class AudioPlayback {
     private let engine = AVAudioEngine()
     private var nodes: [String: (player: AVAudioPlayerNode, eq: AVAudioUnitEQ)] = [:]
     private var files: [String: AVAudioFile] = [:]
     private let logger = Logger(subsystem: "com.hesham.lowey", category: "audio")
     /// Host time (CACurrentMediaTime) at which timeline time `time` is heard.
     private(set) var anchor: (host: CFTimeInterval, time: Double)?
-    var folder: URL
+    public var folder: URL
 
-    init(folder: URL) {
+    public init(folder: URL) {
         self.folder = folder
     }
 
-    var isPlaying: Bool { anchor != nil }
+    public var isPlaying: Bool { anchor != nil }
 
     /// The timeline time being heard now (the picture follows this, so sound and image never drift).
-    var currentTime: Double? {
+    public var currentTime: Double? {
         guard let anchor else { return nil }
         return anchor.time + max(CACurrentMediaTime() - anchor.host, 0)
     }
 
-    func file(_ name: String) -> AVAudioFile? {
+    public func file(_ name: String) -> AVAudioFile? {
         if let cached = files[name] { return cached }
         let url = folder.appendingPathComponent(name)
         guard let file = try? AVAudioFile(forReading: url) else { return nil }
@@ -105,13 +105,13 @@ final class AudioPlayback {
         return file
     }
 
-    func forget(_ name: String) {
+    public func forget(_ name: String) {
         files[name] = nil
     }
 
     /// Starts every clip that is (or will be) heard from `time` on. Returns false without audio.
     @discardableResult
-    func play(_ clips: [AudioClip], from time: Double, until end: Double) -> Bool {
+    public func play(_ clips: [AudioClip], from time: Double, until end: Double) -> Bool {
         stop()
         let audible = clips.filter { !$0.muted && $0.end > time && $0.start < end }
         guard !audible.isEmpty else { return false }
@@ -160,7 +160,7 @@ final class AudioPlayback {
     }
 
     /// Fades and envelopes, applied once per displayed frame.
-    func updateGains(_ clips: [AudioClip], at time: Double) {
+    public func updateGains(_ clips: [AudioClip], at time: Double) {
         for clip in clips {
             guard let node = nodes[clip.id] else { continue }
             apply(gain: clip.gain(at: time), to: node)
@@ -172,7 +172,7 @@ final class AudioPlayback {
         node.eq.globalGain = gain > 1 ? Float(min(20 * log10(gain), 24)) : 0
     }
 
-    func stop() {
+    public func stop() {
         for node in nodes.values {
             node.player.stop()
             engine.detach(node.player)
@@ -183,7 +183,7 @@ final class AudioPlayback {
     }
 
     /// A short snippet at `time` while scrubbing (hear the word you're on).
-    func scrub(_ clips: [AudioClip], at time: Double) {
+    public func scrub(_ clips: [AudioClip], at time: Double) {
         guard !isPlaying else { return }
         play(clips, from: time, until: time + 0.09)
         anchor = nil
@@ -192,22 +192,24 @@ final class AudioPlayback {
 
 /// Records a voiceover into the project's audio folder.
 @MainActor
-final class VoiceRecorder {
+public final class VoiceRecorder {
+    public init() {}
+
     private var recorder: AVAudioRecorder?
     private(set) var url: URL?
 
-    var isRecording: Bool { recorder?.isRecording ?? false }
-    var level: Float {
+    public var isRecording: Bool { recorder?.isRecording ?? false }
+    public var level: Float {
         recorder?.updateMeters()
         guard let power = recorder?.averagePower(forChannel: 0) else { return 0 }
         return max(0, min(1, (power + 50) / 50))
     }
 
-    static func requestPermission() async -> Bool {
+    public static func requestPermission() async -> Bool {
         await AVAudioApplication.requestRecordPermission()
     }
 
-    func start(in folder: URL, name: String) throws -> URL {
+    public func start(in folder: URL, name: String) throws -> URL {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker, .allowBluetoothA2DP])
@@ -228,7 +230,7 @@ final class VoiceRecorder {
     }
 
     /// Stops and returns the file and its length.
-    func stop() -> (URL, Double)? {
+    public func stop() -> (URL, Double)? {
         guard let recorder, let url else { return nil }
         let duration = recorder.currentTime
         recorder.stop()
@@ -238,7 +240,7 @@ final class VoiceRecorder {
         return (url, AudioDecoder.duration(of: url) ?? duration)
     }
 
-    enum VoiceRecorderError: Error, CustomStringConvertible {
+    public enum VoiceRecorderError: Error, CustomStringConvertible {
         case couldNotStart
 
         var description: String { "The microphone didn't start" }

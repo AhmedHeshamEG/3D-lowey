@@ -6,20 +6,20 @@ import os
 import Vision
 
 /// One analysed camera frame: the face (nil = no face in view), the hands, and what the preview draws.
-struct FaceSample: @unchecked Sendable {
-    var face: FaceLandmarks?
+public struct FaceSample: @unchecked Sendable {
+    public var face: FaceLandmarks?
     /// Hand channels from body tracking (nil when this frame didn't look for the body).
-    var hands: [PropertyKey: Double]?
+    public var hands: [PropertyKey: Double]?
     /// Tracking dots and bones in normalised picture coordinates (0…1, y down), as the preview shows them.
-    var dots: [CGPoint]
-    var bones: [(CGPoint, CGPoint)]
+    public var dots: [CGPoint]
+    public var bones: [(CGPoint, CGPoint)]
     /// A small mirrored picture of the camera for the preview (a few times a second).
-    var preview: CGImage?
+    public var preview: CGImage?
 }
 
 /// Reads your face (and upper body) from the iPad's front camera with Vision, no TrueDepth needed. Frames arrive upright
 /// and mirrored (like a mirror, and like the preview), so what Vision sees is what you see.
-final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
+public final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     private let session = AVCaptureSession()
     private let queue = DispatchQueue(label: "com.hesham.lowey.face")
     private let logger = Logger(subsystem: "com.hesham.lowey", category: "face")
@@ -31,19 +31,19 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
     private var rotation: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
     /// Called on the main actor for every analysed frame.
-    let onSample: @MainActor @Sendable (FaceSample) -> Void
+    public let onSample: @MainActor @Sendable (FaceSample) -> Void
 
-    init(onSample: @escaping @MainActor @Sendable (FaceSample) -> Void) {
+    public init(onSample: @escaping @MainActor @Sendable (FaceSample) -> Void) {
         self.onSample = onSample
         super.init()
     }
 
-    static func requestAccess() async -> Bool {
+    public static func requestAccess() async -> Bool {
         await AVCaptureDevice.requestAccess(for: .video)
     }
 
     @MainActor
-    func start() throws {
+    public func start() throws {
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
             throw FaceCaptureError.noCamera
         }
@@ -77,13 +77,13 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
         connection.videoRotationAngle = angle
     }
 
-    func stop() {
+    public func stop() {
         rotationObservation?.invalidate()
         rotationObservation = nil
         queue.async { [session] in session.stopRunning() }
     }
 
-    func captureOutput(_: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from _: AVCaptureConnection) {
+    public func captureOutput(_: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from _: AVCaptureConnection) {
         let now = CACurrentMediaTime()
         guard now - lastFrame > 1.0 / 30, let pixels = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         lastFrame = now
@@ -127,7 +127,7 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
         return context.createCGImage(small, from: small.extent)
     }
 
-    static func landmarks(_ observation: VNFaceObservation) -> FaceLandmarks? {
+    public static func landmarks(_ observation: VNFaceObservation) -> FaceLandmarks? {
         guard let marks = observation.landmarks else { return nil }
         func points(_ region: VNFaceLandmarkRegion2D?) -> [Vec2] {
             region?.normalizedPoints.map { Vec2(Double($0.x), Double($0.y)) } ?? []
@@ -147,7 +147,7 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
     }
 
     /// Every landmark as a dot in picture space (y down).
-    static func dots(_ observation: VNFaceObservation) -> [CGPoint] {
+    public static func dots(_ observation: VNFaceObservation) -> [CGPoint] {
         guard let points = observation.landmarks?.allPoints?.normalizedPoints else { return [] }
         let box = observation.boundingBox
         return points.map { point in
@@ -155,12 +155,12 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
         }
     }
 
-    static func joint(_ body: VNHumanBodyPoseObservation?, _ name: VNHumanBodyPoseObservation.JointName) -> BodySolver.Joint? {
+    public static func joint(_ body: VNHumanBodyPoseObservation?, _ name: VNHumanBodyPoseObservation.JointName) -> BodySolver.Joint? {
         guard let point = try? body?.recognizedPoint(name) else { return nil }
         return BodySolver.Joint(x: Double(point.location.x), y: Double(point.location.y), confidence: Double(point.confidence))
     }
 
-    static func hands(_ body: VNHumanBodyPoseObservation?) -> [PropertyKey: Double] {
+    public static func hands(_ body: VNHumanBodyPoseObservation?) -> [PropertyKey: Double] {
         BodySolver.channels(
             BodySolver.Arm(shoulder: joint(body, .leftShoulder), wrist: joint(body, .leftWrist)),
             BodySolver.Arm(shoulder: joint(body, .rightShoulder), wrist: joint(body, .rightWrist))
@@ -168,7 +168,7 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
     }
 
     /// Shoulders, arms and neck as lines for the preview.
-    static func bones(_ body: VNHumanBodyPoseObservation?) -> [(CGPoint, CGPoint)] {
+    public static func bones(_ body: VNHumanBodyPoseObservation?) -> [(CGPoint, CGPoint)] {
         guard let body else { return [] }
         let pairs: [(VNHumanBodyPoseObservation.JointName, VNHumanBodyPoseObservation.JointName)] = [
             (.leftShoulder, .rightShoulder), (.leftShoulder, .leftElbow), (.leftElbow, .leftWrist),
@@ -180,7 +180,7 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
         }
     }
 
-    enum FaceCaptureError: Error, CustomStringConvertible {
+    public enum FaceCaptureError: Error, CustomStringConvertible {
         case noCamera
 
         var description: String { "No front camera" }
@@ -189,16 +189,18 @@ final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
 
 /// Turns raw faces into smooth character channels: calibrates the neutral face, filters jitter, mirrors.
 @MainActor
-final class FacePerformer {
+public final class FacePerformer {
+    public init() {}
+
     private var neutral: FaceMeasure?
     private var filters: [PropertyKey: OneEuroFilter] = [:]
     /// Your rest pose (head angles, gaze, dials), taken when capture starts and whenever you ask.
     private(set) var rest = RestPose()
     private var wantsRest = true
-    var mirror = true
+    public var mirror = true
 
     /// Use the next face as "neutral" (relaxed, looking at the iPad): Character Animator's Set Rest Pose.
-    func recalibrate() {
+    public func recalibrate() {
         neutral = nil
         wantsRest = true
         filters = [:]
@@ -206,7 +208,7 @@ final class FacePerformer {
 
     /// Camera face → channels (measured from your neutral face and rest pose, filtered, mirrored). The iPad's frames are
     /// mirrored, so the solver's picture sides are already the mirror's sides.
-    func channels(for face: FaceLandmarks, at time: Double) -> [PropertyKey: Double] {
+    public func channels(for face: FaceLandmarks, at time: Double) -> [PropertyKey: Double] {
         if neutral == nil { neutral = FaceSolver.measure(face) }
         guard let neutral else { return [:] }
         return finish(FaceSolver.channels(face, neutral: neutral), at: time)
@@ -214,12 +216,12 @@ final class FacePerformer {
 
     /// Channels that arrive ready (the iPhone's ARKit face, sent with the mirror's sides): the same rest pose,
     /// filtering and mirroring.
-    func channels(fromLink values: [PropertyKey: Double], at time: Double) -> [PropertyKey: Double] {
+    public func channels(fromLink values: [PropertyKey: Double], at time: Double) -> [PropertyKey: Double] {
         finish(values, at: time)
     }
 
     /// Hands from the body tracker (already in on-screen sides; the mirror switch swaps them).
-    func hands(_ values: [PropertyKey: Double], at time: Double) -> [PropertyKey: Double] {
+    public func hands(_ values: [PropertyKey: Double], at time: Double) -> [PropertyKey: Double] {
         var result = values
         if !mirror {
             result[.handLeftX] = values[.handRightX]

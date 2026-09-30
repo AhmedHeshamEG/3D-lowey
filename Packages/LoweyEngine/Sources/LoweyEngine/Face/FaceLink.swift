@@ -10,39 +10,41 @@ import UIKit
 import Vision
 
 /// Bonjour service the iPhone companion streams face channels to.
-enum FaceLinkService {
-    static let type = "_loweyface._tcp"
+public enum FaceLinkService {
+    public static let type = "_loweyface._tcp"
 }
 
 /// One line of the face link (newline-separated JSON): channels every time, the preview's dots and bones, and now and
 /// then a small JPEG of the camera. Channels use the mirror's sides (see `FaceSolver`).
-struct FaceLinkMessage: Codable {
+public struct FaceLinkMessage: Codable {
     /// Channel name → value.
-    var c: [String: Double]?
+    public var c: [String: Double]?
     /// Tracking dots, normalised picture coordinates (x, y down), flattened.
-    var p: [Double]?
+    public var p: [Double]?
     /// Bones as x1, y1, x2, y2 quadruples, flattened.
-    var b: [Double]?
+    public var b: [Double]?
     /// A small JPEG of the camera (base64).
-    var j: String?
+    public var j: String?
 }
 
 /// iPad side: receives face channels from an iPhone with Face ID (ARKit face tracking — more precise than the
 /// iPad's camera). Local network only.
 @MainActor
-final class FaceLinkReceiver {
+public final class FaceLinkReceiver {
+    public init() {}
+
     private var listener: NWListener?
     private var connections: [NWConnection] = []
     private let logger = Logger(subsystem: "com.hesham.lowey", category: "facelink")
     /// Channels (face and, when the phone sees them, hands).
-    var onChannels: (([PropertyKey: Double]) -> Void)?
+    public var onChannels: (([PropertyKey: Double]) -> Void)?
     /// What the preview shows: dots, bones and (sometimes) a picture.
-    var onPreview: (([CGPoint], [(CGPoint, CGPoint)], CGImage?) -> Void)?
-    var onStatus: ((String) -> Void)?
+    public var onPreview: (([CGPoint], [(CGPoint, CGPoint)], CGImage?) -> Void)?
+    public var onStatus: ((String) -> Void)?
 
-    var isRunning: Bool { listener != nil }
+    public var isRunning: Bool { listener != nil }
 
-    func start() {
+    public func start() {
         guard listener == nil else { return }
         do {
             let listener = try NWListener(using: .tcp)
@@ -67,7 +69,7 @@ final class FaceLinkReceiver {
         }
     }
 
-    func stop() {
+    public func stop() {
         listener?.cancel()
         listener = nil
         for connection in connections {
@@ -112,7 +114,7 @@ final class FaceLinkReceiver {
     }
 
     /// A message line (or an older companion's plain channel dictionary).
-    static func decode(_ line: Data) -> FaceLinkMessage? {
+    public static func decode(_ line: Data) -> FaceLinkMessage? {
         if let message = try? JSONDecoder().decode(FaceLinkMessage.self, from: line), message.c != nil || message.p != nil {
             return message
         }
@@ -142,7 +144,11 @@ final class FaceLinkReceiver {
 
 /// iPhone side (the companion screen): ARKit face tracking (+ Vision body tracking for the hands) → channels → the iPad.
 @MainActor
-final class FaceLinkSender: NSObject, ARSessionDelegate {
+public final class FaceLinkSender: NSObject, ARSessionDelegate {
+    override public init() {
+        super.init()
+    }
+
     private let session = ARSession()
     private var browser: NWBrowser?
     private var connection: NWConnection?
@@ -154,13 +160,13 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
     private var bodyBusy = false
     private let bodyQueue = DispatchQueue(label: "com.hesham.lowey.body")
     private let context = CIContext(options: [.cacheIntermediates: false])
-    var onStatus: ((String) -> Void)?
+    public var onStatus: ((String) -> Void)?
     /// The companion's own preview: the picture as sent, dots, bones.
-    var onPreview: ((CGImage?, [CGPoint], [(CGPoint, CGPoint)]) -> Void)?
+    public var onPreview: ((CGImage?, [CGPoint], [(CGPoint, CGPoint)]) -> Void)?
 
-    static var isSupported: Bool { ARFaceTrackingConfiguration.isSupported }
+    public static var isSupported: Bool { ARFaceTrackingConfiguration.isSupported }
 
-    func start() {
+    public func start() {
         guard Self.isSupported else {
             onStatus?("This iPhone has no Face ID camera")
             return
@@ -183,7 +189,7 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
         onStatus?("Looking for your iPad…")
     }
 
-    func stop() {
+    public func stop() {
         session.pause()
         browser?.cancel()
         browser = nil
@@ -212,7 +218,7 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
         self.connection = connection
     }
 
-    nonisolated func session(_: ARSession, didUpdate frame: ARFrame) {
+    public nonisolated func session(_: ARSession, didUpdate frame: ARFrame) {
         guard let face = frame.anchors.compactMap({ $0 as? ARFaceAnchor }).first else { return }
         let values = Self.channels(face)
         let dots = Self.dots(face, frame: frame)
@@ -264,16 +270,16 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
         return context.createCGImage(small, from: small.extent)
     }
 
-    static func points(_ flat: [Double]) -> [CGPoint] {
+    public static func points(_ flat: [Double]) -> [CGPoint] {
         stride(from: 0, to: flat.count - 1, by: 2).map { CGPoint(x: flat[$0], y: flat[$0 + 1]) }
     }
 
-    static func segments(_ flat: [Double]) -> [(CGPoint, CGPoint)] {
+    public static func segments(_ flat: [Double]) -> [(CGPoint, CGPoint)] {
         stride(from: 0, to: flat.count - 3, by: 4).map { (CGPoint(x: flat[$0], y: flat[$0 + 1]), CGPoint(x: flat[$0 + 2], y: flat[$0 + 3])) }
     }
 
     /// Hands and bones from the camera picture (portrait, then mirrored so sides match the preview).
-    nonisolated static func body(_ pixels: CVPixelBuffer) -> (hands: [String: Double], bones: [Double]) {
+    public nonisolated static func body(_ pixels: CVPixelBuffer) -> (hands: [String: Double], bones: [Double]) {
         let request = VNDetectHumanBodyPoseRequest()
         let handler = VNImageRequestHandler(cvPixelBuffer: pixels, orientation: .leftMirrored)
         guard (try? handler.perform([request])) != nil, let body = request.results?.first else { return ([:], []) }
@@ -302,7 +308,7 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
     }
 
     /// A few dozen points of the face mesh, where they are in the (mirrored, portrait) picture.
-    nonisolated static func dots(_ face: ARFaceAnchor, frame: ARFrame) -> [Double] {
+    public nonisolated static func dots(_ face: ARFaceAnchor, frame: ARFrame) -> [Double] {
         let vertices = face.geometry.vertices
         let viewport = CGSize(width: 1, height: 1)
         var result: [Double] = []
@@ -318,7 +324,7 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
 
     /// ARKit blend shapes → Lowey face channels, with the mirror's sides (your left eye is the one on the left of the
     /// preview; turning to your left turns the character to the stage's left).
-    nonisolated static func channels(_ face: ARFaceAnchor) -> [String: Double] {
+    public nonisolated static func channels(_ face: ARFaceAnchor) -> [String: Double] {
         func shape(_ key: ARFaceAnchor.BlendShapeLocation) -> Double { face.blendShapes[key]?.doubleValue ?? 0 }
         let brows = shape(.browInnerUp) * 0.6 + (shape(.browOuterUpLeft) + shape(.browOuterUpRight)) * 0.3
             - (shape(.browDownLeft) + shape(.browDownRight)) * 0.5
@@ -348,5 +354,5 @@ final class FaceLinkSender: NSObject, ARSessionDelegate {
 }
 
 private extension simd_float4x4 {
-    var rotationQuaternion: simd_quatf { simd_quatf(self) }
+    public var rotationQuaternion: simd_quatf { simd_quatf(self) }
 }

@@ -5,9 +5,9 @@ import LoweyCore
 /// A temporary voiceover for samples and tests: the device's own speech voice says each sentence at its time.
 /// Hesham replaces it with his recording (Audio → Record voiceover / import) and re-transcribes.
 @MainActor
-enum PlaceholderVoice {
+public enum PlaceholderVoice {
     /// Speaks `lines` (text, start seconds) into one audio file of `duration` seconds at `url` (.m4a or .caf/.wav).
-    static func render(_ lines: [(String, Double)], duration: Double, to url: URL, language: String = "en-US") async throws {
+    public static func render(_ lines: [(String, Double)], duration: Double, to url: URL, language: String = "en-US") async throws {
         let rate = 48000.0
         var mix = [Float](repeating: 0, count: Int(duration * rate))
         for (text, start) in lines {
@@ -21,7 +21,7 @@ enum PlaceholderVoice {
     }
 
     /// One utterance as mono float samples at `sampleRate`. Nonisolated: the synthesizer calls back on its own thread.
-    nonisolated static func speak(_ text: String, language: String, sampleRate: Double) async throws -> [Float] {
+    public nonisolated static func speak(_ text: String, language: String, sampleRate: Double) async throws -> [Float] {
         let synthesizer = AVSpeechSynthesizer()
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: language)
@@ -45,7 +45,7 @@ enum PlaceholderVoice {
     }
 
     /// Resamples one synthesiser buffer to mono float.
-    nonisolated static func convert(_ buffer: AVAudioPCMBuffer, sampleRate: Double) -> [Float] {
+    public nonisolated static func convert(_ buffer: AVAudioPCMBuffer, sampleRate: Double) -> [Float] {
         var output: [Float] = []
         do {
             guard let target = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false),
@@ -69,7 +69,7 @@ enum PlaceholderVoice {
         return output
     }
 
-    static func write(_ samples: [Float], sampleRate: Double, to url: URL) throws {
+    public static func write(_ samples: [Float], sampleRate: Double, to url: URL) throws {
         try? FileManager.default.removeItem(at: url)
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false) else { return }

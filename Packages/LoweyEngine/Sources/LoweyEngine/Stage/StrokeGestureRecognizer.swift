@@ -2,8 +2,8 @@ import UIKit
 import UIKit.UIGestureRecognizerSubclass
 
 /// Captures one drawing stroke with pressure and coalesced (high-frequency) Pencil samples.
-final class StrokeGestureRecognizer: UIGestureRecognizer {
-    struct Sample {
+public final class StrokeGestureRecognizer: UIGestureRecognizer {
+    public struct Sample {
         var location: CGPoint
         /// 0...1 (fingers report ~0.6).
         var pressure: Double
@@ -12,15 +12,15 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
     private(set) var samples: [Sample] = []
     private var trackedTouch: UITouch?
     /// Draw, then hold still: called once per stroke (QuickShape). Moving on after it keeps reporting samples.
-    var onHold: (() -> Void)?
+    public var onHold: (() -> Void)?
     /// How long the tip must rest, and how far it may drift while resting (points).
-    var holdDuration: TimeInterval = 0.45
-    var holdTolerance: CGFloat = 5
+    public var holdDuration: TimeInterval = 0.45
+    public var holdTolerance: CGFloat = 5
     private(set) var held = false
     private var holdAnchor: CGPoint?
     private var holdTimer: Timer?
 
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+    override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         guard trackedTouch == nil, let touch = touches.first else {
             for touch in touches where touch !== trackedTouch {
                 ignore(touch, for: event)
@@ -33,7 +33,7 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
         armHold(at: samples[0].location)
     }
 
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+    override public func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
         guard let touch = trackedTouch, touches.contains(touch) else { return }
         let coalesced = event.coalescedTouches(for: touch) ?? [touch]
         for item in coalesced {
@@ -59,17 +59,17 @@ final class StrokeGestureRecognizer: UIGestureRecognizer {
         }
     }
 
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+    override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
         guard let touch = trackedTouch, touches.contains(touch) else { return }
         samples.append(sample(touch))
         state = .ended
     }
 
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+    override public func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
         state = .cancelled
     }
 
-    override func reset() {
+    override public func reset() {
         super.reset()
         trackedTouch = nil
         samples = []
