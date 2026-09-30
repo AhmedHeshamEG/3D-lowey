@@ -31,7 +31,8 @@ let package = Package(
         .testTarget(
             name: "LoweyCoreTests",
             dependencies: ["LoweyCore"],
-            path: "Tests/LoweyCoreTests"
+            path: "Tests/LoweyCoreTests",
+            resources: [.copy("Fixtures")]
         )
     ],
     swiftLanguageModes: [.v6]
