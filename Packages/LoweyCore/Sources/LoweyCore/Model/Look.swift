@@ -154,9 +154,13 @@ public struct Ground: Codable, Hashable, Sendable {
     }
 }
 
-/// Everything about how a world looks. Lives in the project (default for all scenes)
-/// and optionally per scene. There is no house style: every value is the project's.
+/// Everything about how a world looks: the Look (render style: Ink, Comic, Sketch, Clay, Low-poly or "My Look"),
+/// the mood (sun, sky, fog), the palette and the finish. Lives in the project (default for all scenes) and
+/// optionally per scene.
 public struct Look: Codable, Hashable, Sendable {
+    /// The render style (`LookPreset` id). New projects use Ink.
+    public var presetID: String
+    /// Mesh shading of imported models and legacy content (the Look's smoothing decides the shading of the rest).
     public var shading: ShadingStyle
     public var palette: Palette
     public var lightingPreset: LightingPreset?
@@ -168,15 +172,17 @@ public struct Look: Codable, Hashable, Sendable {
     public var post: PostSettings
 
     public init(
+        presetID: String = LookLibrary.defaultID,
         shading: ShadingStyle = .smooth,
         palette: Palette = .starter,
         lightingPreset: LightingPreset? = .day,
         lighting: Lighting = Lighting(),
-        sky: Sky = LookPresets.sky(for: .day),
+        sky: Sky = MoodPresets.sky(for: .day),
         fog: Fog = Fog(),
         ground: Ground = Ground(),
         post: PostSettings = PostSettings()
     ) {
+        self.presetID = presetID
         self.shading = shading
         self.palette = palette
         self.lightingPreset = lightingPreset
@@ -188,11 +194,12 @@ public struct Look: Codable, Hashable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case shading, palette, lightingPreset, lighting, sky, fog, ground, post
+        case presetID, shading, palette, lightingPreset, lighting, sky, fog, ground, post
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        presetID = try c.decodeIfPresent(String.self, forKey: .presetID) ?? LookLibrary.defaultID
         shading = try c.decode(ShadingStyle.self, forKey: .shading)
         palette = try c.decode(Palette.self, forKey: .palette)
         lightingPreset = try c.decodeIfPresent(LightingPreset.self, forKey: .lightingPreset)
@@ -205,6 +212,7 @@ public struct Look: Codable, Hashable, Sendable {
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(presetID, forKey: .presetID)
         try c.encode(shading, forKey: .shading)
         try c.encode(palette, forKey: .palette)
         try c.encodeIfPresent(lightingPreset, forKey: .lightingPreset)
@@ -215,12 +223,19 @@ public struct Look: Codable, Hashable, Sendable {
         if post != PostSettings() { try c.encode(post, forKey: .post) }
     }
 
-    public static let `default` = LookPresets.look(for: .day)
+    public static let `default` = MoodPresets.look(for: .day)
+
+    /// The same world in another Look (render style).
+    public func withPreset(_ id: String) -> Look {
+        var look = self
+        look.presetID = id
+        return look
+    }
 
     /// Applies a lighting preset: sun, sky, fog. Keeps palette, shading and ground color.
     public func applying(_ preset: LightingPreset) -> Look {
         var look = self
-        let presetLook = LookPresets.look(for: preset)
+        let presetLook = MoodPresets.look(for: preset)
         look.lightingPreset = preset
         look.lighting = presetLook.lighting
         look.sky = presetLook.sky
@@ -230,7 +245,7 @@ public struct Look: Codable, Hashable, Sendable {
 }
 
 /// The six built-in lighting moods. Tuned for low-poly worlds.
-public enum LookPresets {
+public enum MoodPresets {
     public static func look(for preset: LightingPreset) -> Look {
         switch preset {
         case .day:

@@ -262,7 +262,7 @@ struct PresetCard: View {
     let selected: Bool
 
     var body: some View {
-        let sky = LookPresets.sky(for: preset)
+        let sky = MoodPresets.sky(for: preset)
         VStack(spacing: 8) {
             ZStack(alignment: .bottom) {
                 LinearGradient(colors: [sky.top.color, sky.horizon.color, sky.bottom.color], startPoint: .top, endPoint: .bottom)

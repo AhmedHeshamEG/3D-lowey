@@ -19,7 +19,7 @@ final class SerializationTests: XCTestCase {
     func testEnvelopeShape() throws {
         let data = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
         let raw = try LoweyJSON.decode(JSONValue.self, from: data)
-        XCTAssertEqual(raw["schemaVersion"]?.numberValue, Double(SchemaCoder.currentVersion))
+        XCTAssertEqual(raw["schemaVersion"]?.numberValue, Double(LoweySchema.currentVersion))
         XCTAssertEqual(raw["kind"]?.stringValue, "scene")
         XCTAssertNotNil(raw["payload"]?["objects"]?["a"])
     }
@@ -74,33 +74,33 @@ final class SerializationTests: XCTestCase {
         {"schemaVersion": 99, "kind": "scene", "payload": {}}
         """
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data(future.utf8))) { error in
-            XCTAssertEqual(error as? SchemaError, .newerThanApp(found: 99, supported: SchemaCoder.currentVersion))
+            XCTAssertEqual(error as? SchemaError, .newerThanApp(app: "3D-lowey", found: 99, supported: LoweySchema.currentVersion))
         }
     }
 
     func testMissingMigrationAndMalformed() throws {
-        let coder = SchemaCoder(migrations: [], currentVersion: SchemaCoder.currentVersion + 1)
+        let coder = SchemaCoder(appName: "3D-lowey", currentVersion: LoweySchema.currentVersion + 1, migrations: [])
         let current = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
         XCTAssertThrowsError(try coder.decode(Scene.self, kind: .scene, from: current)) { error in
-            XCTAssertEqual(error as? SchemaError, .missingMigration(from: SchemaCoder.currentVersion))
+            XCTAssertEqual(error as? SchemaError, .missingMigration(kind: "scene", from: LoweySchema.currentVersion))
         }
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data("not json".utf8)))
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data("{\"schemaVersion\":1,\"payload\":{}}".utf8)))
-        for error in [SchemaError.newerThanApp(found: 2, supported: 1), .missingMigration(from: 0), .malformed("x")] {
+        for error in [SchemaError.newerThanApp(app: "3D-lowey", found: 2, supported: 1), .missingMigration(kind: "scene", from: 0), .malformed("x")] {
             XCTAssertFalse(error.description.isEmpty)
         }
     }
 
     func testCustomMigrationChain() throws {
         // A future version that rewrites the name, proving the chain runs in order.
-        let next = SchemaCoder.currentVersion
-        let coder = SchemaCoder(migrations: SchemaCoder.builtInMigrations + [
+        let next = LoweySchema.currentVersion
+        let coder = SchemaCoder(appName: "3D-lowey", currentVersion: next + 1, migrations: LoweySchema.migrations + [
             Migration(kind: .scene, from: next) { payload in
                 var p = payload
                 p["name"] = .string((payload["name"]?.stringValue ?? "") + " (migrated)")
                 return p
             }
-        ], currentVersion: next + 1)
+        ])
         let current = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
         let scene = try coder.decode(Scene.self, kind: .scene, from: current)
         XCTAssertEqual(scene.name, "Test (migrated)")
@@ -118,7 +118,27 @@ final class SerializationTests: XCTestCase {
         let library = try SchemaCoder.shared.decode(LibraryManifest.self, kind: .library,
                                                     from: Data(#"{"schemaVersion":1,"kind":"library","payload":{"assets":[],"prefabs":[],"looks":[]}}"#.utf8))
         XCTAssertTrue(library.scripts.isEmpty)
-        XCTAssertEqual(SchemaCoder.currentVersion, 3)
+        XCTAssertEqual(LoweySchema.currentVersion, 4)
+    }
+
+    func testVersion1LooksKeepTheirAppearance() throws {
+        // A 1.x project: its look had no render style. Smooth → Clay, faceted → Low-poly; new looks are Ink.
+        var project = try JSONSerialization.jsonObject(with: SchemaCoder.shared.encode(ProjectInfo(id: "p", name: "Old"), kind: .project))
+            as? [String: Any] ?? [:]
+        project["schemaVersion"] = 3
+        var payload = project["payload"] as? [String: Any] ?? [:]
+        var look = payload["look"] as? [String: Any] ?? [:]
+        look.removeValue(forKey: "presetID")
+        payload["look"] = look
+        project["payload"] = payload
+        let old = try JSONSerialization.data(withJSONObject: project)
+        XCTAssertEqual(try SchemaCoder.shared.decode(ProjectInfo.self, kind: .project, from: old).look.presetID, "clay")
+        look["shading"] = "flat"
+        payload["look"] = look
+        project["payload"] = payload
+        let faceted = try JSONSerialization.data(withJSONObject: project)
+        XCTAssertEqual(try SchemaCoder.shared.decode(ProjectInfo.self, kind: .project, from: faceted).look.presetID, "lowPoly")
+        XCTAssertEqual(ProjectInfo(id: "n", name: "New").look.presetID, "ink")
     }
 
     func testJSONValue() throws {

@@ -90,7 +90,7 @@ final class LibraryModel: LibraryProviding {
 
     private func studio() async -> EnvironmentResource? {
         if let studioEnvironment { return studioEnvironment }
-        let look = LookPresets.look(for: .studio)
+        let look = MoodPresets.look(for: .studio)
         guard let image = EnvironmentRig.skyImage(look: look, width: 256, height: 128, stars: false) else { return nil }
         studioEnvironment = try? await EnvironmentResource(equirectangular: image, withName: "studio")
         return studioEnvironment
@@ -270,7 +270,7 @@ final class LibraryModel: LibraryProviding {
     }
 
     func saveLook(_ look: Look, name: String) {
-        let preset = LookPreset(id: .make(), name: name, look: look)
+        let preset = SavedLook(id: .make(), name: name, look: look)
         manifest.looks.append(preset)
         save()
         if let image = EnvironmentRig.skyImage(look: look, width: 256, height: 256, stars: true) {

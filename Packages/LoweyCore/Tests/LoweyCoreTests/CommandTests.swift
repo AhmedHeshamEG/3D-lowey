@@ -50,8 +50,8 @@ final class CommandTests: XCTestCase {
         let document = makeDocument()
         try assertReverts(.rename("a", "Renamed"), on: document)
         try assertReverts(.setKind("a", .asset("tree")), on: document)
-        try assertReverts(.setLook(LookPresets.look(for: .night), scope: .project), on: document)
-        try assertReverts(.setLook(LookPresets.look(for: .dusk), scope: .scene), on: document)
+        try assertReverts(.setLook(MoodPresets.look(for: .night), scope: .project), on: document)
+        try assertReverts(.setLook(MoodPresets.look(for: .dusk), scope: .scene), on: document)
         try assertReverts(.renameScene("New name"), on: document)
         let cameraDoc = try assertReverts(
             .insert(SceneFragment(object: SceneObject(id: "cam", name: "Cam", kind: .camera)), parent: nil, index: nil),

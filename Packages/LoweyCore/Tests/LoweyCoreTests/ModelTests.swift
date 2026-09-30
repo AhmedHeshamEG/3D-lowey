@@ -179,7 +179,7 @@ final class ModelTests: XCTestCase {
 
     func testLookPresets() {
         for preset in LightingPreset.allCases {
-            let look = LookPresets.look(for: preset)
+            let look = MoodPresets.look(for: preset)
             XCTAssertEqual(look.lightingPreset, preset)
             XCTAssertFalse(preset.displayName.isEmpty)
             XCTAssertTrue(look.lighting.sunDirection.y < 0, "sun must shine downward")
@@ -188,8 +188,8 @@ final class ModelTests: XCTestCase {
         custom.palette = Palette(swatches: [])
         let night = custom.applying(.night)
         XCTAssertEqual(night.palette, custom.palette, "presets keep the palette")
-        XCTAssertEqual(night.lighting, LookPresets.look(for: .night).lighting)
-        XCTAssertEqual(night.sky.stars, LookPresets.sky(for: .night).stars)
+        XCTAssertEqual(night.lighting, MoodPresets.look(for: .night).lighting)
+        XCTAssertEqual(night.sky.stars, MoodPresets.sky(for: .night).stars)
         let document = makeDocument()
         XCTAssertEqual(document.effectiveLook, document.project.look)
         XCTAssertEqual(document.palette, document.project.look.palette)

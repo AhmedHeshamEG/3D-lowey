@@ -17,7 +17,7 @@ final class ProjectStoreTests: XCTestCase {
         try session.perform(ops.add(factory.primitive(.cube, at: Vec3(1, 0, 0))))
         try session.perform(ops.add(factory.light(.point, at: Vec3(0, 2, 0))))
         if let (dup, _) = ops.duplicate(["f-1"], in: session.document.scene) { try session.perform(dup) }
-        try session.perform(.setLook(LookPresets.look(for: .dusk), scope: .scene))
+        try session.perform(.setLook(MoodPresets.look(for: .dusk), scope: .scene))
         session.setViewpoint(Viewpoint(target: Vec3(1, 2, 3), yaw: 10, pitch: 20, distance: 4))
         try store.save(session.document, to: url, touch: false)
 

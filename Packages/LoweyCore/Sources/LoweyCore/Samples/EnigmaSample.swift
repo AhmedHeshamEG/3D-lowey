@@ -9,7 +9,7 @@ public enum EnigmaSample {
     /// Builds the sample project. Deterministic (sequential ids) so tests can compare output.
     public static func build(ids: IDFactory = .sequential("enigma")) throws -> (ProjectInfo, [Scene]) {
         var ids = ids
-        var look = LookPresets.look(for: .night)
+        var look = MoodPresets.look(for: .night)
         look.palette = Palette(swatches: [
             .init(name: "Paper", color: RGBA(hex: "#EFE4C8")!),
             .init(name: "Desk wood", color: RGBA(hex: "#6B4428")!),

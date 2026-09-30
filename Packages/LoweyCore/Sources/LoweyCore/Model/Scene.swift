@@ -220,6 +220,14 @@ public struct ProjectInfo: Codable, Hashable, Sendable, Identifiable {
     public var sceneOrder: [SceneID]
     public var sceneNames: [SceneID: String]
     public var lastOpenedScene: SceneID?
+    /// The project's own Looks ("My Look"), stored only when there are some.
+    private var looks: [LookPreset]?
+
+    /// The project's own Looks ("My Look" duplicates of the built-ins).
+    public var customLooks: [LookPreset] {
+        get { looks ?? [] }
+        set { looks = newValue.isEmpty ? nil : newValue }
+    }
 
     public init(
         id: ProjectID, name: String, created: Date = Date(), modified: Date = Date(), look: Look = .default,

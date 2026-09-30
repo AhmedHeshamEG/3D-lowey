@@ -92,15 +92,15 @@ public struct Prefab: Codable, Hashable, Sendable, Identifiable {
 }
 
 /// A saved look ("environment preset").
-public struct LookPreset: Codable, Hashable, Sendable, Identifiable {
-    public var id: LookPresetID
+public struct SavedLook: Codable, Hashable, Sendable, Identifiable {
+    public var id: SavedLookID
     public var name: String
     public var look: Look
     public var favorite: Bool
     public var added: Date
     public var lastUsed: Date?
 
-    public init(id: LookPresetID, name: String, look: Look, favorite: Bool = false, added: Date = Date(), lastUsed: Date? = nil) {
+    public init(id: SavedLookID, name: String, look: Look, favorite: Bool = false, added: Date = Date(), lastUsed: Date? = nil) {
         self.id = id
         self.name = name
         self.look = look
@@ -136,10 +136,10 @@ public struct ScriptAsset: Codable, Hashable, Sendable, Identifiable {
 public struct LibraryManifest: Codable, Hashable, Sendable {
     public var assets: [LibraryAsset]
     public var prefabs: [Prefab]
-    public var looks: [LookPreset]
+    public var looks: [SavedLook]
     public var scripts: [ScriptAsset]
 
-    public init(assets: [LibraryAsset] = [], prefabs: [Prefab] = [], looks: [LookPreset] = [], scripts: [ScriptAsset] = []) {
+    public init(assets: [LibraryAsset] = [], prefabs: [Prefab] = [], looks: [SavedLook] = [], scripts: [ScriptAsset] = []) {
         self.assets = assets
         self.prefabs = prefabs
         self.looks = looks
@@ -152,13 +152,13 @@ public struct LibraryManifest: Codable, Hashable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         assets = try c.decodeIfPresent([LibraryAsset].self, forKey: .assets) ?? []
         prefabs = try c.decodeIfPresent([Prefab].self, forKey: .prefabs) ?? []
-        looks = try c.decodeIfPresent([LookPreset].self, forKey: .looks) ?? []
+        looks = try c.decodeIfPresent([SavedLook].self, forKey: .looks) ?? []
         scripts = try c.decodeIfPresent([ScriptAsset].self, forKey: .scripts) ?? []
     }
 
     public func asset(_ id: AssetID) -> LibraryAsset? { assets.first { $0.id == id } }
     public func prefab(_ id: PrefabID) -> Prefab? { prefabs.first { $0.id == id } }
-    public func look(_ id: LookPresetID) -> LookPreset? { looks.first { $0.id == id } }
+    public func look(_ id: SavedLookID) -> SavedLook? { looks.first { $0.id == id } }
     public func script(_ id: ScriptID) -> ScriptAsset? { scripts.first { $0.id == id } }
 }
 
@@ -166,7 +166,7 @@ public struct LibraryManifest: Codable, Hashable, Sendable {
 public enum LibraryItem: Hashable, Sendable, Identifiable {
     case asset(LibraryAsset)
     case prefab(Prefab)
-    case look(LookPreset)
+    case look(SavedLook)
     case script(ScriptAsset)
 
     public var id: String {

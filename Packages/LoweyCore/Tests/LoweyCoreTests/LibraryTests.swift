@@ -16,7 +16,7 @@ final class LibraryTests: XCTestCase {
                 LibraryAsset(id: "desk", name: "Desk", tags: ["office", "furniture"], format: .obj, file: "desk.obj", added: now)
             ],
             prefabs: [Prefab(id: "lamp", name: "Warm desk lamp", tags: ["light"], fragment: SceneFragment(objects: [], roots: []))],
-            looks: [LookPreset(id: "moody", name: "Moody night", look: LookPresets.look(for: .night))]
+            looks: [SavedLook(id: "moody", name: "Moody night", look: MoodPresets.look(for: .night))]
         )
     }
 

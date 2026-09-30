@@ -303,7 +303,15 @@ public struct PropertySpec: Sendable, Hashable {
         .browAngle: PropertySpec(type: .float, animatable: true, label: "Brow angle"),
         .squash: PropertySpec(type: .float, animatable: true, label: "Squash & stretch"),
         .cartoon: PropertySpec(type: .float, animatable: false, label: "Cartoon springiness"),
-        .autoBlink: PropertySpec(type: .bool, animatable: false, label: "Blink on its own")
+        .autoBlink: PropertySpec(type: .bool, animatable: false, label: "Blink on its own"),
+        .lookPreset: PropertySpec(type: .enumeration, animatable: false, label: "Look"),
+        .lineWeight: PropertySpec(type: .float, animatable: true, label: "Line weight"),
+        .smoothing: PropertySpec(type: .float, animatable: false, label: "Shape smoothing"),
+        .rimStrength: PropertySpec(type: .float, animatable: true, label: "Rim light"),
+        .glossy: PropertySpec(type: .bool, animatable: false, label: "Glossy"),
+        .accent: PropertySpec(type: .bool, animatable: false, label: "Accent"),
+        .bevel: PropertySpec(type: .float, animatable: false, label: "Bevel"),
+        .bevelSegments: PropertySpec(type: .int, animatable: false, label: "Bevel segments")
     ]
 }
 
