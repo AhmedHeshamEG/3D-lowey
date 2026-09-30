@@ -109,6 +109,18 @@ public extension EditCommand {
             document.scene.timeline = timeline
             return (.setTimeline(old), ChangeSet(objects: Set(timeline.tracks.map(\.target) + old.tracks.map(\.target)), scene: true))
 
+        case let .setShadowPaint(id, dabs):
+            guard var object = document.scene.objects[id] else { throw CommandError.objectNotFound(id) }
+            let old = object.shadowDabs
+            object.shadowDabs = dabs
+            document.scene.objects[id] = object
+            return (.setShadowPaint(id, old), ChangeSet(objects: [id]))
+
+        case let .setCustomLooks(looks):
+            let old = document.project.customLooks
+            document.project.customLooks = looks
+            return (.setCustomLooks(old), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
+
         case let .setTracks(edits):
             var inverse: [TrackEdit] = []
             var changed = Set<ObjectID>()
