@@ -136,3 +136,47 @@ final class EngineGeometryTests: XCTestCase {
         XCTAssertEqual(Composition.allCases.count, 5)
     }
 }
+
+final class OutlineTests: XCTestCase {
+    private func square(_ size: Double, clockwise: Bool = false, offset: Double = 0) -> [Vec2] {
+        let points = [Vec2(offset, offset), Vec2(offset + size, offset), Vec2(offset + size, offset + size), Vec2(offset, offset + size)]
+        return clockwise ? points.reversed() : points
+    }
+
+    func testShapesFindHolesByNesting() {
+        let shapes = Outlines.shapes([square(4), square(2, offset: 1), square(1, offset: 10)])
+        XCTAssertEqual(shapes.count, 2)
+        XCTAssertEqual(shapes.first { $0.holes.count == 1 }?.holes.count, 1, "the inner square is a hole")
+        XCTAssertGreaterThan(DrawingMesher.signedArea(shapes[0].outer), 0, "outer contours run counter-clockwise")
+    }
+
+    func testExtrudedRingHasTheRightArea() {
+        let mesh = Outlines.extrude([square(4), square(2, offset: 1)], depth: 0.5)
+        XCTAssertFalse(mesh.isEmpty)
+        // Front-face area = 16 − 4 = 12.
+        var area: Float = 0
+        for tri in stride(from: 0, to: mesh.indices.count, by: 3) {
+            let a = mesh.positions[Int(mesh.indices[tri])], b = mesh.positions[Int(mesh.indices[tri + 1])]
+            let c = mesh.positions[Int(mesh.indices[tri + 2])]
+            guard a.z > 0.2, b.z > 0.2, c.z > 0.2 else { continue }
+            area += cross3(b - a, c - a).z / 2
+        }
+        XCTAssertEqual(area, 12, accuracy: 0.01)
+        let bounds = mesh.bounds
+        XCTAssertEqual(bounds?.size.z ?? 0, 0.5, accuracy: 1e-6)
+    }
+}
+
+final class NightMarketTests: XCTestCase {
+    func testBenchmarkSceneIsBigValidAndDeterministic() {
+        let (info, scene) = NightMarket.build()
+        XCTAssertEqual(info.look.presetID, "ink")
+        XCTAssertGreaterThanOrEqual(scene.objects.count, 380)
+        XCTAssertTrue(scene.validate().isEmpty, "\(scene.validate().prefix(3))")
+        XCTAssertEqual(scene.timeline.clipTracks.count, 6)
+        XCTAssertEqual(scene.objects.values.filter { $0.kind.assetID == NightMarket.walkerAsset }.count, 6)
+        XCTAssertEqual(scene.objects.values.filter { $0[.rigStandard]?.stringValue == "blob" }.count, 4)
+        XCTAssertEqual(NightMarket.build().1, scene, "the same frames every run")
+        XCTAssertEqual(NightMarket.facts(scene)["objects"], Double(scene.objects.count))
+    }
+}
