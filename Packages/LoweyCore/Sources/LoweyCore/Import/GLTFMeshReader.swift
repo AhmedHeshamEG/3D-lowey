@@ -16,7 +16,7 @@ public enum GLTFMeshReader {
         var parts: [ImportedPart] = []
         for (index, node) in nodes.enumerated() {
             guard let meshIndex = node["mesh"] as? Int else { continue }
-            let skinned = node["skin"] as? Int != nil
+            let skinned = node["skin"] is Int
             parts += try meshParts(file, mesh: meshIndex, transform: skinned ? .identity : globals[index] ?? .identity, skinned: skinned)
         }
         return try ImportedModel(parts: parts, materials: materials(file), textures: textures(file, baseURL: baseURL),

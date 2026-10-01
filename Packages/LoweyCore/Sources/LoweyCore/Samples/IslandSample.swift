@@ -9,7 +9,7 @@ public enum IslandSample {
         var look = Look.default.applying(.goldenHour)
         look.post = PostSettings.Preset.cinematic.settings
         look.ground.visible = false
-        look.fog = Fog(enabled: true, color: RGBA(hex: "#F6C48E")!, distance: 80)
+        look.fog = Fog(enabled: true, color: RGBA.hex("#F6C48E"), distance: 80)
         let info = ProjectInfo(id: ids.isSequential ? "island-project" : .make(), name: projectName, look: look)
         var scene = Scene(id: ids.isSequential ? "island-scene" : .make(), name: "Fly-through")
         scene.timeline = Timeline(fps: 30, duration: 10)

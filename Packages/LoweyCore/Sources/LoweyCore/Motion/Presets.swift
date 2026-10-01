@@ -120,6 +120,15 @@ public struct StaggerSettings: Hashable, Sendable {
     }
 }
 
+/// A key `time` seconds after the preset's start.
+struct PresetKeys: Sendable {
+    let start: Double
+
+    func callAsFunction(_ time: Double, _ value: PropertyValue, _ easing: Easing = .easeInOut) -> Keyframe {
+        Keyframe(time: start + time, value: value, easing: easing)
+    }
+}
+
 /// Builds keys for presets (single objects or staggered crowds).
 public struct PresetBuilder: Sendable {
     public var ids: IDFactory
@@ -136,9 +145,7 @@ public struct PresetBuilder: Sendable {
         let a = options.amplitude
         let t = object.transform
         let id = object.id
-        func k(_ time: Double, _ value: PropertyValue, _ easing: Easing = .easeInOut) -> Keyframe {
-            Keyframe(time: start + time, value: value, easing: easing)
-        }
+        let k = PresetKeys(start: start)
         switch preset {
         case .popIn:
             return [(id, .scale, [k(0, .vec3(t.scale * 0.001), .backOut), k(d, .vec3(t.scale))])]
@@ -161,47 +168,13 @@ public struct PresetBuilder: Sendable {
             let from = t.position + options.direction.normalized * a
             return [(id, .position, [k(0, .vec3(from), .backOut), k(d, .vec3(t.position))])]
         case .float:
-            let steps = 8
-            var keys: [Keyframe] = []
-            for index in 0 ... steps {
-                let phase = Double(index) / Double(steps) * 2 * .pi * 2
-                keys.append(k(d * Double(index) / Double(steps), .vec3(t.position + Vec3(0, sin(phase) * a, 0))))
-            }
-            return [(id, .position, keys)]
+            return [(id, .position, floatKeys(t.position, k: k, d: d, a: a))]
         case .shake:
-            var random = SeededRandom(seed: Noise.seed(id.raw))
-            var keys: [Keyframe] = [k(0, .vec3(t.position), .linear)]
-            let steps = 8
-            for index in 1 ..< steps {
-                let falloff = 1 - Double(index) / Double(steps)
-                let jitter = Vec3(random.range(-1, 1), random.range(-0.3, 0.3), random.range(-1, 1))
-                let offset: Vec3 = jitter * (a * falloff)
-                keys.append(k(d * Double(index) / Double(steps), .vec3(t.position + offset), .linear))
-            }
-            keys.append(k(d, .vec3(t.position)))
-            return [(id, .position, keys)]
+            return [(id, .position, shakeKeys(t.position, seed: Noise.seed(id.raw), k: k, d: d, a: a))]
         case .wiggle:
-            var keys: [Keyframe] = [k(0, .quat(t.rotation))]
-            let steps = 6
-            for index in 1 ..< steps {
-                let falloff = 1 - Double(index - 1) / Double(steps)
-                let angle = (index % 2 == 0 ? -1.0 : 1.0) * a * falloff * .pi / 180
-                keys.append(k(d * Double(index) / Double(steps), .quat((t.rotation * Quat(angle: angle, axis: .unitZ)).normalized)))
-            }
-            keys.append(k(d, .quat(t.rotation)))
-            return [(id, .rotation, keys)]
+            return [(id, .rotation, wiggleKeys(t.rotation, k: k, d: d, a: a))]
         case .spin:
-            // Quarter turns so slerp never takes the short way back.
-            let quarters = max(Int((abs(a) / 90).rounded(.up)), 1)
-            let step = a / Double(quarters) * .pi / 180
-            var keys: [Keyframe] = []
-            for index in 0 ... quarters {
-                let easing: Easing = quarters == 1 ? .easeInOut : (index == 0 ? .easeIn : (index == quarters - 1 ? .easeOut : .linear))
-                // Overlays turn in the frame; everything else spins around its vertical axis.
-                let rotation = (t.rotation * Quat(angle: step * Double(index), axis: object.kind.isOverlay ? .unitZ : .unitY)).normalized
-                keys.append(k(d * Double(index) / Double(quarters), .quat(rotation), easing))
-            }
-            return [(id, .rotation, keys)]
+            return [(id, .rotation, spinKeys(t.rotation, axis: object.kind.isOverlay ? .unitZ : .unitY, k: k, d: d, a: a))]
         case .fadeIn:
             return [(id, .opacity, [k(0, .float(0), .easeOut), k(d, .float(object.opacity))])]
         case .fadeOut:
@@ -224,6 +197,56 @@ public struct PresetBuilder: Sendable {
                 ])
             }
         }
+    }
+
+    static func floatKeys(_ position: Vec3, k: PresetKeys, d: Double, a: Double) -> [Keyframe] {
+        let steps = 8
+        var keys: [Keyframe] = []
+        for index in 0 ... steps {
+            let phase = Double(index) / Double(steps) * 2 * .pi * 2
+            keys.append(k(d * Double(index) / Double(steps), .vec3(position + Vec3(0, sin(phase) * a, 0))))
+        }
+        return keys
+    }
+
+    static func shakeKeys(_ position: Vec3, seed: UInt64, k: PresetKeys, d: Double, a: Double) -> [Keyframe] {
+        var random = SeededRandom(seed: seed)
+        var keys: [Keyframe] = [k(0, .vec3(position), .linear)]
+        let steps = 8
+        for index in 1 ..< steps {
+            let falloff = 1 - Double(index) / Double(steps)
+            let jitter = Vec3(random.range(-1, 1), random.range(-0.3, 0.3), random.range(-1, 1))
+            let offset: Vec3 = jitter * (a * falloff)
+            keys.append(k(d * Double(index) / Double(steps), .vec3(position + offset), .linear))
+        }
+        keys.append(k(d, .vec3(position)))
+        return keys
+    }
+
+    static func wiggleKeys(_ rotation: Quat, k: PresetKeys, d: Double, a: Double) -> [Keyframe] {
+        var keys: [Keyframe] = [k(0, .quat(rotation))]
+        let steps = 6
+        for index in 1 ..< steps {
+            let falloff = 1 - Double(index - 1) / Double(steps)
+            let angle = (index % 2 == 0 ? -1.0 : 1.0) * a * falloff * .pi / 180
+            keys.append(k(d * Double(index) / Double(steps), .quat((rotation * Quat(angle: angle, axis: .unitZ)).normalized)))
+        }
+        keys.append(k(d, .quat(rotation)))
+        return keys
+    }
+
+    /// Overlays turn in the frame (`axis` Z); everything else spins around its vertical axis.
+    static func spinKeys(_ rotation: Quat, axis: Vec3, k: PresetKeys, d: Double, a: Double) -> [Keyframe] {
+        // Quarter turns so slerp never takes the short way back.
+        let quarters = max(Int((abs(a) / 90).rounded(.up)), 1)
+        let step = a / Double(quarters) * .pi / 180
+        var keys: [Keyframe] = []
+        for index in 0 ... quarters {
+            let easing: Easing = quarters == 1 ? .easeInOut : (index == 0 ? .easeIn : (index == quarters - 1 ? .easeOut : .linear))
+            let turned = (rotation * Quat(angle: step * Double(index), axis: axis)).normalized
+            keys.append(k(d * Double(index) / Double(quarters), .quat(turned), easing))
+        }
+        return keys
     }
 
     /// Applies a preset to objects (staggered when more than one) as one undoable command.

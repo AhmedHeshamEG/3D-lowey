@@ -11,16 +11,16 @@ public enum EnigmaSample {
         var ids = ids
         var look = MoodPresets.look(for: .night)
         look.palette = Palette(swatches: [
-            .init(name: "Paper", color: RGBA(hex: "#EFE4C8")!),
-            .init(name: "Desk wood", color: RGBA(hex: "#6B4428")!),
-            .init(name: "Lamp", color: RGBA(hex: "#FFB45C")!),
-            .init(name: "Wall", color: RGBA(hex: "#2B3148")!),
-            .init(name: "Metal", color: RGBA(hex: "#9AA3B2")!),
-            .init(name: "Screen", color: RGBA(hex: "#7FD4FF")!),
-            .init(name: "Rock", color: RGBA(hex: "#4A4E5A")!),
-            .init(name: "Hero", color: RGBA(hex: "#E8EEF5")!),
-            .init(name: "Skin", color: RGBA(hex: "#D9A27E")!),
-            .init(name: "Shirt", color: RGBA(hex: "#5B6C8F")!)
+            .init(name: "Paper", color: RGBA.hex("#EFE4C8")),
+            .init(name: "Desk wood", color: RGBA.hex("#6B4428")),
+            .init(name: "Lamp", color: RGBA.hex("#FFB45C")),
+            .init(name: "Wall", color: RGBA.hex("#2B3148")),
+            .init(name: "Metal", color: RGBA.hex("#9AA3B2")),
+            .init(name: "Screen", color: RGBA.hex("#7FD4FF")),
+            .init(name: "Rock", color: RGBA.hex("#4A4E5A")),
+            .init(name: "Hero", color: RGBA.hex("#E8EEF5")),
+            .init(name: "Skin", color: RGBA.hex("#D9A27E")),
+            .init(name: "Shirt", color: RGBA.hex("#5B6C8F"))
         ])
         let info = ProjectInfo(id: ids.next(), name: projectName, created: Date(timeIntervalSince1970: 1_790_000_000),
                                modified: Date(timeIntervalSince1970: 1_790_000_000), look: look)
@@ -102,14 +102,14 @@ public enum EnigmaSample {
         var look = info.look
         look.lighting.sunIntensity = 0.12
         look.lighting.ambientIntensity = 0.45
-        look.fog = Fog(enabled: true, color: RGBA(hex: "#0D1020")!, distance: 14)
-        look.ground = Ground(visible: false, color: RGBA(hex: "#1A1D2B")!, size: 30)
+        look.fog = Fog(enabled: true, color: RGBA.hex("#0D1020"), distance: 14)
+        look.ground = Ground(visible: false, color: RGBA.hex("#1A1D2B"), size: 30)
         scene.look = look
         scene.viewpoint = Viewpoint(target: Vec3(0, 0.85, 0), yaw: 20, pitch: 32, distance: 3.4, fieldOfView: 42)
         var b = Builder(scene: scene, info: info, ids: ids)
 
         // Room shell.
-        try b.box("Floor", at: Vec3(0, -0.02, 0), size: Vec3(8, 0.02, 8), color: .rgba(RGBA(hex: "#23202A")!))
+        try b.box("Floor", at: Vec3(0, -0.02, 0), size: Vec3(8, 0.02, 8), color: .rgba(RGBA.hex("#23202A")))
         try b.box("Back wall", at: Vec3(0, 0, -1.6), size: Vec3(8, 3.2, 0.1), color: .palette(3))
         try b.box("Side wall", at: Vec3(-2.6, 0, 0), size: Vec3(0.1, 3.2, 8), color: .palette(3))
 
@@ -125,7 +125,7 @@ public enum EnigmaSample {
         try b.box("Army message", at: Vec3(-0.1, 0.78, 0.08), size: Vec3(0.3, 0.004, 0.42),
                   color: .palette(0), rotation: Vec3(0, -12, 0))
         try b.box("Envelope", at: Vec3(0.28, 0.78, 0.12), size: Vec3(0.24, 0.006, 0.14),
-                  color: .rgba(RGBA(hex: "#C9B48A")!), rotation: Vec3(0, 18, 0))
+                  color: .rgba(RGBA.hex("#C9B48A")), rotation: Vec3(0, 18, 0))
 
         // Warm desk lamp: base, drawn arm, cone shade, glowing bulb, point light.
         let lamp = try b.group("Desk lamp", at: Vec3(0.55, 0.78, -0.22))
@@ -140,15 +140,15 @@ public enum EnigmaSample {
                   color: .palette(4), rotation: Vec3(180, 0, 0), parent: lamp)
         try b.box("Bulb", .sphere, at: Vec3(-0.3, 0.36, 0.17), size: Vec3(0.07, 0.07, 0.07),
                   color: .palette(2), parent: lamp, glow: 3)
-        try b.light(.point, at: Vec3(-0.3, 0.33, 0.17), color: RGBA(hex: "#FFB45C")!, intensity: 2.2, range: 4, parent: lamp)
+        try b.light(.point, at: Vec3(-0.3, 0.33, 0.17), color: RGBA.hex("#FFB45C"), intensity: 2.2, range: 4, parent: lamp)
 
         // Chair blockout.
         let chair = try b.group("Chair", at: Vec3(0, 0, 0.75))
-        try b.box("Seat", at: Vec3(0, 0.45, 0), size: Vec3(0.45, 0.05, 0.45), color: .rgba(RGBA(hex: "#3C2A1E")!), parent: chair)
-        try b.box("Back", at: Vec3(0, 0.45, 0.2), size: Vec3(0.45, 0.5, 0.04), color: .rgba(RGBA(hex: "#3C2A1E")!), parent: chair)
+        try b.box("Seat", at: Vec3(0, 0.45, 0), size: Vec3(0.45, 0.05, 0.45), color: .rgba(RGBA.hex("#3C2A1E")), parent: chair)
+        try b.box("Back", at: Vec3(0, 0.45, 0.2), size: Vec3(0.45, 0.5, 0.04), color: .rgba(RGBA.hex("#3C2A1E")), parent: chair)
         for (x, z) in [(-0.2, -0.2), (0.2, -0.2), (-0.2, 0.2), (0.2, 0.2)] {
             try b.box("Chair leg", .cylinder, at: Vec3(x, 0, z), size: Vec3(0.035, 0.45, 0.035),
-                      color: .rgba(RGBA(hex: "#3C2A1E")!), parent: chair)
+                      color: .rgba(RGBA.hex("#3C2A1E")), parent: chair)
         }
         ids = b.ids
         return b.session.document.scene
@@ -159,25 +159,25 @@ public enum EnigmaSample {
         var look = info.look
         look.lighting.sunIntensity = 0.3
         look.lighting.ambientIntensity = 0.8
-        look.fog = Fog(enabled: true, color: RGBA(hex: "#101528")!, distance: 22)
-        look.ground = Ground(visible: false, color: RGBA(hex: "#1A1D2B")!, size: 40)
+        look.fog = Fog(enabled: true, color: RGBA.hex("#101528"), distance: 22)
+        look.ground = Ground(visible: false, color: RGBA.hex("#1A1D2B"), size: 40)
         scene.look = look
         scene.viewpoint = Viewpoint(target: Vec3(1.8, 0.8, 1.6), yaw: 28, pitch: 30, distance: 9, fieldOfView: 48)
         var b = Builder(scene: scene, info: info, ids: ids)
 
-        try b.box("Floor", at: Vec3(1.8, -0.02, 1.8), size: Vec3(12, 0.02, 10), color: .rgba(RGBA(hex: "#262A38")!))
+        try b.box("Floor", at: Vec3(1.8, -0.02, 1.8), size: Vec3(12, 0.02, 10), color: .rgba(RGBA.hex("#262A38")))
         try b.box("Back wall", at: Vec3(1.8, 0, -1.4), size: Vec3(12, 3.4, 0.1), color: .palette(3))
 
         // One workstation: desk, PC, glowing screen, person typing.
         let station = try b.group("Workstation")
         try b.box("Desk", at: Vec3(0, 0.7, 0), size: Vec3(1.2, 0.05, 0.6), color: .palette(1), parent: station)
-        try b.box("Desk legs", at: Vec3(0, 0, 0), size: Vec3(1.1, 0.7, 0.5), color: .rgba(RGBA(hex: "#4A3120")!), parent: station)
+        try b.box("Desk legs", at: Vec3(0, 0, 0), size: Vec3(1.1, 0.7, 0.5), color: .rgba(RGBA.hex("#4A3120")), parent: station)
         try b.box("Monitor", at: Vec3(0, 0.75, -0.18), size: Vec3(0.5, 0.34, 0.05), color: .palette(4), parent: station)
         try b.box("Screen", at: Vec3(0, 0.77, -0.152), size: Vec3(0.45, 0.29, 0.005), color: .palette(5), parent: station, glow: 1.6)
         try b.box("PC tower", at: Vec3(0.45, 0, -0.05), size: Vec3(0.18, 0.42, 0.4), color: .palette(4), parent: station)
-        try b.box("Keyboard", at: Vec3(0, 0.725, 0.05), size: Vec3(0.4, 0.02, 0.13), color: .rgba(RGBA(hex: "#30343F")!), parent: station)
+        try b.box("Keyboard", at: Vec3(0, 0.725, 0.05), size: Vec3(0.4, 0.02, 0.13), color: .rgba(RGBA.hex("#30343F")), parent: station)
         let person = try b.group("Person", at: Vec3(0, 0, 0.55), parent: station)
-        try b.box("Legs", .cylinder, at: Vec3(0, 0, 0), size: Vec3(0.3, 0.46, 0.3), color: .rgba(RGBA(hex: "#2E3445")!), parent: person)
+        try b.box("Legs", .cylinder, at: Vec3(0, 0, 0), size: Vec3(0.3, 0.46, 0.3), color: .rgba(RGBA.hex("#2E3445")), parent: person)
         try b.box("Body", .cylinder, at: Vec3(0, 0.46, 0), size: Vec3(0.38, 0.5, 0.3), color: .palette(9), parent: person)
         try b.box("Head", .sphere, at: Vec3(0, 0.98, -0.02), size: Vec3(0.24, 0.26, 0.24), color: .palette(8), parent: person)
         for x in [-0.2, 0.2] {
@@ -195,7 +195,7 @@ public enum EnigmaSample {
 
         // Cold ceiling lights.
         for x in [0.0, 2.4, 4.8] {
-            try b.light(.point, at: Vec3(x, 2.8, 1.8), color: RGBA(hex: "#BFD8FF")!, intensity: 3, range: 7)
+            try b.light(.point, at: Vec3(x, 2.8, 1.8), color: RGBA.hex("#BFD8FF"), intensity: 3, range: 7)
         }
         ids = b.ids
         return b.session.document.scene
@@ -207,8 +207,8 @@ public enum EnigmaSample {
         look.shading = .flat
         look.lighting.sunIntensity = 0.25
         look.lighting.ambientIntensity = 0.5
-        look.fog = Fog(enabled: true, color: RGBA(hex: "#0B0E18")!, distance: 16)
-        look.ground = Ground(visible: true, color: RGBA(hex: "#23262F")!, size: 40)
+        look.fog = Fog(enabled: true, color: RGBA.hex("#0B0E18"), distance: 16)
+        look.ground = Ground(visible: true, color: RGBA.hex("#23262F"), size: 40)
         scene.look = look
         scene.viewpoint = Viewpoint(target: Vec3(0, 1.4, 0), yaw: 0, pitch: 8, distance: 7.5, fieldOfView: 45)
         var b = Builder(scene: scene, info: info, ids: ids)
@@ -248,12 +248,12 @@ public enum EnigmaSample {
         try b.box("Arm R", .cylinder, at: Vec3(0.65, 0.75, 0), size: Vec3(0.22, 0.95, 0.22), color: .palette(4),
                   rotation: Vec3(0, 0, 8), parent: robot)
         try b.box("Antenna", .cylinder, at: Vec3(0, 2.3, 0), size: Vec3(0.04, 0.3, 0.04), color: .palette(4), parent: robot)
-        try b.box("Antenna tip", .sphere, at: Vec3(0, 2.58, 0), size: Vec3(0.08, 0.08, 0.08), color: .rgba(RGBA(hex: "#FF5A3C")!),
+        try b.box("Antenna tip", .sphere, at: Vec3(0, 2.58, 0), size: Vec3(0.08, 0.08, 0.08), color: .rgba(RGBA.hex("#FF5A3C")),
                   parent: robot, glow: 4)
 
         // Heroic rim light from behind + cold glow from the core.
-        try b.light(.spot, at: Vec3(0, 4.5, -3.2), color: RGBA(hex: "#9CC8FF")!, intensity: 6, range: 14)
-        try b.light(.point, at: Vec3(0, 1.3, 0.4), color: RGBA(hex: "#7FD4FF")!, intensity: 1.6, range: 3.5, parent: robot)
+        try b.light(.spot, at: Vec3(0, 4.5, -3.2), color: RGBA.hex("#9CC8FF"), intensity: 6, range: 14)
+        try b.light(.point, at: Vec3(0, 1.3, 0.4), color: RGBA.hex("#7FD4FF"), intensity: 1.6, range: 3.5, parent: robot)
         ids = b.ids
         return b.session.document.scene
     }

@@ -222,40 +222,8 @@ public enum Simulation {
         }
         record(0)
         for frame in 1 ... max(frames, 1) {
-            var next = velocities
-            for i in birds.indices {
-                var separation = Vec3.zero
-                var alignment = Vec3.zero
-                var cohesion = Vec3.zero
-                var neighbours = 0.0
-                for j in birds.indices where j != i {
-                    let offset = positions[j] - positions[i]
-                    let distance = offset.length
-                    guard distance < 3.5 else { continue }
-                    neighbours += 1
-                    alignment += velocities[j]
-                    cohesion += positions[j]
-                    if distance < 1.2, distance > 1e-6 { separation -= offset / (distance * distance) }
-                }
-                var steer = separation * 1.6
-                if neighbours > 0 {
-                    steer += (alignment / neighbours - velocities[i]) * 0.08
-                    steer += (cohesion / neighbours - positions[i]) * 0.05
-                }
-                // Stay inside the area.
-                let fromCenter = positions[i] - settings.center
-                for axis in Axis.allCases where abs(fromCenter[axis]) > settings.extent[axis] {
-                    var push = Vec3.zero
-                    push[axis] = fromCenter[axis] > 0 ? -1 : 1
-                    steer += push * 2.5
-                }
-                // A little wandering keeps it alive.
-                steer += Vec3(Noise.value(Double(frame) * 0.05, seed: settings.seed &+ UInt64(i)), 0,
-                              Noise.value(Double(frame) * 0.05 + 50, seed: settings.seed &+ UInt64(i))) * 0.6
-                var velocity = velocities[i] + steer * dt * 4
-                let speed = velocity.length
-                if speed > 1e-6 { velocity = velocity / speed * min(max(speed, settings.speed * 0.6), settings.speed * 1.3) }
-                next[i] = velocity
+            let next = birds.indices.map { i in
+                boidVelocity(i, positions: positions, velocities: velocities, settings: settings, frame: frame, dt: dt)
             }
             velocities = next
             for i in birds.indices {
@@ -269,6 +237,42 @@ public enum Simulation {
             edits.append(TrackEdit(bake(id, .rotation, PerformBaker.simplify(rotationKeys[index], tolerance: 0.01), timeline: timeline, ids: &ids)))
         }
         return .batch("Flock", [.setTracks(edits)])
+    }
+
+    /// One bird's next velocity: separation, alignment, cohesion, staying in the area and a little wandering.
+    static func boidVelocity(_ i: Int, positions: [Vec3], velocities: [Vec3], settings: FlockSettings, frame: Int, dt: Double) -> Vec3 {
+        var separation = Vec3.zero
+        var alignment = Vec3.zero
+        var cohesion = Vec3.zero
+        var neighbours = 0.0
+        for j in positions.indices where j != i {
+            let offset = positions[j] - positions[i]
+            let distance = offset.length
+            guard distance < 3.5 else { continue }
+            neighbours += 1
+            alignment += velocities[j]
+            cohesion += positions[j]
+            if distance < 1.2, distance > 1e-6 { separation -= offset / (distance * distance) }
+        }
+        var steer = separation * 1.6
+        if neighbours > 0 {
+            steer += (alignment / neighbours - velocities[i]) * 0.08
+            steer += (cohesion / neighbours - positions[i]) * 0.05
+        }
+        // Stay inside the area.
+        let fromCenter = positions[i] - settings.center
+        for axis in Axis.allCases where abs(fromCenter[axis]) > settings.extent[axis] {
+            var push = Vec3.zero
+            push[axis] = fromCenter[axis] > 0 ? -1 : 1
+            steer += push * 2.5
+        }
+        // A little wandering keeps it alive.
+        steer += Vec3(Noise.value(Double(frame) * 0.05, seed: settings.seed &+ UInt64(i)), 0,
+                      Noise.value(Double(frame) * 0.05 + 50, seed: settings.seed &+ UInt64(i))) * 0.6
+        var velocity = velocities[i] + steer * dt * 4
+        let speed = velocity.length
+        if speed > 1e-6 { velocity = velocity / speed * min(max(speed, settings.speed * 0.6), settings.speed * 1.3) }
+        return velocity
     }
 
     // MARK: Crowd walks in

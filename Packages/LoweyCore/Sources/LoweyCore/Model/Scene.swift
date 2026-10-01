@@ -162,8 +162,8 @@ public struct Scene: Codable, Hashable, Sendable, Identifiable {
     public func validate() -> [String] {
         var problems: [String] = []
         var seen = Set<ObjectID>()
-        for id in orderedIDs() {
-            if !seen.insert(id).inserted { problems.append("\(id) appears twice in the hierarchy") }
+        for id in orderedIDs() where !seen.insert(id).inserted {
+            problems.append("\(id) appears twice in the hierarchy")
         }
         for (id, object) in objects {
             if object.id != id { problems.append("\(id) key mismatch") }

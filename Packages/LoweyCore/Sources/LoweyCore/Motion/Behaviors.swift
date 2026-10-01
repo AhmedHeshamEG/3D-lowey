@@ -300,42 +300,16 @@ public enum BehaviorEvaluator {
         case let .orbit(center, around, period, faceCenter):
             guard period != 0 else { return }
             let pivot = around.flatMap { scene.objects[$0] != nil ? scene.worldTransform(of: $0).position : nil } ?? center
-            let angle = local / period * 2 * .pi
-            let spin = Quat(angle: angle, axis: .unitY)
-            world.position = pivot + spin.act(world.position - pivot)
-            if faceCenter {
-                world.rotation = facing(Vec3(pivot.x, world.position.y, pivot.z) - world.position, cameraStyle: isCamera)
-            } else {
-                world.rotation = (spin * world.rotation).normalized
-            }
+            world = orbited(world, pivot: pivot, angle: local / period * 2 * .pi, faceCenter: faceCenter, cameraStyle: isCamera)
 
         case let .noise(position, rotation, frequency):
-            let x = local * frequency
-            let offset = Vec3(
-                position.x * Noise.fractal(x, seed: seed),
-                position.y * Noise.fractal(x, seed: seed &+ 1),
-                position.z * Noise.fractal(x, seed: seed &+ 2)
-            )
-            let euler = Vec3(
-                rotation.x * Noise.fractal(x, seed: seed &+ 3),
-                rotation.y * Noise.fractal(x, seed: seed &+ 4),
-                rotation.z * Noise.fractal(x, seed: seed &+ 5)
-            )
-            var transform = object.transform
-            transform.position += offset
-            transform.rotation = (transform.rotation * Quat(eulerDegrees: euler)).normalized
-            object.transform = transform
+            object.transform = wobbled(object.transform, position: position, rotation: rotation, at: local * frequency, seed: seed)
             scene.objects[behavior.target] = object
             return
 
         case let .windSway(angle, frequency, direction):
-            // Phase from the position: a forest ripples instead of swaying in lock-step.
-            let phase = world.position.x * 0.35 + world.position.z * 0.23
-            let sway = sin(2 * .pi * frequency * local + phase) * 0.75 + Noise.fractal(local * frequency * 1.7 + phase, seed: seed) * 0.25
-            let windYaw = direction * .pi / 180
-            let bendAxis = Vec3(cos(windYaw), 0, -sin(windYaw))
-            let bend = Quat(angle: sway * angle * .pi / 180, axis: bendAxis)
-            world.rotation = (bend * world.rotation).normalized
+            world.rotation = (windBend(at: world.position, angle: angle, frequency: frequency, direction: direction, local: local, seed: seed)
+                * world.rotation).normalized
 
         case let .bob(height, period, tilt):
             guard period > 0 else { return }
@@ -354,5 +328,44 @@ public enum BehaviorEvaluator {
         let localTransform = Transform.relative(world: world, toParent: parentWorld)
         object.transform = Transform(position: localTransform.position, rotation: localTransform.rotation, scale: object.transform.scale)
         scene.objects[behavior.target] = object
+    }
+
+    static func orbited(_ world: Transform, pivot: Vec3, angle: Double, faceCenter: Bool, cameraStyle: Bool) -> Transform {
+        var world = world
+        let spin = Quat(angle: angle, axis: .unitY)
+        world.position = pivot + spin.act(world.position - pivot)
+        if faceCenter {
+            world.rotation = facing(Vec3(pivot.x, world.position.y, pivot.z) - world.position, cameraStyle: cameraStyle)
+        } else {
+            world.rotation = (spin * world.rotation).normalized
+        }
+        return world
+    }
+
+    /// Smooth random drift on top of the object's own (local) transform.
+    static func wobbled(_ transform: Transform, position: Vec3, rotation: Vec3, at x: Double, seed: UInt64) -> Transform {
+        let offset = Vec3(
+            position.x * Noise.fractal(x, seed: seed),
+            position.y * Noise.fractal(x, seed: seed &+ 1),
+            position.z * Noise.fractal(x, seed: seed &+ 2)
+        )
+        let euler = Vec3(
+            rotation.x * Noise.fractal(x, seed: seed &+ 3),
+            rotation.y * Noise.fractal(x, seed: seed &+ 4),
+            rotation.z * Noise.fractal(x, seed: seed &+ 5)
+        )
+        var transform = transform
+        transform.position += offset
+        transform.rotation = (transform.rotation * Quat(eulerDegrees: euler)).normalized
+        return transform
+    }
+
+    /// The wind's bend at a spot. Phase from the position: a forest ripples instead of swaying in lock-step.
+    static func windBend(at position: Vec3, angle: Double, frequency: Double, direction: Double, local: Double, seed: UInt64) -> Quat {
+        let phase = position.x * 0.35 + position.z * 0.23
+        let sway = sin(2 * .pi * frequency * local + phase) * 0.75 + Noise.fractal(local * frequency * 1.7 + phase, seed: seed) * 0.25
+        let windYaw = direction * .pi / 180
+        let bendAxis = Vec3(cos(windYaw), 0, -sin(windYaw))
+        return Quat(angle: sway * angle * .pi / 180, axis: bendAxis)
     }
 }

@@ -47,39 +47,7 @@ struct TestRig {
         // A one-triangle mesh so the file is a real model.
         let positions = add([0, 0, 0, 1, 0, 0, 0, 1, 0], type: "VEC3", count: 3)
         let offset = armature == nil ? 1 : 2
-        var nodes: [[String: Any]] = [["name": "Body", "mesh": 0, "skin": 0]]
-        if let armature {
-            let a = armature
-            nodes.append(["name": "Armature", "children": [], "translation": [a.position.x, a.position.y, a.position.z],
-                          "rotation": [a.rotation.x, a.rotation.y, a.rotation.z, a.rotation.w], "scale": [a.scale.x, a.scale.y, a.scale.z]])
-        }
-        for (index, bone) in bones.enumerated() {
-            var node: [String: Any] = ["name": bone.name, "children": [Int]()]
-            if index == 0, matrixRoot {
-                let t = Transform(position: bone.translation, rotation: bone.rotation)
-                let x = t.rotation.act(.unitX), y = t.rotation.act(.unitY), z = t.rotation.act(.unitZ)
-                node["matrix"] = [x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, t.position.x, t.position.y, t.position.z, 1]
-            } else {
-                node["translation"] = [bone.translation.x, bone.translation.y, bone.translation.z]
-                node["rotation"] = [bone.rotation.x, bone.rotation.y, bone.rotation.z, bone.rotation.w]
-            }
-            nodes.append(node)
-        }
-        var roots: [Int] = [0]
-        for (index, bone) in bones.enumerated() {
-            if let parent = bone.parent {
-                var children = nodes[offset + parent]["children"] as? [Int] ?? []
-                children.append(offset + index)
-                nodes[offset + parent]["children"] = children
-            } else if armature != nil {
-                var children = nodes[1]["children"] as? [Int] ?? []
-                children.append(offset + index)
-                nodes[1]["children"] = children
-            } else {
-                roots.append(offset + index)
-            }
-        }
-        if armature != nil { roots.append(1) }
+        let (nodes, roots) = nodeTree(offset: offset)
         var animations: [[String: Any]] = []
         for (name, channels) in clips {
             var samplers: [[String: Any]] = []
@@ -117,6 +85,44 @@ struct TestRig {
         data.append(contentsOf: [0x42, 0x49, 0x4E, 0])
         data.append(blob)
         return data
+    }
+
+    /// The mesh node, the optional armature and the bones (children wired up), plus the scene's root nodes.
+    func nodeTree(offset: Int) -> (nodes: [[String: Any]], roots: [Int]) {
+        var nodes: [[String: Any]] = [["name": "Body", "mesh": 0, "skin": 0]]
+        if let armature {
+            let a = armature
+            nodes.append(["name": "Armature", "children": [], "translation": [a.position.x, a.position.y, a.position.z],
+                          "rotation": [a.rotation.x, a.rotation.y, a.rotation.z, a.rotation.w], "scale": [a.scale.x, a.scale.y, a.scale.z]])
+        }
+        for (index, bone) in bones.enumerated() {
+            var node: [String: Any] = ["name": bone.name, "children": [Int]()]
+            if index == 0, matrixRoot {
+                let t = Transform(position: bone.translation, rotation: bone.rotation)
+                let x = t.rotation.act(.unitX), y = t.rotation.act(.unitY), z = t.rotation.act(.unitZ)
+                node["matrix"] = [x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, t.position.x, t.position.y, t.position.z, 1]
+            } else {
+                node["translation"] = [bone.translation.x, bone.translation.y, bone.translation.z]
+                node["rotation"] = [bone.rotation.x, bone.rotation.y, bone.rotation.z, bone.rotation.w]
+            }
+            nodes.append(node)
+        }
+        var roots: [Int] = [0]
+        for (index, bone) in bones.enumerated() {
+            if let parent = bone.parent {
+                var children = nodes[offset + parent]["children"] as? [Int] ?? []
+                children.append(offset + index)
+                nodes[offset + parent]["children"] = children
+            } else if armature != nil {
+                var children = nodes[1]["children"] as? [Int] ?? []
+                children.append(offset + index)
+                nodes[1]["children"] = children
+            } else {
+                roots.append(offset + index)
+            }
+        }
+        if armature != nil { roots.append(1) }
+        return (nodes, roots)
     }
 
     static func quatFloats(_ q: Quat) -> [Float] { [Float(q.x), Float(q.y), Float(q.z), Float(q.w)] }

@@ -115,26 +115,7 @@ public enum DrawingMesher {
             ball.positions = ball.positions.map { ($0 - SIMD3<Float>(0, 0.5, 0)) * (radius * 2) + (points.first ?? .zero) }
             return ball
         }
-        // Parallel-transport frames.
-        var tangents: [SIMD3<Float>] = []
-        for index in points.indices {
-            let prev = points[max(index - 1, 0)]
-            let next = points[min(index + 1, points.count - 1)]
-            tangents.append(normalize3(next - prev, fallback: SIMD3<Float>(0, 0, 1)))
-        }
-        var normal = perpendicular(to: tangents[0])
-        var normals: [SIMD3<Float>] = []
-        for index in points.indices {
-            if index > 0 {
-                let axis = cross3(tangents[index - 1], tangents[index])
-                let axisLength = length3(axis)
-                if axisLength > 1e-6 {
-                    let angle = acos(min(max(dot3(tangents[index - 1], tangents[index]), -1), 1))
-                    normal = rotate(normal, around: axis / axisLength, angle: angle)
-                }
-            }
-            normals.append(normal)
-        }
+        let (tangents, normals) = transportFrames(points)
         for index in points.indices {
             let t = tangents[index]
             let n = normals[index]
@@ -169,6 +150,31 @@ public enum DrawingMesher {
             mesh.addTriangle(endCenter, lastRing + side, lastRing + (side + 1) % ringSize)
         }
         return mesh
+    }
+
+    /// Parallel-transport frames along a polyline: a tangent and a normal per point that never twist.
+    static func transportFrames(_ points: [SIMD3<Float>]) -> (tangents: [SIMD3<Float>], normals: [SIMD3<Float>]) {
+        var tangents: [SIMD3<Float>] = []
+        for index in points.indices {
+            let prev = points[max(index - 1, 0)]
+            let next = points[min(index + 1, points.count - 1)]
+            tangents.append(normalize3(next - prev, fallback: SIMD3<Float>(0, 0, 1)))
+        }
+        guard let first = tangents.first else { return ([], []) }
+        var normal = perpendicular(to: first)
+        var normals: [SIMD3<Float>] = []
+        for index in points.indices {
+            if index > 0 {
+                let axis = cross3(tangents[index - 1], tangents[index])
+                let axisLength = length3(axis)
+                if axisLength > 1e-6 {
+                    let angle = acos(min(max(dot3(tangents[index - 1], tangents[index]), -1), 1))
+                    normal = rotate(normal, around: axis / axisLength, angle: angle)
+                }
+            }
+            normals.append(normal)
+        }
+        return (tangents, normals)
     }
 
     // MARK: Ribbon

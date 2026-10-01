@@ -271,7 +271,8 @@ public enum TranscriptEditing {
         }
         var copy = transcript
         let slice = transcript.words[range]
-        let merged = TranscriptWord(text: slice.map(\.text).joined(separator: " "), start: slice.first!.start, end: slice.last!.end,
+        guard let first = slice.first, let last = slice.last else { return transcript }
+        let merged = TranscriptWord(text: slice.map(\.text).joined(separator: " "), start: first.start, end: last.end,
                                     confidence: slice.compactMap(\.confidence).min())
         copy.words.replaceSubrange(range, with: [merged])
         return copy

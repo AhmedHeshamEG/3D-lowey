@@ -136,107 +136,14 @@ public enum BoneMapper {
 
     /// Auto-maps a skeleton to a standard. Limbs are found by their root bone, then followed down the chain.
     public static func map(_ skeleton: Skeleton, to standard: SkeletonStandard) -> [String: String] {
-        let names = skeleton.joints.map { normalize($0.name) }
-        var result: [String: String] = [:]
-        var used = Set<Int>()
-
-        func find(_ keywords: [String], side wanted: Int? = nil, excluding: [String] = [], from indices: [Int]? = nil) -> Int? {
-            for index in indices ?? Array(names.indices) where !used.contains(index) {
-                let n = names[index]
-                guard keywords.contains(where: { n.contains($0) }), !excluding.contains(where: { n.contains($0) }) else { continue }
-                if let wanted, side(n) != wanted { continue }
-                return index
-            }
-            return nil
-        }
-
-        func assign(_ bone: String, _ index: Int?) {
-            guard let index else { return }
-            result[bone] = skeleton.joints[index].name
-            used.insert(index)
-        }
-
-        /// Follows the first child chain below a limb root.
-        func chain(from root: Int, length: Int) -> [Int] {
-            var chain = [root]
-            var current = root
-            while chain.count < length {
-                let kids = skeleton.children(of: current).filter { !used.contains($0) }
-                guard let next = kids.first else { break }
-                chain.append(next)
-                current = next
-            }
-            return chain
-        }
-
+        var mapper = BoneMatch(skeleton: skeleton)
         switch standard {
-        case .humanoid:
-            assign("hips", find(["hips", "pelvis", "hip"], side: 0) ?? find(["root"], side: 0))
-            assign("spine", find(["spine", "abdomen"], side: 0))
-            assign("chest", find(["chest", "spine2", "spine1", "torso", "upperchest"], side: 0))
-            assign("neck", find(["neck"], side: 0))
-            assign("head", find(["head"], side: 0, excluding: ["end", "top", "nub"]))
-            for (sideName, sideValue) in [("left", -1), ("right", 1)] {
-                assign("\(sideName)Shoulder", find(["shoulder", "clavicle"], side: sideValue))
-                if let upper = find(["upperarm", "arm"], side: sideValue, excluding: ["fore", "lower"]) {
-                    let limb = chain(from: upper, length: 3)
-                    assign("\(sideName)UpperArm", limb[0])
-                    if limb.count > 1 { assign("\(sideName)LowerArm", limb[1]) }
-                    if limb.count > 2 { assign("\(sideName)Hand", limb[2]) }
-                }
-                if let upper = find(["upleg", "upperleg", "thigh"], side: sideValue) {
-                    let limb = chain(from: upper, length: 4)
-                    assign("\(sideName)UpperLeg", limb[0])
-                    if limb.count > 1 { assign("\(sideName)LowerLeg", limb[1]) }
-                    if limb.count > 2 { assign("\(sideName)Foot", limb[2]) }
-                    if limb.count > 3 { assign("\(sideName)Toes", limb[3]) }
-                }
-            }
-        case .quadruped:
-            assign("hips", find(["hips", "pelvis", "hip"], side: 0) ?? find(["root", "body"], side: 0))
-            assign("spine", find(["spine"], side: 0))
-            assign("chest", find(["chest", "spine2", "torso"], side: 0))
-            assign("neck", find(["neck"], side: 0))
-            assign("head", find(["head"], side: 0, excluding: ["end", "top", "nub"]))
-            assign("tail", find(["tail"], side: 0))
-            for (sideName, sideValue) in [("Left", -1), ("Right", 1)] {
-                let front = find(["front", "fore", "arm", "shoulder"], side: sideValue, excluding: ["tail"])
-                if let front {
-                    let limb = chain(from: front, length: 3)
-                    assign("front\(sideName)Upper", limb[0])
-                    if limb.count > 1 { assign("front\(sideName)Lower", limb[1]) }
-                    if limb.count > 2 { assign("front\(sideName)Foot", limb[2]) }
-                }
-                let back = find(["back", "hind", "rear", "thigh", "leg"], side: sideValue, excluding: ["tail"])
-                if let back {
-                    let limb = chain(from: back, length: 3)
-                    assign("back\(sideName)Upper", limb[0])
-                    if limb.count > 1 { assign("back\(sideName)Lower", limb[1]) }
-                    if limb.count > 2 { assign("back\(sideName)Foot", limb[2]) }
-                }
-            }
-        case .bird:
-            assign("hips", find(["hips", "pelvis", "root", "body"], side: 0))
-            assign("spine", find(["spine", "chest"], side: 0))
-            assign("neck", find(["neck"], side: 0))
-            assign("head", find(["head"], side: 0, excluding: ["end", "top"]))
-            assign("tail", find(["tail"], side: 0))
-            for (sideName, sideValue) in [("left", -1), ("right", 1)] {
-                if let wing = find(["wing"], side: sideValue) {
-                    let limb = chain(from: wing, length: 2)
-                    assign("\(sideName)Wing", limb[0])
-                    if limb.count > 1 { assign("\(sideName)WingTip", limb.last) }
-                }
-                if let leg = find(["leg", "thigh"], side: sideValue) {
-                    let limb = chain(from: leg, length: 2)
-                    assign("\(sideName)Leg", limb[0])
-                    if limb.count > 1 { assign("\(sideName)Foot", limb.last) }
-                }
-            }
-        case .custom:
-            break
+        case .humanoid: mapper.humanoid()
+        case .quadruped: mapper.quadruped()
+        case .bird: mapper.bird()
+        case .custom: break
         }
-        return result
+        return mapper.result
     }
 }
 
@@ -403,6 +310,98 @@ public enum ClipMixer {
         }
         if let look = ik.lookAt, let targetWorld = targetPosition(look), let head = character.joint("head") {
             IKSolver.lookAt(&pose, skeleton: skeleton, joint: head, target: world.inverseApply(to: targetWorld))
+        }
+    }
+}
+
+/// Finds a standard's bones in a skeleton by name, side and chain.
+struct BoneMatch {
+    let skeleton: Skeleton
+    let names: [String]
+    var result: [String: String] = [:]
+    var used = Set<Int>()
+
+    init(skeleton: Skeleton) {
+        self.skeleton = skeleton
+        names = skeleton.joints.map { BoneMapper.normalize($0.name) }
+    }
+
+    func find(_ keywords: [String], side wanted: Int? = nil, excluding: [String] = []) -> Int? {
+        for index in names.indices where !used.contains(index) {
+            let n = names[index]
+            guard keywords.contains(where: { n.contains($0) }), !excluding.contains(where: { n.contains($0) }) else { continue }
+            if let wanted, BoneMapper.side(n) != wanted { continue }
+            return index
+        }
+        return nil
+    }
+
+    mutating func assign(_ bone: String, _ index: Int?) {
+        guard let index else { return }
+        result[bone] = skeleton.joints[index].name
+        used.insert(index)
+    }
+
+    /// Follows the first child chain below a limb root.
+    func chain(from root: Int, length: Int) -> [Int] {
+        var chain = [root]
+        var current = root
+        while chain.count < length {
+            let kids = skeleton.children(of: current).filter { !used.contains($0) }
+            guard let next = kids.first else { break }
+            chain.append(next)
+            current = next
+        }
+        return chain
+    }
+
+    /// Assigns `bones` down the chain that starts at `root` (as far as the chain goes).
+    mutating func assignChain(_ bones: [String], from root: Int?) {
+        guard let root else { return }
+        for (bone, index) in zip(bones, chain(from: root, length: bones.count)) {
+            assign(bone, index)
+        }
+    }
+
+    mutating func humanoid() {
+        assign("hips", find(["hips", "pelvis", "hip"], side: 0) ?? find(["root"], side: 0))
+        assign("spine", find(["spine", "abdomen"], side: 0))
+        assign("chest", find(["chest", "spine2", "spine1", "torso", "upperchest"], side: 0))
+        assign("neck", find(["neck"], side: 0))
+        assign("head", find(["head"], side: 0, excluding: ["end", "top", "nub"]))
+        for (name, side) in [("left", -1), ("right", 1)] {
+            assign("\(name)Shoulder", find(["shoulder", "clavicle"], side: side))
+            assignChain(["\(name)UpperArm", "\(name)LowerArm", "\(name)Hand"],
+                        from: find(["upperarm", "arm"], side: side, excluding: ["fore", "lower"]))
+            assignChain(["\(name)UpperLeg", "\(name)LowerLeg", "\(name)Foot", "\(name)Toes"],
+                        from: find(["upleg", "upperleg", "thigh"], side: side))
+        }
+    }
+
+    mutating func quadruped() {
+        assign("hips", find(["hips", "pelvis", "hip"], side: 0) ?? find(["root", "body"], side: 0))
+        assign("spine", find(["spine"], side: 0))
+        assign("chest", find(["chest", "spine2", "torso"], side: 0))
+        assign("neck", find(["neck"], side: 0))
+        assign("head", find(["head"], side: 0, excluding: ["end", "top", "nub"]))
+        assign("tail", find(["tail"], side: 0))
+        for (name, side) in [("Left", -1), ("Right", 1)] {
+            assignChain(["front\(name)Upper", "front\(name)Lower", "front\(name)Foot"],
+                        from: find(["front", "fore", "arm", "shoulder"], side: side, excluding: ["tail"]))
+            assignChain(["back\(name)Upper", "back\(name)Lower", "back\(name)Foot"],
+                        from: find(["back", "hind", "rear", "thigh", "leg"], side: side, excluding: ["tail"]))
+        }
+    }
+
+    mutating func bird() {
+        assign("hips", find(["hips", "pelvis", "root", "body"], side: 0))
+        assign("spine", find(["spine", "chest"], side: 0))
+        assign("neck", find(["neck"], side: 0))
+        assign("head", find(["head"], side: 0, excluding: ["end", "top"]))
+        assign("tail", find(["tail"], side: 0))
+        for (name, side) in [("left", -1), ("right", 1)] {
+            assignChain(["\(name)Wing", "\(name)WingTip"], from: find(["wing"], side: side))
+            assignChain(["\(name)Leg", "\(name)Foot"], from: find(["leg", "thigh"], side: side))
         }
     }
 }

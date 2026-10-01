@@ -108,7 +108,7 @@ public enum GuideSurface: Hashable, Sendable, Codable {
                     let point = ray.point(at: t)
                     if point.y >= base.y, point.y <= base.y + height {
                         let normal = Vec3(point.x - base.x, 0, point.z - base.z).normalized
-                        if best == nil || t < best!.distance { best = SurfaceHit(point: point, normal: normal, distance: t) }
+                        if t < best?.distance ?? .infinity { best = SurfaceHit(point: point, normal: normal, distance: t) }
                         break
                     }
                 }
@@ -118,7 +118,7 @@ public enum GuideSurface: Hashable, Sendable, Codable {
         for (y, normal) in [(base.y + height, Vec3.unitY), (base.y, -Vec3.unitY)] {
             if let hit = intersectPlane(ray, origin: Vec3(base.x, y, base.z), normal: normal) {
                 let dxz = Vec3(hit.point.x - base.x, 0, hit.point.z - base.z)
-                if dxz.length <= radius, best == nil || hit.distance < best!.distance {
+                if dxz.length <= radius, hit.distance < best?.distance ?? .infinity {
                     best = SurfaceHit(point: hit.point, normal: normal, distance: hit.distance)
                 }
             }

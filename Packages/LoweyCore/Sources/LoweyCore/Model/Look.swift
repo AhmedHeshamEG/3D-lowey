@@ -43,14 +43,14 @@ public struct Palette: Codable, Hashable, Sendable {
 
     /// A warm/cool low-poly starter palette. A starting point, not a house style.
     public static let starter = Palette(swatches: [
-        Swatch(name: "Paper", color: RGBA(hex: "#F2E8D5")!),
-        Swatch(name: "Wood", color: RGBA(hex: "#8A5A3B")!),
-        Swatch(name: "Leaf", color: RGBA(hex: "#5E8C4A")!),
-        Swatch(name: "Stone", color: RGBA(hex: "#8C8F94")!),
-        Swatch(name: "Sky", color: RGBA(hex: "#6FA8DC")!),
-        Swatch(name: "Lamp", color: RGBA(hex: "#FFB347")!),
-        Swatch(name: "Night", color: RGBA(hex: "#1E2440")!),
-        Swatch(name: "Accent", color: RGBA(hex: "#E4572E")!)
+        Swatch(name: "Paper", color: RGBA.hex("#F2E8D5")),
+        Swatch(name: "Wood", color: RGBA.hex("#8A5A3B")),
+        Swatch(name: "Leaf", color: RGBA.hex("#5E8C4A")),
+        Swatch(name: "Stone", color: RGBA.hex("#8C8F94")),
+        Swatch(name: "Sky", color: RGBA.hex("#6FA8DC")),
+        Swatch(name: "Lamp", color: RGBA.hex("#FFB347")),
+        Swatch(name: "Night", color: RGBA.hex("#1E2440")),
+        Swatch(name: "Accent", color: RGBA.hex("#E4572E"))
     ])
 }
 
@@ -251,38 +251,38 @@ public enum MoodPresets {
         case .day:
             return Look(
                 lightingPreset: .day,
-                lighting: Lighting(sunElevation: 55, sunAzimuth: 35, sunColor: RGBA(hex: "#FFF6E8")!,
+                lighting: Lighting(sunElevation: 55, sunAzimuth: 35, sunColor: RGBA.hex("#FFF6E8"),
                                    sunIntensity: 1.0, ambientIntensity: 1.0),
                 sky: sky(for: .day),
-                fog: Fog(enabled: true, color: RGBA(hex: "#CFE3F2")!, distance: 90),
-                ground: Ground(color: RGBA(hex: "#8DB36B")!)
+                fog: Fog(enabled: true, color: RGBA.hex("#CFE3F2"), distance: 90),
+                ground: Ground(color: RGBA.hex("#8DB36B"))
             )
         case .goldenHour:
             return Look(
                 lightingPreset: .goldenHour,
-                lighting: Lighting(sunElevation: 14, sunAzimuth: 250, sunColor: RGBA(hex: "#FFB86B")!,
+                lighting: Lighting(sunElevation: 14, sunAzimuth: 250, sunColor: RGBA.hex("#FFB86B"),
                                    sunIntensity: 1.15, ambientIntensity: 0.75),
                 sky: sky(for: .goldenHour),
-                fog: Fog(enabled: true, color: RGBA(hex: "#F6C48E")!, distance: 70),
-                ground: Ground(color: RGBA(hex: "#A7A45E")!)
+                fog: Fog(enabled: true, color: RGBA.hex("#F6C48E"), distance: 70),
+                ground: Ground(color: RGBA.hex("#A7A45E"))
             )
         case .dusk:
             return Look(
                 lightingPreset: .dusk,
-                lighting: Lighting(sunElevation: 6, sunAzimuth: 280, sunColor: RGBA(hex: "#FF8A7A")!,
+                lighting: Lighting(sunElevation: 6, sunAzimuth: 280, sunColor: RGBA.hex("#FF8A7A"),
                                    sunIntensity: 0.45, ambientIntensity: 0.5),
                 sky: sky(for: .dusk),
-                fog: Fog(enabled: true, color: RGBA(hex: "#5B4A78")!, distance: 45),
-                ground: Ground(color: RGBA(hex: "#4B5A55")!)
+                fog: Fog(enabled: true, color: RGBA.hex("#5B4A78"), distance: 45),
+                ground: Ground(color: RGBA.hex("#4B5A55"))
             )
         case .night:
             return Look(
                 lightingPreset: .night,
-                lighting: Lighting(sunElevation: 40, sunAzimuth: 120, sunColor: RGBA(hex: "#9DB4FF")!,
+                lighting: Lighting(sunElevation: 40, sunAzimuth: 120, sunColor: RGBA.hex("#9DB4FF"),
                                    sunIntensity: 0.22, ambientIntensity: 0.28),
                 sky: sky(for: .night),
-                fog: Fog(enabled: true, color: RGBA(hex: "#141A33")!, distance: 35),
-                ground: Ground(color: RGBA(hex: "#2A3342")!)
+                fog: Fog(enabled: true, color: RGBA.hex("#141A33"), distance: 35),
+                ground: Ground(color: RGBA.hex("#2A3342"))
             )
         case .space:
             return Look(
@@ -291,7 +291,7 @@ public enum MoodPresets {
                                    sunIntensity: 1.3, ambientIntensity: 0.12),
                 sky: sky(for: .space),
                 fog: Fog(enabled: false, color: .black, distance: 200),
-                ground: Ground(visible: false, color: RGBA(hex: "#333333")!)
+                ground: Ground(visible: false, color: RGBA.hex("#333333"))
             )
         case .studio:
             return Look(
@@ -299,8 +299,8 @@ public enum MoodPresets {
                 lighting: Lighting(sunElevation: 60, sunAzimuth: 30, sunColor: .white,
                                    sunIntensity: 0.9, ambientIntensity: 1.2),
                 sky: sky(for: .studio),
-                fog: Fog(enabled: false, color: RGBA(hex: "#E6E6E6")!, distance: 100),
-                ground: Ground(color: RGBA(hex: "#D9D9D9")!)
+                fog: Fog(enabled: false, color: RGBA.hex("#E6E6E6"), distance: 100),
+                ground: Ground(color: RGBA.hex("#D9D9D9"))
             )
         }
     }
@@ -308,17 +308,17 @@ public enum MoodPresets {
     public static func sky(for preset: LightingPreset) -> Sky {
         switch preset {
         case .day:
-            Sky(top: RGBA(hex: "#4F8FD6")!, horizon: RGBA(hex: "#CFE3F2")!, bottom: RGBA(hex: "#9DB88A")!)
+            Sky(top: RGBA.hex("#4F8FD6"), horizon: RGBA.hex("#CFE3F2"), bottom: RGBA.hex("#9DB88A"))
         case .goldenHour:
-            Sky(top: RGBA(hex: "#6C8CC7")!, horizon: RGBA(hex: "#FFC98A")!, bottom: RGBA(hex: "#8C7A55")!)
+            Sky(top: RGBA.hex("#6C8CC7"), horizon: RGBA.hex("#FFC98A"), bottom: RGBA.hex("#8C7A55"))
         case .dusk:
-            Sky(top: RGBA(hex: "#1F2150")!, horizon: RGBA(hex: "#E07A6A")!, bottom: RGBA(hex: "#3A3450")!, stars: 0.25)
+            Sky(top: RGBA.hex("#1F2150"), horizon: RGBA.hex("#E07A6A"), bottom: RGBA.hex("#3A3450"), stars: 0.25)
         case .night:
-            Sky(top: RGBA(hex: "#060914")!, horizon: RGBA(hex: "#1B2547")!, bottom: RGBA(hex: "#0B0F1E")!, stars: 0.8)
+            Sky(top: RGBA.hex("#060914"), horizon: RGBA.hex("#1B2547"), bottom: RGBA.hex("#0B0F1E"), stars: 0.8)
         case .space:
-            Sky(top: RGBA(hex: "#000000")!, horizon: RGBA(hex: "#0A0A18")!, bottom: RGBA(hex: "#000000")!, stars: 1)
+            Sky(top: RGBA.hex("#000000"), horizon: RGBA.hex("#0A0A18"), bottom: RGBA.hex("#000000"), stars: 1)
         case .studio:
-            Sky(top: RGBA(hex: "#D5D8DD")!, horizon: RGBA(hex: "#EEEEEE")!, bottom: RGBA(hex: "#D0D0D0")!)
+            Sky(top: RGBA.hex("#D5D8DD"), horizon: RGBA.hex("#EEEEEE"), bottom: RGBA.hex("#D0D0D0"))
         }
     }
 }

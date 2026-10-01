@@ -17,27 +17,51 @@ public enum NightMarket {
         var look = MoodPresets.look(for: .night)
         look.presetID = LookPreset.ink.id
         look.palette = Palette(swatches: [
-            .init(name: "Timber", color: RGBA(hex: "#7A4A2E")!), .init(name: "Canvas", color: RGBA(hex: "#D8C39A")!),
-            .init(name: "Awning red", color: RGBA(hex: "#C0413A")!), .init(name: "Awning teal", color: RGBA(hex: "#2F8C8C")!),
-            .init(name: "Lantern", color: RGBA(hex: "#FFB85C")!), .init(name: "Stone", color: RGBA(hex: "#4B4F5C")!),
-            .init(name: "Fruit", color: RGBA(hex: "#F07A3C")!), .init(name: "Leaf", color: RGBA(hex: "#5E8C4A")!)
+            .init(name: "Timber", color: RGBA.hex("#7A4A2E")), .init(name: "Canvas", color: RGBA.hex("#D8C39A")),
+            .init(name: "Awning red", color: RGBA.hex("#C0413A")), .init(name: "Awning teal", color: RGBA.hex("#2F8C8C")),
+            .init(name: "Lantern", color: RGBA.hex("#FFB85C")), .init(name: "Stone", color: RGBA.hex("#4B4F5C")),
+            .init(name: "Fruit", color: RGBA.hex("#F07A3C")), .init(name: "Leaf", color: RGBA.hex("#5E8C4A"))
         ])
-        look.ground.color = RGBA(hex: "#3A3F4B")!
+        look.ground.color = RGBA.hex("#3A3F4B")
         let info = ProjectInfo(id: "market-project", name: projectName, look: look)
         var scene = Scene(id: "market-scene", name: "Night Market")
         var objects: [SceneObject] = []
         func add(_ object: SceneObject) { objects.append(object) }
-        for index in 0 ..< 24 { stall(index, ids: &ids, add: add) }
-        for index in 0 ..< 60 { crate(index, ids: &ids, add: add) }
-        for index in 0 ..< 30 { lantern(index, ids: &ids, add: add) }
+        for index in 0 ..< 24 {
+            stall(index, ids: &ids, add: add)
+        }
+        for index in 0 ..< 60 {
+            crate(index, ids: &ids, add: add)
+        }
+        for index in 0 ..< 30 {
+            lantern(index, ids: &ids, add: add)
+        }
         for (index, x) in [-8.0, 0, 8].enumerated() {
             var light = SceneObject(id: ids.next(), name: "Street light \(index + 1)", kind: .light(.point),
                                     transform: Transform(position: Vec3(x, 3.2, 0)))
-            light[.lightColor] = .color(.rgba(RGBA(hex: "#FFB85C")!))
+            light[.lightColor] = .color(.rgba(RGBA.hex("#FFB85C")))
             light[.lightIntensity] = .float(2.2)
             light[.lightRange] = .float(9)
             add(light)
         }
+        objects += shoppers(ids: &ids)
+        let (figures, clipTracks) = walkers(ids: &ids)
+        objects += figures
+        let camera = dolly(ids: &ids)
+        add(camera)
+        for object in objects {
+            scene.objects[object.id] = object
+        }
+        scene.roots = objects.filter { $0.parent == nil }.map(\.id)
+        scene.activeCamera = camera.id
+        scene.timeline = timeline(camera: camera.id, clipTracks: clipTracks)
+        scene.viewpoint = Viewpoint(target: Vec3(0, 1, 0), yaw: 25, pitch: 18, distance: 18)
+        return (info, scene)
+    }
+
+    /// Four blob characters along the street.
+    static func shoppers(ids: inout IDFactory) -> [SceneObject] {
+        var objects: [SceneObject] = []
         for index in 0 ..< 4 {
             var build = BlobCharacter.build(BlobRecipe(name: "Shopper \(index + 1)", hat: index.isMultiple(of: 2) ? .beret : .cap), ids: &ids)
             if let root = build.fragment.roots.first, let slot = build.fragment.objects.firstIndex(where: { $0.id == root }) {
@@ -45,37 +69,43 @@ public enum NightMarket {
             }
             objects += build.fragment.objects
         }
+        return objects
+    }
+
+    /// Six rigged figures walking both ways, each with its walk clip slightly out of step.
+    static func walkers(ids: inout IDFactory) -> ([SceneObject], [ClipTrack]) {
+        var objects: [SceneObject] = []
         var clipTracks: [ClipTrack] = []
         for index in 0 ..< 6 {
             let id: ObjectID = ids.next()
             let side = index.isMultiple(of: 2) ? 1.0 : -1.0
-            add(SceneObject(id: id, name: "Walker \(index + 1)", kind: .asset(walkerAsset),
-                            transform: Transform(position: Vec3(Double(index) * 2.6 - 7, 0, side * 0.6),
-                                                 rotation: Quat(angle: side > 0 ? .pi / 2 : -.pi / 2, axis: .unitY))))
+            objects.append(SceneObject(id: id, name: "Walker \(index + 1)", kind: .asset(walkerAsset),
+                                       transform: Transform(position: Vec3(Double(index) * 2.6 - 7, 0, side * 0.6),
+                                                            rotation: Quat(angle: side > 0 ? .pi / 2 : -.pi / 2, axis: .unitY))))
             clipTracks.append(ClipTrack(id: "walk-\(index)", target: id, segments: [
                 ClipSegment(id: "walk-\(index)-a", clip: ClipRef(asset: walkerAsset, name: walkClip), start: 0, duration: duration,
                             offset: Double(index) * 0.17)
             ]))
         }
+        return (objects, clipTracks)
+    }
+
+    static func dolly(ids: inout IDFactory) -> SceneObject {
         var camera = SceneObject(id: ids.next(), name: "Dolly", kind: .camera,
                                  transform: Transform(position: Vec3(-12, 2.2, 7), rotation: Quat(angle: -0.5, axis: .unitY)))
         camera[.fieldOfView] = .float(CameraLens.fieldOfView(focalLength: 32))
-        add(camera)
-        for object in objects {
-            scene.objects[object.id] = object
-        }
-        scene.roots = objects.filter { $0.parent == nil }.map(\.id)
-        scene.activeCamera = camera.id
+        return camera
+    }
+
+    /// The walk clips and a slow dolly down the street.
+    static func timeline(camera: ObjectID, clipTracks: [ClipTrack]) -> Timeline {
         var timeline = Timeline(fps: 30, duration: duration)
         timeline.clipTracks = clipTracks
-        timeline.cuts = [CameraCut(time: 0, camera: camera.id)]
-        let move = Track(id: "dolly", target: camera.id, property: .position, keyframes: [
+        timeline.cuts = [CameraCut(time: 0, camera: camera)]
+        timeline.tracks = [Track(id: "dolly", target: camera, property: .position, keyframes: [
             Keyframe(time: 0, value: .vec3(Vec3(-12, 2.2, 7))), Keyframe(time: duration, value: .vec3(Vec3(10, 2.8, 6)))
-        ])
-        timeline.tracks = [move]
-        scene.timeline = timeline
-        scene.viewpoint = Viewpoint(target: Vec3(0, 1, 0), yaw: 25, pitch: 18, distance: 18)
-        return (info, scene)
+        ])]
+        return timeline
     }
 
     /// Facts the benchmark report records.

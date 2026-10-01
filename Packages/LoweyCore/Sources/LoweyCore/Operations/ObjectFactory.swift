@@ -44,7 +44,7 @@ public struct ObjectFactory: Sendable {
         return object
     }
 
-    public mutating func light(_ type: LightType, at position: Vec3, color: RGBA = RGBA(hex: "#FFB347")!) -> SceneObject {
+    public mutating func light(_ type: LightType, at position: Vec3, color: RGBA = RGBA.hex("#FFB347")) -> SceneObject {
         let name: String = switch type {
         case .directional: "Sun light"
         case .point: "Lamp light"

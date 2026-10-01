@@ -15,21 +15,21 @@ public enum ParticleMesher {
     public static func bands(_ particles: [Particle], recipe: ParticleRecipe) -> [Band] {
         guard !particles.isEmpty else { return [] }
         // Bucket by quantised colour and opacity so fading particles share a few materials.
-        var buckets: [Int: (mesh: MeshData, r: Double, g: Double, b: Double, a: Double, count: Double)] = [:]
+        var buckets: [Int: Bucket] = [:]
         for particle in particles where particle.size > 1e-4 && particle.color.a > 0.02 {
             let key = bucket(particle.color)
-            var entry = buckets[key] ?? (MeshData(), 0, 0, 0, 0, 0)
+            var entry = buckets[key] ?? Bucket()
             append(particle, shape: recipe.shape, to: &entry.mesh)
-            entry.r += particle.color.r
-            entry.g += particle.color.g
-            entry.b += particle.color.b
-            entry.a += particle.color.a
+            entry.red += particle.color.r
+            entry.green += particle.color.g
+            entry.blue += particle.color.b
+            entry.alpha += particle.color.a
             entry.count += 1
             buckets[key] = entry
         }
         var result = buckets.sorted { $0.key < $1.key }.map { _, entry in
-            Band(mesh: entry.mesh, color: RGBA(entry.r / entry.count, entry.g / entry.count, entry.b / entry.count),
-                 opacity: entry.a / entry.count)
+            Band(mesh: entry.mesh, color: RGBA(entry.red / entry.count, entry.green / entry.count, entry.blue / entry.count),
+                 opacity: entry.alpha / entry.count)
         }
         // Merge the smallest bands into their neighbours when there are too many.
         while result.count > maxBands {
@@ -40,6 +40,16 @@ public enum ParticleMesher {
             result.remove(at: index)
         }
         return result
+    }
+
+    /// Particles that share a material: their mesh and summed colours.
+    private struct Bucket {
+        var mesh = MeshData()
+        var red = 0.0
+        var green = 0.0
+        var blue = 0.0
+        var alpha = 0.0
+        var count = 0.0
     }
 
     static func bucket(_ color: RGBA) -> Int {

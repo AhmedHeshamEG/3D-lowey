@@ -23,6 +23,11 @@ public struct RGBA: Hashable, Sendable {
         return (Swift.min(Swift.max(value, 0), 1) * 255).rounded() / 255
     }
 
+    /// A colour written in code as "#RRGGBB" (a literal checked by the tests; a typo shows as magenta, never a crash).
+    public static func hex(_ literal: StaticString) -> RGBA {
+        RGBA(hex: "\(literal)") ?? RGBA(1, 0, 1)
+    }
+
     public init?(hex: String) {
         var string = hex.trimmingCharacters(in: .whitespaces)
         if string.hasPrefix("#") { string.removeFirst() }
@@ -63,7 +68,7 @@ public struct RGBA: Hashable, Sendable {
     public static let white = RGBA(1, 1, 1)
     public static let black = RGBA(0, 0, 0)
     /// The neutral blockout grey.
-    public static let blockout = RGBA(hex: "#C7C7C2")!
+    public static let blockout = RGBA.hex("#C7C7C2")
 }
 
 extension RGBA: Codable {

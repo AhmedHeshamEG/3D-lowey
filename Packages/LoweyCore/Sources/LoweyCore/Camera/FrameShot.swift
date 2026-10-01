@@ -161,7 +161,7 @@ public enum FrameShot {
             let between = Vec3(other.bounds.center.x - subject.bounds.center.x, 0, other.bounds.center.z - subject.bounds.center.z)
             if between.length > 1e-6 {
                 var perpendicular = Vec3(-between.z, 0, between.x).normalized
-                if perpendicular.dot(front) < 0 { perpendicular = perpendicular * -1 }
+                if perpendicular.dot(front) < 0 { perpendicular = -perpendicular }
                 front = perpendicular
             }
         }
