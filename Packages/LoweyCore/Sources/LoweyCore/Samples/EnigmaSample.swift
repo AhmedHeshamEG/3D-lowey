@@ -1,6 +1,6 @@
 import Foundation
 
-/// The canonical test: the three static sets of the Enigma video (context.md §7.1),
+/// The canonical test: the three static sets of the Enigma video,
 /// built only from blockout, drawing recipes and lights — through the same commands
 /// the UI uses. Ships as a sample project and doubles as a round-trip test fixture.
 public enum EnigmaSample {

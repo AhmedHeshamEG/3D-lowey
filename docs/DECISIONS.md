@@ -1,7 +1,8 @@
 # Decisions
 
-Every non-obvious choice, with the reason. Binding decisions from `docs/context.md` §10 are not repeated here
-unless something changed.
+Every non-obvious choice, with the reason. D1–D86 are the 1.x decisions, kept as history; where 2.0 replaced one,
+the 2.0 entry (R…) says so. What the product is lives in [SPEC.md](SPEC.md); how it's built in
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Engineering
 
@@ -384,3 +385,115 @@ content (iPadOS 18+), and the lanes need that drag. The lanes decide once per dr
 status icon needs a Network Extension (paid developer account), and Live Activities don't show on iPad. The app is
 sideloaded, so it uses the audio background mode: while the bridge is on and the app is away it plays silence mixed with
 other audio, and posts a quiet "Bridge on" notification. Drawing (snapshots, export) still waits for the foreground.
+
+## 2.0 — Remaster, phase 1
+
+**R1 — `legacy/v1` starts at the v1.4.3 tip, not v1.4.2.** 1.4.3 shipped after the remaster was specified; the legacy
+branch and the `v1-final` tag point at what users actually have.
+
+**R2 — Shared code lives in hmm-kit, a public package pulled in as a git subtree (`Packages/HmmKit`).** Public, so the
+subtree needs no credentials in CI and its own CI runs on free minutes. Lowey depends on its products and never edits
+the subtree in place: changes go to hmm-kit first, then `chore: sync hmm-kit`.
+
+**R3 — Four layers: LoweyCore → LoweyEngine → LoweyFeatures → App** (supersedes D1). Core stays pure Swift and
+Linux-tested. The engine owns Metal, import, export, the stage view, audio, face capture and scripting. Features are
+the SwiftUI editor. The app target is only the entry point, menu commands, background tasks and the widget.
+
+**R4 — LoweyRender 2 on Metal replaces RealityKit** (supersedes D15 and the 1.x rendering decisions). One renderer
+draws the stage, thumbnails and every export, so the preview is the export (tested pixel for pixel). RealityKit
+couldn't give lines, a Look system, exact picking, deterministic frames or control over the compositor.
+
+**R5 — glTF is read by a pure-Swift reader in LoweyCore** (GLTFKit2 removed). It runs in the Linux tests, needs no
+binary dependency, and the importer and the skeleton reader share one parser.
+
+**R6 — Only the sun casts shadows (two cascades); point and spot lights don't.** Up to 16 of them light a frame (the
+nearest to the camera win). Shadowed local lights cost a shadow map each; the Looks get their mood from the sun,
+contact shading and lines.
+
+**R7 — Metal front faces are counter-clockwise.** Every mesh in LoweyCore winds counter-clockwise; with Metal's
+default (clockwise) every visible face read as a back face, normals flipped and objects shadowed themselves.
+
+**R8 — Golden images are recorded on the CI simulator and reviewed before they're committed.** The simulator's GPU
+differs from a device's, so goldens come from where they're checked: a missing or changed golden fails the test and
+uploads the render; once it looks right it's committed. Tolerance: 1 % of pixels may differ by more than 24 levels.
+
+**R9 — Spike results.** Metal and 4× MSAA work in the CI iPad simulator. The simulator's encoder has no 4K HEVC and
+drops out at 4K H.264, so the simulator checks the 4K pipeline at 1440p and 4K HEVC is on the device checklist. GPU
+skinning works there (walker golden). MetalFX is device-only; the simulator falls back to bilinear scaling.
+
+**R10 — 1.x projects open in the Clay Look** (Low-poly when the project used flat shading): the closest to the
+RealityKit picture, so nothing looks broken after the update. Choosing another Look is one tap.
+
+**R11 — Features are folders in one target, and folders never reference each other.** One SwiftPM target keeps build
+times down; `Tools/check-feature-boundaries.py` (in CI) fails when a feature names a top-level type of another.
+Workspace is shared by all (models, session API, controls); Shell is the composition root and may use every feature.
+Theater settings and the tour go through `AppModel`, not across features.
+
+**R12 — One editor, no modes.** Five modes hid tools behind a switcher; the editor shows the tool panels in a sidebar,
+the stage and the timeline together. ⌘1–5 open panels instead of modes.
+
+**R13 — Auto-key belongs to the timeline's Keyframe mode; Compose (the default) never creates keys.** In 1.x an
+accidental drag in Animate mode made keys nobody asked for.
+
+**R14 — Universal gestures (two-, three- and four-finger taps, two-finger hold) live on hmm-kit's gesture layer at
+the window**, so they work over panels and sheets the same way; the stage no longer handles them.
+
+**R15 — The joystick stays, optional and off by default** (Transform ▸ Joystick). Direct touch covers most moves; the
+game-controller Fly performer is phase 2.
+
+**R16 — Selection is drawn as a silhouette outline, not a box.** It reads on any shape and in every Look, and comes
+from the ID buffer the picking already has.
+
+**R17 — Project cards play a looping GIF** (8 fps, 2.4 s) through the shot camera, next to a still PNG thumbnail.
+
+**R18 — Export runs on the main actor, encoders on the caller's actor.** `ExportSession` is `@MainActor`, and HmmMedia
+builds with `NonisolatedNonsendingByDefault`, so its async encoder API runs where it's called and pixel buffers are
+never sent across actors (Swift 6, no warnings).
+
+**R19 — Background export is a `BGContinuedProcessingTask`** (iPadOS 26), with GPU access where the device grants it;
+otherwise the export waits while the app is away and continues when it's back (as in 1.x). Progress goes to a Live
+Activity where the system shows them, and a notification says when it's done either way.
+
+**R20 — Exports are verified before they're handed over** (frame count, size, length, audio track, alpha) by
+HmmMedia's inspector. A broken file is an error, not a share sheet.
+
+**R21 — The bridge is off until it's turned on, pairs with a one-time code and keeps tokens in the Keychain**
+(supersedes the 1.x bridge decisions and D86's "on by default"). The permanent `000000` code and `lowey-mcp --public`
+are gone, and so are the tunnel modes: a creative tool shouldn't be an open door on café Wi-Fi. Unpaired requests get
+401, non-local ones 403, a pairing attempt with no code on screen 409 (tested).
+
+**R22 — The silent-audio keep-alive (D86) stays for sideloaded builds only.** Feature flags in Info.plist
+(`LoweyAIBridge`, `LoweyBackgroundBridge`) switch the bridge and the keep-alive off in the App Store configuration.
+
+**R23 — LoweyCore's 1.x bridge code is removed.** Its HTTP parser and `BridgeAuth` (with the permanent code) are
+replaced by HmmBridge; Core keeps only the compact scene, transcript and asset summaries the bridge sends.
+
+**R24 — iCloud only in the App Store configuration.** A sideloaded build can't carry the iCloud entitlement, so
+`DocumentLocator` falls back to on-device storage and says so.
+
+**R25 — The Night Market benchmark uses a generated walker** (`BenchmarkFigure`, an 11-bone box figure with a walk
+cycle, made in LoweyCore and seeded into the model library), so it needs nothing from the user's library and runs the
+same everywhere. Target on a device: p95 frame time ≤ 8.3 ms at render scale ≥ 0.85.
+
+**R26 — Finish ▸ Outline adds lines over any Look.** Lines are a renderer pass, so any Look can have them, not only
+Ink and Comic.
+
+**R27 — Lint at the STUDIO limits, strictly.** SwiftLint runs with `--strict`: files ≤ 500 lines, type bodies ≤ 350,
+functions ≤ 60, complexity ≤ 12 (switch cases don't count: a switch over an enum is one decision, not twelve), no force
+unwraps outside tests. Long lines inside multi-line strings are allowed: they're Scene Script and JavaScript examples
+shown to people and to the AI, and wrapping JSON objects mid-line would make them harder to copy.
+
+**R28 — Colour literals go through `RGBA.hex(_:)`,** which takes a `StaticString` and falls back to magenta, so a
+mistyped literal shows on screen instead of crashing, and there are no force unwraps.
+
+**R29 — Script time limits are checked at every API call.** JavaScriptCore has no public execution time limit on
+iOS, so a loop that never calls `lowey` or `scene` can't be stopped (BACKLOG). Every loop that builds anything calls
+the API, and those stop.
+
+**R30 — Flipbook tracks are phase 2, and so is the Mac target.** Phase 1 rebuilds the engine and the editor; LoweyCore
+and hmm-kit already compile for macOS.
+
+**R31 — The 1.x app's render and export tests were ported, not dropped.** They moved from the hosted app tests to
+LoweyEngine's tests on LoweyRender 2 (export, scene, library and script tests), with the animal-pack fixtures. Two
+checks were 1.x-specific and are gone: the RealityKit depth-pass calibration (the Metal renderer has a real depth
+buffer) and the RealityKit post-processing install timing.

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Phase 2's proof: the Enigma opening, animated end to end (context.md §7.1), built only
+/// Phase 2's proof: the Enigma opening, animated end to end (the first beats of the video), built only
 /// through commands, presets, camera moves, behaviours and a Perform take.
 ///
 ///  0.0  "A German army message from 1941"  — paper under a warm lamp, the camera pushes in.
