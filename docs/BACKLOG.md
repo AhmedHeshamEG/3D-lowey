@@ -29,8 +29,8 @@ What's known and not done yet, so nothing lives only in someone's head. The phas
   busy until the app quits. (R29)
 - **Golden images come from the simulator.** They catch regressions in the pipeline, not device-specific GPU
   differences; device renders are checked by eye from the PR's device checklist. (R8)
-- **4K HEVC isn't exercised in CI.** The simulator's encoder has none; CI checks the 4K pipeline at 1440p H.264 and
-  4K HEVC is a device check. (R9)
+- **4K HEVC isn't exercised in CI.** The simulator's encoder has none; CI runs the same pipeline at 1080p H.264 and 4K
+  HEVC is a device check. (R9)
 - **MetalFX upscaling is device-only.** The simulator falls back to bilinear scaling, so dynamic resolution quality is
   a device check. (R9)
 - **Sideloaded builds have no iCloud.** A free Apple ID can't sign the iCloud entitlement; projects stay on the

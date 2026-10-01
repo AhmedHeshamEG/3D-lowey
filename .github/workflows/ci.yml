@@ -90,7 +90,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/goldens"
-          TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test             -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult"             -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
+          TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test             -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult"             -test-timeouts-enabled YES -default-test-execution-time-allowance 300             -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
           grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/engine.log"
       - name: Collect renders
         if: always()

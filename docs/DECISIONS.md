@@ -418,7 +418,8 @@ differs from a device's, so goldens come from where they're checked: a missing o
 uploads the render; once it looks right it's committed. Tolerance: 1 % of pixels may differ by more than 24 levels.
 
 **R9 — Spike results.** Metal and 4× MSAA work in the CI iPad simulator. The simulator's encoder has no 4K HEVC and
-drops out at 4K H.264, so the simulator checks the 4K pipeline at 1440p and 4K HEVC is on the device checklist. GPU
+drops out (or hangs the test runner) at 4K and 1440p H.264, so the simulator runs the export pipeline at 1080p and
+4K HEVC is on the device checklist. GPU
 skinning works there (walker golden). MetalFX is device-only; the simulator falls back to bilinear scaling.
 
 **R10 — 1.x projects open in the Clay Look** (Low-poly when the project used flat shading): the closest to the
