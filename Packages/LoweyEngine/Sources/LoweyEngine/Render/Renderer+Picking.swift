@@ -11,10 +11,10 @@ public struct PickHit: Sendable, Equatable {
     public var distance: Double
 }
 
-extension LoweyRenderer {
+public extension LoweyRenderer {
     /// Reads the last frame's ID and depth buffers around a pixel (a small window, so a finger finds thin things) and
     /// returns the object nearest the centre. Exact: the ID buffer is what was drawn, pixel for pixel.
-    public func pick(at pixel: SIMD2<Int>, radius: Int = 6) -> PickHit? {
+    func pick(at pixel: SIMD2<Int>, radius: Int = 6) -> PickHit? {
         guard let targets, let scene = lastScene, let camera = lastCamera else { return nil }
         let x0 = min(max(pixel.x - radius, 0), targets.width - 1)
         let y0 = min(max(pixel.y - radius, 0), targets.height - 1)
@@ -59,12 +59,12 @@ extension LoweyRenderer {
     }
 
     /// The object indices whose pixels fall inside a screen polygon (lasso) in the last frame, by bounds centre.
-    public func visibleObjects() -> [ObjectID] {
+    func visibleObjects() -> [ObjectID] {
         lastScene?.objectIDs ?? []
     }
 
     /// World bounds of objects as last drawn (what you see, loaded models included).
-    public func visualBounds(of ids: Set<ObjectID>) -> Bounds? {
+    func visualBounds(of ids: Set<ObjectID>) -> Bounds? {
         guard let scene = lastScene else { return nil }
         var result: Bounds?
         for item in scene.items {
@@ -75,7 +75,7 @@ extension LoweyRenderer {
     }
 
     /// An object's geometry in world space as last drawn (drawing on its surface).
-    public func worldMesh(of id: ObjectID) -> MeshData? {
+    func worldMesh(of id: ObjectID) -> MeshData? {
         guard let scene = lastScene else { return nil }
         var result = MeshData()
         for item in scene.items where scene.objectID(forPacked: item.uniforms.ids.x) == id {
@@ -96,5 +96,5 @@ extension LoweyRenderer {
     }
 
     /// Helpers (lights, cameras, emitters) as last drawn.
-    public var helpers: [HelperItem] { lastScene?.helpers ?? [] }
+    var helpers: [HelperItem] { lastScene?.helpers ?? [] }
 }

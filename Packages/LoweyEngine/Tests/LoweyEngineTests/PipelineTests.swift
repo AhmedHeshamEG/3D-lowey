@@ -59,7 +59,7 @@ final class PipelineTests: XCTestCase {
         _ = try await session.video(settings, audio: nil, to: url) { progress = $0 }
         XCTAssertEqual(progress, 1)
         let problems = try await MediaInspector.verify(url, expected: ExportExpectation(duration: 1, frameCount: 30, width: size.width,
-                                                                                         height: size.height, audio: false, alpha: false))
+                                                                                        height: size.height, audio: false, alpha: false))
         XCTAssertEqual(problems, [])
     }
 

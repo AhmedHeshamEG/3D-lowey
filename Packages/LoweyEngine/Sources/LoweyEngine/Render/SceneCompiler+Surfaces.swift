@@ -107,7 +107,7 @@ extension SceneCompiler {
         let pictureKey = MeshKey.picture(width: MeshKey.mm(picture.width), height: MeshKey.mm(picture.height))
         guard let quad = meshes.mesh(pictureKey, make: {
             GPUMesh(device: device, mesh: Self.pictureQuad(width: Float(picture.width), height: Float(picture.height),
-                                                            center: SIMD3<Float>(0, Float(size.height / 2), Float(size.depth / 2) + 0.0015)),
+                                                           center: SIMD3<Float>(0, Float(size.height / 2), Float(size.depth / 2) + 0.0015)),
                     label: "picture")
         }) else { return }
         var face = base
@@ -179,7 +179,7 @@ extension SceneCompiler {
         // The object's scale is the amount, not a size: particles keep their own size.
         let scale = object.transform.scale
         let unscale = simd_float4x4(diagonal: SIMD4<Float>(1 / Float(max(abs(scale.x), 1e-3)), 1 / Float(max(abs(scale.y), 1e-3)),
-                                                            1 / Float(max(abs(scale.z), 1e-3)), 1))
+                                                           1 / Float(max(abs(scale.z), 1e-3)), 1))
         for band in ParticleMesher.bands(particles, recipe: recipe) {
             guard let mesh = GPUMesh(device: device, mesh: band.mesh, label: "particles") else { continue }
             var uniforms = ObjectUniforms()

@@ -126,7 +126,7 @@ public final class ExportSession {
             try await waitUntilRenderable()
             let time = settings.range.start + Double(frame) / Double(settings.fps)
             let request = try await frameRequest(at: time, settings: settings)
-            writer.append(try await frames.image(request, width: size.width, height: size.height))
+            try await writer.append(frames.image(request, width: size.width, height: size.height))
             progress(Double(frame + 1) / Double(settings.frameCount))
         }
         try writer.finish()

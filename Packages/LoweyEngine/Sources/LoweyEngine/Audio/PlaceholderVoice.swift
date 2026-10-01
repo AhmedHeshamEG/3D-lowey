@@ -83,8 +83,10 @@ public enum PlaceholderVoice {
             let count = min(chunk, samples.count - offset)
             guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count)) else { break }
             buffer.frameLength = AVAudioFrameCount(count)
+            guard let channel = buffer.floatChannelData?[0] else { break }
             samples.withUnsafeBufferPointer { source in
-                buffer.floatChannelData![0].update(from: source.baseAddress! + offset, count: count)
+                guard let base = source.baseAddress else { return }
+                channel.update(from: base + offset, count: count)
             }
             try file.write(from: buffer)
             offset += count

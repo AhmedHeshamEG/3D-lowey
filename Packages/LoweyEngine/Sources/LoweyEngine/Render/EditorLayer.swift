@@ -135,7 +135,7 @@ extension LoweyRenderer {
             let mesh = helper.kind == .camera ? editorMeshes.box : editorMeshes.sphere
             let size = helper.kind == .camera ? SIMD3<Float>(0.3, 0.2, 0.2) : SIMD3<Float>(repeating: Float(helper.radius))
             var model = LoweyCore.Transform(position: helper.transform.position, rotation: helper.transform.rotation).matrix
-            model = model * simd_float4x4(diagonal: SIMD4<Float>(size, 1))
+            model *= simd_float4x4(diagonal: SIMD4<Float>(size, 1))
             // Primitives stand on their base: centre them on the object.
             model.columns.3 -= model.columns.1 * 0.5
             draws.append(EditorDraw(mesh: mesh, item: EditorItemUniforms(model: model, color: color, params: SIMD4<Float>(1, 0, 0, 0)),
@@ -155,8 +155,7 @@ extension LoweyRenderer {
         switch guide {
         case let .plane(origin, normal):
             let rotation = Quat.rotation(from: .unitY, to: normal)
-            var model = LoweyCore.Transform(position: origin, rotation: rotation, scale: Vec3(0.01, 1, 0.01)).matrix
-            model = model * simd_float4x4(diagonal: SIMD4<Float>(1, 1, 1, 1))
+            let model = LoweyCore.Transform(position: origin, rotation: rotation, scale: Vec3(0.01, 1, 0.01)).matrix
             return [EditorDraw(mesh: editorMeshes.quad, item: EditorItemUniforms(model: model, color: fill, params: .zero), depthTested: true)]
         case let .box(center, size):
             let model = LoweyCore.Transform(position: center - Vec3(0, size.y / 2, 0), scale: size).matrix
@@ -198,7 +197,7 @@ extension LoweyRenderer {
         if mode == .scale {
             let center = origin * LoweyCore.Transform(position: Vec3(0, -0.1, 0), scale: Vec3(0.2, 0.2, 0.2)).matrix
             draws.append(EditorDraw(mesh: editorMeshes.box, item: EditorItemUniforms(model: center, color: SIMD4<Float>(1, 1, 1, 1),
-                                                                                  params: SIMD4<Float>(1, 0, 0, 0)), depthTested: false))
+                                                                                     params: SIMD4<Float>(1, 0, 0, 0)), depthTested: false))
         }
         return draws
     }

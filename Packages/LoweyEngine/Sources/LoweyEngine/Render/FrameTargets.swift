@@ -74,8 +74,8 @@ final class FrameTargets {
         for level in 0 ..< 4 {
             mipWidth = max(mipWidth / 2, 1)
             mipHeight = max(mipHeight / 2, 1)
-            mips.append(try device.makeTexture(RenderDevice.colorFormat, width: mipWidth, height: mipHeight, usage: rw, label: "bloom \(level)"))
-            ups.append(try device.makeTexture(RenderDevice.colorFormat, width: mipWidth, height: mipHeight, usage: rw, label: "bloom up \(level)"))
+            try mips.append(device.makeTexture(RenderDevice.colorFormat, width: mipWidth, height: mipHeight, usage: rw, label: "bloom \(level)"))
+            try ups.append(device.makeTexture(RenderDevice.colorFormat, width: mipWidth, height: mipHeight, usage: rw, label: "bloom up \(level)"))
         }
         bloom = mips
         bloomUp = ups

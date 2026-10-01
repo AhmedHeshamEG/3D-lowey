@@ -50,7 +50,7 @@ public final class StageView: MTKView {
         preferredFramesPerSecond = 120
         autoResizeDrawable = true
         clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
-        self.delegate = self
+        delegate = self
         isPaused = true
         enableSetNeedsDisplay = true
         isMultipleTouchEnabled = true
@@ -236,7 +236,6 @@ public final class StageView: MTKView {
         if pixels > 1 { scene.pixelAngle = Float(2 * tan(Double(camera.fieldOfView) * .pi / 360) / pixels) }
         return scene
     }
-
 }
 
 extension StageView: MTKViewDelegate {

@@ -9,7 +9,7 @@ import UIKit
 enum TextMesher {
     static func mesh(for recipe: TextRecipe) -> MeshData {
         let size = CGFloat(max(recipe.size, 0.01))
-        let font = self.font(recipe.style, size: size)
+        let font = font(recipe.style, size: size)
         let lines = recipe.text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         var contoursByLine: [[[Vec2]]] = []
         var widths: [Double] = []

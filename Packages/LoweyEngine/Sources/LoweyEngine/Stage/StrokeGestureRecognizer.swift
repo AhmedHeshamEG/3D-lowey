@@ -1,4 +1,3 @@
-import UIKit
 import UIKit.UIGestureRecognizerSubclass
 
 /// Captures one drawing stroke with pressure and coalesced (high-frequency) Pencil samples.

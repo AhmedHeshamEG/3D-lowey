@@ -274,8 +274,8 @@ final class ScriptHost: @unchecked Sendable {
         }
         var parent: ObjectID?
         if let raw = options["parent"] as? String {
+            guard scene.objects[ObjectID(raw: raw)] != nil else { throw ScriptAPIError("no parent \(raw)") }
             parent = ObjectID(raw: raw)
-            guard scene.objects[parent!] != nil else { throw ScriptAPIError("no parent \(raw)") }
         }
         try perform(.insert(SceneFragment(object: object), parent: parent, index: nil))
         created.append(object.id)
