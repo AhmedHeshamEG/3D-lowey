@@ -8,6 +8,7 @@ import pytest
 
 TOKEN = "t0ken"
 RECEIVED = []
+PAIRED = []
 
 
 class FakeBridge(BaseHTTPRequestHandler):
@@ -29,6 +30,8 @@ class FakeBridge(BaseHTTPRequestHandler):
         return self.rfile.read(int(self.headers.get("Content-Length", 0)))
 
     def do_GET(self):  # noqa: N802
+        if self.path == "/v1/hello":
+            return self.reply(200, {"app": "lowey", "appVersion": "2.0.0", "device": "iPad", "bridgeVersion": 2, "pairing": True})
         if not self.authorized():
             return self.reply(401, {"error": "Pair first"})
         path = self.path.split("?")[0]
@@ -50,8 +53,9 @@ class FakeBridge(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         body = self.body()
         if path == "/v1/pair":
-            code = json.loads(body)["code"]
-            return self.reply(200, {"token": TOKEN}) if code == "123456" else self.reply(401, {"error": "Wrong code"})
+            request = json.loads(body)
+            PAIRED.append(request.get("client"))
+            return self.reply(200, {"token": TOKEN, "client": "c1"}) if request["code"] == "123456" else self.reply(401, {"error": "Wrong code"})
         if not self.authorized():
             return self.reply(401, {"error": "Pair first"})
         RECEIVED.append((path, self.path, body, self.headers.get("X-Lowey-Client")))
@@ -153,17 +157,33 @@ def test_finds_the_ipad_again_after_its_address_changed(bridge_host, monkeypatch
     assert json.loads(pathlib.Path(client.CONFIG).read_text())["host"] == bridge_host
 
 
-def test_pair_without_a_code_uses_the_default(bridge_host, monkeypatch):
+def test_pairing_needs_the_code_from_the_ipad(bridge_host, monkeypatch):
+    """There is no default code: without the one on the iPad's screen, nothing is sent."""
     from lowey_tools import client, link
     importlib = __import__("importlib")
     importlib.reload(link)
     monkeypatch.setattr(link, "discover", lambda: [bridge_host])
     sent = []
-    original = client.Bridge.pair
-    monkeypatch.setattr(client.Bridge, "pair", lambda self, code: sent.append(code) or original(self, code))
-    assert link.main(["pair"]) == 1, "the fake iPad's code isn't the default"
-    assert sent == [client.DEFAULT_CODE]
+    monkeypatch.setattr(client.Bridge, "pair", lambda self, code, client=None: sent.append(code))
+    assert link.main(["pair"]) == 1
+    assert sent == [], "no request without a code"
+    assert not hasattr(client, "DEFAULT_CODE")
+
+
+def test_pairing_names_this_laptop_and_any_order_works(bridge_host, monkeypatch):
+    from lowey_tools import link
+    importlib = __import__("importlib")
+    importlib.reload(link)
     assert link.main(["pair", "123456", bridge_host]) == 0, "address and code in any order"
+    assert PAIRED[-1], "the iPad gets a name to list (and revoke) this laptop by"
+
+
+def test_discovery_keeps_only_3d_lowey(bridge_host, monkeypatch):
+    """Other hmm apps advertise the same service type: /v1/hello tells them apart."""
+    from lowey_tools import client
+    monkeypatch.setattr(client, "_mdns_hosts", lambda timeout: ["127.0.0.1:9", bridge_host])
+    assert client.discover(timeout=0.1) == [bridge_host]
+    assert client.hello(bridge_host)["app"] == "lowey"
 
 
 def test_errors_are_readable(tmp_path, monkeypatch):
@@ -216,16 +236,10 @@ def test_media_and_manim_reach_the_shot(bridge_host, tmp_path, monkeypatch):
         assert "a" in stream.codec_context.pix_fmt, "the movie keeps its alpha"
 
 
-def test_public_mcp_secret_is_stable_until_rotated(tmp_path, monkeypatch):
-    monkeypatch.setattr("lowey_tools.client.CONFIG", tmp_path / "config.json")
+def test_http_mode_is_localhost_only():
     from lowey_tools import remote
-    first = remote.mcp_secret()
-    assert len(first) >= 20 and remote.mcp_secret() == first
-    assert remote.mcp_secret(rotate=True) != first
-    assert remote.QUICK_TUNNEL.search("INF |  https://calm-fox-12.trycloudflare.com  |").group(0).endswith(".trycloudflare.com")
-
-
-def test_public_https_url_and_ip_csr():
-    from lowey_tools import public
-    assert public.url_for("203.0.113.7", 443, "/s/mcp") == "https://203.0.113.7/s/mcp"
-    assert public.url_for("2001:db8::1", 8443, "/s/mcp") == "https://[2001:db8::1]:8443/s/mcp"
+    assert remote.url() == "http://127.0.0.1:8765/mcp"
+    assert remote.LOCALHOST == "127.0.0.1"
+    import lowey_tools
+    package = pathlib.Path(lowey_tools.__file__).parent
+    assert not (package / "public.py").exists(), "no internet mode"

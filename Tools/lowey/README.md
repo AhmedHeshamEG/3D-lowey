@@ -9,8 +9,8 @@ Python for Blender scripts, and FastMCP/MCPServer makes each tool a plain functi
 ```powershell
 cd tools/lowey
 pip install -e .
-# On the iPad: scene menu → "AI & laptop bridge…" → Bridge on. It shows the address and a 6-digit code.
-lowey-link pair 123456                 # finds the iPad on your Wi-Fi by itself
+# On the iPad: Actions ▸ AI & laptop (⇧⌘B) ▸ turn the bridge on ▸ Pair a laptop. It shows a one-time 6-digit code.
+lowey-link pair 123456                 # finds the iPad on your Wi-Fi by itself (Bonjour) and keeps a token
 lowey-link pair 192.168.1.20 123456    # ...or say where it is
 lowey-link status
 ```
@@ -27,23 +27,13 @@ Claude Desktop (`claude_desktop_config.json`):
 ```json
 { "mcpServers": { "lowey": { "command": "lowey-mcp" } } }
 ```
-### A public HTTPS link for claude.ai connectors (no tunnel service)
+### Over HTTP on this laptop
 
 ```powershell
-lowey-mcp --public      # https://<your public IP>/<secret>/mcp, with a free Let's Encrypt certificate
-lowey-mcp --http        # local only: http://127.0.0.1:8765/mcp  → claude mcp add --transport http lowey http://127.0.0.1:8765/mcp
+lowey-mcp --http        # http://127.0.0.1:8765/mcp  → claude mcp add --transport http lowey http://127.0.0.1:8765/mcp
 ```
-`--public` serves straight from this laptop: it finds the public IP, opens ports 80 and 443 on the router with UPnP (or tells
-you what to forward once), gets a Let's Encrypt certificate for the bare IP on port 80, renews it while running (IP
-certificates last about 6 days), and prints the link. Paste it into claude.ai → Settings → Connectors → *Add custom
-connector* (no OAuth). Keep the window open; the laptop talks to whichever iPad it's paired with on the Wi-Fi.
-
-- Needs a real public IP. Most home lines have one; a line behind carrier NAT does not (use `--tunnel` there).
-- `--ip <address>` picks the address, e.g. the laptop's stable IPv6 one: no port forwarding, but the router's IPv6
-  firewall must let 80/443 in. `--https-port` changes 443; `--staging` uses Let's Encrypt's test CA.
-- The secret path segment is the lock (stored as `mcp_secret` in `~/.lowey/config.json`); `--new-secret` rotates it.
-  Certificates and the ACME account key live in `~/.lowey/tls`.
-- `--tunnel` does the same through a Cloudflare quick tunnel (needs `cloudflared`), `--own-tunnel` behind one you run.
+There is no internet mode. The iPad's bridge answers only on the local network, only to laptops paired with a one-time
+code (the iPad lists them and can revoke each one), and it is off until you turn it on.
 
 Then: *"Read lowey://transcript and build the 'Nobody could' shot."* The iPad shows a preview; tap **Apply** (or turn on
 auto-apply in the bridge panel). Every change is one undo step.

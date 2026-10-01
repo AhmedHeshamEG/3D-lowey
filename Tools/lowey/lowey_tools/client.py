@@ -1,9 +1,9 @@
-"""Talks to the 3D-lowey Bridge on the iPad (local network only).
+"""Talks to the 3D-lowey Bridge on the iPad (local network only; the bridge is off until it's turned on there).
 
-The iPad shows its address and a 6-digit code (scene menu → "AI & laptop bridge…"; "000000" unless changed).
-`lowey-link pair` finds the iPad on the network (or `lowey-link pair <ip:port> <code>`) and stores a token in
-~/.lowey/config.json; everything else reuses it. If the iPad's address changed (Wi-Fi gave it a new one), the client finds
-it again by Bonjour and remembers the new address.
+On the iPad: Bridge ▸ Pair a laptop shows a one-time 6-digit code for a few minutes. `lowey-link pair <code>` finds the
+iPad on the network (or `lowey-link pair <ip:port> <code>`), trades the code for a token and keeps it in
+~/.lowey/config.json; everything else sends that token. The iPad lists paired laptops and can revoke them. If the iPad's
+address changed (Wi-Fi gave it a new one), the client finds it again by Bonjour and remembers the new address.
 Environment overrides: LOWEY_HOST (e.g. 192.168.1.20:7717), LOWEY_TOKEN.
 """
 from __future__ import annotations
@@ -20,7 +20,8 @@ from typing import Any
 
 CONFIG = pathlib.Path(os.environ.get("LOWEY_CONFIG", pathlib.Path.home() / ".lowey" / "config.json"))
 DEFAULT_PORT = 7717
-DEFAULT_CODE = "000000"
+SERVICE = b"_hmm._tcp.local"
+APP = "lowey"
 # Connecting to an iPad on the same Wi-Fi takes milliseconds; if it hasn't answered in this long it isn't there
 # (asleep, bridge off, new address). Replies can take much longer: a script waits for Hesham's OK on the iPad.
 CONNECT_TIMEOUT = 2.5
@@ -42,9 +43,14 @@ def load_config() -> dict[str, str]:
 
 
 def discover(timeout: float = 3.0) -> list[str]:
-    """iPads with the bridge on, found by Bonjour (`_lowey._tcp`), as "ip:port". Standard library only: one mDNS
-    question asking for a direct answer, repeated until `timeout`."""
-    labels = b"".join(bytes([len(part)]) + part for part in b"_lowey._tcp.local".split(b".")) + b"\0"
+    """iPads with the 3D-lowey bridge on, as "ip:port": devices answering Bonjour for hmm-kit's `_hmm._tcp` whose
+    `/v1/hello` says they are 3D-lowey (other hmm apps share the service type). Standard library only."""
+    return [host for host in _mdns_hosts(timeout) if _is_lowey(host)]
+
+
+def _mdns_hosts(timeout: float) -> list[str]:
+    """One mDNS question for `_hmm._tcp` asking for a direct answer, repeated until something answers or `timeout`."""
+    labels = b"".join(bytes([len(part)]) + part for part in SERVICE.split(b".")) + b"\0"
     # Header (id 0, one question), then PTR, class IN with the "answer me directly" bit.
     query = struct.pack(">HHHHHH", 0, 0, 1, 0, 0, 0) + labels + struct.pack(">HH", 12, 0x8001)
     found: list[str] = []
@@ -60,7 +66,7 @@ def discover(timeout: float = 3.0) -> list[str]:
                 while True:
                     data, (ip, _) = sock.recvfrom(9000)
                     address = f"{ip}:{DEFAULT_PORT}"
-                    if b"_lowey" in data and address not in found:
+                    if b"_hmm" in data and address not in found:
                         found.append(address)
             except (socket.timeout, TimeoutError):
                 pass
@@ -71,6 +77,25 @@ def discover(timeout: float = 3.0) -> list[str]:
     finally:
         sock.close()
     return found
+
+
+def hello(host: str) -> dict:
+    """What a bridge says about itself before pairing (app, version, device, whether a code is showing)."""
+    name, _, port = normalize_host(host).rpartition(":")
+    connection = http.client.HTTPConnection(name.strip("[]"), int(port), timeout=CONNECT_TIMEOUT)
+    try:
+        connection.request("GET", "/v1/hello")
+        response = connection.getresponse()
+        return json.loads(response.read()) if response.status == 200 else {}
+    finally:
+        connection.close()
+
+
+def _is_lowey(host: str) -> bool:
+    try:
+        return hello(host).get("app") == APP
+    except (OSError, ValueError):
+        return False
 
 
 def save_config(config: dict[str, str]) -> None:
@@ -156,8 +181,9 @@ class Bridge:
         return json.loads(data) if "json" in kind else data
 
     # -- API --------------------------------------------------------------------------------------------------------
-    def pair(self, code: str) -> str:
-        reply = self.post("/v1/pair", {"code": code})
+    def pair(self, code: str, client: str | None = None) -> str:
+        """Trades the one-time code shown on the iPad for this laptop's token (named so the iPad can list and revoke it)."""
+        reply = self.post("/v1/pair", {"code": code, "client": client or socket.gethostname() or "A laptop"})
         self.token = reply["token"]
         return self.token
 

@@ -1,6 +1,6 @@
 [project]
 name = "lowey-tools"
-version = "1.0.0"
+version = "2.0.0"
 description = "Laptop side of 3D-lowey: the MCP server (lowey-mcp) and the companion CLI (lowey-link)"
 requires-python = ">=3.10"
 license = { text = "MIT" }
