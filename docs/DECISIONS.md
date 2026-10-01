@@ -500,3 +500,9 @@ and hmm-kit already compile for macOS.
 LoweyEngine's tests on LoweyRender 2 (export, scene, library and script tests), with the animal-pack fixtures. Two
 checks were 1.x-specific and are gone: the RealityKit depth-pass calibration (the Metal renderer has a real depth
 buffer) and the RealityKit post-processing install timing.
+
+**R32 — CI retries a failing engine test up to twice.** The simulator's software video encoder now and then stops
+accepting frames or hangs the test runner, whatever the size (a 160 × 90 export did it once), and the same test passes
+on the next run. Retrying keeps CI meaningful without hiding a real failure: a test that fails three times in a row
+still fails the build, and every retry shows in the log and the result bundle. Video encoding itself is checked on a
+device (the PR checklist).
