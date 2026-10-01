@@ -78,8 +78,8 @@ final class SceneRenderTests: XCTestCase {
         XCTAssertGreaterThan(ImageChecks.difference(styled, raw), 0.02, "post / overlays / captions / effects changed the frame")
     }
 
-    /// On the Clay Look (no lines of its own): Finish ▸ Outline adds lines, and a wide aperture focused on the cube
-    /// blurs what's nearer and further.
+    /// On the Clay Look (no lines of its own): Finish ▸ Outline adds lines, and a wide aperture focused just in front of
+    /// the lens melts the set behind (a 35 mm lens at f/1.4 focused at 1.2 m blurs things 6–9 m away by several pixels).
     func testLensBlurAndInkOutlines() async throws {
         var document = TestScenes.lookCheck(look: LookPreset.clay.id, mood: .day)
         var look = document.effectiveLook
@@ -87,15 +87,13 @@ final class SceneRenderTests: XCTestCase {
         look.post.depthOfField = false
         document.project.look = look
         let camera = try XCTUnwrap(document.scene.objects.values.first { $0.kind == .camera }).id
-        let cube = try XCTUnwrap(document.scene.objects.values.first { $0.name == "Cube" }).id
         let plain = try await frame(document)
         var outlined = document
         outlined.project.look.post.outline = 0.7
         let lines = try await frame(outlined)
         var blurred = document
-        let focus = document.scene.worldTransform(of: camera).position.distance(to: document.scene.worldTransform(of: cube).position)
         blurred.scene.objects[camera]?[.aperture] = .float(1.4)
-        blurred.scene.objects[camera]?[.focusDistance] = .float(focus)
+        blurred.scene.objects[camera]?[.focusDistance] = .float(1.2)
         blurred.project.look.post.depthOfField = true
         let blur = try await frame(blurred)
         attach(plain, name: "clay-plain")
