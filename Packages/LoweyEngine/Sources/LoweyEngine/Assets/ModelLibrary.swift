@@ -91,6 +91,16 @@ public final class ModelLibrary: Sendable {
         }
     }
 
+    /// Puts a model made in code into the library (the benchmark's walker): it counts as loaded from the start.
+    public func seed(_ id: AssetID, model: ImportedModel, rig: RigAsset?) {
+        state.withLock { state in
+            state.models[id] = model
+            state.rigs[id] = rig
+            state.failed[id] = nil
+            state.loading.remove(id)
+        }
+    }
+
     /// Forgets a model (re-imported or removed).
     public func evict(_ id: AssetID) {
         state.withLock { state in

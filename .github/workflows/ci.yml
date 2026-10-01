@@ -1,5 +1,5 @@
-# Every push / PR: lint → LoweyCore tests (fast, Linux) → app build for iPad simulator →
-# render tests + UI smoke test (with screenshots) → scene-file round-trip tests.
+# Every push / PR: lint → LoweyCore tests (Linux) + laptop tools + LoweyEngine render tests (iPad simulator)
+# → app build for the iPad simulator, app tests and the UI smoke test (with screenshots).
 name: CI
 
 on:
@@ -44,16 +44,17 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: Packages/LoweyCore/.build
-          key: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift') }}
-      - name: Test (includes save → load round-trip and v0 migration tests)
+          key: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}
+      - name: Test (save → load round trips, v1 → v2 package upgrade, Look system, geometry)
         working-directory: Packages/LoweyCore
-        run: swift test --enable-code-coverage --parallel
+        # Serial: parallel runs corrupt the coverage profile.
+        run: swift test --enable-code-coverage
       - name: Coverage gate (≥ 80% lines)
         working-directory: Packages/LoweyCore
         run: |
           PROFILE=$(dirname "$(swift test --show-codecov-path)")/default.profdata
           BINARY=$(find .build -name 'LoweyCorePackageTests.xctest' -type f | head -1)
-          llvm-cov report "$BINARY" -instr-profile="$PROFILE" -ignore-filename-regex='Tests|\.build' | tee coverage.txt
+          llvm-cov report "$BINARY" -instr-profile="$PROFILE" -ignore-filename-regex='Tests|\.build|HmmKit' | tee coverage.txt
           COVERAGE=$(grep TOTAL coverage.txt | awk '{print $10}' | tr -d '%')
           echo "Line coverage: $COVERAGE%"
           echo "### LoweyCore line coverage: ${COVERAGE}%" >> "$GITHUB_STEP_SUMMARY"
@@ -68,14 +69,66 @@ jobs:
         with:
           python-version: "3.12"
       - name: Test against a fake iPad bridge
-        working-directory: tools/lowey
+        working-directory: Tools/lowey
         run: |
           pip install -e ".[test]"
           pytest -q
 
+  engine:
+    name: LoweyEngine (Metal renderer) build + render tests
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+      - name: Pick an iPad simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)["devices"]
+          best = None
+          for runtime, devices in data.items():
+              if "iOS" not in runtime: continue
+              version = tuple(int(x) for x in runtime.split("iOS-")[-1].split("-"))
+              for d in devices:
+                  if "iPad" not in d["name"]: continue
+                  score = (version, "iPad Air 13" in d["name"], "iPad Air" in d["name"])
+                  if best is None or score > best[0]: best = (score, d["udid"], d["name"])
+          print(best[1]); print(best[2], file=sys.stderr)
+          ')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: Build and test (golden images, picking, skinning, preview = export, 4K spike, benchmark)
+        working-directory: Packages/LoweyEngine
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/goldens"
+          TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test             -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult"             -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/engine.log"
+      - name: Collect renders
+        if: always()
+        run: |
+          mkdir -p renders
+          cp "$RUNNER_TEMP"/goldens/*.png renders/ 2>/dev/null || true
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/Engine.xcresult" --output-path renders || true
+          ls renders | head -80
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-renders
+          path: renders
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: engine-log
+          path: ${{ runner.temp }}/engine.log
+          retention-days: 7
+
   app:
     name: iPad app build + render & UI tests
-    needs: [lint, core-tests, tools]
+    needs: [lint, core-tests, tools, engine]
     runs-on: xcode-27
     timeout-minutes: 60
     steps:

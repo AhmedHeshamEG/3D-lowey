@@ -180,3 +180,38 @@ final class NightMarketTests: XCTestCase {
         XCTAssertEqual(NightMarket.facts(scene)["objects"], Double(scene.objects.count))
     }
 }
+
+final class BenchmarkFigureTests: XCTestCase {
+    func testFigureStandsOnTheGroundAndIsAHumanoid() throws {
+        let model = BenchmarkFigure.model()
+        let bounds = try XCTUnwrap(model.bounds)
+        XCTAssertEqual(bounds.min.y, 0, accuracy: 0.03, "feet on the ground")
+        XCTAssertEqual(bounds.max.y, 1.82, accuracy: 0.1, "about a person's height")
+        XCTAssertEqual(model.triangleCount, 11 * 12)
+        XCTAssertTrue(model.parts[0].isSkinned)
+        XCTAssertEqual(RigClassifier.classify(jointNames: BenchmarkFigure.skeleton.names), .humanoid)
+        XCTAssertEqual(BenchmarkFigure.asset.clips, [NightMarket.walkClip])
+    }
+
+    func testInverseBindMatricesUndoTheRestPose() {
+        let skin = BenchmarkFigure.model().skin
+        let rest = BenchmarkFigure.skeleton.modelRest
+        for (index, matrix) in (skin?.inverseBindMatrices ?? []).enumerated() {
+            XCTAssertEqual(Double(matrix[12]), -rest[index].position.x, accuracy: 1e-6)
+            XCTAssertEqual(Double(matrix[13]), -rest[index].position.y, accuracy: 1e-6)
+        }
+    }
+
+    func testWalkLoopsAndSwingsTheLegsInOpposition() throws {
+        let rig = BenchmarkFigure.rig()
+        let clip = try XCTUnwrap(rig.clips[NightMarket.walkClip])
+        let start = clip.pose(at: 0, skeleton: rig.skeleton)
+        let end = clip.pose(at: BenchmarkFigure.cycle, skeleton: rig.skeleton)
+        let left = try XCTUnwrap(rig.skeleton.index(of: "LeftUpLeg"))
+        let right = try XCTUnwrap(rig.skeleton.index(of: "RightUpLeg"))
+        XCTAssertEqual(start[left].rotation.x, end[left].rotation.x, accuracy: 1e-6, "the cycle loops")
+        let quarter = clip.pose(at: BenchmarkFigure.cycle / 4, skeleton: rig.skeleton)
+        XCTAssertGreaterThan(quarter[left].rotation.x, 0.2)
+        XCTAssertLessThan(quarter[right].rotation.x, -0.2)
+    }
+}

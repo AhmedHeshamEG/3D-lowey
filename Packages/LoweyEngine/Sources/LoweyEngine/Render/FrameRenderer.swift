@@ -50,6 +50,12 @@ public final class FrameRenderer {
         return bytes
     }
 
+    /// Renders a frame without reading it back (benchmarks).
+    @discardableResult
+    public func render(_ request: FrameRequest, width: Int, height: Int) async throws -> FrameReport {
+        try await run(request, into: outputTexture(width: width, height: height))
+    }
+
     public func image(_ request: FrameRequest, width: Int, height: Int) async throws -> CGImage {
         let bytes = try await bytes(request, width: width, height: height)
         return try Self.image(bgra: bytes, width: width, height: height, transparent: request.transparent)
