@@ -5,9 +5,11 @@
 
     final class DrawingTests: XCTestCase {
         private func frame(_ gray: CGFloat) -> CGImage? {
+            // sRGB, so a 0.5 grey is L* 53.4 everywhere (DeviceRGB is converted differently per platform).
+            let space = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
             let context = CGContext(data: nil, width: 160, height: 90, bitsPerComponent: 8, bytesPerRow: 0,
-                                    space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-            context?.setFillColor(CGColor(red: gray, green: gray, blue: gray, alpha: 1))
+                                    space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            context?.setFillColor(CGColor(colorSpace: space, components: [gray, gray, gray, 1]) ?? CGColor(gray: gray, alpha: 1))
             context?.fill(CGRect(x: 0, y: 0, width: 160, height: 90))
             return context?.makeImage()
         }
