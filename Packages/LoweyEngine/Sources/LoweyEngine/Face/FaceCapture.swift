@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import CoreImage
 import Foundation
 import LoweyCore
@@ -21,8 +21,8 @@ public struct FaceSample: @unchecked Sendable {
 /// and mirrored (like a mirror, and like the preview), so what Vision sees is what you see.
 public final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     private let session = AVCaptureSession()
-    private let queue = DispatchQueue(label: "com.hesham.lowey.face")
-    private let logger = Logger(subsystem: "com.hesham.lowey", category: "face")
+    private let queue = DispatchQueue(label: "studio.hmm.lowey.face")
+    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "face")
     private let context = CIContext(options: [.cacheIntermediates: false])
     private var lastFrame: CFTimeInterval = 0
     private var lastPreview: CFTimeInterval = 0
@@ -183,7 +183,7 @@ public final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDe
     public enum FaceCaptureError: Error, CustomStringConvertible {
         case noCamera
 
-        var description: String { "No front camera" }
+        public var description: String { "No front camera" }
     }
 }
 

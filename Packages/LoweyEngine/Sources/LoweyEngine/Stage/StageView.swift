@@ -239,7 +239,7 @@ public final class StageView: MTKView {
 
 }
 
-extension StageView: @preconcurrency MTKViewDelegate {
+extension StageView: MTKViewDelegate {
     public func mtkView(_: MTKView, drawableSizeWillChange _: CGSize) {
         redraw()
     }
@@ -264,8 +264,8 @@ extension StageView: @preconcurrency MTKViewDelegate {
             let gpu = buffer.gpuEndTime - buffer.gpuStartTime
             Task { @MainActor in
                 guard let self else { return }
-                let scale = dynamicScale.update(gpuTime: gpu, thermal: .current)
-                onFrameTime?(gpu, total, scale)
+                let scale = self.dynamicScale.update(gpuTime: gpu, thermal: .current)
+                self.onFrameTime?(gpu, total, scale)
             }
         }
         commandBuffer.commit()

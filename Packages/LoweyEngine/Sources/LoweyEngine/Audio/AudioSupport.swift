@@ -11,7 +11,7 @@ public enum AudioDecoder {
     public enum DecodeError: Error, CustomStringConvertible {
         case unreadable(String)
 
-        var description: String {
+        public var description: String {
             switch self {
             case let .unreadable(reason): "Couldn't read the audio: \(reason)"
             }
@@ -80,7 +80,7 @@ public final class AudioPlayback {
     private let engine = AVAudioEngine()
     private var nodes: [String: (player: AVAudioPlayerNode, eq: AVAudioUnitEQ)] = [:]
     private var files: [String: AVAudioFile] = [:]
-    private let logger = Logger(subsystem: "com.hesham.lowey", category: "audio")
+    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "audio")
     /// Host time (CACurrentMediaTime) at which timeline time `time` is heard.
     private(set) var anchor: (host: CFTimeInterval, time: Double)?
     public var folder: URL
@@ -243,6 +243,6 @@ public final class VoiceRecorder {
     public enum VoiceRecorderError: Error, CustomStringConvertible {
         case couldNotStart
 
-        var description: String { "The microphone didn't start" }
+        public var description: String { "The microphone didn't start" }
     }
 }

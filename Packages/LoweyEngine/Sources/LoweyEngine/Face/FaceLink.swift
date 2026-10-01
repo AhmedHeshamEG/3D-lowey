@@ -34,7 +34,7 @@ public final class FaceLinkReceiver {
 
     private var listener: NWListener?
     private var connections: [NWConnection] = []
-    private let logger = Logger(subsystem: "com.hesham.lowey", category: "facelink")
+    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "facelink")
     /// Channels (face and, when the phone sees them, hands).
     public var onChannels: (([PropertyKey: Double]) -> Void)?
     /// What the preview shows: dots, bones and (sometimes) a picture.
@@ -157,7 +157,7 @@ public final class FaceLinkSender: NSObject, ARSessionDelegate {
     private var hands: [String: Double] = [:]
     private var bones: [Double] = []
     private var bodyBusy = false
-    private let bodyQueue = DispatchQueue(label: "com.hesham.lowey.body")
+    private let bodyQueue = DispatchQueue(label: "studio.hmm.lowey.body")
     private let context = CIContext(options: [.cacheIntermediates: false])
     public var onStatus: ((String) -> Void)?
     /// The companion's own preview: the picture as sent, dots, bones.
@@ -353,5 +353,5 @@ public final class FaceLinkSender: NSObject, ARSessionDelegate {
 }
 
 private extension simd_float4x4 {
-    public var rotationQuaternion: simd_quatf { simd_quatf(self) }
+    var rotationQuaternion: simd_quatf { simd_quatf(self) }
 }
