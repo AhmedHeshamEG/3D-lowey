@@ -6,6 +6,7 @@ import UIKit
 import XCTest
 
 /// Pixel checks shared by the render and export tests (a blank frame, two frames that differ, one pixel's colour).
+@MainActor
 enum ImageChecks {
     /// Mean absolute difference of two same-sized images, 0…1.
     static func difference(_ a: CGImage, _ b: CGImage) -> Double {

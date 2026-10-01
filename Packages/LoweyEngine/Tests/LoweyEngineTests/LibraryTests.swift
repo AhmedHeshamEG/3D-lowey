@@ -29,7 +29,8 @@ final class LibraryTests: XCTestCase {
     /// Imports a model the way the library does: copied in, then measured (bounds, rig, clips).
     private func importAsset(_ url: URL, id: AssetID) async throws -> LibraryAsset {
         var asset = try store.importModel(from: url, id: id)
-        let info = try await XCTUnwrap(models.inspect(asset, catalog: catalog([asset])), "\(asset.name) loads")
+        let inspected = await models.inspect(asset, catalog: catalog([asset]))
+        let info = try XCTUnwrap(inspected, "\(asset.name) loads")
         asset.bounds = info.bounds
         asset.rig = info.rig
         asset.clips = info.clips
@@ -133,7 +134,8 @@ final class LibraryTests: XCTestCase {
     /// An imported box keeps its 12 triangles, and drawing on objects raycasts its world mesh.
     func testImportedBoxIsRaycastable() async throws {
         let box = try await importAsset(fixture("box", in: "Fixtures"), id: "box")
-        let model = try await XCTUnwrap(models.load(box, catalog: catalog([box])))
+        let loaded = await models.load(box, catalog: catalog([box]))
+        let model = try XCTUnwrap(loaded)
         var mesh = MeshData()
         for part in model.parts {
             mesh.append(part.mesh)
