@@ -203,7 +203,6 @@ public enum BlobRig {
         let browAngle = sprung(.browAngle)
         let wide = sprung(.eyeWide)
         let happy = sprung(.eyeHappy)
-        let smileChannel = sprung(.smile)
         let squashChannel = sprung(.squash)
         let lookX = sprung(.lookX).now
         let lookY = sprung(.lookY).now

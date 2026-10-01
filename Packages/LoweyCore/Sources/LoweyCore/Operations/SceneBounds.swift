@@ -61,7 +61,7 @@ public struct SceneBounds: Sendable {
         func visit(_ id: ObjectID, parentTransform: Transform) {
             guard let object = byID[id] else { return }
             let transform = parentTransform * object.transform
-            var local: Bounds? = if case let .prefab(prefabID) = object.kind, let prefab = library.prefab(prefabID) {
+            let local: Bounds? = if case let .prefab(prefabID) = object.kind, let prefab = library.prefab(prefabID) {
                 fragmentBounds(prefab.fragment, depth: depth + 1)
             } else {
                 localBounds(of: object)

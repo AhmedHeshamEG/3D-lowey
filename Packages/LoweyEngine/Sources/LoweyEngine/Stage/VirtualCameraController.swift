@@ -1,6 +1,5 @@
 import ARKit
 import LoweyCore
-import LoweyRender
 import UIKit
 
 /// The iPad as a virtual camera (Unreal-style): ARKit world tracking with the rear camera reports
