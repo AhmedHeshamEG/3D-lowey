@@ -64,7 +64,7 @@ public struct PrefabID: LoweyIdentifier {
     public init(raw: String) { self.raw = raw }
 }
 
-public struct LookPresetID: LoweyIdentifier {
+public struct SavedLookID: LoweyIdentifier {
     public let raw: String
     public init(raw: String) { self.raw = raw }
 }

@@ -13,8 +13,8 @@ final class EditSessionTests: XCTestCase {
             .rename("n", "Donut"),
             .setKind("c", .asset("tree")),
             .reparent([ReparentEntry(object: "n", parent: "a")]),
-            .setLook(LookPresets.look(for: .goldenHour), scope: .project),
-            .setLook(LookPresets.look(for: .night), scope: .scene),
+            .setLook(MoodPresets.look(for: .goldenHour), scope: .project),
+            .setLook(MoodPresets.look(for: .night), scope: .scene),
             .renameScene("Renamed"),
             .delete(["a"])
         ]

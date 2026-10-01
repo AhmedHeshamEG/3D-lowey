@@ -8,9 +8,10 @@ public struct ProjectSummary: Hashable, Sendable, Identifiable {
     public var thumbnailURL: URL { url.appendingPathComponent(ProjectLayout.thumbnail) }
 }
 
-/// The `.lowey` project folder format (visible in the Files app):
+/// The `.lowey` project package (an hmm-kit `DocumentPackage`, visible in the Files app):
 ///
 ///     MyVideo.lowey/
+///       manifest.json   {schemaVersion: 2, app: "lowey", kind: "project", created, modified}
 ///       project.json
 ///       scenes/<scene-id>.json
 ///       assets/          copies of library assets (written by "Export project")
@@ -29,6 +30,25 @@ public enum ProjectLayout {
     public static func sceneURL(_ id: SceneID, in project: URL) -> URL {
         project.appendingPathComponent(scenesFolder).appendingPathComponent("\(id.raw).json")
     }
+
+    /// Package format: 1 = 3D-lowey 1.x (no manifest), 2 = 2.0.
+    public static let packageVersion = 2
+    public static let app = "lowey"
+    public static let kind = "project"
+
+    public static func manifest(now: Date = Date()) -> DocumentManifest {
+        DocumentManifest(schemaVersion: packageVersion, app: app, kind: kind, created: now, modified: now)
+    }
+
+    /// Upgrades 1.x packages when they're opened: a `<Name>.v1.bak` copy is kept next to the project, the manifest is
+    /// added, and the JSON files are migrated (schema v3 → v4) as they're read and re-saved.
+    public static let migrator = PackageMigrator(
+        app: app, kind: kind, currentVersion: packageVersion,
+        migrations: [PackageMigration(from: 1) { _ in }],
+        legacyVersion: { package in
+            FileManager.default.fileExists(atPath: package.fileURL(projectFile).path) ? 1 : nil
+        }
+    )
 }
 
 public enum ProjectStoreError: Error, Equatable, CustomStringConvertible {
@@ -77,6 +97,7 @@ public struct ProjectStore: Sendable {
         for folder in [ProjectLayout.scenesFolder, ProjectLayout.assetsFolder, ProjectLayout.audioFolder, ProjectLayout.rendersFolder] {
             try fileManager.createDirectory(at: url.appendingPathComponent(folder), withIntermediateDirectories: true)
         }
+        try DocumentPackage(url: url).writeManifest(ProjectLayout.manifest())
         let scene = Scene(id: .make(), name: firstSceneName)
         let info = ProjectInfo(
             id: .make(), name: name, look: look,
@@ -94,6 +115,7 @@ public struct ProjectStore: Sendable {
         for folder in [ProjectLayout.scenesFolder, ProjectLayout.assetsFolder, ProjectLayout.audioFolder, ProjectLayout.rendersFolder] {
             try fileManager.createDirectory(at: url.appendingPathComponent(folder), withIntermediateDirectories: true)
         }
+        try DocumentPackage(url: url).writeManifest(ProjectLayout.manifest())
         var info = info
         info.sceneOrder = scenes.map(\.id)
         info.sceneNames = Dictionary(uniqueKeysWithValues: scenes.map { ($0.id, $0.name) })
@@ -166,8 +188,9 @@ public struct ProjectStore: Sendable {
         return (scene, result.recoveredFromBackup)
     }
 
-    /// Opens a project on its last scene (or first).
+    /// Opens a project on its last scene (or first), upgrading a 1.x package first.
     public func openDocument(at url: URL, scene sceneID: SceneID? = nil) throws -> Document {
+        try ProjectLayout.migrator.open(url)
         let (info, _) = try loadProjectInfo(at: url)
         guard let target = sceneID ?? info.lastOpenedScene ?? info.sceneOrder.first else {
             throw ProjectStoreError.sceneMissing(SceneID(raw: "none"))
@@ -187,6 +210,13 @@ public struct ProjectStore: Sendable {
         info.lastOpenedScene = document.scene.id
         try SafeFileWriter.write(coder.encode(document.scene, kind: .scene), to: ProjectLayout.sceneURL(document.scene.id, in: url))
         try SafeFileWriter.write(coder.encode(info, kind: .project), to: url.appendingPathComponent(ProjectLayout.projectFile))
+        let package = DocumentPackage(url: url)
+        if var manifest = try package.readManifest() {
+            manifest.modified = info.modified
+            try package.writeManifest(manifest)
+        } else {
+            try ProjectLayout.migrator.open(url)
+        }
     }
 
     /// Adds a new empty scene (inheriting the project look) and returns it.

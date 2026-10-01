@@ -25,7 +25,7 @@ public enum MeshRaycast {
             if v < 0 || u + v > 1 { continue }
             let t = dot3(edge2, q) * inverse
             if t <= 1e-5 { continue }
-            if best == nil || t < best!.t {
+            if t < best?.t ?? .infinity {
                 var normal = normalize3(cross3(edge1, edge2), fallback: SIMD3<Float>(0, 1, 0))
                 if dot3(normal, direction) > 0 { normal = -normal } // face the viewer
                 best = (t, normal)

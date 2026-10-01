@@ -1,0 +1,78 @@
+import HmmDesign
+import LoweyCore
+import LoweyEngine
+import SwiftUI
+
+/// Screen-space marks above the stage: the lasso loop, the scatter area, the Pencil's hover preview and dashed frames
+/// around selected overlays (they have no 3D outline). The Director view's framing guides are drawn by the renderer.
+struct StageOverlayView: View {
+    let editor: EditorModel
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        ZStack {
+            if editor.lassoPoints.count > 1 {
+                Path { path in
+                    path.addLines(editor.lassoPoints)
+                    path.closeSubpath()
+                }
+                .fill(theme.accent.opacity(0.12))
+                Path { path in path.addLines(editor.lassoPoints) }
+                    .stroke(theme.accent, style: StrokeStyle(lineWidth: 2, dash: [6, 5]))
+            }
+            if let preview = editor.scatterPreview {
+                Ellipse()
+                    .fill(theme.accent.opacity(0.12))
+                    .overlay(Ellipse().stroke(theme.accent, style: StrokeStyle(lineWidth: 2, dash: [8, 6])))
+                    .frame(width: preview.radius * 2, height: preview.radius * 2 * 0.55)
+                    .position(preview.center)
+                Text("\(editor.scatter.count)")
+                    .font(.hmmNumbers(.body, weight: .semibold))
+                    .padding(HmmSpacing.xs)
+                    .hmmGlass(in: Capsule(), interactive: false)
+                    .position(preview.center)
+            }
+            OverlaySelectionFrames(editor: editor)
+            if let hover = editor.hoverPoint {
+                hoverRing(at: hover)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    /// The brush (or a pointer) under the hovering Pencil, shrinking as the tip comes closer.
+    private func hoverRing(at point: CGPoint) -> some View {
+        let radius: CGFloat = switch editor.tool {
+        case .draw: max(6, 40 * CGFloat(editor.draw.width / 0.05)) * 0.3
+        case .shadowBrush: max(10, CGFloat(editor.shadowBrush.radius) * 120)
+        default: 6
+        }
+        let size = radius * 2 * (1 + CGFloat(editor.hoverHeight))
+        return Circle()
+            .stroke(theme.accent.opacity(0.9), lineWidth: 1.5)
+            .frame(width: size, height: size)
+            .position(point)
+    }
+}
+
+/// Dashed frames around selected overlays.
+private struct OverlaySelectionFrames: View {
+    let editor: EditorModel
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        // Redraws when the scene or playhead changes (placements read unobserved state).
+        let revision = editor.displayRevision
+        let selected = Set(editor.selection)
+        let rect = editor.frameRect
+        let placements = selected.isEmpty || revision < 0 ? [] : editor.stageOverlayPlacements().filter { selected.contains($0.id) }
+        ForEach(placements, id: \.id) { placement in
+            let box = OverlayRenderer.boxSize(placement, frame: rect.size)
+            RoundedRectangle(cornerRadius: HmmRadius.control, style: .continuous)
+                .stroke(theme.accent, style: StrokeStyle(lineWidth: 2, dash: [7, 5]))
+                .frame(width: box.width + 16, height: box.height + 16)
+                .rotationEffect(.radians(-placement.angle))
+                .position(x: rect.minX + CGFloat(placement.center.x), y: rect.minY + CGFloat(placement.center.y))
+        }
+    }
+}

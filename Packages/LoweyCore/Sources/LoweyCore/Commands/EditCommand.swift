@@ -111,6 +111,10 @@ public indirect enum EditCommand: Hashable, Sendable {
     case setTimeline(Timeline)
     /// Fine-grained key editing (the common case: keying, Perform takes, presets).
     case setTracks([TrackEdit])
+    /// Replace an object's Shadow Brush painting (empty removes it).
+    case setShadowPaint(ObjectID, [ShadowDab])
+    /// Replace the project's own Looks ("My Look").
+    case setCustomLooks([LookPreset])
     /// Several commands as one undo step.
     case batch(String, [EditCommand])
 
@@ -139,6 +143,8 @@ public indirect enum EditCommand: Hashable, Sendable {
         case let .setTracks(edits):
             if edits.allSatisfy({ $0.track == nil }) { return "Delete keys" }
             return "Animate"
+        case .setShadowPaint: return "Paint shadows"
+        case .setCustomLooks: return "Edit looks"
         case let .batch(label, _): return label
         }
     }

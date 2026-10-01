@@ -1,17 +1,19 @@
+# hmm. studio limits (STUDIO §3): files 500 lines, type bodies 350, functions 60, cyclomatic complexity 12. CI runs
+# `swiftlint --strict`, so reaching a warning threshold (the STUDIO limit) fails the build.
 included:
   - App
-  - AppTests
   - AppUITests
   - Packages/LoweyCore/Sources
   - Packages/LoweyCore/Tests
-  - Packages/LoweyRender/Sources
-  - Packages/LoweyScript/Sources
+  - Packages/LoweyEngine/Sources
+  - Packages/LoweyEngine/Tests
+  - Packages/LoweyFeatures/Sources
+  - Packages/LoweyFeatures/Tests
 excluded:
   - "**/.build"
+  - Packages/HmmKit # linted in its own repository
   - DerivedData
-  - build
 
-# Geometry and math code legitimately uses short names (x, y, z, a, b, t…).
 identifier_name:
   min_length: 1
   max_length: 60
@@ -21,24 +23,27 @@ type_name:
   max_length: 50
 line_length:
   warning: 160
-  error: 220
+  error: 200
   ignores_comments: true
   ignores_urls: true
+  # Scene Script and JavaScript examples inside multi-line strings are data, not code.
+  ignores_multiline_strings: true
 file_length:
-  warning: 900
-  error: 1400
+  warning: 500
+  error: 600
 type_body_length:
-  warning: 600
-  error: 1000
+  warning: 350
+  error: 450
 function_body_length:
-  warning: 120
-  error: 220
+  warning: 60
+  error: 80
 cyclomatic_complexity:
-  warning: 25
-  error: 45
+  warning: 12
+  error: 15
+  ignores_case_statements: true
 large_tuple:
   warning: 4
-  error: 6
+  error: 5
 function_parameter_count:
   warning: 8
   error: 10
@@ -49,9 +54,9 @@ nesting:
 disabled_rules:
   - todo
   - trailing_comma
-  - opening_brace # SwiftFormat owns brace placement for multi-line conditions
-  - force_try # used only in tests
+  - opening_brace
   - multiple_closures_with_trailing_closure
+  - optional_data_string_conversion # String(decoding:as:) is the deliberate, lossless-enough choice for logs and tests
 
 opt_in_rules:
   - empty_count
@@ -59,3 +64,4 @@ opt_in_rules:
   - contains_over_first_not_nil
   - redundant_nil_coalescing
   - sorted_first_last
+  - force_unwrapping

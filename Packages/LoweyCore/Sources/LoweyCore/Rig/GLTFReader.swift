@@ -42,6 +42,22 @@ public enum GLTFReader {
         func array(_ key: String) -> [[String: Any]] { json[key] as? [[String: Any]] ?? [] }
     }
 
+    /// A buffer from a data URI or a file next to the model.
+    static func loadBuffer(_ uri: String, baseURL: URL?) throws -> Data {
+        if uri.hasPrefix("data:"), let comma = uri.firstIndex(of: ",") {
+            guard let decoded = Data(base64Encoded: String(uri[uri.index(after: comma)...])) else {
+                throw GLTFReadError.malformed("bad data URI")
+            }
+            return decoded
+        }
+        guard let baseURL else { throw GLTFReadError.missingBuffer(uri) }
+        let path = uri.removingPercentEncoding ?? uri
+        guard let loaded = try? Data(contentsOf: baseURL.appendingPathComponent(path)) else {
+            throw GLTFReadError.missingBuffer(uri)
+        }
+        return loaded
+    }
+
     static func parse(_ data: Data, baseURL: URL?) throws -> File {
         var jsonData = data
         var binary: Data?
@@ -63,20 +79,7 @@ public enum GLTFReader {
         var buffers: [Data] = []
         for (index, buffer) in (json["buffers"] as? [[String: Any]] ?? []).enumerated() {
             if let uri = buffer["uri"] as? String {
-                if uri.hasPrefix("data:"), let comma = uri.firstIndex(of: ",") {
-                    guard let decoded = Data(base64Encoded: String(uri[uri.index(after: comma)...])) else {
-                        throw GLTFReadError.malformed("bad data URI")
-                    }
-                    buffers.append(decoded)
-                } else if let baseURL {
-                    let path = uri.removingPercentEncoding ?? uri
-                    guard let loaded = try? Data(contentsOf: baseURL.appendingPathComponent(path)) else {
-                        throw GLTFReadError.missingBuffer(uri)
-                    }
-                    buffers.append(loaded)
-                } else {
-                    throw GLTFReadError.missingBuffer(uri)
-                }
+                try buffers.append(loadBuffer(uri, baseURL: baseURL))
             } else if index == 0, let binary {
                 buffers.append(binary)
             } else {

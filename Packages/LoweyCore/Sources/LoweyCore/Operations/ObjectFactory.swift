@@ -12,6 +12,11 @@ public struct ObjectFactory: Sendable {
         var object = SceneObject(id: ids.next(), name: shape.displayName, kind: .primitive(shape),
                                  transform: Transform(position: position))
         object[.color] = .color(color ?? .rgba(.blockout))
+        // A small bevel catches the rim light and gives the lines something to follow.
+        if BevelSpec.applies(to: shape) {
+            object[.bevel] = .float(BevelSpec.standard.radius)
+            object[.bevelSegments] = .int(BevelSpec.standard.segments)
+        }
         return object
     }
 
@@ -39,7 +44,7 @@ public struct ObjectFactory: Sendable {
         return object
     }
 
-    public mutating func light(_ type: LightType, at position: Vec3, color: RGBA = RGBA(hex: "#FFB347")!) -> SceneObject {
+    public mutating func light(_ type: LightType, at position: Vec3, color: RGBA = RGBA.hex("#FFB347")) -> SceneObject {
         let name: String = switch type {
         case .directional: "Sun light"
         case .point: "Lamp light"

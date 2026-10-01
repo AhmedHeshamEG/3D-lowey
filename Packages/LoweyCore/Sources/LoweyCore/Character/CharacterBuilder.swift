@@ -65,9 +65,9 @@ public struct CharacterRecipe: Codable, Hashable, Sendable {
 
     public init(
         name: String = "Me", head: Head = .round, hair: Hair = .short, eyes: Eyes = .dots, body: Body = .regular, top: Top = .hoodie,
-        bottom: Bottom = .jeans, extras: [Extra] = [], skin: ColorValue = .rgba(RGBA(hex: "#D9A57E")!),
-        hairColor: ColorValue = .rgba(RGBA(hex: "#231812")!), topColor: ColorValue = .rgba(RGBA(hex: "#E4572E")!),
-        bottomColor: ColorValue = .rgba(RGBA(hex: "#2F3E5C")!), shoeColor: ColorValue = .rgba(RGBA(hex: "#F1F1F1")!), height: Double = 1
+        bottom: Bottom = .jeans, extras: [Extra] = [], skin: ColorValue = .rgba(RGBA.hex("#D9A57E")),
+        hairColor: ColorValue = .rgba(RGBA.hex("#231812")), topColor: ColorValue = .rgba(RGBA.hex("#E4572E")),
+        bottomColor: ColorValue = .rgba(RGBA.hex("#2F3E5C")), shoeColor: ColorValue = .rgba(RGBA.hex("#F1F1F1")), height: Double = 1
     ) {
         self.name = name
         self.head = head
@@ -120,12 +120,11 @@ public extension PropertyKey {
 }
 
 public enum CharacterBuilder {
-    static let dark = ColorValue.rgba(RGBA(hex: "#2A1616")!)
-    static let white = ColorValue.rgba(RGBA(hex: "#F7F4EE")!)
-    static let tongue = ColorValue.rgba(RGBA(hex: "#D8616C")!)
+    static let dark = ColorValue.rgba(RGBA.hex("#2A1616"))
+    static let white = ColorValue.rgba(RGBA.hex("#F7F4EE"))
+    static let tongue = ColorValue.rgba(RGBA.hex("#D8616C"))
 
     /// Builds the character as a fragment (root first). `ids` makes deterministic ids in tests.
-    // swiftlint:disable:next function_body_length
     public static func build(_ recipe: CharacterRecipe, ids: inout IDFactory) -> SceneFragment {
         var objects: [SceneObject] = []
         var builder = Assembler(ids: ids)
@@ -136,58 +135,17 @@ public enum CharacterBuilder {
         if let json = try? LoweyJSON.encode(recipe), let text = String(bytes: json, encoding: .utf8) {
             builder.objects[0][.characterRecipe] = .string(text)
         }
-        let w = recipe.body.width
         let skin = recipe.skin
-        let sleeves = recipe.top == .tshirt ? skin : recipe.topColor
 
         // Hips and legs.
         let hips = builder.joint("hips", parent: root, at: Vec3(0, 0.9, 0))
-        let pantsColor = recipe.bottomColor
-        builder.part(.cube, "Pelvis", parent: hips, center: Vec3(0, 0, 0), size: Vec3(w * 0.85, 0.22, 0.24), color: pantsColor)
-        if recipe.bottom == .skirt {
-            builder.part(.cone, "Skirt", parent: hips, center: Vec3(0, -0.12, 0), size: Vec3(w * 1.25, 0.36, 0.42), color: pantsColor)
-        }
-        for side in [1.0, -1.0] {
-            let prefix = side > 0 ? "left" : "right"
-            let upper = builder.joint("\(prefix)UpperLeg", parent: hips, at: Vec3(side * w * 0.26, -0.04, 0))
-            let legColor = recipe.bottom == .jeans ? pantsColor : (recipe.bottom == .shorts ? pantsColor : skin)
-            builder.part(.cylinder, "Thigh", parent: upper, center: Vec3(0, -0.21, 0), size: Vec3(0.15, 0.44, 0.15), color: legColor)
-            let lower = builder.joint("\(prefix)LowerLeg", parent: upper, at: Vec3(0, -0.42, 0))
-            builder.part(.cylinder, "Shin", parent: lower, center: Vec3(0, -0.2, 0), size: Vec3(0.13, 0.42, 0.13),
-                         color: recipe.bottom == .jeans ? pantsColor : skin)
-            let foot = builder.joint("\(prefix)Foot", parent: lower, at: Vec3(0, -0.4, 0))
-            builder.part(.cube, "Shoe", parent: foot, center: Vec3(0, -0.035, 0.04), size: Vec3(0.13, 0.09, 0.25), color: recipe.shoeColor)
-        }
+        legs(&builder, recipe: recipe, hips: hips)
 
         // Spine, chest, arms.
         let spine = builder.joint("spine", parent: hips, at: Vec3(0, 0.1, 0))
         let chest = builder.joint("chest", parent: spine, at: Vec3(0, 0.2, 0))
-        let torsoShape: PrimitiveShape = recipe.body == .broad ? .cube : .cylinder
-        builder.part(torsoShape, "Torso", parent: spine, center: Vec3(0, 0.22, 0), size: Vec3(w, 0.52, 0.27), color: recipe.topColor)
-        switch recipe.top {
-        case .hoodie:
-            builder.part(.torus, "Hood", parent: chest, center: Vec3(0, 0.25, -0.05), size: Vec3(w * 0.75, 0.12, 0.3), color: recipe.topColor)
-            builder.part(.cube, "Pocket", parent: spine, center: Vec3(0, 0.08, 0.135), size: Vec3(w * 0.55, 0.1, 0.01), color: shade(recipe.topColor))
-        case .shirt:
-            builder.part(.cube, "Collar", parent: chest, center: Vec3(0, 0.25, 0.1), size: Vec3(w * 0.45, 0.05, 0.08), color: white)
-            builder.part(.cube, "Buttons", parent: spine, center: Vec3(0, 0.22, 0.136), size: Vec3(0.02, 0.44, 0.01), color: white)
-        case .jacket:
-            builder.part(.cube, "Shirt", parent: spine, center: Vec3(0, 0.22, 0.13), size: Vec3(w * 0.28, 0.5, 0.02), color: white)
-        case .tshirt, .sweater:
-            break
-        }
-        for side in [1.0, -1.0] {
-            let prefix = side > 0 ? "left" : "right"
-            let shoulder = builder.joint("\(prefix)Shoulder", parent: chest, at: Vec3(side * (w / 2 - 0.02), 0.22, 0))
-            let upper = builder.joint("\(prefix)UpperArm", parent: shoulder, at: Vec3(side * 0.05, 0, 0))
-            builder.part(.sphere, "Shoulder", parent: upper, center: Vec3(0, -0.02, 0), size: Vec3(0.13, 0.13, 0.13), color: recipe.topColor)
-            builder.part(.cylinder, "Upper arm", parent: upper, center: Vec3(0, -0.15, 0), size: Vec3(0.11, 0.3, 0.11), color: sleeves)
-            let lower = builder.joint("\(prefix)LowerArm", parent: upper, at: Vec3(0, -0.3, 0))
-            builder.part(.cylinder, "Forearm", parent: lower, center: Vec3(0, -0.14, 0), size: Vec3(0.1, 0.28, 0.1),
-                         color: recipe.top == .tshirt ? skin : sleeves)
-            let hand = builder.joint("\(prefix)Hand", parent: lower, at: Vec3(0, -0.28, 0))
-            builder.part(.sphere, "Hand", parent: hand, center: Vec3(0, -0.05, 0), size: Vec3(0.11, 0.12, 0.09), color: skin)
-        }
+        torso(&builder, recipe: recipe, spine: spine, chest: chest)
+        arms(&builder, recipe: recipe, chest: chest)
 
         // Neck and head.
         let neck = builder.joint("neck", parent: chest, at: Vec3(0, 0.27, 0))
@@ -207,6 +165,78 @@ public enum CharacterBuilder {
         for side in [1.0, -1.0] {
             builder.part(.sphere, "Ear", parent: head, center: Vec3(side * headSize.x / 2, r * 0.95, 0), size: Vec3(0.05, 0.09, 0.07), color: skin)
         }
+        face(&builder, recipe: recipe, head: head, radius: r, front: front)
+
+        // Hair and extras.
+        builder.hair(recipe.hair, parent: head, radius: r, size: headSize, color: hairColor)
+        extras(&builder, recipe: recipe, head: head, radius: r, size: headSize, front: front)
+        objects = builder.objects
+        ids = builder.ids
+        return SceneFragment(objects: objects, roots: [root])
+    }
+
+    static func legs(_ builder: inout Assembler, recipe: CharacterRecipe, hips: ObjectID) {
+        let w = recipe.body.width
+        let skin = recipe.skin
+        let pantsColor = recipe.bottomColor
+        builder.part(.cube, "Pelvis", parent: hips, center: Vec3(0, 0, 0), size: Vec3(w * 0.85, 0.22, 0.24), color: pantsColor)
+        if recipe.bottom == .skirt {
+            builder.part(.cone, "Skirt", parent: hips, center: Vec3(0, -0.12, 0), size: Vec3(w * 1.25, 0.36, 0.42), color: pantsColor)
+        }
+        for side in [1.0, -1.0] {
+            let prefix = side > 0 ? "left" : "right"
+            let upper = builder.joint("\(prefix)UpperLeg", parent: hips, at: Vec3(side * w * 0.26, -0.04, 0))
+            let legColor = recipe.bottom == .jeans ? pantsColor : (recipe.bottom == .shorts ? pantsColor : skin)
+            builder.part(.cylinder, "Thigh", parent: upper, center: Vec3(0, -0.21, 0), size: Vec3(0.15, 0.44, 0.15), color: legColor)
+            let lower = builder.joint("\(prefix)LowerLeg", parent: upper, at: Vec3(0, -0.42, 0))
+            builder.part(.cylinder, "Shin", parent: lower, center: Vec3(0, -0.2, 0), size: Vec3(0.13, 0.42, 0.13),
+                         color: recipe.bottom == .jeans ? pantsColor : skin)
+            let foot = builder.joint("\(prefix)Foot", parent: lower, at: Vec3(0, -0.4, 0))
+            builder.part(.cube, "Shoe", parent: foot, center: Vec3(0, -0.035, 0.04), size: Vec3(0.13, 0.09, 0.25), color: recipe.shoeColor)
+        }
+    }
+
+    static func torso(_ builder: inout Assembler, recipe: CharacterRecipe, spine: ObjectID, chest: ObjectID) {
+        let w = recipe.body.width
+        let torsoShape: PrimitiveShape = recipe.body == .broad ? .cube : .cylinder
+        builder.part(torsoShape, "Torso", parent: spine, center: Vec3(0, 0.22, 0), size: Vec3(w, 0.52, 0.27), color: recipe.topColor)
+        switch recipe.top {
+        case .hoodie:
+            builder.part(.torus, "Hood", parent: chest, center: Vec3(0, 0.25, -0.05), size: Vec3(w * 0.75, 0.12, 0.3), color: recipe.topColor)
+            builder.part(.cube, "Pocket", parent: spine, center: Vec3(0, 0.08, 0.135), size: Vec3(w * 0.55, 0.1, 0.01), color: shade(recipe.topColor))
+        case .shirt:
+            builder.part(.cube, "Collar", parent: chest, center: Vec3(0, 0.25, 0.1), size: Vec3(w * 0.45, 0.05, 0.08), color: white)
+            builder.part(.cube, "Buttons", parent: spine, center: Vec3(0, 0.22, 0.136), size: Vec3(0.02, 0.44, 0.01), color: white)
+        case .jacket:
+            builder.part(.cube, "Shirt", parent: spine, center: Vec3(0, 0.22, 0.13), size: Vec3(w * 0.28, 0.5, 0.02), color: white)
+        case .tshirt, .sweater:
+            break
+        }
+    }
+
+    static func arms(_ builder: inout Assembler, recipe: CharacterRecipe, chest: ObjectID) {
+        let w = recipe.body.width
+        let skin = recipe.skin
+        let sleeves = recipe.top == .tshirt ? skin : recipe.topColor
+        for side in [1.0, -1.0] {
+            let prefix = side > 0 ? "left" : "right"
+            let shoulder = builder.joint("\(prefix)Shoulder", parent: chest, at: Vec3(side * (w / 2 - 0.02), 0.22, 0))
+            let upper = builder.joint("\(prefix)UpperArm", parent: shoulder, at: Vec3(side * 0.05, 0, 0))
+            builder.part(.sphere, "Shoulder", parent: upper, center: Vec3(0, -0.02, 0), size: Vec3(0.13, 0.13, 0.13), color: recipe.topColor)
+            builder.part(.cylinder, "Upper arm", parent: upper, center: Vec3(0, -0.15, 0), size: Vec3(0.11, 0.3, 0.11), color: sleeves)
+            let lower = builder.joint("\(prefix)LowerArm", parent: upper, at: Vec3(0, -0.3, 0))
+            builder.part(.cylinder, "Forearm", parent: lower, center: Vec3(0, -0.14, 0), size: Vec3(0.1, 0.28, 0.1),
+                         color: recipe.top == .tshirt ? skin : sleeves)
+            let hand = builder.joint("\(prefix)Hand", parent: lower, at: Vec3(0, -0.28, 0))
+            builder.part(.sphere, "Hand", parent: hand, center: Vec3(0, -0.05, 0), size: Vec3(0.11, 0.12, 0.09), color: skin)
+        }
+    }
+
+    /// Eyes (with pupils that look around), brows, nose and the mouth: a group of swappable shapes, one per viseme
+    /// (lip sync switches them).
+    static func face(_ builder: inout Assembler, recipe: CharacterRecipe, head: ObjectID, radius r: Double, front: Double) {
+        let hairColor = recipe.hairColor
+        let skin = recipe.skin
         // Eyes (with pupils that look around), brows, nose.
         for side in [1.0, -1.0] {
             let tag = side > 0 ? "L" : "R"
@@ -235,9 +265,10 @@ public enum CharacterBuilder {
         let mouth = builder.group("Mouth", parent: head, at: Vec3(0, r * 0.52, front * 0.96))
         builder.objects[builder.index(mouth)][.faceRole] = .string("mouth")
         builder.mouthShapes(parent: mouth)
+    }
 
-        // Hair and extras.
-        builder.hair(recipe.hair, parent: head, radius: r, size: headSize, color: hairColor)
+    static func extras(_ builder: inout Assembler, recipe: CharacterRecipe, head: ObjectID, radius r: Double, size headSize: Vec3, front: Double) {
+        let hairColor = recipe.hairColor
         for extra in recipe.extras {
             switch extra {
             case .glasses:
@@ -261,9 +292,6 @@ public enum CharacterBuilder {
                 }
             }
         }
-        objects = builder.objects
-        ids = builder.ids
-        return SceneFragment(objects: objects, roots: [root])
     }
 
     /// A slightly darker variant of a colour (pockets, nose).
@@ -282,7 +310,10 @@ public enum CharacterBuilder {
             self.ids = ids
         }
 
-        func index(_ id: ObjectID) -> Int { positions[id]! }
+        func index(_ id: ObjectID) -> Int {
+            guard let position = positions[id] else { preconditionFailure("\(id) wasn't made by this assembler") }
+            return position
+        }
 
         @discardableResult
         mutating func add(_ object: SceneObject) -> ObjectID {

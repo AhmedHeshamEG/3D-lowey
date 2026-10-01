@@ -1,6 +1,6 @@
 import Foundation
 
-/// Position / rotation / scale. Composes like RealityKit's `Transform`:
+/// Position / rotation / scale (translate · rotate · scale, the usual order):
 /// a point p maps to `position + rotation.act(scale * p)`.
 public struct Transform: Hashable, Sendable, Codable {
     public var position: Vec3

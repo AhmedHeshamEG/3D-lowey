@@ -10,87 +10,36 @@ public extension EditCommand {
         return result
     }
 
-    private func applyUnchecked(to document: inout Document) throws -> (inverse: EditCommand, changes: ChangeSet) {
+    typealias Applied = (inverse: EditCommand, changes: ChangeSet)
+
+    private func applyUnchecked(to document: inout Document) throws -> Applied {
         switch self {
         case let .insert(fragment, parent, index):
             let ids = try Self.insert(fragment, parent: parent, index: index, into: &document.scene)
             return (.delete(fragment.roots), ChangeSet(objects: ids, hierarchy: true))
 
         case let .delete(ids):
-            var entries: [RestoreEntry] = []
-            var changed = Set<ObjectID>()
-            for id in ids {
-                // Already removed as a descendant of an earlier id in the list.
-                guard document.scene.objects[id] != nil else { continue }
-                let entry = try Self.remove(id, from: &document.scene)
-                changed.formUnion(entry.fragment.objects.map(\.id))
-                entries.append(entry)
-            }
-            return (.restore(entries.reversed()), ChangeSet(objects: changed, hierarchy: true))
+            return try Self.applyDelete(ids, in: &document)
 
         case let .restore(entries):
-            var roots: [ObjectID] = []
-            var changed = Set<ObjectID>()
-            for entry in entries {
-                let ids = try Self.insert(entry.fragment, parent: entry.parent, index: entry.index, into: &document.scene)
-                changed.formUnion(ids)
-                roots.append(contentsOf: entry.fragment.roots)
-            }
-            return (.delete(roots.reversed()), ChangeSet(objects: changed, hierarchy: true))
+            return try Self.applyRestore(entries, in: &document)
 
         case let .setProperties(changes):
-            var inverse: [PropertyChange] = []
-            var changed = Set<ObjectID>()
-            for change in changes {
-                guard var object = document.scene.objects[change.object] else {
-                    throw CommandError.objectNotFound(change.object)
-                }
-                if let value = change.value, let spec = change.key.spec, spec.type != value.type,
-                   !(spec.type == .float && value.type == .int) {
-                    throw CommandError.typeMismatch(key: change.key, expected: spec.type, got: value.type)
-                }
-                inverse.append(PropertyChange(object: change.object, key: change.key, value: object.properties[change.key]))
-                object.properties[change.key] = change.value
-                document.scene.objects[change.object] = object
-                changed.insert(change.object)
-            }
-            return (.setProperties(inverse.reversed()), ChangeSet(objects: changed))
+            return try Self.applySetProperties(changes, in: &document)
 
         case let .rename(id, name):
-            guard var object = document.scene.objects[id] else { throw CommandError.objectNotFound(id) }
-            let old = object.name
-            object.name = name
-            document.scene.objects[id] = object
+            let old = try Self.replaceField(\.name, of: id, to: name, in: &document)
             return (.rename(id, old), ChangeSet(objects: [id], hierarchy: true))
 
         case let .setKind(id, kind):
-            guard var object = document.scene.objects[id] else { throw CommandError.objectNotFound(id) }
-            let old = object.kind
-            object.kind = kind
-            document.scene.objects[id] = object
+            let old = try Self.replaceField(\.kind, of: id, to: kind, in: &document)
             return (.setKind(id, old), ChangeSet(objects: [id]))
 
         case let .reparent(entries):
-            var inverse: [ReparentEntry] = []
-            var changed = Set<ObjectID>()
-            for entry in entries {
-                try inverse.append(Self.reparent(entry, in: &document.scene))
-                changed.formUnion(document.scene.subtree(of: entry.object))
-            }
-            return (.reparent(inverse.reversed()), ChangeSet(objects: changed, hierarchy: true))
+            return try Self.applyReparent(entries, in: &document)
 
         case let .setLook(look, scope):
-            switch scope {
-            case .project:
-                guard let look else { throw CommandError.empty }
-                let old = document.project.look
-                document.project.look = look
-                return (.setLook(old, scope: .project), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
-            case .scene:
-                let old = document.scene.look
-                document.scene.look = look
-                return (.setLook(old, scope: .scene), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
-            }
+            return try Self.applySetLook(look, scope: scope, in: &document)
 
         case let .renameScene(name):
             let old = document.scene.name
@@ -109,35 +58,17 @@ public extension EditCommand {
             document.scene.timeline = timeline
             return (.setTimeline(old), ChangeSet(objects: Set(timeline.tracks.map(\.target) + old.tracks.map(\.target)), scene: true))
 
+        case let .setShadowPaint(id, dabs):
+            let old = try Self.replaceField(\.shadowDabs, of: id, to: dabs, in: &document)
+            return (.setShadowPaint(id, old), ChangeSet(objects: [id]))
+
+        case let .setCustomLooks(looks):
+            let old = document.project.customLooks
+            document.project.customLooks = looks
+            return (.setCustomLooks(old), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
+
         case let .setTracks(edits):
-            var inverse: [TrackEdit] = []
-            var changed = Set<ObjectID>()
-            for edit in edits {
-                if let track = edit.track, track.id != edit.id { throw CommandError.empty }
-                var tracks = document.scene.timeline.tracks
-                if let existing = tracks.firstIndex(where: { $0.id == edit.id }) {
-                    let old = tracks[existing]
-                    changed.insert(old.target)
-                    if let track = edit.track {
-                        tracks[existing] = track
-                        changed.insert(track.target)
-                        inverse.append(TrackEdit(id: edit.id, track: old, index: existing))
-                    } else {
-                        tracks.remove(at: existing)
-                        inverse.append(TrackEdit(id: edit.id, track: old, index: existing))
-                    }
-                } else if let track = edit.track {
-                    let at = min(max(edit.index ?? tracks.count, 0), tracks.count)
-                    tracks.insert(track, at: at)
-                    changed.insert(track.target)
-                    inverse.append(TrackEdit(id: edit.id, track: nil))
-                } else {
-                    // Removing a track that isn't there: a no-op (keeps scripts forgiving).
-                    continue
-                }
-                document.scene.timeline.tracks = tracks
-            }
-            return (.setTracks(inverse.reversed()), ChangeSet(objects: changed, scene: true))
+            return try Self.applySetTracks(edits, in: &document)
 
         case let .batch(label, commands):
             var inverses: [EditCommand] = []
@@ -149,6 +80,116 @@ public extension EditCommand {
             }
             return (.batch(label, inverses.reversed()), changes)
         }
+    }
+
+    /// Sets one field of an object and returns the old value.
+    private static func replaceField<Value>(_ field: WritableKeyPath<SceneObject, Value>, of id: ObjectID, to value: Value,
+                                            in document: inout Document) throws -> Value {
+        guard var object = document.scene.objects[id] else { throw CommandError.objectNotFound(id) }
+        let old = object[keyPath: field]
+        object[keyPath: field] = value
+        document.scene.objects[id] = object
+        return old
+    }
+
+    // MARK: Commands with lists
+
+    private static func applyDelete(_ ids: [ObjectID], in document: inout Document) throws -> Applied {
+        var entries: [RestoreEntry] = []
+        var changed = Set<ObjectID>()
+        for id in ids {
+            // Already removed as a descendant of an earlier id in the list.
+            guard document.scene.objects[id] != nil else { continue }
+            let entry = try Self.remove(id, from: &document.scene)
+            changed.formUnion(entry.fragment.objects.map(\.id))
+            entries.append(entry)
+        }
+        return (.restore(entries.reversed()), ChangeSet(objects: changed, hierarchy: true))
+    }
+
+    private static func applyRestore(_ entries: [RestoreEntry], in document: inout Document) throws -> Applied {
+        var roots: [ObjectID] = []
+        var changed = Set<ObjectID>()
+        for entry in entries {
+            let ids = try Self.insert(entry.fragment, parent: entry.parent, index: entry.index, into: &document.scene)
+            changed.formUnion(ids)
+            roots.append(contentsOf: entry.fragment.roots)
+        }
+        return (.delete(roots.reversed()), ChangeSet(objects: changed, hierarchy: true))
+    }
+
+    private static func applySetProperties(_ changes: [PropertyChange], in document: inout Document) throws -> Applied {
+        var inverse: [PropertyChange] = []
+        var changed = Set<ObjectID>()
+        for change in changes {
+            guard var object = document.scene.objects[change.object] else {
+                throw CommandError.objectNotFound(change.object)
+            }
+            if let value = change.value, let spec = change.key.spec, spec.type != value.type,
+               !(spec.type == .float && value.type == .int) {
+                throw CommandError.typeMismatch(key: change.key, expected: spec.type, got: value.type)
+            }
+            inverse.append(PropertyChange(object: change.object, key: change.key, value: object.properties[change.key]))
+            object.properties[change.key] = change.value
+            document.scene.objects[change.object] = object
+            changed.insert(change.object)
+        }
+        return (.setProperties(inverse.reversed()), ChangeSet(objects: changed))
+    }
+
+    private static func applyReparent(_ entries: [ReparentEntry], in document: inout Document) throws -> Applied {
+        var inverse: [ReparentEntry] = []
+        var changed = Set<ObjectID>()
+        for entry in entries {
+            try inverse.append(Self.reparent(entry, in: &document.scene))
+            changed.formUnion(document.scene.subtree(of: entry.object))
+        }
+        return (.reparent(inverse.reversed()), ChangeSet(objects: changed, hierarchy: true))
+    }
+
+    private static func applySetLook(_ look: Look?, scope: LookScope, in document: inout Document) throws -> Applied {
+        switch scope {
+        case .project:
+            guard let look else { throw CommandError.empty }
+            let old = document.project.look
+            document.project.look = look
+            return (.setLook(old, scope: .project), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
+        case .scene:
+            let old = document.scene.look
+            document.scene.look = look
+            return (.setLook(old, scope: .scene), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
+        }
+    }
+
+    private static func applySetTracks(_ edits: [TrackEdit], in document: inout Document) throws -> Applied {
+        var inverse: [TrackEdit] = []
+        var changed = Set<ObjectID>()
+        for edit in edits {
+            if let track = edit.track, track.id != edit.id { throw CommandError.empty }
+            var tracks = document.scene.timeline.tracks
+            if let existing = tracks.firstIndex(where: { $0.id == edit.id }) {
+                let old = tracks[existing]
+                changed.insert(old.target)
+                if let track = edit.track {
+                    tracks[existing] = track
+                    changed.insert(track.target)
+                    inverse.append(TrackEdit(id: edit.id, track: old, index: existing))
+                } else {
+                    tracks.remove(at: existing)
+                    inverse.append(TrackEdit(id: edit.id, track: old, index: existing))
+                }
+            } else if let track = edit.track {
+                let at = min(max(edit.index ?? tracks.count, 0), tracks.count)
+                tracks.insert(track, at: at)
+                changed.insert(track.target)
+                inverse.append(TrackEdit(id: edit.id, track: nil))
+            } else {
+                // Removing a track that isn't there: a no-op (keeps scripts forgiving).
+                continue
+            }
+            document.scene.timeline.tracks = tracks
+        }
+        return (.setTracks(inverse.reversed()), ChangeSet(objects: changed, scene: true))
     }
 
     // MARK: Hierarchy primitives

@@ -5,11 +5,12 @@ import Foundation
 extension EditCommand: Codable {
     private enum Key: String, CodingKey {
         case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands, tracks
+        case dabs, looks
     }
 
     private enum Op: String, Codable {
         case insert, delete, restore, setProperties, rename, setKind, reparent, setLook, renameScene
-        case setActiveCamera, setTimeline, setTracks, batch
+        case setActiveCamera, setTimeline, setTracks, batch, setShadowPaint, setCustomLooks
     }
 
     public init(from decoder: Decoder) throws {
@@ -46,6 +47,10 @@ extension EditCommand: Codable {
             self = try .setTracks(c.decode([TrackEdit].self, forKey: .tracks))
         case .batch:
             self = try .batch(c.decode(String.self, forKey: .label), c.decode([EditCommand].self, forKey: .commands))
+        case .setShadowPaint:
+            self = try .setShadowPaint(c.decode(ObjectID.self, forKey: .id), c.decodeIfPresent([ShadowDab].self, forKey: .dabs) ?? [])
+        case .setCustomLooks:
+            self = try .setCustomLooks(c.decodeIfPresent([LookPreset].self, forKey: .looks) ?? [])
         }
     }
 
@@ -97,6 +102,13 @@ extension EditCommand: Codable {
             try c.encode(Op.batch, forKey: .op)
             try c.encode(label, forKey: .label)
             try c.encode(commands, forKey: .commands)
+        case let .setShadowPaint(id, dabs):
+            try c.encode(Op.setShadowPaint, forKey: .op)
+            try c.encode(id, forKey: .id)
+            try c.encode(dabs, forKey: .dabs)
+        case let .setCustomLooks(looks):
+            try c.encode(Op.setCustomLooks, forKey: .op)
+            try c.encode(looks, forKey: .looks)
         }
     }
 }

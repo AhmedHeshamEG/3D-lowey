@@ -7,6 +7,8 @@ App/Info.plist
 .build/
 DerivedData/
 build/
+# …but the Build feature (Xcode-style build folders are what the line above is for).
+!Packages/LoweyFeatures/Sources/LoweyFeatures/Build/
 *.xcresult
 Payload/
 *.ipa
@@ -27,3 +29,6 @@ Package.resolved
 __pycache__/
 *.egg-info/
 .pytest_cache/
+
+App/Widgets/Info.plist
+*.bak

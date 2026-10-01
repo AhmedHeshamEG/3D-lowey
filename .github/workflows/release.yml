@@ -1,38 +1,99 @@
-# Push to main → installable Lowey.ipa artifact. Tag v* → also a GitHub Release with the .ipa.
+# Release builds, only from commits CI passed.
 #
-# The build is an unsigned device build, then ad-hoc codesigned so Sideloadly doesn't fail with
-# "no code signature found". Sideloadly re-signs it with Hesham's free Apple ID (7-day expiry).
+# - CI finished green on main → an installable Lowey.ipa artifact for that exact commit.
+# - Tag v* → the same, plus a GitHub Release with the .ipa. A tag is released only when its commit passed CI, or
+#   when the commits since the last green one change nothing but docs (CI skips docs-only pushes).
+#
+# The build is an unsigned device build, then ad-hoc codesigned (app and widget extension) so Sideloadly doesn't fail
+# with "no code signature found"; Sideloadly re-signs it with a free Apple ID. Nothing built is ever committed.
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
+  push:
     tags: ["v*"]
-    paths-ignore: ["**.md", "docs/**", "LICENSE"]
-  workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event.workflow_run.head_sha || github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: write
+  actions: read
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
 
 jobs:
+  gate:
+    name: Only commits CI passed
+    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
+      version: ${{ steps.check.outputs.version }}
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check CI on this commit
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+            TAG=""
+            VERSION=$(git show "$SHA:Config/Branding.xcconfig" | grep '^MARKETING_VERSION' | awk -F'= ' '{print $2}')
+            echo "CI passed on $SHA (main)."
+          else
+            SHA="$GITHUB_SHA"
+            TAG="$GITHUB_REF_NAME"
+            VERSION="${TAG#v}"
+            GREEN=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?status=success&event=push&per_page=100" \
+              --jq '.workflow_runs[].head_sha' | sort -u)
+            if grep -qx "$SHA" <<< "$GREEN"; then
+              echo "CI passed on $SHA."
+            else
+              BASE=""
+              for CANDIDATE in $(git rev-list "$SHA"); do
+                if grep -qx "$CANDIDATE" <<< "$GREEN"; then BASE="$CANDIDATE"; break; fi
+              done
+              if [[ -z "$BASE" ]]; then
+                echo "::error::No green CI run on $SHA or any commit before it. Push it to a branch and let CI pass first."
+                exit 1
+              fi
+              CHANGED=$(git diff --name-only "$BASE" "$SHA" | grep -vE '\.md$|^docs/|^LICENSE$' || true)
+              if [[ -n "$CHANGED" ]]; then
+                echo "::error::$SHA has no green CI run, and it changes more than docs since $BASE:"
+                echo "$CHANGED"
+                exit 1
+              fi
+              echo "CI passed on $BASE; only docs changed since."
+            fi
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   ipa:
     name: Build Lowey.ipa
+    needs: gate
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.gate.outputs.sha }}
           fetch-depth: 0
       - name: Install XcodeGen
         run: brew install xcodegen
-      - name: Install the Metal toolchain (needed for the RealityKit surface shader)
+      - name: Install the Metal toolchain (LoweyRender 2's shaders)
         run: xcodebuild -downloadComponent MetalToolchain
       - uses: actions/cache@v4
         with:
@@ -40,17 +101,6 @@ jobs:
             ~/Library/Caches/org.swift.swiftpm
             build/SourcePackages
           key: spm-release-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}
-      - name: Version
-        id: version
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-          else
-            VERSION=$(grep '^MARKETING_VERSION' Config/Branding.xcconfig | awk -F'= ' '{print $2}')
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "build=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
-          echo "Building $VERSION (${{ github.run_number }})"
       - name: Generate project
         run: xcodegen generate
       - name: Unsigned device build
@@ -62,19 +112,22 @@ jobs:
             -sdk iphoneos -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             -skipPackagePluginValidation \
-            MARKETING_VERSION=${{ steps.version.outputs.version }} \
-            CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
+            MARKETING_VERSION=${{ needs.gate.outputs.version }} \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             | tee build.log | grep -E "error:|\*\* BUILD" || true
           grep -q "\*\* BUILD SUCCEEDED \*\*" build.log
       - name: Ad-hoc codesign and package
         run: |
+          set -euo pipefail
           APP=build/Build/Products/Release-iphoneos/Lowey.app
           test -d "$APP"
-          # Sign nested frameworks first, then the app (Sideloadly needs a signature to replace).
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "studio.hmm.lowey"
+          # Inside out: frameworks, then the widget extension, then the app (Sideloadly needs signatures to replace).
           find "$APP/Frameworks" -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
+          find "$APP/PlugIns" -maxdepth 1 -name "*.appex" -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
           codesign --force --sign - --timestamp=none "$APP"
-          codesign --verify --verbose=2 "$APP"
+          codesign --verify --deep --verbose=2 "$APP"
           mkdir -p Payload
           cp -R "$APP" Payload/
           zip -qry Lowey.ipa Payload
@@ -83,14 +136,15 @@ jobs:
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist"
       - uses: actions/upload-artifact@v4
         with:
-          name: Lowey-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}
+          name: Lowey-${{ needs.gate.outputs.version }}-${{ github.run_number }}
           path: Lowey.ipa
           retention-days: 30
       - name: GitHub Release (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: needs.gate.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.gate.outputs.tag }}
         run: |
-          gh release create "$GITHUB_REF_NAME" Lowey.ipa \
-            --title "3D-lowey $GITHUB_REF_NAME" \
-            --generate-notes
+          PRERELEASE=""
+          if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; fi
+          gh release create "$TAG" Lowey.ipa --title "3D-lowey $TAG" --generate-notes $PRERELEASE
