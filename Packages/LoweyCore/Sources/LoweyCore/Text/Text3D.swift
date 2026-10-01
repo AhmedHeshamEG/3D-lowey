@@ -1,7 +1,7 @@
 import Foundation
 
 /// 3D text in the world. "Blocky" is meshed here in Core from a built-in 5×7 font (low-poly, exact,
-/// exportable); the other styles use the system fonts through RealityKit (smooth outlines, any script).
+/// exportable); the other styles use the system fonts through the engine's TextMesher (CoreText outlines, any script).
 public struct TextRecipe: Codable, Hashable, Sendable {
     public enum Style: String, Codable, Sendable, CaseIterable, Identifiable {
         case blocky, rounded, bold, serif, mono

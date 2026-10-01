@@ -2,9 +2,9 @@ import Foundation
 
 /// Simulations that BAKE to keyframes: editable afterwards and deterministic in export.
 ///
-/// They run in LoweyCore on a fixed timestep rather than inside RealityKit's live physics:
-/// RealityKit's simulation advances with the display clock, can't be stepped headlessly, and
-/// isn't guaranteed to replay identically — while a baked take must be exact (see DECISIONS.md).
+/// They run in LoweyCore on a fixed timestep rather than in a live physics engine: a live simulation
+/// advances with the display clock, can't be stepped headlessly and isn't guaranteed to replay
+/// identically — while a baked take must be exact (see DECISIONS.md).
 public enum PhysicsKind: String, Codable, Sendable, CaseIterable {
     /// Objects fall and bounce on the ground and on each other.
     case fall
