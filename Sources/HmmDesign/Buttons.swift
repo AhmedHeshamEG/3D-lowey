@@ -43,7 +43,7 @@
             .accessibilityLabel(label)
             .accessibilityIdentifier(label)
             .accessibilityAddTraits(isOn ? .isSelected : [])
-            .hoverEffect(.highlight)
+            .hmmHoverHighlight()
         }
 
         private var foreground: Color {
@@ -88,7 +88,7 @@
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier(title)
-            .hoverEffect(.highlight)
+            .hmmHoverHighlight()
         }
     }
 
@@ -103,6 +103,17 @@
             } else {
                 content
             }
+        }
+    }
+
+    extension View {
+        /// The pointer / Pencil hover highlight where the platform has one (iPadOS); nothing on macOS.
+        func hmmHoverHighlight() -> some View {
+            #if os(iOS) || os(visionOS)
+                hoverEffect(.highlight)
+            #else
+                self
+            #endif
         }
     }
 #endif
