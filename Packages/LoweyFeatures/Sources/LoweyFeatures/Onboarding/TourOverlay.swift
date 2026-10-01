@@ -73,6 +73,7 @@ struct TourOverlay: View {
         }
         .onAppear { current.action?(editor) }
         .transition(.opacity)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("tour")
     }
 

@@ -133,6 +133,7 @@ struct ProposalBanner: View {
         .hmmPanelBackground()
         .padding(HmmSpacing.m)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("proposal")
     }
 }

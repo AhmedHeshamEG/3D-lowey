@@ -2,8 +2,9 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Build: shapes (bevelled), lights and cameras, characters, words in the world and on the frame, effects. One tap
-/// each; things land in the middle of the view.
+/// Build: shapes (bevelled), lights and cameras, words in the world and on the frame, effects. One tap each; things
+/// land in the middle of the view, and the panel closes so the inspector shows what was added (as Procreate Dreams'
+/// insert menu does). Screen effects keep it open: they add no object.
 struct BuildPanel: View {
     let editor: EditorModel
 
@@ -14,31 +15,31 @@ struct BuildPanel: View {
                     TileGrid {
                         ForEach(PrimitiveShape.allCases, id: \.self) { shape in
                             TileButton(title: shape.displayName, systemName: Self.icon(for: shape), identifier: "add-\(shape.rawValue)") {
-                                editor.addPrimitive(shape)
+                                place { editor.addPrimitive(shape) }
                             }
                         }
                     }
                 }
                 PanelSection("Light & camera") {
                     TileGrid {
-                        TileButton(title: "Lamp", systemName: "lightbulb.fill") { editor.addLight(.point) }
-                        TileButton(title: "Spot", systemName: "light.overhead.right.fill") { editor.addLight(.spot) }
-                        TileButton(title: "Sun", systemName: "sun.max.fill") { editor.addLight(.directional) }
-                        TileButton(title: "Camera", systemName: "video.fill", identifier: "add-camera") { editor.addCamera() }
+                        TileButton(title: "Lamp", systemName: "lightbulb.fill") { place { editor.addLight(.point) } }
+                        TileButton(title: "Spot", systemName: "light.overhead.right.fill") { place { editor.addLight(.spot) } }
+                        TileButton(title: "Sun", systemName: "sun.max.fill") { place { editor.addLight(.directional) } }
+                        TileButton(title: "Camera", systemName: "video.fill", identifier: "add-camera") { place { editor.addCamera() } }
                     }
                 }
                 PanelSection("Words") {
                     TileGrid {
-                        TileButton(title: "3D text", systemName: "textformat", identifier: "add-text3d") { editor.addText3D() }
-                        TileButton(title: "Title", systemName: "textformat.size") { editor.addOverlay(.title) }
-                        TileButton(title: "Label", systemName: "tag") { editor.addOverlay(.label) }
+                        TileButton(title: "3D text", systemName: "textformat", identifier: "add-text3d") { place { editor.addText3D() } }
+                        TileButton(title: "Title", systemName: "textformat.size") { place { editor.addOverlay(.title) } }
+                        TileButton(title: "Label", systemName: "tag") { place { editor.addOverlay(.label) } }
                     }
                 }
                 PanelSection("On the frame") {
                     TileGrid {
                         ForEach([OverlayRecipe.Shape.cross, .question, .arrow, .highlight, .exclamation, .check, .circle, .star], id: \.self) { shape in
                             TileButton(title: shape.title, systemName: shape.systemImage, identifier: "add-overlay-\(shape.rawValue)") {
-                                editor.addOverlay(shape)
+                                place { editor.addOverlay(shape) }
                             }
                         }
                     }
@@ -47,7 +48,7 @@ struct BuildPanel: View {
                     TileGrid {
                         ForEach(ParticleRecipe.Preset.allCases) { preset in
                             TileButton(title: preset.title, systemName: preset.systemImage, identifier: "add-fx-\(preset.rawValue)") {
-                                editor.addParticles(preset)
+                                place { editor.addParticles(preset) }
                             }
                         }
                     }
@@ -64,6 +65,11 @@ struct BuildPanel: View {
                 HmmPillButton("Open the library", systemName: "books.vertical") { editor.openPanel = .library }
             }
         }
+    }
+
+    private func place(_ add: () -> Void) {
+        add()
+        editor.openPanel = nil
     }
 
     static func icon(for shape: PrimitiveShape) -> String {

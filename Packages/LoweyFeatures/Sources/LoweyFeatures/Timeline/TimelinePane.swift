@@ -68,6 +68,7 @@ struct TimelinePane: View {
             }
             Button("Cancel", role: .cancel) { renamingMarker = nil }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("timeline")
     }
 

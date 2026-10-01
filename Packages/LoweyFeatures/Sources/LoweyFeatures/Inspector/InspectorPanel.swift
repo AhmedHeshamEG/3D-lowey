@@ -46,6 +46,7 @@ struct InspectorPanel: View {
         } message: {
             Text("Build once, reuse it everywhere. Linked copies update when you edit the original.")
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("inspector")
     }
 

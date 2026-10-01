@@ -99,6 +99,7 @@ struct ExportSheet: View {
                     HmmPillButton("Cancel", role: .destructive) { editor.cancelExport() }
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("export-progress")
         } else {
             HStack(spacing: HmmSpacing.xs) {
@@ -124,6 +125,7 @@ struct ExportSheet: View {
                     HmmPillButton("Save to Photos", systemName: "photo.on.rectangle") { editor.saveToPhotos(editor.exportResults) }
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("export-results")
         }
     }

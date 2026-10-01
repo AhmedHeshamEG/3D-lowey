@@ -46,6 +46,7 @@ struct ScriptSheet: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("script-log")
             DisclosureGroup("What scripts can do") {
                 Text(Self.reference).font(.system(size: 12, design: .monospaced)).foregroundStyle(theme.text2).textSelection(.enabled)
