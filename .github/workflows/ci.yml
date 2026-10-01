@@ -33,7 +33,7 @@ jobs:
       - name: SwiftLint
         run: |
           docker run --rm -v "$PWD:/work" -w /work ghcr.io/realm/swiftlint:0.65.1 \
-            swiftlint lint --reporter github-actions-logging
+            swiftlint lint --strict --reporter github-actions-logging
 
   core-tests:
     name: LoweyCore tests + coverage (Linux)
@@ -84,21 +84,7 @@ jobs:
         run: xcodebuild -downloadComponent MetalToolchain
       - name: Pick an iPad simulator
         id: sim
-        run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
-          data = json.load(sys.stdin)["devices"]
-          best = None
-          for runtime, devices in data.items():
-              if "iOS" not in runtime: continue
-              version = tuple(int(x) for x in runtime.split("iOS-")[-1].split("-"))
-              for d in devices:
-                  if "iPad" not in d["name"]: continue
-                  score = (version, "iPad Air 13" in d["name"], "iPad Air" in d["name"])
-                  if best is None or score > best[0]: best = (score, d["udid"], d["name"])
-          print(best[1]); print(best[2], file=sys.stderr)
-          ')
-          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+        run: echo "udid=$(python3 Tools/pick-simulator.py)" >> "$GITHUB_OUTPUT"
       - name: Build and test (golden images, picking, skinning, preview = export, 4K spike, benchmark)
         working-directory: Packages/LoweyEngine
         run: |
@@ -126,83 +112,67 @@ jobs:
           path: ${{ runner.temp }}/engine.log
           retention-days: 7
 
+  features:
+    name: LoweyFeatures build + tests (iPad simulator)
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+      - name: Feature boundaries (no feature reaches into another)
+        run: python3 Tools/check-feature-boundaries.py
+      - name: Pick an iPad simulator
+        id: sim
+        run: echo "udid=$(python3 Tools/pick-simulator.py)" >> "$GITHUB_OUTPUT"
+      - name: Build and test
+        working-directory: Packages/LoweyFeatures
+        run: |
+          set -o pipefail
+          xcodebuild test -scheme LoweyFeatures -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/features.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/features.log"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: features-log
+          path: ${{ runner.temp }}/features.log
+          retention-days: 7
+
   app:
-    name: iPad app build + render & UI tests
-    needs: [lint, core-tests, tools, engine]
+    name: iPad app build + UI smoke tests
+    needs: [lint, core-tests, tools, engine, features]
     runs-on: xcode-27
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Xcode
+      - name: Install XcodeGen and the Metal toolchain
         run: |
-          ls -d /Applications/Xcode*.app
-          xcodebuild -version
-      - name: Install XcodeGen
-        run: brew install xcodegen
-      - name: Install the Metal toolchain (needed for the RealityKit surface shader)
-        run: xcodebuild -downloadComponent MetalToolchain
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/org.swift.swiftpm
-            DerivedData/SourcePackages
-          key: spm-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}
+          brew install xcodegen
+          xcodebuild -downloadComponent MetalToolchain
       - name: Generate project
         run: xcodegen generate
       - name: Pick an iPad simulator
         id: sim
-        run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
-          data = json.load(sys.stdin)["devices"]
-          best = None
-          for runtime, devices in data.items():
-              if "iOS" not in runtime: continue
-              version = tuple(int(x) for x in runtime.split("iOS-")[-1].split("-"))
-              for d in devices:
-                  if "iPad" not in d["name"]: continue
-                  score = (version, "iPad Air 13" in d["name"], "iPad Air" in d["name"])
-                  if best is None or score > best[0]: best = (score, d["udid"], d["name"])
-          print(best[1]); print(best[2], file=sys.stderr)
-          ')
-          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
-      - name: Build only (commit message contains [build-only])
-        if: contains(github.event.head_commit.message, '[build-only]')
+        run: echo "udid=$(python3 Tools/pick-simulator.py)" >> "$GITHUB_OUTPUT"
+      - name: Build and run the UI smoke tests
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath DerivedData -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|\*\* " || true
-          grep -q "\*\* TEST BUILD SUCCEEDED \*\*" xcodebuild.log
-      - name: Build and test (render tests + UI smoke test)
-        if: "!contains(github.event.head_commit.message, '[build-only]')"
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project Lowey.xcodeproj -scheme Lowey \
-            -destination "id=${{ steps.sim.outputs.udid }}" \
-            -derivedDataPath DerivedData \
-            -resultBundlePath TestResults.xcresult \
-            -skipPackagePluginValidation \
-            -collect-test-diagnostics never \
-            -test-timeouts-enabled YES -default-test-execution-time-allowance 240 -maximum-test-execution-time-allowance 480 \
-            CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: .*Lowey|Test Case|Executed|\*\* " || true
+          xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult -skipPackagePluginValidation             -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 300             CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: |Test Case|Executed|\*\* " || true
           grep -q "\*\* TEST SUCCEEDED \*\*" xcodebuild.log
-      - name: Export screenshots & renders
-        if: always() && !contains(github.event.head_commit.message, '[build-only]')
+      - name: Export screenshots
+        if: always()
         run: |
           mkdir -p attachments
           xcrun xcresulttool export attachments --path TestResults.xcresult --output-path attachments || true
-          ls attachments | head -50
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-attachments
+          name: screenshots
           path: attachments
           retention-days: 14
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: xcodebuild-log
-          path: |
-            xcodebuild.log
-            TestResults.xcresult
+          path: xcodebuild.log
           retention-days: 7
