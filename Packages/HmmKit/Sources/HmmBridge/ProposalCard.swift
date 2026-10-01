@@ -56,6 +56,7 @@
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(HmmSpacing.l)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("proposal")
         }
     }
