@@ -52,9 +52,9 @@ private struct ClipControls: View {
                 ForEach(AudioRole.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            slider("Volume", clip.volume, 0 ... 2, NumberFormat.percent) { value in $0.volume = value }
-            slider("Fade in", clip.fadeIn, 0 ... 5, { "\(NumberFormat.short($0)) s" }) { value in $0.fadeIn = min(value, $0.duration) }
-            slider("Fade out", clip.fadeOut, 0 ... 5, { "\(NumberFormat.short($0)) s" }) { value in $0.fadeOut = min(value, $0.duration) }
+            slider("Volume", clip.volume, 0 ... 2, NumberFormat.percent) { value, clip in clip.volume = value }
+            slider("Fade in", clip.fadeIn, 0 ... 5, { "\(NumberFormat.short($0)) s" }) { value, clip in clip.fadeIn = min(value, clip.duration) }
+            slider("Fade out", clip.fadeOut, 0 ... 5, { "\(NumberFormat.short($0)) s" }) { value, clip in clip.fadeOut = min(value, clip.duration) }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: HmmSpacing.xs) {
                     HmmPillButton(clip.muted ? "Unmute" : "Mute", systemName: clip.muted ? "speaker.wave.2" : "speaker.slash") {
