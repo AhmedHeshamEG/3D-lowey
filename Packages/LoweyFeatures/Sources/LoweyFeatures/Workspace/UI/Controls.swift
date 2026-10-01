@@ -9,8 +9,8 @@ struct LabeledSlider: View {
     let value: Double
     let range: ClosedRange<Double>
     var format: (Double) -> String = { NumberFormat.short($0) }
-    let set: (Double) -> Void
-    var done: () -> Void = {}
+    let set: @MainActor (Double) -> Void
+    var done: @MainActor () -> Void = {}
     @Environment(\.hmmTheme) private var theme
 
     var body: some View {

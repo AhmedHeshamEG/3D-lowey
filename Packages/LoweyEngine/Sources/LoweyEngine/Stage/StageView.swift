@@ -225,7 +225,7 @@ public final class StageView: MTKView {
 
     public var gizmoCenter: Vec3? { gizmoPivot }
 
-    func editorScene(showsSelection: Bool) -> EditorScene {
+    public func editorScene(showsSelection: Bool) -> EditorScene {
         var scene = EditorScene()
         scene.showsGrid = showsGrid && lookThrough == nil
         scene.showsSelection = showsSelection

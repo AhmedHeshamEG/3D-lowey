@@ -17,10 +17,10 @@ public final class AppModel {
     let library: LibraryModel
     private(set) var projects: [ProjectSummary] = []
     private(set) var archived: [ProjectSummary] = []
-    internal(set) var thumbnails: [ProjectID: UIImage] = [:]
+    var thumbnails: [ProjectID: UIImage] = [:]
     /// Looping previews (a few frames of each project's first seconds) for the Theater cards.
-    internal(set) var loops: [ProjectID: [CGImage]] = [:]
-    internal(set) var editor: EditorModel?
+    var loops: [ProjectID: [CGImage]] = [:]
+    var editor: EditorModel?
     var toast: HmmToastMessage?
     /// The 60-second tour (first launch, or Settings ▸ Take the tour).
     var showTour = false
@@ -202,7 +202,7 @@ struct ProjectConflict: Identifiable, Sendable {
     var name: String { url.deletingPathExtension().lastPathComponent }
 
     /// This device's version (the file as it is here).
-    var thisVersion: ConflictVersion {
+    @MainActor var thisVersion: ConflictVersion {
         let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date()
         return ConflictVersion(id: "current", deviceName: UIDevice.current.name, modified: modified)
     }

@@ -1,5 +1,6 @@
 import HmmDesign
 import LoweyCore
+import LoweyEngine
 import SwiftUI
 
 /// The optional on-screen joystick under a selection, the same layout for every gizmo mode: the stick works on the

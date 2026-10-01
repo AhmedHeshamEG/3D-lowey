@@ -231,7 +231,7 @@ extension EditorModel {
         Task {
             do {
                 let words = try await SpeechTranscription.words(in: url, language: language) { message in
-                    Task { @MainActor [weak self] in self?.transcribing = message }
+                    Task { @MainActor in self.transcribing = message }
                 }
                 updateTimeline("Transcribe") { timeline in
                     timeline.transcripts.removeAll { $0.clip == id }

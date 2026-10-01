@@ -86,7 +86,8 @@ extension EditorModel {
     }
 
     private func startFrontCamera() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             guard await FaceCapture.requestAccess() else {
                 app.show("Allow the camera in Settings to perform with your face", kind: .error)
                 return

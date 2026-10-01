@@ -69,8 +69,9 @@ final class BridgeModel {
 
     func start() {
         guard server == nil, FeatureFlags.aiBridge else { return }
+        let deviceName = UIDevice.current.name
         let router = BridgeRouter(authority: authority, routes: routes()) {
-            BridgeHello(app: "lowey", appVersion: AppIdentity.shortVersion, device: UIDevice.current.name, pairing: false)
+            BridgeHello(app: "lowey", appVersion: AppIdentity.shortVersion, device: deviceName, pairing: false)
         }
         let server = BridgeServer(router: router, app: "lowey", serviceName: "\(AppIdentity.displayName) on \(UIDevice.current.name)",
                                   logSubsystem: AppIdentity.subsystem)
