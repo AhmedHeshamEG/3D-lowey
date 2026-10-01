@@ -66,8 +66,8 @@ public final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDe
         rotation = coordinator
         applyRotation(coordinator.videoRotationAngleForHorizonLevelCapture)
         rotationObservation = coordinator.observe(\.videoRotationAngleForHorizonLevelCapture, options: [.new]) { [weak self] _, change in
-            guard let angle = change.newValue else { return }
-            self?.queue.async { self?.applyRotation(angle) }
+            guard let angle = change.newValue, let self else { return }
+            queue.async { [weak self] in self?.applyRotation(angle) }
         }
         queue.async { [session] in session.startRunning() }
     }

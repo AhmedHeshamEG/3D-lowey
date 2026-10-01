@@ -39,8 +39,13 @@ final class BridgeSecurityTests: XCTestCase {
 
 @MainActor
 final class EditorFlowTests: XCTestCase {
+    /// The app model outlives its editors (the editor holds it unowned), as it does in the app: XCTest keeps each test
+    /// case alive for the whole run, so the model is still there when an editor's autosave or thumbnail finishes.
+    private var app: AppModel?
+
     private func makeEditor() throws -> EditorModel {
         let app = AppModel()
+        self.app = app
         app.createProject(named: "Test \(UUID().uuidString.prefix(6))", mood: .day, look: LookPreset.ink.id)
         return try XCTUnwrap(app.editor)
     }

@@ -78,23 +78,31 @@ final class SceneRenderTests: XCTestCase {
         XCTAssertGreaterThan(ImageChecks.difference(styled, raw), 0.02, "post / overlays / captions / effects changed the frame")
     }
 
+    /// On the Clay Look (no lines of its own): Finish ▸ Outline adds lines, and a wide aperture focused on the cube
+    /// blurs what's nearer and further.
     func testLensBlurAndInkOutlines() async throws {
-        var document = try TestDocuments.opening()
-        let camera = try XCTUnwrap(document.scene.objects.values.first { $0.name == "Desk camera" }).id
-        let paper = try XCTUnwrap(document.scene.objects.values.first { $0.name == "Army message" }).id
-        let sharp = try await frame(document, at: 0.1)
-        // Focus on the paper: it stays sharp, the dark room behind it melts; ink lines on everything.
-        let focus = document.scene.worldTransform(of: camera).position.distance(to: document.scene.worldTransform(of: paper).position)
-        document.scene.objects[camera]?[.aperture] = .float(1.4)
-        document.scene.objects[camera]?[.focusDistance] = .float(focus)
+        var document = TestScenes.lookCheck(look: LookPreset.clay.id, mood: .day)
         var look = document.effectiveLook
-        look.post.outline = 0.7
-        look.post.depthOfField = true
-        document.scene.look = look
-        let styled = try await frame(document, at: 0.1)
-        attach(sharp, name: "desk-sharp")
-        attach(styled, name: "desk-lens-blur-and-outlines")
-        XCTAssertGreaterThan(ImageChecks.difference(sharp, styled), 0.002, "the finish changed the frame")
+        look.post.outline = 0
+        look.post.depthOfField = false
+        document.project.look = look
+        let camera = try XCTUnwrap(document.scene.objects.values.first { $0.kind == .camera }).id
+        let cube = try XCTUnwrap(document.scene.objects.values.first { $0.name == "Cube" }).id
+        let plain = try await frame(document)
+        var outlined = document
+        outlined.project.look.post.outline = 0.7
+        let lines = try await frame(outlined)
+        var blurred = document
+        let focus = document.scene.worldTransform(of: camera).position.distance(to: document.scene.worldTransform(of: cube).position)
+        blurred.scene.objects[camera]?[.aperture] = .float(1.4)
+        blurred.scene.objects[camera]?[.focusDistance] = .float(focus)
+        blurred.project.look.post.depthOfField = true
+        let blur = try await frame(blurred)
+        attach(plain, name: "clay-plain")
+        attach(lines, name: "clay-finish-outline")
+        attach(blur, name: "clay-lens-blur")
+        XCTAssertGreaterThan(ImageChecks.difference(plain, lines), 0.002, "Finish ▸ Outline draws lines over Clay")
+        XCTAssertGreaterThan(ImageChecks.difference(plain, blur), 0.002, "the lens blurs what's out of focus")
     }
 
     /// Glow is a halo, not just a brighter surface: the same sphere lights up the dark around it when it glows.
