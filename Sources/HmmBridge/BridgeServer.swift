@@ -102,13 +102,13 @@
                         if complete || error != nil {
                             connection.cancel()
                         } else {
-                            read(connection, buffer: pending)
+                            self.read(connection, buffer: pending)
                         }
                     case let .invalid(reason):
-                        send(.error(400, reason), on: connection)
+                        self.send(.error(400, reason), on: connection)
                     case let .request(request):
-                        let response = await router.handle(request, from: Self.address(of: connection))
-                        send(response, on: connection)
+                        let response = await self.router.handle(request, from: Self.address(of: connection))
+                        self.send(response, on: connection)
                     }
                 }
             }
@@ -141,8 +141,8 @@
                 Task { @MainActor in
                     guard let self else { return }
                     let token = data.flatMap { String(bytes: $0, encoding: .utf8) }?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if router.authority.authorize(token: token) != nil {
-                        eventClients[ObjectIdentifier(connection)] = connection
+                    if self.router.authority.authorize(token: token) != nil {
+                        self.eventClients[ObjectIdentifier(connection)] = connection
                     } else {
                         connection.cancel()
                     }
@@ -177,7 +177,7 @@
                 guard name.hasPrefix("en") || name.hasPrefix("bridge") else { continue }
                 var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                 if getnameinfo(address, socklen_t(address.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
-                    let text = String(cString: host)
+                    let text = String(decoding: host.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
                     if NetworkPolicy.isLocal(text), !text.hasPrefix("127.") { result = result ?? text }
                 }
             }

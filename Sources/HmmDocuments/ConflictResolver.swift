@@ -50,7 +50,7 @@ public enum ConflictNaming {
         /// The other devices' versions of `url` still waiting to be settled.
         public static func conflicts(at url: URL) -> [ConflictVersion] {
             (NSFileVersion.unresolvedConflictVersionsOfItem(at: url) ?? []).map { version in
-                ConflictVersion(id: version.persistentIdentifier.description,
+                ConflictVersion(id: String(describing: version.persistentIdentifier),
                                 deviceName: version.localizedNameOfSavingComputer ?? "another device",
                                 modified: version.modificationDate ?? .distantPast)
             }
