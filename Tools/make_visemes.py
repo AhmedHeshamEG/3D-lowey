@@ -5,7 +5,7 @@ Each line: `word visemes` — one character per phoneme, Rhubarb / Preston Blair
   E rounded (AO, ER)    F puckered (OO, OW, W)          G lip bite (F, V)     H tongue (L)
 Vowels are lower-case (they get more time than consonants when a word is spread over its duration).
 
-Usage: python scripts/make_visemes.py cmudict.dict
+Usage: python Tools/make_visemes.py cmudict.dict
 CMUdict: https://github.com/cmusphinx/cmudict (BSD 2-clause, see THIRD_PARTY.md).
 """
 import re

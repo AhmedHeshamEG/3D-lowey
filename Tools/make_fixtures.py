@@ -1,10 +1,10 @@
-"""Generates the tiny glTF test fixtures in AppTests/Fixtures (run: python scripts/make_fixtures.py).
+"""Generates the tiny glTF test fixtures for LoweyEngine's tests (and the two LoweyCore uses): python Tools/make_fixtures.py.
 
 - box.glb: one coloured low-poly box (static model).
 - AnimalPack/*.glb: three differently-shaped "animals" (static) + one rigged quadruped with a walk clip,
   used to prove that a whole pack imports with thumbnails and rig detection.
 """
-import json, struct, math, os
+import json, math, os, shutil, struct
 
 def pad4(b, fill=b"\x00"):
     return b + fill * ((4 - len(b) % 4) % 4)
@@ -102,7 +102,7 @@ def write_glb(path, pos, nor, idx, color, skin=None):
         f.write(struct.pack("<I4s", len(js), b"JSON")); f.write(js)
         f.write(struct.pack("<I4s", len(blob), b"BIN\x00")); f.write(blob)
 
-root = os.path.join(os.path.dirname(__file__), "..", "AppTests", "Fixtures")
+root = os.path.join(os.path.dirname(__file__), "..", "Packages", "LoweyEngine", "Tests", "LoweyEngineTests", "Fixtures")
 write_glb(os.path.join(root, "box.glb"), *box(1, 1, 1), (0.9, 0.55, 0.2))
 pack = os.path.join(root, "AnimalPack")
 # Blocky "animals" (body + head + legs) in different proportions and colours.
@@ -119,4 +119,8 @@ pos, nor, idx = merge([box(0.6, 0.45, 1.2, 0, 0.5, 0), box(0.35, 0.35, 0.35, 0, 
 write_glb(os.path.join(pack, "Tiger_Rigged.glb"), pos, nor, idx, (0.95, 0.55, 0.15),
           skin=(["Root", "Spine", "Neck", "Head", "FrontLeg_L", "FrontLeg_R", "BackLeg_L", "BackLeg_R", "Tail"],
                 [None, 0, 1, 2, 1, 1, 0, 0, 0], [1] * len(pos)))
+core = os.path.join(os.path.dirname(__file__), "..", "Packages", "LoweyCore", "Tests", "LoweyCoreTests", "Fixtures")
+os.makedirs(core, exist_ok=True)
+shutil.copyfile(os.path.join(root, "box.glb"), os.path.join(core, "box.glb"))
+shutil.copyfile(os.path.join(pack, "Tiger_Rigged.glb"), os.path.join(core, "Tiger_Rigged.glb"))
 print("fixtures written")

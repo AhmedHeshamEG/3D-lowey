@@ -429,8 +429,10 @@ times down; `Tools/check-feature-boundaries.py` (in CI) fails when a feature nam
 Workspace is shared by all (models, session API, controls); Shell is the composition root and may use every feature.
 Theater settings and the tour go through `AppModel`, not across features.
 
-**R12 — One editor, no modes.** Five modes hid tools behind a switcher; the editor shows the tool panels in a sidebar,
-the stage and the timeline together. ⌘1–5 open panels instead of modes.
+**R12 — One editor, no modes, in Procreate Dreams' grammar.** Five modes hid tools behind a switcher. Now the Stage
+sits over the Timeline; document things are in the top-left cluster, making tools in the top-right one, two context
+sliders and undo / redo in a sidebar (mirrorable), and the inspector appears only while something is selected.
+⌘1–5 open the Select, Build, Draw, Transform and Look panels.
 
 **R13 — Auto-key belongs to the timeline's Keyframe mode; Compose (the default) never creates keys.** In 1.x an
 accidental drag in Animate mode made keys nobody asked for.

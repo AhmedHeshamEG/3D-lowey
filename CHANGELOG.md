@@ -1,7 +1,45 @@
 # Changelog
 
-All notable changes. Versions follow the phase plan (Phase 1 = v0.1 → v0.4, Phase 2 = v0.5 → v0.8, Phase 3 = v0.9 → v1.0,
-Phase 4 = v1.1 → v1.3).
+All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first.
+
+## [2.0.0-beta.1] — A new engine, Looks, and a layout without modes
+
+The remaster's first half: everything 1.4.3 did, on a new renderer, in a new layout. Projects from 1.x open as they
+are. Every 1.x feature and what happened to it is in [docs/MIGRATION.md](docs/MIGRATION.md).
+
+- **Looks.** Five ways to draw the same world: **Ink** (the new default: cel shading with soft-edged bands, shadows
+  that shift toward the sky's colour, bounce light, contact shading, a rim light and ink lines), **Comic** (halftone
+  shadows, colour misregistration, heavier lines, on twos), **Sketch** (pencil lines, paper, and one **Accent** that
+  keeps its colour), **Clay** (the soft 1.x look, with soft shadows) and **Low-poly** (faceted). Duplicate any Look
+  into your own; a scene or a single object can use a different one. Moods and the palette work with all of them.
+  1.x projects open in Clay, so nothing looks different until you choose.
+- **LoweyRender 2.** A Metal renderer of our own replaces RealityKit. The stage, thumbnails and exports are drawn by
+  the same code, so what you see is what you export. Tapping picks exactly the object under your finger (even thin
+  ones), the selection is outlined, rigged characters are skinned on the GPU, repeated objects are drawn in one go,
+  and the picture drops to a lower resolution and upscales (MetalFX) when the iPad is busy or hot. Shadows come from
+  the sun; up to 16 lamps light a shot.
+- **One editor, no modes.** The stage sits over the timeline. Top left: Theater, Actions, Look, Select. Top right:
+  Build, Draw, Transform, Cast, Library. A sidebar holds two sliders for whatever you're doing, Pick, undo and redo.
+  The inspector slides in when something is selected. Four fingers hide everything but the stage. ⌘1–5 open Select,
+  Build, Draw, Transform and Look.
+- **The Theater.** Projects play a short loop of their first seconds; New project asks for a name, a mood and a Look.
+- **Bevels** on primitives (on by default, small), so edges catch the light and the lines.
+- **Shadow Brush.** Paint where shadows fall on any surface with the Pencil.
+- **Director view** (⌥⌘D): look through the shot camera with the delivery frame, thirds and safe areas marked;
+  drag, pinch and twist to aim, move, dolly and roll it, keyed. **Frame shot** places a camera on the selection with
+  a shot size and a composition.
+- **Auto-key lives in Keyframe mode.** Compose, the default, never makes keys by accident.
+- **Export presets**: YouTube 4K, 1080p, Shorts / Reels, Square, Transparent, PNG stills, **GIF loop** (new), 3D, and
+  captions. Every export is checked (frames, size, length, sound, transparency) before it's handed to you. Exports keep
+  going in the background, with a Live Activity where the system shows one and a notification when they're done.
+- **Diagnostics**: a performance HUD over the stage and the **Night Market** benchmark (a busy street with walkers and
+  blobs under lamps) that writes a JSON report; log export.
+- **The bridge is off until you turn it on.** Pairing uses a one-time code shown on the iPad, laptops get their own
+  token (kept in the Keychain, listed, revocable), and nothing answers from outside the local network. `lowey-link pair
+  <code>` takes the code; `lowey-mcp --public` and the tunnel modes are gone.
+- **New identity**: bundle id `studio.hmm.lowey`; 2.0 installs next to 1.x.
+- Under the hood: the code is now LoweyCore → LoweyEngine → LoweyFeatures → App, with shared parts in hmm-kit; Swift 6
+  with no warnings; no file over 500 lines; golden-image tests for every Look; releases only from commits CI passed.
 
 ## [1.4.3] — Moving-around speed, a smoother stage, a real ground, a nicer joystick
 

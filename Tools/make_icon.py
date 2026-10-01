@@ -1,4 +1,4 @@
-"""Generates the app icon (a low-poly night island with a glowing cabin): python scripts/make_icon.py"""
+"""Generates the app icon (a low-poly night island with a glowing cabin): python Tools/make_icon.py"""
 import json, os, random
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
