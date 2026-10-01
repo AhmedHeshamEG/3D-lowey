@@ -4,19 +4,24 @@ import UIKit.UIGestureRecognizerSubclass
 /// Captures one drawing stroke with pressure and coalesced (high-frequency) Pencil samples.
 public final class StrokeGestureRecognizer: UIGestureRecognizer {
     public struct Sample {
-        var location: CGPoint
+        public var location: CGPoint
         /// 0...1 (fingers report ~0.6).
-        var pressure: Double
+        public var pressure: Double
+
+        public init(location: CGPoint, pressure: Double) {
+            self.location = location
+            self.pressure = pressure
+        }
     }
 
-    private(set) var samples: [Sample] = []
+    public private(set) var samples: [Sample] = []
     private var trackedTouch: UITouch?
     /// Draw, then hold still: called once per stroke (QuickShape). Moving on after it keeps reporting samples.
     public var onHold: (() -> Void)?
     /// How long the tip must rest, and how far it may drift while resting (points).
     public var holdDuration: TimeInterval = 0.45
     public var holdTolerance: CGFloat = 5
-    private(set) var held = false
+    public private(set) var held = false
     private var holdAnchor: CGPoint?
     private var holdTimer: Timer?
 

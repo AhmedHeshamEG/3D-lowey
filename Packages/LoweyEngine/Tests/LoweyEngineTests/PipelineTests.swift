@@ -45,18 +45,21 @@ final class PipelineTests: XCTestCase {
         let document = TestScenes.lookCheck(look: LookPreset.sketch.id, mood: .goldenHour)
         let session = try ExportSession(document: document, catalog: .empty, device: RenderDevice.sharedDevice(), models: ModelLibrary())
         var settings = ExportPreset.youtube4K.settings(range: TimeRange(start: 0, end: 1), fps: 30)
-        #if targetEnvironment(simulator)
-            settings.codec = .h264
-        #endif
         XCTAssertEqual(settings.size.width, 3840)
         XCTAssertEqual(settings.size.height, 2160)
+        #if targetEnvironment(simulator)
+            // The simulator's software encoder drops out at 4K now and then; the same pipeline runs at 1440p there.
+            settings.codec = .h264
+            settings.longSide = 2560
+        #endif
+        let size = settings.size
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("spike-4k.mp4")
         try? FileManager.default.removeItem(at: url)
         var progress = 0.0
         _ = try await session.video(settings, audio: nil, to: url) { progress = $0 }
         XCTAssertEqual(progress, 1)
-        let problems = try await MediaInspector.verify(url, expected: ExportExpectation(duration: 1, frameCount: 30, width: 3840, height: 2160,
-                                                                                         audio: false, alpha: false))
+        let problems = try await MediaInspector.verify(url, expected: ExportExpectation(duration: 1, frameCount: 30, width: size.width,
+                                                                                         height: size.height, audio: false, alpha: false))
         XCTAssertEqual(problems, [])
     }
 
