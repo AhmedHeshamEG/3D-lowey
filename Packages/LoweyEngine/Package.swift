@@ -34,7 +34,7 @@ let package = Package(
             name: "LoweyEngineTests",
             dependencies: ["LoweyEngine"],
             path: "Tests/LoweyEngineTests",
-            resources: [.copy("Golden")]
+            resources: [.copy("Golden"), .copy("Fixtures")]
         )
     ],
     swiftLanguageModes: [.v6]
