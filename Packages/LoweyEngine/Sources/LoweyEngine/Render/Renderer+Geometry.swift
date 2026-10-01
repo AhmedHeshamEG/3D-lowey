@@ -82,6 +82,7 @@ extension LoweyRenderer {
             pass.depthAttachment.clearDepth = 1
             pass.depthAttachment.storeAction = .store
             guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { continue }
+            encoder.setFrontFacing(.counterClockwise)
             encoder.label = "Sun shadows \(cascade)"
             encoder.setDepthStencilState(device.pipelines.shadowDepth)
             encoder.setDepthBias(0.0005, slopeScale: 2.0, clamp: 0.01)
@@ -127,6 +128,7 @@ extension LoweyRenderer {
         pass.depthAttachment.clearDepth = 0
         pass.depthAttachment.storeAction = .store
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
+        encoder.setFrontFacing(.counterClockwise)
         encoder.label = "Prepass"
         var uniforms = frame
         encoder.setDepthStencilState(device.pipelines.depthWrite)
@@ -168,6 +170,7 @@ extension LoweyRenderer {
         pass.depthAttachment.clearDepth = 0
         pass.depthAttachment.storeAction = .dontCare
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return 0 }
+        encoder.setFrontFacing(.counterClockwise)
         encoder.label = "Look shading"
         encoder.setCullMode(.none)
         var looks = gpu.looks

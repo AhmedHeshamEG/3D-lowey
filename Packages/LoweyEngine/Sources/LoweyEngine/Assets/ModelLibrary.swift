@@ -82,6 +82,13 @@ public final class ModelLibrary: Sendable {
         return store(result, for: asset)
     }
 
+    /// Loads a model (if needed) and measures it: bounds, triangles, rig and clips (an import fills its library entry
+    /// with these).
+    public func inspect(_ asset: LibraryAsset, catalog: AssetCatalog) async -> AssetInfo? {
+        guard let model = await load(asset, catalog: catalog) else { return nil }
+        return Self.info(model, rig: rig(asset.id))
+    }
+
     /// Waits until every model that started loading is in.
     public func waitUntilLoaded(timeout: Duration = .seconds(30)) async {
         let clock = ContinuousClock()

@@ -97,6 +97,7 @@ extension LoweyRenderer {
         pass.depthAttachment.loadAction = .load
         pass.depthAttachment.storeAction = .dontCare
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
+        encoder.setFrontFacing(.counterClockwise)
         encoder.label = "Editor layer"
         encoder.setCullMode(.none)
         let camera = request.camera

@@ -22,16 +22,16 @@ enum TestScenes {
             }
             objects.append(object)
         }
-        primitive(.cube, "Cube", at: Vec3(-1.6, 0, 0.2), size: Vec3(1, 1, 1), color: 0)
-        primitive(.sphere, "Sphere", at: Vec3(0, 0, -0.6), size: Vec3(1.1, 1.1, 1.1), color: 1)
-        primitive(.cylinder, "Cylinder", at: Vec3(1.5, 0, 0.3), size: Vec3(0.7, 1.3, 0.7), color: 2)
-        primitive(.cone, "Cone", at: Vec3(0.4, 0, 1.4), size: Vec3(0.6, 0.9, 0.6), color: 3)
+        primitive(.cube, "Cube", at: Vec3(-0.2, 0, -1.1), size: Vec3(1, 1, 1), color: 0)
+        primitive(.sphere, "Sphere", at: Vec3(1.25, 0, -0.6), size: Vec3(1.1, 1.1, 1.1), color: 1)
+        primitive(.cylinder, "Cylinder", at: Vec3(2.5, 0, 0.3), size: Vec3(0.7, 1.3, 0.7), color: 2)
+        primitive(.cone, "Cone", at: Vec3(0.9, 0, 1.3), size: Vec3(0.6, 0.9, 0.6), color: 3)
         var blob = BlobCharacter.build(BlobRecipe(name: "Pip", hat: .beret), ids: &ids)
         if let root = blob.fragment.roots.first, let slot = blob.fragment.objects.firstIndex(where: { $0.id == root }) {
-            blob.fragment.objects[slot].transform.position = Vec3(-0.4, 0, 1.6)
+            blob.fragment.objects[slot].transform.position = Vec3(-1.7, 0, 0.9)
         }
         objects += blob.fragment.objects
-        let camera = Self.camera(ids: &ids, view: Viewpoint(target: Vec3(0, 0.55, 0.3), yaw: 30, pitch: 18, distance: 6.4))
+        let camera = Self.camera(ids: &ids, view: Viewpoint(target: Vec3(0.4, 0.6, 0), yaw: 24, pitch: 16, distance: 7.6))
         objects.append(camera)
         for object in objects {
             scene.objects[object.id] = object

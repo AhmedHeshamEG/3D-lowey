@@ -38,11 +38,16 @@ final class PipelineTests: XCTestCase {
         XCTAssertFalse(benchmark.record(frameTime: 1.0 / 120, renderScale: 1, report: nil))
     }
 
-    /// The 4K spike: one second of HEVC at 3840 × 2160, rendered and verified like every export.
-    func testFourKHEVCExportIsVerified() async throws {
+    /// The 4K spike: one second at 3840 × 2160, rendered straight into IOSurface pixel buffers and verified like every
+    /// export. HEVC on a device; the simulator's software encoder has no 4K HEVC, so there it checks the same 4K
+    /// pipeline with H.264 (HEVC 4K is on the device checklist).
+    func testFourKExportIsVerified() async throws {
         let document = TestScenes.lookCheck(look: LookPreset.sketch.id, mood: .goldenHour)
         let session = try ExportSession(document: document, catalog: .empty, device: RenderDevice.sharedDevice(), models: ModelLibrary())
-        let settings = ExportPreset.youtube4K.settings(range: TimeRange(start: 0, end: 1), fps: 30)
+        var settings = ExportPreset.youtube4K.settings(range: TimeRange(start: 0, end: 1), fps: 30)
+        #if targetEnvironment(simulator)
+            settings.codec = .h264
+        #endif
         XCTAssertEqual(settings.size.width, 3840)
         XCTAssertEqual(settings.size.height, 2160)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("spike-4k.mp4")
@@ -66,7 +71,7 @@ final class PipelineTests: XCTestCase {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("sequence")
         _ = try await session.pngSequence(settings, audio: [Float](repeating: 0, count: 9600), to: folder) { _ in }
         let files = try FileManager.default.contentsOfDirectory(atPath: folder.path).sorted()
-        XCTAssertEqual(files.filter { $0.hasSuffix(".png") }.count, 4)
+        XCTAssertEqual(files.filter { $0.hasSuffix(".png") }.count, settings.frameCount)
         XCTAssertTrue(files.contains("soundtrack.wav"))
         let still = try await session.image(at: 0, framing: .square, longSide: 512, transparent: true)
         XCTAssertEqual(still.width, 512)
