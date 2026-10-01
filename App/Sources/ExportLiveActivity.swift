@@ -7,7 +7,8 @@ import UserNotifications
 /// (or fails) while the app is away.
 @MainActor
 final class ExportLiveActivity: ExportProgressReporting {
-    private var activities: [String: Activity<ExportActivityAttributes>] = [:]
+    /// Export id → Live Activity id (the activities themselves aren't Sendable; they are looked up where they're used).
+    private var activities: [String: String] = [:]
     private var lastUpdate: [String: Date] = [:]
 
     func exportStarted(id: String, title: String) {
@@ -15,17 +16,17 @@ final class ExportLiveActivity: ExportProgressReporting {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let attributes = ExportActivityAttributes(title: title, project: "")
         let state = ExportActivityAttributes.ContentState(fraction: 0, waiting: false, finished: false)
-        activities[id] = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: nil))
+        activities[id] = (try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: nil)))?.id
     }
 
     func exportProgressed(id: String, fraction: Double, waiting: Bool) {
-        guard let activity = activities[id] else { return }
+        guard let activityID = activities[id] else { return }
         // A few updates a second at most: the system throttles anyway.
         let now = Date()
         if let last = lastUpdate[id], now.timeIntervalSince(last) < 0.5, !waiting { return }
         lastUpdate[id] = now
         let state = ExportActivityAttributes.ContentState(fraction: fraction, waiting: waiting, finished: false)
-        Task { await activity.update(ActivityContent(state: state, staleDate: nil)) }
+        Task { await Self.apply(state, to: activityID, ending: false) }
     }
 
     func exportFinished(id: String, title: String, files: [URL]) {
@@ -39,10 +40,21 @@ final class ExportLiveActivity: ExportProgressReporting {
     }
 
     private func end(_ id: String, fraction: Double) {
-        guard let activity = activities.removeValue(forKey: id) else { return }
+        guard let activityID = activities.removeValue(forKey: id) else { return }
         lastUpdate[id] = nil
         let state = ExportActivityAttributes.ContentState(fraction: fraction, waiting: false, finished: true)
-        Task { await activity.end(ActivityContent(state: state, staleDate: nil), dismissalPolicy: .after(.now + 60)) }
+        Task { await Self.apply(state, to: activityID, ending: true) }
+    }
+
+    /// Updates or ends a Live Activity, found by its id here so no `Activity` value crosses actors.
+    private nonisolated static func apply(_ state: ExportActivityAttributes.ContentState, to activityID: String, ending: Bool) async {
+        guard let activity = Activity<ExportActivityAttributes>.activities.first(where: { $0.id == activityID }) else { return }
+        let content = ActivityContent(state: state, staleDate: nil)
+        if ending {
+            await activity.end(content, dismissalPolicy: .after(.now + 60))
+        } else {
+            await activity.update(content)
+        }
     }
 
     private func notify(title: String, body: String) {
