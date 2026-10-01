@@ -52,7 +52,7 @@ Prompts: `breakdown_script`, `plan_shots`, `build_scene`, `direct_camera`, `sync
 ## Any other model
 
 No MCP? Any model can write a **Scene Script** (JSON, see `/schemas/scene-script.schema.json` and `GET /v1/actions`).
-Paste it on the iPad (scene menu → *Paste a Scene Script*) or send it: `lowey-link script shot.json`.
+Paste it on the iPad (⌥⌘V, or Actions ▸ *Paste script*) or send it: `lowey-link script shot.json`.
 
 ## Laptop → iPad
 

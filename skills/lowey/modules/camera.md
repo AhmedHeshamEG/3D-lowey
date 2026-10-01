@@ -26,6 +26,6 @@ Fast-paced explainer direction: strong framing, a camera move on the words that 
 3. `snapshot` at each cut and at the end of each move; adjust with a tiny script.
 
 ## Performing the camera by hand (tell Hesham when it fits)
-Camera mode → look through the camera → Timeline Perform → Record: his normal gestures (drag to aim, two fingers to
-move, pinch to dolly, twist to roll) fly the camera and the path is recorded and smoothed. Best for handheld energy
+Director view (⌥⌘D) → Timeline Perform → Record: his normal gestures (drag to aim, two fingers to move, pinch to
+dolly, twist to roll) fly the camera and the path is recorded and smoothed. Best for handheld energy
 you can't key.

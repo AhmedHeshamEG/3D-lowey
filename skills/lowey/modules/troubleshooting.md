@@ -10,4 +10,4 @@
 | Snapshot shows floating/overlapping things | A small follow-up script moving by name; never rebuild the shot. |
 | Manim render fails | Show the Manim error line; common fixes: install LaTeX for `MathTex`, or use `Text`. PyAV/ffmpeg come with Manim. |
 | Media doesn't play on the iPad | It must be H.264/HEVC (.mp4/.mov) or ProRes 4444 (transparent). `render_manim` already produces the right thing. |
-| The bridge is unreachable | `lowey-link status`; the iPad must be on the same Wi-Fi with the bridge on (scene menu → AI & laptop bridge). |
+| The bridge is unreachable | `lowey-link status`; the iPad must be on the same Wi-Fi with the bridge on and this laptop paired (Actions ▸ AI & laptop ▸ Pair a laptop, then `lowey-link pair <code>`). |
