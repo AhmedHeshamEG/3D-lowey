@@ -87,7 +87,7 @@
         private func metric(_ label: String, _ value: String, warn: Bool = false) -> some View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(value).font(.hmmNumbers(.footnote)).foregroundStyle(warn ? theme.warning : theme.text)
-                Text(label).font(.hmm(.caption)).foregroundStyle(theme.text3)
+                Text(LocalizedStringKey(label)).font(.hmm(.caption)).foregroundStyle(theme.text3)
             }
         }
     }

@@ -122,7 +122,7 @@
         public var body: some View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(title)
+                    Text(LocalizedStringKey(title))
                         .font(.hmm(.headline, weight: .semibold))
                         .foregroundStyle(theme.text)
                         .accessibilityAddTraits(.isHeader)
@@ -169,14 +169,14 @@
                 ScrollView {
                     VStack(alignment: .leading, spacing: HmmSpacing.m) {
                         if let subtitle {
-                            Text(subtitle).font(.hmm(.body)).foregroundStyle(theme.text2)
+                            Text(LocalizedStringKey(subtitle)).font(.hmm(.body)).foregroundStyle(theme.text2)
                         }
                         content
                     }
                     .padding(HmmSpacing.l)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .navigationTitle(title)
+                .navigationTitle(Text(LocalizedStringKey(title)))
                 .navigationBarTitleDisplayModeInline()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -184,7 +184,7 @@
                     }
                     if let primary {
                         ToolbarItem(placement: .confirmationAction) {
-                            Button(primary.title, action: primary.action).fontWeight(.semibold)
+                            Button(LocalizedStringKey(primary.title), action: primary.action).fontWeight(.semibold)
                         }
                     }
                 }
@@ -213,7 +213,8 @@
         }
 
         public var body: some View {
-            Text(title.uppercased())
+            Text(LocalizedStringKey(title))
+                .textCase(.uppercase)
                 .font(.hmm(.caption, weight: .semibold))
                 .tracking(0.8)
                 .foregroundStyle(theme.text2)

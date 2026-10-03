@@ -32,7 +32,7 @@
                         .accessibilityLabel("Preview of the change")
                 }
                 VStack(alignment: .leading, spacing: HmmSpacing.xxs) {
-                    Text(proposal.title).font(.hmm(.headline, weight: .semibold)).foregroundStyle(theme.text)
+                    Text(LocalizedStringKey(proposal.title)).font(.hmm(.headline, weight: .semibold)).foregroundStyle(theme.text)
                     Text(proposal.summary).font(.hmm(.body)).foregroundStyle(theme.text2)
                     Text("From \(proposal.source)").font(.hmm(.footnote)).foregroundStyle(theme.text3)
                 }
