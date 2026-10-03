@@ -122,6 +122,16 @@ final class LibraryModel {
         }
     }
 
+    /// PNG of a model's thumbnail for the bridge (rendered now when it hasn't been yet).
+    func thumbnailPNG(for item: LibraryItem) async -> Data? {
+        if thumbnails[item.thumbnailName] == nil { loadThumbnail(for: item) }
+        if thumbnails[item.thumbnailName] == nil, case let .asset(asset) = item {
+            let object = SceneObject(id: .make(), name: asset.name, kind: .asset(asset.id))
+            await renderThumbnail(of: SceneFragment(objects: [object], roots: [object.id]), named: item.thumbnailName)
+        }
+        return thumbnails[item.thumbnailName]?.pngData()
+    }
+
     /// A Kit tile came on screen: its thumbnail is rendered in the Ink Look (once, then cached), one at a time.
     func requestThumbnail(for item: LibraryItem) {
         guard thumbnails[item.thumbnailName] == nil, case let .asset(asset) = item, asset.isKit else { return }

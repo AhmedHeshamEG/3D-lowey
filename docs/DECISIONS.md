@@ -624,3 +624,16 @@ camera view with set-of-marks, top/front/side diagrams from an orthographic came
 the value view, and the subject's silhouette from the ID buffer. Turning perception on the shipped samples found a
 chair blocking the desk push-in, Hesham hiding the one lit screen, the cave camera inside a rock and a chest scaled to
 a third of its size; all four were fixed.
+
+**R49 — MCP v2 is sixteen tools over one `build`.** The laptop's `hmm-bridge mcp` exposes the sixteen tools of PROMPT
+§12.2. Seven of them (`frame_shot`, `light`, `set_look`, `animate`, `camera_move`, `add_overlay`, `flipbook`) are
+small, typed front doors that each send one Scene Script v3 batch to `POST /v2/build`, so every change, however it
+arrives, is the same thing on the iPad: one Proposal with a preview thumbnail, one undo step, and a reply carrying an
+`observe` of the result. That needed three new v3 verbs in Core — `frameShot` (the camera solver), `lighting` (six
+recipes placed relative to the shot camera; re-lighting replaces the recipe's lamps) and `intent` (enter, exit,
+emphasise, react, walk_to, look_at, talk, idle, resolved to presets, clips, expressions, lip sync, keys and a look-at
+behaviour) — and `look` learned the Look itself and per-object Looks. A dry run returns a `proposal_id` that `commit`
+proposes for real, recompiled against the scene as it is then. The v1 routes stay for 1.x laptops; the package is
+`hmm-bridge` (its CLI is `hmm-bridge`, and `lowey-link` / `lowey-mcp` remain as aliases).
+`schemas/scene-script.v3.schema.json` lists every verb with its fields, and a Core test fails if the compiler and the
+schema disagree.

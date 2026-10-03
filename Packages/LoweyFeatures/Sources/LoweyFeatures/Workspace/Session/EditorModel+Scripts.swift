@@ -75,11 +75,11 @@ extension EditorModel {
     }
 
     /// Shows the proposal and waits for Apply / Not now (or three minutes).
-    func propose(_ script: SceneScript, preview: ScriptPreview, source: String) async -> Bool {
+    func propose(_ script: SceneScript, preview: ScriptPreview, source: String, thumbnail: UIImage? = nil) async -> Bool {
         proposal?.reply?.resume(returning: false)
         return await withCheckedContinuation { continuation in
             let made = ScriptProposal(title: script.title, source: source, lines: preview.lines, report: preview.report, script: script,
-                                      reply: continuation)
+                                      thumbnail: thumbnail, reply: continuation)
             proposal = made
             HmmHaptics.play(.selection)
             Task { @MainActor [weak self] in
@@ -110,7 +110,13 @@ extension EditorModel {
         }
         do {
             let preview = try ScriptCompiler.preview(script, document: session.document, context: scriptContext())
-            proposal = ScriptProposal(title: script.title, source: source, lines: preview.lines, report: preview.report, script: script)
+            let made = ScriptProposal(title: script.title, source: source, lines: preview.lines, report: preview.report, script: script)
+            proposal = made
+            let result = try ScriptCompiler.compile(script, document: session.document, context: scriptContext())
+            Task { @MainActor [weak self] in
+                let thumbnail = await self?.previewThumbnail(of: result.document)
+                if self?.proposal?.id == made.id { self?.proposal?.thumbnail = thumbnail }
+            }
         } catch {
             app.show("The script has a problem: \(error)", kind: .error)
         }
@@ -135,6 +141,8 @@ struct ScriptProposal: Identifiable {
     var lines: [String]
     var report: [String]
     var script: SceneScript
+    /// What it would look like (rendered before anything is applied).
+    var thumbnail: UIImage?
     /// The bridge waits on this (true = apply).
     var reply: CheckedContinuation<Bool, Never>?
 }

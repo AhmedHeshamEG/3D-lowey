@@ -1,12 +1,14 @@
 [project]
-name = "lowey-tools"
+name = "hmm-bridge"
 version = "2.0.0"
-description = "Laptop side of 3D-lowey: the MCP server (lowey-mcp) and the companion CLI (lowey-link)"
+description = "Laptop side of 3D-lowey: the hmm-bridge CLI and the lowey MCP server (16 tools) for the iPad's LAN bridge"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = ["mcp>=2"]
 
 [project.scripts]
+hmm-bridge = "lowey_tools.link:main"
+# The 1.x names keep working.
 lowey-mcp = "lowey_tools.mcp_server:main"
 lowey-link = "lowey_tools.link:main"
 

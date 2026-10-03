@@ -146,6 +146,13 @@ extension ScriptState {
         let sceneOnly = bool(action, "sceneOnly") ?? (scene.look != nil)
         var look = document.effectiveLook
         if let mood = string(action, "mood").flatMap(LightingPreset.init(rawValue:)) { look = look.applying(mood) }
+        // v3: the Look itself ("ink", "comic", "sketch", "clay", "lowpoly").
+        if let preset = string(action, "look") ?? string(action, "preset") {
+            guard LookPreset.builtIns.contains(where: { $0.id == preset }) else {
+                throw fail("unknown Look “\(preset)” (\(LookPreset.builtIns.map(\.id).joined(separator: ", ")))")
+            }
+            look.presetID = preset
+        }
         if let post = string(action, "post").flatMap(PostSettings.Preset.init(rawValue:)) { look.post = post.settings }
         if let shading = string(action, "shading").flatMap(ShadingStyle.init(rawValue:)) { look.shading = shading }
         if let fog = action["fog"] {
@@ -163,6 +170,18 @@ extension ScriptState {
         if let bloom = number(action, "bloom") { look.post.bloom = bloom }
         if let grain = number(action, "grain") { look.post.grain = grain }
         try run(.setLook(look, scope: sceneOnly ? .scene : .project), label: "Look")
+        try perObjectLooks(action)
+    }
+
+    /// Per object: {"perObject": {"Robot": "sketch"}} (a thing drawn in another Look).
+    mutating func perObjectLooks(_ action: JSONValue) throws {
+        if case let .object(perObject)? = action["perObject"] ?? action["per_object"] {
+            for (name, value) in perObject.sorted(by: { $0.key < $1.key }) {
+                guard let preset = value.stringValue else { continue }
+                try run(.setProperties(targets(.string(name)).map { PropertyChange(object: $0, key: .lookPreset, value: .enumeration(preset)) }),
+                        label: "“\(name)” in \(preset)")
+            }
+        }
     }
 
     mutating func effect(_ action: JSONValue) throws {

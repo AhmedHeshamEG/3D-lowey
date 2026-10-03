@@ -106,6 +106,11 @@ struct ProposalBanner: View {
                     Text("From \(proposal.source)").font(.hmm(.footnote)).foregroundStyle(theme.text2)
                 }
             }
+            if let thumbnail = proposal.thumbnail {
+                Image(uiImage: thumbnail).resizable().scaledToFit().frame(maxHeight: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .accessibilityLabel("Preview of the result")
+            }
             ScrollView {
                 VStack(alignment: .leading, spacing: HmmSpacing.xxs) {
                     ForEach(proposal.lines, id: \.self) { line in

@@ -1,4 +1,5 @@
-"""The laptop tools against a fake iPad bridge (same endpoints and replies as the app)."""
+"""The laptop tools against a fake iPad bridge (same endpoints and replies as the app): every MCP tool goes through it."""
+import base64
 import json
 import pathlib
 import threading
@@ -9,6 +10,9 @@ import pytest
 TOKEN = "t0ken"
 RECEIVED = []
 PAIRED = []
+PNG = b"\x89PNG\r\n\x1a\nfake"
+OBSERVE = {"summary": "Through “Shot”: “Paper” (mark 1) is the likely subject.", "report": {"objects": [{"name": "Paper", "mark": 1}]},
+           "images": {"camera": base64.b64encode(PNG).decode(), "top": base64.b64encode(PNG).decode()}}
 
 
 class FakeBridge(BaseHTTPRequestHandler):
@@ -35,12 +39,20 @@ class FakeBridge(BaseHTTPRequestHandler):
         if not self.authorized():
             return self.reply(401, {"error": "Pair first"})
         path = self.path.split("?")[0]
-        if path == "/v1/scene":
-            return self.reply(200, {"scene": "Desk", "objects": [{"name": "Paper", "kind": "plane", "at": [0, 0.76, 0]}]})
-        if path == "/v1/transcript":
+        RECEIVED.append((path, self.path, b"", self.headers.get("X-Lowey-Client")))
+        if path == "/v2/status":
+            return self.reply(200, {"app": "3D-lowey", "bridge": 2, "project": "Enigma", "scene": "Desk", "shot": "Shot", "autoApply": False})
+        if path == "/v2/project":
+            return self.reply(200, {"summary": "“Enigma”, scene “Desk”", "shots": [{"camera": "Shot", "at": [0]}], "cast": ["Hesham"]})
+        if path == "/v2/transcript":
             return self.reply(200, {"language": "en-US", "words": [{"i": 0, "w": "Enigma", "t": 1.2, "e": 1.8}]})
-        if path == "/v1/assets":
-            return self.reply(200, [{"name": "Tiger", "kind": "model", "tags": []}])
+        if path == "/v2/actions":
+            return self.reply(200, b"# 3D-lowey Scene Script v3", "text/markdown")
+        if path == "/v2/assets":
+            return self.reply(200, [{"id": "kit.office-desk", "name": "Desk", "set": "Office & Computers", "size": [1.4, 0.75, 0.7],
+                                     "surfaces": [0.75], "rigged": False, "tags": []}])
+        if path == "/v2/thumbnail":
+            return self.reply(200, PNG, "image/png")
         if path == "/v1/renders":
             return self.reply(200, ["Shot 16x9.mp4"])
         if path.startswith("/v1/renders/"):
@@ -59,16 +71,25 @@ class FakeBridge(BaseHTTPRequestHandler):
         if not self.authorized():
             return self.reply(401, {"error": "Pair first"})
         RECEIVED.append((path, self.path, body, self.headers.get("X-Lowey-Client")))
-        if path == "/v1/script":
+        if path == "/v2/build":
             script = json.loads(body)
-            dry = "dryRun=1" in self.path
-            return self.reply(200, {"applied": not dry, "preview": [f"Adds 1: {script['actions'][0].get('name', '?')}"], "report": [],
-                                    "created": {script["actions"][0].get("name", "x"): "id-1"}, "message": "ok"})
-        if path == "/v1/snapshot":
-            return self.reply(200, b"\x89PNG....", "image/png")
+            dry = script.get("dry_run", False)
+            return self.reply(200, {"proposal_id": "p-1" if dry else None, "applied": not dry,
+                                    "diff": [f"Adds 1: {script['actions'][0].get('name', '?')}"], "report": ["did it"],
+                                    "observe": OBSERVE, "message": "dry run" if dry else "Applied (one undo step)"})
+        if path == "/v2/observe":
+            return self.reply(200, OBSERVE)
+        if path == "/v2/contact_sheet":
+            return self.reply(200, {"summary": "6 frames over 4.0 s.", "report": {"frames": [], "motion": []},
+                                    "image": base64.b64encode(PNG).decode()})
+        if path == "/v2/commit":
+            request = json.loads(body)
+            if request["action"] == "undo":
+                return self.reply(200, {"undone": request.get("steps", 1)})
+            return self.reply(200, {"applied": True, "diff": ["Adds 1: Paper"], "report": [], "observe": OBSERVE, "message": "Applied"})
         if path == "/v1/library/import":
             return self.reply(200, {"imported": "tree.glb"})
-        if path == "/v1/media/import":
+        if path == "/v2/media":
             return self.reply(200, {"added": "graph.mov", "id": "id-9", "name": "graph"})
         return self.reply(404, {"error": "no"})
 
@@ -104,34 +125,103 @@ def test_pairing_and_link_cli(bridge_host, tmp_path, monkeypatch):
     script = tmp_path / "shot.json"
     script.write_text(json.dumps({"title": "Shot", "actions": [{"do": "add", "name": "Paper"}]}))
     assert link.main(["script", str(script), "--dry-run"]) == 0
-    assert "dryRun=1" in RECEIVED[-1][1]
+    assert RECEIVED[-1][0] == "/v2/build" and json.loads(RECEIVED[-1][2])["dry_run"] is True
+    assert link.main(["observe", "--views", "camera", "top", "--to", str(tmp_path / "seen")]) == 0
+    assert (tmp_path / "seen" / "top.png").read_bytes() == PNG
+    assert json.loads((tmp_path / "seen" / "report.json").read_text())["objects"][0]["name"] == "Paper"
 
 
-def test_mcp_tools_build_scripts(bridge_host, monkeypatch):
+def _sent():
+    return json.loads(RECEIVED[-1][2])
+
+
+def test_the_sixteen_tools_go_through_the_bridge(bridge_host, monkeypatch, tmp_path):
+    """MCP v2: exactly 16 tools, and each one reaches the right endpoint with the right Scene Script v3."""
     monkeypatch.setenv("LOWEY_HOST", bridge_host)
     monkeypatch.setenv("LOWEY_TOKEN", TOKEN)
+    import asyncio
     import importlib
 
-    from lowey_tools import mcp_server
+    from lowey_tools import manim_render, mcp_server
     importlib.reload(mcp_server)
-    assert "Paper" in mcp_server.get_scene()
-    assert "Enigma" in mcp_server.get_transcript()
-    assert "Tiger" in mcp_server.list_assets("tig")
-    reply = mcp_server.create_object("cube", "Desk", at=[0, 0, 0], size=[1.6, 0.75, 0.8], color="palette:1")
-    assert reply.startswith("Applied.") and "Desk" in reply
-    sent = json.loads(RECEIVED[-1][2])
-    assert sent["actions"][0] == {"do": "add", "shape": "cube", "name": "Desk", "at": [0, 0, 0], "size": [1.6, 0.75, 0.8], "color": "palette:1"}
-    assert RECEIVED[-1][3] == "Claude (lowey-mcp)"
-    mcp_server.attach_to_word("Nobody", {"do": "overlay", "shape": "cross"})
-    sent = json.loads(RECEIVED[-1][2])
-    assert sent["actions"][0]["at"] == {"word": "Nobody", "occurrence": 1, "offset": 0}
-    mcp_server.camera_move("pushIn", subject="Paper", at={"word": "message"}, duration=2)
-    assert json.loads(RECEIVED[-1][2])["actions"][0]["move"] == "pushIn"
-    image = mcp_server.snapshot()
-    assert not isinstance(image, str)
-    assert "Not applied" in mcp_server.run_script("Preview", [{"do": "add", "name": "X"}], dry_run=True)
-    assert mcp_server.actions_reference().startswith("# actions")
-    assert "run_script" in mcp_server.plan_shots("Nobody could.")
+    names = sorted(tool.name for tool in asyncio.run(mcp_server.mcp.list_tools()))
+    assert names == sorted(["status", "read_project", "find_assets", "build", "frame_shot", "light", "set_look", "animate", "camera_move",
+                            "add_overlay", "flipbook", "add_media", "render_manim", "observe", "contact_sheet", "commit"])
+
+    # 1–3: reading
+    assert '"bridge":2' in mcp_server.status() and RECEIVED[-1][0] == "/v2/status"
+    project = json.loads(mcp_server.read_project(transcript=True))
+    assert project["cast"] == ["Hesham"] and project["timedWords"][0]["w"] == "Enigma"
+    found = mcp_server.find_assets("desk", set="Office & Computers", thumbnails=1)
+    assert json.loads(found[0])[0]["id"] == "kit.office-desk" and len(found) == 2, "metadata + one thumbnail"
+    assert any(entry[0] == "/v2/assets" and "set=Office" in entry[1] for entry in RECEIVED)
+    assert RECEIVED[-1][0] == "/v2/thumbnail" and "id=kit.office-desk" in RECEIVED[-1][1]
+
+    # 4: build — one batch, the diff, and an observe of the result with its pictures
+    reply = mcp_server.build([{"do": "add", "asset": "kit.office-desk", "name": "Desk"},
+                              {"do": "place", "target": "Lamp", "relation": "on", "reference": "Desk"}], title="Desk", views=["camera", "top"])
+    assert reply[0].startswith("Applied.") and "Observe:" in reply[0] and len(reply) == 3
+    assert _sent()["actions"][1]["relation"] == "on" and _sent()["title"] == "Desk"
+    assert RECEIVED[-1][3] == "Claude (hmm-bridge)"
+    dry = mcp_server.build([{"do": "add", "name": "Paper"}], dry_run=True)
+    assert "proposal_id: p-1" in dry[0]
+
+    # 5–11: directing, each one small build
+    mcp_server.frame_shot("Hesham", shot_type="closeUp", composition="leftThird", lens=85, shot="Close", on_word="Nobody")
+    assert _sent()["actions"][0] == {"do": "frameShot", "subject": "Hesham", "shotType": "closeUp", "composition": "leftThird", "lens": 85,
+                                     "camera": "Close", "at": {"word": "Nobody"}}
+    mcp_server.light("golden-rim", subject="Hesham", warmth=0.4)
+    assert _sent()["actions"][0] == {"do": "lighting", "recipe": "golden-rim", "subject": "Hesham", "warmth": 0.4}
+    assert _sent()["views"] == ["camera", "value"]
+    mcp_server.set_look(look="comic", mood="dusk", per_object={"Robot": "sketch"})
+    assert _sent()["actions"][0]["perObject"] == {"Robot": "sketch"} and _sent()["actions"][0]["look"] == "comic"
+    mcp_server.animate("Hesham", "react", how="surprised", on_word="Nobody", frame_rate="twos")
+    assert _sent()["actions"][0] == {"do": "intent", "target": "Hesham", "what": "react", "how": "surprised", "at": {"word": "Nobody"},
+                                     "frameRate": "twos"}
+    mcp_server.animate(["Screen 1", "Screen 2"], "popIn", at=2)
+    assert _sent()["actions"][0] == {"do": "preset", "target": ["Screen 1", "Screen 2"], "preset": "popIn", "at": 2}
+    mcp_server.animate("Hesham", "Wave", at=1)
+    assert _sent()["actions"][0]["do"] == "clip"
+    mcp_server.camera_move("pushIn", shot="Close", subject="Paper", on_word="message", duration=2)
+    assert _sent()["actions"][0] == {"do": "cameraMove", "move": "pushIn", "camera": "Close", "subject": "Paper", "at": {"word": "message"},
+                                     "duration": 2}
+    mcp_server.add_overlay("title", text="BERLIN · 1941", on_word="1941", style={"at": [0, 0.6], "size": 0.8})
+    overlay, pop = _sent()["actions"]
+    assert overlay["shape"] == "title" and overlay["at"] == [0, 0.6] and pop == {"do": "preset", "target": "BERLIN · 1941",
+                                                                                   "preset": "typewriter", "at": {"word": "1941"}}
+    mcp_server.flipbook("impactBurst", "Screen 5", on_word="Nobody", color="#FFFFFF")
+    assert _sent()["actions"][0] == {"do": "flipbook", "fx": "impactBurst", "anchor": "Screen 5", "at": {"word": "Nobody"}, "color": "#FFFFFF"}
+
+    # 12–13: media from the laptop
+    picture = tmp_path / "chart.png"
+    picture.write_bytes(b"PNG")
+    assert '"added":"graph.mov"' in mcp_server.add_media(str(picture), at=3, overlay=True)
+    assert RECEIVED[-1][0] == "/v2/media" and "as=overlay" in RECEIVED[-1][1] and "at=3" in RECEIVED[-1][1]
+    made = tmp_path / "Graph.mov"
+    made.write_bytes(b"MOV")
+    rendered = []
+    monkeypatch.setattr(manim_render, "render", lambda source, scene, work, **kw: rendered.append(source.read_text()) or made)
+    assert '"added"' in mcp_server.render_manim("from manim import *\nclass Graph(Scene): pass\n", "Graph", at=1.5)
+    assert rendered and "class Graph" in rendered[0], "source code is written to a file and rendered"
+    assert RECEIVED[-1][2] == b"MOV" and "as=overlay" in RECEIVED[-1][1]
+
+    # 14–15: seeing
+    seen = mcp_server.observe(views=["camera", "top", "nonsense"], subject="Paper")
+    assert seen[0].startswith("Through") and len(seen) == 3
+    assert _sent() == {"views": ["camera", "top"], "subject": "Paper", "long_side": 1280}
+    sheet = mcp_server.contact_sheet(start=0, end=4, frames=6)
+    assert sheet[0].startswith("6 frames") and len(sheet) == 2
+    assert _sent() == {"from": 0, "to": 4, "frames": 6}
+
+    # 16: commit and undo
+    committed = mcp_server.commit(proposal_id="p-1")
+    assert committed[0].startswith("Applied.") and _sent() == {"action": "commit", "proposal_id": "p-1"}
+    assert mcp_server.commit("undo", steps=2) == "Undone 2 step(s)." and _sent() == {"action": "undo", "steps": 2}
+    assert mcp_server.commit().startswith("Error"), "commit needs a proposal id"
+
+    # Resources and the director prompt
+    assert "Scene Script v3" in mcp_server.actions_resource()
+    assert "find_assets" in mcp_server.direct("A robot finds a question mark in a cave.")
 
 
 def test_pair_with_only_the_code(bridge_host, monkeypatch):
@@ -153,7 +243,7 @@ def test_finds_the_ipad_again_after_its_address_changed(bridge_host, monkeypatch
     monkeypatch.delenv("LOWEY_HOST", raising=False)
     client.save_config({"host": "127.0.0.1:9", "token": TOKEN})
     monkeypatch.setattr(client, "discover", lambda timeout=3.0: [bridge_host])
-    assert client.Bridge().scene()["scene"] == "Desk"
+    assert client.Bridge().status()["scene"] == "Desk"
     assert json.loads(pathlib.Path(client.CONFIG).read_text())["host"] == bridge_host
 
 
@@ -193,7 +283,7 @@ def test_errors_are_readable(tmp_path, monkeypatch):
 
     from lowey_tools import client
     importlib.reload(client)
-    with pytest.raises(client.BridgeError, match="lowey-link pair"):
+    with pytest.raises(client.BridgeError, match="hmm-bridge pair"):
         client.Bridge()
     unreachable = client.Bridge(host="127.0.0.1:9", token="x", timeout=2)
     with pytest.raises(client.BridgeError, match="Can't reach"):
@@ -209,7 +299,7 @@ def test_media_and_manim_reach_the_shot(bridge_host, tmp_path, monkeypatch):
     picture = tmp_path / "chart.png"
     picture.write_bytes(b"PNG")
     assert link.main(["media", str(picture), "--at", "2.5"]) == 0
-    assert RECEIVED[-1][0] == "/v1/media/import" and "name=chart.png" in RECEIVED[-1][1] and "at=2.5" in RECEIVED[-1][1]
+    assert RECEIVED[-1][0] == "/v2/media" and "name=chart.png" in RECEIVED[-1][1] and "at=2.5" in RECEIVED[-1][1]
     assert RECEIVED[-1][2] == b"PNG"
     assert "as=card" in RECEIVED[-1][1], "pictures stand in the world as cards by default"
     assert link.main(["media", str(picture), "--overlay"]) == 0

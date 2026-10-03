@@ -1,17 +1,19 @@
-"""lowey-link — the laptop companion for 3D-lowey.
+"""hmm-bridge — the laptop companion for 3D-lowey (the old name, lowey-link, still works).
 
-  lowey-link pair 123456                   pair with the iPad (Actions ▸ AI & laptop ▸ Pair a laptop shows the one-time code)
-  lowey-link pair 192.168.1.20 123456      ...and say where it is if Bonjour can't find it
-  lowey-link status                        what's open on the iPad
-  lowey-link push model.glb tree.usdz      send files to the iPad's library
-  lowey-link audio voiceover.m4a           add a voiceover to the open scene (--role music|sfx)
-  lowey-link pull [--all] [name]           download renders (videos, frames, .srt) into ./renders
-  lowey-link watch ./exports               push every new model that appears in a folder
-  lowey-link generate tree --seed 3        run a laptop-side generator (Blender) and push the result
-  lowey-link generate text "a red fox"     run your text-to-3D command (LOWEY_TEXT_TO_3D) and push the result
-  lowey-link script shot.json              send a Scene Script (preview + approval on the iPad)
-  lowey-link media graph.png clip.mov --at 3   pictures / videos as cards in the shot (--overlay: flat over the frame)
-  lowey-link manim scene.py Graph --at 3   render a Manim scene (transparent) and put it in the shot at 3 s
+  hmm-bridge pair 123456                   pair with the iPad (Actions ▸ AI & laptop ▸ Pair a laptop shows the one-time code)
+  hmm-bridge pair 192.168.1.20 123456      ...and say where it is if Bonjour can't find it
+  hmm-bridge mcp [--http]                  run the MCP server for Claude Code / Claude Desktop (stdio by default)
+  hmm-bridge status                        what's open on the iPad
+  hmm-bridge push model.glb tree.usdz      send files to the iPad's library
+  hmm-bridge audio voiceover.m4a           add a voiceover to the open scene (--role music|sfx)
+  hmm-bridge pull [--all] [name]           download renders (videos, frames, .srt) into ./renders
+  hmm-bridge watch ./exports               push every new model that appears in a folder
+  hmm-bridge generate tree --seed 3        run a laptop-side generator (Blender) and push the result
+  hmm-bridge generate text "a red fox"     run your text-to-3D command (LOWEY_TEXT_TO_3D) and push the result
+  hmm-bridge script shot.json              send a Scene Script v3 (a Proposal on the iPad; --dry-run previews)
+  hmm-bridge observe [--views top value]   save what the shot looks like (pictures + report) into ./observe
+  hmm-bridge media graph.png clip.mov --at 3   pictures / videos as cards in the shot (--overlay: flat over the frame)
+  hmm-bridge manim scene.py Graph --at 3   render a Manim scene (transparent) and put it in the shot at 3 s
 """
 from __future__ import annotations
 
@@ -26,7 +28,7 @@ import sys
 import tempfile
 import time
 
-from .client import Bridge, BridgeError, describe, discover, load_config, normalize_host, save_config
+from .client import Bridge, BridgeError, describe_build, discover, load_config, normalize_host, save_config
 
 MODEL_TYPES = {".glb", ".gltf", ".usdz", ".obj"}
 GENERATORS = pathlib.Path(__file__).parent / "generators"
@@ -70,11 +72,30 @@ def run_generator(name: str, args: list[str], out_dir: pathlib.Path) -> pathlib.
     return out
 
 
+def save_observe(reply: dict, folder: pathlib.Path) -> None:
+    """Writes each view as a PNG and the report as JSON."""
+    import base64
+
+    folder.mkdir(parents=True, exist_ok=True)
+    for view, data in (reply.get("images") or {}).items():
+        (folder / f"{view}.png").write_bytes(base64.b64decode(data))
+    (folder / "report.json").write_text(json.dumps(reply.get("report", {}), indent=2, ensure_ascii=False), encoding="utf-8")
+    print(reply.get("summary", ""))
+    print(f"→ {folder}")
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="lowey-link", description="Laptop companion for 3D-lowey")
+    parser = argparse.ArgumentParser(prog="hmm-bridge", description="Laptop companion for 3D-lowey")
     sub = parser.add_subparsers(dest="command", required=True)
-    pair = sub.add_parser("pair", help="pair with the iPad: lowey-link pair [address] <code>  (the code is on the iPad)")
+    pair = sub.add_parser("pair", help="pair with the iPad: hmm-bridge pair [address] <code>  (the code is on the iPad)")
     pair.add_argument("target", nargs="*", metavar="[address] code")
+    serve = sub.add_parser("mcp", help="run the MCP server (stdio; --http for localhost)")
+    serve.add_argument("args", nargs=argparse.REMAINDER)
+    look = sub.add_parser("observe", help="save the shot's observe pictures and report into a folder")
+    look.add_argument("--time", type=float)
+    look.add_argument("--views", nargs="*", default=["camera", "top", "value"])
+    look.add_argument("--subject")
+    look.add_argument("--to", type=pathlib.Path, default=pathlib.Path("observe"))
     sub.add_parser("status")
     push = sub.add_parser("push")
     push.add_argument("files", nargs="+", type=pathlib.Path)
@@ -105,6 +126,11 @@ def main(argv: list[str] | None = None) -> int:
     script.add_argument("file", type=pathlib.Path)
     script.add_argument("--dry-run", action="store_true")
     options = parser.parse_args(argv)
+    if options.command == "mcp":
+        from .mcp_server import main as serve_mcp
+
+        serve_mcp(options.args)
+        return 0
 
     try:
         if options.command == "pair":
@@ -114,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
             codes = [part for part in options.target if part.isdigit() and len(part) == 6]
             addresses = [part for part in options.target if part not in codes]
             if not codes:
-                print("Pairing needs the code on the iPad: open Actions ▸ AI & laptop ▸ Pair a laptop, then run lowey-link pair <code>.",
+                print("Pairing needs the code on the iPad: open Actions ▸ AI & laptop ▸ Pair a laptop, then run hmm-bridge pair <code>.",
                       file=sys.stderr)
                 return 1
             code = codes[0]
@@ -125,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
                 found = discover()
                 if not found:
                     print("Couldn't find it. Is the Bridge on and the laptop on the same Wi-Fi? "
-                          "Or give the address it shows: lowey-link pair 192.168.1.20 " + code, file=sys.stderr)
+                          "Or give the address it shows: hmm-bridge pair 192.168.1.20 " + code, file=sys.stderr)
                     return 1
                 host = found[0]
                 print(f"Found {host}")
@@ -133,11 +159,13 @@ def main(argv: list[str] | None = None) -> int:
             config = load_config()
             config.update({"host": host, "token": token})
             save_config(config)
-            print(f"Paired with {host}. Try: lowey-link status")
+            print(f"Paired with {host}. Try: hmm-bridge status")
             return 0
         bridge = Bridge()
         if options.command == "status":
             print(json.dumps(bridge.status(), indent=2))
+        elif options.command == "observe":
+            save_observe(bridge.observe(time=options.time, views=options.views, subject=options.subject), options.to)
         elif options.command == "push":
             for path in options.files:
                 print(f"{path.name}: {bridge.import_file(path)}")
@@ -166,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{made.name}: {bridge.import_file(made)}")
         elif options.command == "media":
             for path in options.files:
-                print(f"{path.name}: {bridge.import_media(path, at=options.at, placement='overlay' if options.overlay else 'card')}")
+                print(f"{path.name}: {bridge.add_media(path, at=options.at, placement='overlay' if options.overlay else 'card')}")
         elif options.command == "manim":
             from .manim_render import render
 
@@ -174,10 +202,11 @@ def main(argv: list[str] | None = None) -> int:
                 video = render(options.script, options.scene, pathlib.Path(folder), quality=options.quality, fps=options.fps,
                                transparent=not options.opaque)
                 placement = "card" if options.opaque else "overlay"
-                print(f"{video.name}: {bridge.import_media(video, at=options.at, placement=placement)}")
+                print(f"{video.name}: {bridge.add_media(video, at=options.at, placement=placement)}")
         elif options.command == "script":
             payload = json.loads(options.file.read_text(encoding="utf-8"))
-            print(describe(bridge.script(payload.get("title", options.file.stem), payload.get("actions", []), dry_run=options.dry_run)))
+            reply = bridge.build(payload.get("actions", []), title=payload.get("title", options.file.stem), dry_run=options.dry_run)
+            print(describe_build(reply))
     except BridgeError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1

@@ -21,6 +21,8 @@ final class BridgeModel {
     private(set) var clients: [PairedClient] = []
     /// Scripts apply without asking until the app closes (each is still one undo step).
     var autoApplyThisSession = false
+    /// Dry runs waiting for `commit` (until the app closes).
+    @ObservationIgnored var pendingBuilds: [String: SceneScript] = [:]
     @ObservationIgnored private var pairingTask: Task<Void, Never>?
 
     static let wantsOnKey = "bridge.on"

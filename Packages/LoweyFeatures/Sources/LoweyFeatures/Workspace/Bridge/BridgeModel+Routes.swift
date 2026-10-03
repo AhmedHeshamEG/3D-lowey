@@ -4,7 +4,7 @@ import LoweyCore
 import LoweyEngine
 import UIKit
 
-/// The bridge's endpoints (all behind pairing): read the scene, the look, the transcript and the library; propose a
+/// The bridge's v1 endpoints (all behind pairing; v2 is in BridgeModel+V2): read the scene, the look, the transcript and the library; propose a
 /// Scene Script; snapshots; the playhead; undo; renders; files from the laptop into the library or the shot.
 extension BridgeModel {
     func routes() -> [BridgeRoute] {
@@ -25,7 +25,7 @@ extension BridgeModel {
             route("POST", "/v1/library/import") { model, request in await model.importAsset(request) },
             route("POST", "/v1/audio/import") { model, request in model.withEditor { model.importAudio($0, request) } },
             route("POST", "/v1/media/import") { model, request in await model.importMedia(request) }
-        ]
+        ] + v2Routes()
     }
 
     private func route(_ method: String, _ path: String,

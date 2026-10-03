@@ -1,11 +1,13 @@
-"""lowey-mcp — lets Claude (or any MCP client) drive 3D-lowey on the iPad through the LAN Bridge.
+"""The `lowey` MCP server (MCP v2) — lets Claude, or any MCP client, direct 3D-lowey on the iPad through the LAN bridge.
 
-Run by the MCP client over stdio:  lowey-mcp
-Every tool becomes a small Scene Script; the iPad shows a preview and Hesham approves it (unless auto-apply is on).
-Everything is one undo step on the iPad and stays hand-editable.
+Run by the MCP client over stdio:  hmm-bridge mcp   (or the old name, lowey-mcp)
+Sixteen tools (PROMPT §12.2). Everything that changes the scene is Scene Script v3 sent to `build`: one batch = one
+Proposal on the iPad (with a preview thumbnail) = one undo step. The app sees for the model: `build` replies carry an
+`observe` of the result, and `observe` / `contact_sheet` return pictures with numbered marks and a measured report.
 """
 from __future__ import annotations
 
+import base64
 import json
 import pathlib
 from typing import Any
@@ -17,19 +19,21 @@ except ImportError:  # 1.x
     from mcp.server.fastmcp import FastMCP as Server
     from mcp.server.fastmcp import Image
 
-from .client import Bridge, BridgeError, describe
+from .client import Bridge, BridgeError, describe_build
 
-mcp = Server(
-    "3D-lowey",
-    instructions=(
-        "3D-lowey is Hesham's iPad app for low-poly 3D videos. Read lowey://scene and lowey://transcript first. "
-        "Build shots with run_script (many actions, one approval) or the small tools. Name things so later actions can "
-        "refer to them. Time things to spoken words ({\"word\": \"Enigma\"}). Use the project palette (\"palette:N\"). "
-        "Take a snapshot to check your work. Hesham approves every change on the iPad; if he says no, ask what to change."
-    ),
+INSTRUCTIONS = (
+    "3D-lowey is Hesham's iPad app for low-poly 3D videos (Ink, Comic, Sketch, Clay and Low-poly Looks). Start with status "
+    "and read_project. Build with Scene Script v3 through build: Kit models first (find_assets), placed by relation "
+    "(on, beside_left, in_front_of…), never by guessing coordinates. Then frame_shot, light, observe with the top and "
+    "value views, critique against the rubric, fix. Time everything to spoken words ({\"word\": \"Enigma\"}). One idea "
+    "per shot; one Proposal per shot. Hesham approves every change on the iPad; if he says no, ask what to change."
 )
 
+mcp = Server("3D-lowey", instructions=INSTRUCTIONS)
+
 _bridge: Bridge | None = None
+
+VIEWS = ["camera", "top", "front", "side", "value", "silhouette"]
 
 
 def bridge() -> Bridge:
@@ -47,257 +51,307 @@ def png(data: bytes) -> Image:
         return Image(data=data, format="png")
 
 
-def _script(title: str, actions: list[dict[str, Any]], dry_run: bool = False) -> str:
-    try:
-        return describe(bridge().script(title, actions, dry_run=dry_run))
-    except BridgeError as error:
-        return f"Error: {error}"
+def _compact(value: Any) -> str:
+    return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
 
 
 def _clean(action: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in action.items() if value is not None}
 
 
-# -- Reading ----------------------------------------------------------------------------------------------------------
+def _at(at: Any = None, on_word: str | None = None) -> Any:
+    """A time: a spoken word wins over seconds."""
+    return {"word": on_word} if on_word else at
+
+
+def _images(observe: dict | None, views: list[str] | None = None) -> list[Image]:
+    images = (observe or {}).get("images") or {}
+    order = views or VIEWS
+    return [png(base64.b64decode(images[name])) for name in order if name in images]
+
+
+def _build(title: str, actions: list[dict[str, Any]], dry_run: bool = False, views: list[str] | None = None,
+           subject: str | None = None) -> list[Any] | str:
+    """Sends a v3 batch; returns the reply in words plus the observe pictures of the result."""
+    try:
+        reply = bridge().build(actions, title=title, dry_run=dry_run, views=views, subject=subject)
+    except BridgeError as error:
+        return f"Error: {error}"
+    text = describe_build(reply)
+    pictures = _images(reply.get("observe"), views)
+    return [text, *pictures] if pictures else text
+
+
+# -- 1–3: reading ------------------------------------------------------------------------------------------------------
 
 @mcp.tool()
-def get_scene(depth: int = 2) -> str:
-    """The open scene, compact: objects (name, kind, position, size), cameras, cuts, markers, effects, transcript."""
+def status() -> str:
+    """Which iPad is paired, the open project, scene and shot, the playhead, whether auto-apply is on."""
     try:
-        return json.dumps(bridge().scene(depth), separators=(",", ":"))
+        return _compact(bridge().status())
     except BridgeError as error:
         return f"Error: {error}"
 
 
 @mcp.tool()
-def list_assets(query: str = "", limit: int = 30) -> str:
-    """Search Hesham's asset library (models, prefabs). Use the names with place_asset."""
+def read_project(transcript: bool = False) -> str:
+    """The project at a glance (a summary line first): scenes, shots (cameras, when the edit cuts to them, on which word),
+    the cast, the Look, the palette, Kit Sets in use and the voiceover text. transcript=True adds every word's timing."""
     try:
-        return json.dumps(bridge().assets(query, limit), separators=(",", ":"))
+        project = bridge().read_project()
+        if transcript:
+            project["timedWords"] = bridge().transcript().get("words", [])
+        return _compact(project)
     except BridgeError as error:
         return f"Error: {error}"
 
 
 @mcp.tool()
-def get_transcript() -> str:
-    """The voiceover's words with start/end times (w, t, e). Sync actions to these words."""
+def find_assets(query: str = "", set: str | None = None, limit: int = 8, thumbnails: int = 4) -> list[Any] | str:  # noqa: A002
+    """Kit and library models by words ("desk lamp", "rock", "robot"), Kit first, optionally in one Set ("Room & Desk",
+    "Nature", "Office & Computers", "Lab & Science", "Space", "City & Street", "Kitchen & Food", "Props & Signs",
+    "Characters"). Each has its id (use it in build's add), real size in metres, surface heights to put things on, its front.
+    The first `thumbnails` come with a picture."""
     try:
-        return json.dumps(bridge().transcript(), separators=(",", ":"))
+        found = bridge().find_assets(query, set_name=set, limit=limit)
+        pictures = []
+        for asset in found[: max(thumbnails, 0)]:
+            try:
+                pictures.append(png(bridge().thumbnail(asset["id"])))
+            except BridgeError:
+                continue
+        return [_compact(found), *pictures]
     except BridgeError as error:
         return f"Error: {error}"
 
 
-@mcp.tool()
-def actions_reference() -> str:
-    """The full Scene Script action vocabulary (read once before writing big scripts)."""
-    try:
-        return bridge().actions_reference()
-    except BridgeError as error:
-        return f"Error: {error}"
-
+# -- 4: build ------------------------------------------------------------------------------------------------------------
 
 @mcp.tool()
-def snapshot(framing: str = "16:9", time: float | None = None, through_camera: bool = True) -> Image | str:
-    """A picture of the shot (through the shot camera) at a time — check your work."""
-    try:
-        return png(bridge().snapshot(framing=framing, long_side=960, camera=through_camera, time=time))
-    except BridgeError as error:
-        return f"Error: {error}"
+def build(actions: list[dict[str, Any]], title: str = "From Claude", dry_run: bool = False, views: list[str] | None = None,
+          subject: str | None = None) -> list[Any] | str:
+    """Scene Script v3 (resource lowey://actions has every verb): add from the Kit, place by relation, scaleTo, recolor,
+    remove, group, frameShot, lighting, look, intent, preset, keys, cameraMove, cut, overlay, flipbook, effect… Many actions,
+    ONE Proposal on the iPad, ONE undo step. Returns what changed and an observe of the result (views: camera, top, front,
+    side, value, silhouette). dry_run=True previews without proposing and returns a proposal_id for commit."""
+    return _build(title, actions, dry_run, views, subject)
 
 
-# -- Building ---------------------------------------------------------------------------------------------------------
+# -- 5–11: directing (each is one small build) --------------------------------------------------------------------------
 
 @mcp.tool()
-def run_script(title: str, actions: list[dict[str, Any]], dry_run: bool = False) -> str:
-    """Run a Scene Script (see actions_reference): many actions, ONE approval, ONE undo step. Best for whole shots.
-    dry_run=True only previews."""
-    return _script(title, actions, dry_run)
+def frame_shot(subject: str, shot_type: str = "medium", composition: str = "center", lens: float | None = None,
+               shot: str | None = None, other: str | None = None, at: Any = None, on_word: str | None = None) -> list[Any] | str:
+    """The camera solver: shot_type extremeWide | wide | full | medium | closeUp | extremeCloseUp | overTheShoulder |
+    twoShot | insert; composition center | leftThird | rightThird | lowAngle | highAngle; lens in mm (the shot type picks
+    one otherwise). `shot` names the camera (made when new). With on_word/at the edit cuts to it there."""
+    action = _clean({"do": "frameShot", "subject": subject, "shotType": shot_type, "composition": composition, "lens": lens,
+                     "camera": shot, "other": other, "at": _at(at, on_word)})
+    return _build(f"Frame {subject}", [action], views=["camera"], subject=subject)
 
 
 @mcp.tool()
-def create_object(shape: str, name: str, at: list[float] | None = None, size: list[float] | None = None, color: str | None = None,
-                  rotation: list[float] | None = None, glow: float | None = None) -> str:
-    """Add a blockout shape (cube, sphere, cylinder, cone, plane, torus, ramp, group). Stands on the ground unless 'at' has a height."""
-    return _script(f"Add {name}", [_clean({"do": "add", "shape": shape, "name": name, "at": at, "size": size, "color": color,
-                                           "rotation": rotation, "glow": glow})])
+def light(recipe: str, subject: str | None = None, intensity: float | None = None, warmth: float | None = None) -> list[Any] | str:
+    """A lighting recipe placed for the shot camera: key-warm-world-cool (the default story light), noir-single-source,
+    golden-rim, monitor-glow, moonlit, studio-soft. Overrides: intensity (×), warmth (-1 cool … 1 warm)."""
+    action = _clean({"do": "lighting", "recipe": recipe, "subject": subject, "intensity": intensity, "warmth": warmth})
+    return _build(f"Light: {recipe}", [action], views=["camera", "value"], subject=subject)
 
 
 @mcp.tool()
-def place_asset(asset: str, name: str | None = None, at: list[float] | None = None, scale: float | None = None,
-                rotation: list[float] | None = None) -> str:
-    """Place a library model or prefab by search text (e.g. 'desk', 'tiger')."""
-    return _script(f"Place {asset}", [_clean({"do": "place", "asset": asset, "name": name, "at": at, "scale": scale, "rotation": rotation})])
+def set_look(look: str | None = None, mood: str | None = None, per_object: dict[str, str] | None = None,
+             scene_only: bool = True) -> list[Any] | str:
+    """The Look (ink, comic, sketch, clay, lowpoly), the mood (day, goldenHour, dusk, night, space, studio) and per-object
+    Looks ({"Robot": "sketch"})."""
+    action = _clean({"do": "look", "look": look, "mood": mood, "perObject": per_object, "sceneOnly": scene_only})
+    return _build("Look", [action], views=["camera"])
 
 
 @mcp.tool()
-def set_property(target: str, property: str, value: Any, at: Any = None) -> str:  # noqa: A002 - matches the app's word
-    """Set a property (color, opacity, glow=emissiveIntensity, lightIntensity, fieldOfView…). With 'at' it becomes a key."""
-    return _script(f"Set {property}", [_clean({"do": "set", "target": target, "property": property, "value": value, "at": at})])
+def animate(targets: str | list[str], what: str, at: Any = None, on_word: str | None = None, duration: float | None = None,
+            how: str | None = None, to: Any = None, frame_rate: str | None = None) -> list[Any] | str:
+    """Say the intent; the app picks the animation. what: enter | exit | emphasise | react | walk_to | look_at | talk | idle
+    — or a preset (popIn, bounce, float…) or a clip (Wave, Walk, Nod…). how: an expression for react (surprised, happy,
+    shocked…). to: where walk_to / look_at go (a name or [x, y, z]). frame_rate: ones | twos | threes | fours."""
+    when = _at(at, on_word)
+    presets = {"popIn", "popOut", "grow", "shrink", "bounce", "wiggle", "float", "spin", "shake", "pulse", "fadeIn", "fadeOut",
+               "slideIn", "dropIn", "typewriter"}
+    clips = {"Idle", "Walk", "Run", "Talk", "Wave", "Point", "Type", "Nod", "Shrug", "Celebrate"}
+    if what in presets:
+        action = _clean({"do": "preset", "target": targets, "preset": what, "at": when, "duration": duration})
+    elif what in clips:
+        action = _clean({"do": "clip", "character": targets, "clip": what, "at": when, "duration": duration})
+    else:
+        action = _clean({"do": "intent", "target": targets, "what": what, "how": how, "to": to, "at": when, "duration": duration,
+                         "frameRate": frame_rate})
+    return _build(f"Animate: {what}", [action], views=["camera"])
 
 
 @mcp.tool()
-def add_keyframes(target: str, property: str, keys: list[dict[str, Any]]) -> str:
-    """Keyframes: keys = [{"t": seconds or {"word": …}, "value": …, "easing": "backOut"}]. Properties: position, rotation, scale, opacity…"""
-    return _script(f"Animate {target}", [{"do": "keys", "target": target, "property": property, "keys": keys}])
+def camera_move(move: str, shot: str | None = None, subject: Any = None, strength: float | None = None, at: Any = None,
+                on_word: str | None = None, duration: float | None = None) -> list[Any] | str:
+    """pushIn, pullOut, punchIn, snapZoom, orbit, dolly, truck, crane, whipPan, shake, reveal — eased, landing on the word."""
+    action = _clean({"do": "cameraMove", "move": move, "camera": shot, "subject": subject, "strength": strength,
+                     "at": _at(at, on_word), "duration": duration})
+    return _build(f"Camera: {move}", [action], views=["camera"])
 
 
 @mcp.tool()
-def apply_preset(target: str | list[str], preset: str, at: Any = "now", duration: float | None = None, stagger: float | None = None,
-                 order: str | None = None) -> str:
-    """One-tap animation (popIn, grow, bounce, wiggle, float, spin, shake, pulse, fadeIn, slideIn, dropIn, typewriter…).
-    Several targets are staggered (order: selection | leftToRight | wave)."""
-    return _script(f"{preset}", [_clean({"do": "preset", "target": target, "preset": preset, "at": at, "duration": duration,
-                                         "stagger": stagger, "order": order})])
+def add_overlay(kind: str, text: str | None = None, on_word: str | None = None, at: Any = None, style: dict[str, Any] | None = None,
+                name: str | None = None) -> list[Any] | str:
+    """Titles, labels and comic language over the frame: title, label, arrow, highlight, cross, question, exclamation,
+    check, circle, star. It pops in on `on_word`. style: {"at": [x, y] in -1…1, "size": 1, "color": "palette:2",
+    "follow": "Paper"}. Don't repeat the voiceover word for word."""
+    style = style or {}
+    overlay_name = name or (text or kind)[:24]
+    actions = [_clean({"do": "overlay", "shape": kind, "text": text, "name": overlay_name, "at": style.get("at"),
+                       "size": style.get("size"), "color": style.get("color"), "follow": style.get("follow")})]
+    if on_word or at is not None:
+        preset = "typewriter" if kind in {"title", "label"} else "popIn"
+        actions.append({"do": "preset", "target": overlay_name, "preset": preset, "at": _at(at, on_word)})
+    return _build(f"Overlay: {overlay_name}", actions, views=["camera"])
 
 
 @mcp.tool()
-def camera_move(move: str, subject: str | None = None, at: Any = "now", duration: float | None = None, camera: str | None = None) -> str:
-    """Camera move on the shot camera: pushIn, pullOut, punchIn, snapZoom, orbit, dolly, truck, crane, whipPan, shake, reveal."""
-    return _script(f"{move}", [_clean({"do": "cameraMove", "move": move, "subject": subject, "at": at, "duration": duration,
-                                       "camera": camera})])
+def flipbook(kind: str, anchor: Any, at: Any = None, on_word: str | None = None, until: Any = None, frames: int | None = None,
+             color: str | None = None) -> list[Any] | str:
+    """Drawn FX that sell a moment: speedLines, impactBurst, sweatDrop, sparkle, smear — anchored to an object (or a
+    point) from `on_word` (or `at`) until `until`."""
+    action = _clean({"do": "flipbook", "fx": kind, "anchor": anchor, "at": _at(at, on_word), "until": until, "frames": frames,
+                     "color": color})
+    return _build(f"Flipbook: {kind}", [action], views=["camera"])
 
 
-@mcp.tool()
-def set_look(mood: str | None = None, post: str | None = None, fog: float | None = None, scene_only: bool = True) -> str:
-    """Mood (day, goldenHour, dusk, night, space, studio) and finish (clean, cinematic, dreamy, retro, comic, collage, oldFilm)."""
-    return _script("Look", [_clean({"do": "look", "mood": mood, "post": post, "fog": fog, "sceneOnly": scene_only})])
-
-
-@mcp.tool()
-def add_overlay(shape: str, text: str | None = None, at: list[float] | None = None, size: float | None = None, follow: str | None = None,
-                color: str | None = None, name: str | None = None) -> str:
-    """2D overlay on the frame: title, label, arrow, highlight, cross (the big X), question, exclamation, check, circle, star.
-    'at' is frame space [x, y] in -1…1. 'follow' pins it to an object."""
-    return _script(f"Overlay {shape}", [_clean({"do": "overlay", "shape": shape, "text": text, "at": at, "size": size, "follow": follow,
-                                                "color": color, "name": name})])
-
-
-@mcp.tool()
-def attach_to_word(word: str, action: dict[str, Any], occurrence: int = 1, offset: float = 0) -> str:
-    """Run any action at a spoken word, e.g. word='Nobody', action={"do": "overlay", "shape": "cross"} or
-    {"do": "preset", "target": "Paper", "preset": "grow"}."""
-    timed = dict(action)
-    timed["at"] = {"word": word, "occurrence": occurrence, "offset": offset}
-    return _script(f"On '{word}'", [timed])
-
+# -- 12–13: media from the laptop ---------------------------------------------------------------------------------------
 
 @mcp.tool()
 def add_media(path: str, at: float | None = None, overlay: bool = False) -> str:
-    """Put a picture or video file from this laptop into the open shot (a screenshot, a clip, a chart).
-    It stands in the 3D world as a thin card (move, turn and size it like any object); overlay=True lays it flat over
-    the frame instead. Videos play from `at` seconds on the timeline (default: the playhead)."""
-    return json.dumps(bridge().import_media(pathlib.Path(path).expanduser(), at=at, placement="overlay" if overlay else "card"))
+    """A picture or video file from this laptop into the open shot: a thin card standing in the 3D world, or overlay=True
+    to lay it flat over the frame. Videos play from `at` seconds (default: the playhead)."""
+    try:
+        return _compact(bridge().add_media(pathlib.Path(path).expanduser(), at=at, placement="overlay" if overlay else "card"))
+    except (BridgeError, OSError) as error:
+        return f"Error: {error}"
 
 
 @mcp.tool()
-def render_manim(script: str, scene: str, at: float | None = None, quality: str = "high", transparent: bool = True) -> str:
-    """Render a Manim scene on this laptop and lay it over the shot from `at` seconds (graphs, equations, diagrams).
-    Transparent by default, so it floats over the 3D world. `script` is the .py path, `scene` the Scene class name."""
+def render_manim(code: str, scene: str, at: float | None = None, quality: str = "high", transparent: bool = True) -> str:
+    """Render Manim on this laptop and lay it over the shot from `at` seconds (graphs, equations, diagrams). `code` is the
+    Python source (or a path to a .py file); `scene` the Scene class. Transparent by default, floating over the 3D world."""
     import tempfile
 
     from .manim_render import render
 
     with tempfile.TemporaryDirectory() as folder:
-        video = render(pathlib.Path(script).expanduser(), scene, pathlib.Path(folder), quality=quality, transparent=transparent)
-        return json.dumps(bridge().import_media(video, at=at, placement="overlay" if transparent else "card"))
+        source = pathlib.Path(code).expanduser()
+        if not (len(code) < 400 and source.suffix == ".py" and source.exists()):
+            source = pathlib.Path(folder) / "scene.py"
+            source.write_text(code, encoding="utf-8")
+        try:
+            video = render(source, scene, pathlib.Path(folder), quality=quality, transparent=transparent)
+            return _compact(bridge().add_media(video, at=at, placement="overlay" if transparent else "card"))
+        except (BridgeError, RuntimeError, OSError) as error:
+            return f"Error: {error}"
+
+
+# -- 14–15: seeing -------------------------------------------------------------------------------------------------------
+
+@mcp.tool()
+def observe(time: float | None = None, views: list[str] | None = None, subject: str | None = None, framing: str | None = None,
+            report: bool = True) -> list[Any] | str:
+    """Look at the shot: the camera view with set-of-marks numbers, plus any of top / front / side (orthographic layout
+    diagrams with the shot camera drawn on), value (the squint) and silhouette. The ShotReport measures every marked
+    object (coverage, visible %, grounded + gap, intersects, cut by the frame, facing) and the frame (subject on thirds,
+    headroom, ΔL* contrast, clutter, tangents, palette, key light) and checks the rubric with a fix for each fail."""
+    wanted = [view for view in (views or ["camera", "top", "value"]) if view in VIEWS]
+    try:
+        reply = bridge().observe(time=time, views=wanted, subject=subject, framing=framing)
+    except BridgeError as error:
+        return f"Error: {error}"
+    text = reply.get("summary", "")
+    if report:
+        text += "\n" + _compact(reply.get("report", {}))
+    return [text, *_images(reply, ["camera", *[view for view in wanted if view != "camera"]])]
 
 
 @mcp.tool()
-def undo() -> str:
-    """Undo the last change on the iPad."""
+def contact_sheet(start: float | None = None, end: float | None = None, frames: int = 6, subject: str | None = None) -> list[Any] | str:
+    """N frames of the shot in a grid with timecodes and notes, plus motion stats per moving thing (screen path, peak
+    speed, direction changes, holds, leaves frame, arcs vs straight lines, constant-speed glides, moves landing on words)
+    and the camera's move. Critique motion with it."""
     try:
-        bridge().undo()
-        return "Undone."
+        reply = bridge().contact_sheet(start=start, end=end, frames=frames, subject=subject)
     except BridgeError as error:
         return f"Error: {error}"
+    text = reply.get("summary", "") + "\n" + _compact(reply.get("report", {}))
+    image = reply.get("image")
+    return [text, png(base64.b64decode(image))] if image else text
 
 
-# -- Resources ----------------------------------------------------------------------------------------------------------
+# -- 16: commit / undo ---------------------------------------------------------------------------------------------------
 
-@mcp.resource("lowey://scene")
-def scene_resource() -> str:
-    """The open scene (compact JSON)."""
-    return get_scene()
-
-
-@mcp.resource("lowey://look")
-def look_resource() -> str:
-    """The project's look: palette, lighting, sky, fog, post-processing."""
+@mcp.tool()
+def commit(action: str = "commit", proposal_id: str | None = None, steps: int = 1) -> list[Any] | str:
+    """action="commit": propose a dry run (its proposal_id) on the iPad for real. action="undo": undo `steps` changes."""
     try:
-        return json.dumps(bridge().look(), separators=(",", ":"))
+        if action == "undo":
+            reply = bridge().commit(action="undo", steps=steps)
+            return f"Undone {reply.get('undone', 0)} step(s)."
+        if not proposal_id:
+            return "Error: commit needs the proposal_id a dry run returned."
+        reply = bridge().commit(proposal_id=proposal_id)
     except BridgeError as error:
         return f"Error: {error}"
+    pictures = _images(reply.get("observe"), ["camera"])
+    return [describe_build(reply), *pictures] if pictures else describe_build(reply)
 
 
-@mcp.resource("lowey://assets")
-def assets_resource() -> str:
-    """Hesham's asset library index."""
-    return list_assets("", 200)
+# -- Resources and prompts ----------------------------------------------------------------------------------------------
+
+@mcp.resource("lowey://project")
+def project_resource() -> str:
+    """The project summary (same as read_project)."""
+    return read_project()
 
 
 @mcp.resource("lowey://transcript")
 def transcript_resource() -> str:
-    """The voiceover transcript with word times."""
-    return get_transcript()
+    """The voiceover's words with start/end times (w, t, e)."""
+    try:
+        return _compact(bridge().transcript())
+    except BridgeError as error:
+        return f"Error: {error}"
 
 
-# -- Prompts -------------------------------------------------------------------------------------------------------------
-
-@mcp.prompt()
-def breakdown_script(script: str) -> str:
-    """Script → shots (what each line shows)."""
-    return (
-        "Break this narration into shots for a low-poly 3D explainer. For each shot give: the line, the ONE image it shows "
-        "(a visual metaphor, goofy is fine), the subject, 3–6 objects (library first, blockout otherwise), the camera move and the "
-        "word it lands on, overlays/effects. Keep it short — a table.\n\n" + script
-    )
-
-
-@mcp.prompt()
-def plan_shots(line: str) -> str:
-    """Plan shots for one line of the script."""
-    return (
-        f"Plan the shot(s) for: “{line}”. Read lowey://scene, lowey://assets and lowey://transcript. Say which words carry the beats "
-        "(camera push, pop-ins, the X…). Then write ONE run_script call that builds it. Use palette colours, name everything."
-    )
+@mcp.resource("lowey://actions")
+def actions_resource() -> str:
+    """Every Scene Script v3 verb, one line each."""
+    try:
+        return bridge().actions()
+    except BridgeError as error:
+        return f"Error: {error}"
 
 
 @mcp.prompt()
-def build_scene(description: str) -> str:
-    """Build a set from a description."""
+def direct(brief: str) -> str:
+    """The director loop for a brief or a script."""
     return (
-        f"Build this set in 3D-lowey: {description}. Check list_assets first; use blockout shapes for the rest. Few objects, big "
-        "shapes, warm light on the subject against a cooler world. One run_script, then a snapshot to check, then fix what's off."
+        "Direct this in 3D-lowey, following the lowey skill's director loop: read_project; a beat sheet (one beat per idea, "
+        "anchored to words); a shot list as a compact table (share it before building anything expensive); per shot "
+        "find_assets → build (Kit first, relations) → frame_shot → light → observe with top + value → critique with the "
+        "rubric → fix (max 3 rounds); animate → contact_sheet → fix (max 2). One Proposal per shot.\n\n" + brief
     )
 
 
-@mcp.prompt()
-def direct_camera(shot: str) -> str:
-    """Camera direction for a shot."""
-    return (
-        f"Direct the camera for: {shot}. Add a camera framing the subject (35–50 mm), cut to it, and one move timed to the key word. "
-        "Fast pacing: punch-ins on emphasis, slow push on reveals. Snapshot at the start and end of the move."
-    )
-
-
-@mcp.prompt()
-def sync_to_voiceover() -> str:
-    """Re-time the shot to the voiceover."""
-    return (
-        "Read lowey://transcript and lowey://scene. Re-time every animation, cut and effect to the word it belongs to "
-        "(use {\"word\": …} times, not seconds). Report what moved."
-    )
-
-
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     import argparse
 
     from .remote import DEFAULT_HTTP_PORT, serve
 
-    parser = argparse.ArgumentParser(prog="lowey-mcp", description="3D-lowey MCP server (stdio by default).")
+    parser = argparse.ArgumentParser(prog="hmm-bridge mcp", description="3D-lowey MCP server (stdio by default).")
     parser.add_argument("--http", action="store_true", help="serve over HTTP on localhost: http://127.0.0.1:PORT/mcp")
     parser.add_argument("--port", type=int, default=DEFAULT_HTTP_PORT, help="local port for --http")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.http:
         serve(mcp, port=args.port)
     else:

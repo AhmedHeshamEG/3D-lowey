@@ -61,7 +61,7 @@ jobs:
           awk -v c="$COVERAGE" 'BEGIN { exit !(c >= 80) }'
 
   tools:
-    name: Laptop tools (lowey-mcp, lowey-link)
+    name: Laptop tools (hmm-bridge, MCP v2)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
