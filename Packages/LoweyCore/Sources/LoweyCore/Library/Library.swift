@@ -163,6 +163,7 @@ public struct LibraryManifest: Codable, Hashable, Sendable {
     public func asset(_ id: AssetID) -> LibraryAsset? {
         id.raw.hasPrefix(KitIndex.idPrefix) ? kit.first { $0.id == id } : assets.first { $0.id == id }
     }
+
     public func prefab(_ id: PrefabID) -> Prefab? { prefabs.first { $0.id == id } }
     public func look(_ id: SavedLookID) -> SavedLook? { looks.first { $0.id == id } }
     public func script(_ id: ScriptID) -> ScriptAsset? { scripts.first { $0.id == id } }

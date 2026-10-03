@@ -44,7 +44,7 @@ final class KitRenderTests: XCTestCase {
         let objects = [
             SceneObject(id: "desk", name: "Desk", kind: .asset(desk.id)),
             SceneObject(id: "chair", name: "Chair", kind: .asset(chair.id), transform: Transform(position: Vec3(0, 0, 0.7),
-                                                                                               rotation: Quat(angle: .pi, axis: .unitY))),
+                                                                                                 rotation: Quat(angle: .pi, axis: .unitY))),
             SceneObject(id: "screen", name: "Screen", kind: .asset(screen.id), transform: Transform(position: Vec3(0, top.height, -0.15)))
         ]
         let document = TestDocuments.document("Desk", objects: objects, camera: Vec3(1.6, 1.5, 2.6), rotation: Quat(eulerDegrees: Vec3(-20, 30, 0)))
