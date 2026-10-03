@@ -58,6 +58,8 @@ public struct Placement: Hashable, Sendable {
     public var object: ObjectID
     public var world: Transform
     public var note: String
+    /// Put in the air on purpose (`above`): marked so perception doesn't call it floating.
+    public var airborne = false
 }
 
 public struct RelationSolver {
@@ -143,8 +145,9 @@ public extension RelationSolver {
         .setProperties(placements.flatMap { placement -> [PropertyChange] in
             let parentWorld = scene.objects[placement.object]?.parent.map { scene.worldTransform(of: $0) } ?? .identity
             let local = Transform.relative(world: placement.world, toParent: parentWorld)
-            return [PropertyChange(object: placement.object, key: .position, value: .vec3(local.position)),
-                    PropertyChange(object: placement.object, key: .rotation, value: .quat(local.rotation))]
+            let pose = [PropertyChange(object: placement.object, key: .position, value: .vec3(local.position)),
+                        PropertyChange(object: placement.object, key: .rotation, value: .quat(local.rotation))]
+            return placement.airborne ? pose + [PropertyChange(object: placement.object, key: .airborne, value: .bool(true))] : pose
         })
     }
 

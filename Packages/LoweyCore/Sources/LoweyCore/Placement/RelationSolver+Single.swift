@@ -86,7 +86,7 @@ extension RelationSolver {
         var world = scene.worldTransform(of: target)
         world.position = position
         world.rotation = turned
-        return Placement(object: target, world: world, note: note)
+        return Placement(object: target, world: world, note: note, airborne: relation == .above)
     }
 
     static func words(_ relation: Relation) -> String {

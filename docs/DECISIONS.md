@@ -606,3 +606,21 @@ Kit and the relation solver, so they show what the app and the AI actually make.
 Kit and fails if anything floats or intersects. The primitive-built 1.x samples (`IslandSample`, `EnigmaSample` and
 its opening and story) keep driving the engine, export and file-format tests, which check exact names and frames;
 rewriting those around Kit models would test less, not more.
+
+**R48 — Perception measures geometry in Core and colour from the render.** `observe` (ShotReport) and
+`contact_sheet` are pure Swift in LoweyCore (`Perception/`), so every number is unit-tested on Linux against scenes
+where the answer is known (a floating cube reports `grounded: false` and a 100 cm gap). Coverage and visible % come
+from a small depth-tested CPU rasteriser (about 320 × 180) of the meshes the renderer drew (Core's own meshes, else
+boxes, in tests): exact enough to say "the lamp is 26% visible", deterministic everywhere. Contrast (ΔL* in the
+squinted value view), silhouette separation, palette and the light read come from the rendered pixels; without them
+those rubric lines are `skipped`, never guessed. Intersections compare surfaces, not boxes (a chair tucked under a
+desk isn't intersecting), and set pieces (floors, walls, terrain over 6 m or 40% of the frame) may overlap each other.
+Things in the air on purpose carry `airborne` (`above` sets it; 3D words count as signs). Clutter counts copies of one
+model once (nine desks read as one pattern). Kit models may be half to twice their real size before Scale fails.
+Focus passes when the subject is the accent, the biggest, the brightest or the most contrasty thing in frame. Motion
+is measured on screen with velocities over a 0.17 s window, so animation on twos or fours isn't read as stop-start;
+anticipation isn't measured (it's in the critique module's checklist instead). The Engine adds the pictures: the
+camera view with set-of-marks, top/front/side diagrams from an orthographic camera with the shot camera drawn on,
+the value view, and the subject's silhouette from the ID buffer. Turning perception on the shipped samples found a
+chair blocking the desk push-in, Hesham hiding the one lit screen, the cave camera inside a rock and a chest scaled to
+a third of its size; all four were fixed.

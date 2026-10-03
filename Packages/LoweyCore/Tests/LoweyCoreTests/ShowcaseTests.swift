@@ -72,4 +72,27 @@ final class ShowcaseTests: XCTestCase {
         let lampBox = try XCTUnwrap(bounds.worldBounds(of: lamp.id, in: scenes[0]))
         XCTAssertEqual(lampBox.min.y, try XCTUnwrap(bounds.worldBounds(of: desk.id, in: scenes[0])).max.y, accuracy: 0.02, "the lamp is on the desk")
     }
+
+    /// Each sample, seen through its shot camera halfway through, passes the rubric's geometric lines (Focus, Ground,
+    /// Scale, Clutter) — the same checks `observe` gives the AI. (Read and Light need pixels: the Engine's tests.)
+    func testTheSamplesPassTheRubric() throws {
+        let kit = try kit()
+        var library = LibraryManifest()
+        library.kit = kit
+        let (islandInfo, island) = try Showcase.island(kit: kit)
+        let (enigmaInfo, enigma) = try Showcase.enigma(kit: kit)
+        // Each shot's subject, and a moment it's on screen.
+        let subjects = ["Hesham", "Enigma", "Screen 5", "Robot", "Screen 5"]
+        let times = [2.4, 4.4, 3, 3, 6.4]
+        let shots = island.map { (islandInfo, $0) } + enigma.map { (enigmaInfo, $0) }
+        for (index, (info, scene)) in shots.enumerated() {
+            let document = Document(project: info, scene: scene)
+            let report = ShotObserver(document: document, library: library).observe(at: times[index], subject: subjects[index])
+            print("observe · \(scene.name): \(report.summary)")
+            XCTAssertEqual(report.frame.subject, subjects[index], scene.name)
+            for check in report.checks where ["Focus", "Ground", "Scale", "Clutter"].contains(check.name) {
+                XCTAssertNotEqual(check.result, .fail, "\(scene.name) · \(check.name): \(check.detail)")
+            }
+        }
+    }
 }

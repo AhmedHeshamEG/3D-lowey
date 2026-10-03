@@ -58,6 +58,20 @@ public extension LoweyRenderer {
         return PickHit(object: object, point: ray.point(at: distance), normal: Vec3(worldNormal).normalized, distance: distance)
     }
 
+    /// The whole ID buffer of the last frame (packed ids, top row first) and its size.
+    func idBuffer() -> (ids: [UInt32], width: Int, height: Int)? {
+        guard let targets, let buffer = device.device.makeBuffer(length: targets.width * targets.height * 4, options: .storageModeShared),
+              let commandBuffer = device.queue.makeCommandBuffer(), let blit = commandBuffer.makeBlitCommandEncoder() else { return nil }
+        let size = MTLSize(width: targets.width, height: targets.height, depth: 1)
+        blit.copy(from: targets.ids, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(), sourceSize: size, to: buffer,
+                  destinationOffset: 0, destinationBytesPerRow: targets.width * 4, destinationBytesPerImage: targets.width * targets.height * 4)
+        blit.endEncoding()
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        let pointer = buffer.contents().bindMemory(to: UInt32.self, capacity: targets.width * targets.height)
+        return (Array(UnsafeBufferPointer(start: pointer, count: targets.width * targets.height)), targets.width, targets.height)
+    }
+
     /// The object indices whose pixels fall inside a screen polygon (lasso) in the last frame, by bounds centre.
     func visibleObjects() -> [ObjectID] {
         lastScene?.objectIDs ?? []

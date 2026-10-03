@@ -20,12 +20,12 @@ enum ShowcaseScripts {
     {"do": "add", "asset": "kit.nature-tree-palmtall", "name": "Palm", "at": [5.4, 0.35, 2.2]},
     {"do": "add", "asset": "kit.nature-rock-largea", "name": "Big rock", "at": [-2.8, 0.35, 2.8]},
     {"do": "add", "asset": "kit.nature-plant-bushlarge", "name": "Bush", "relation": "beside_right", "reference": "Big rock"},
-    {"do": "add", "asset": "kit.nature-canoe", "name": "Canoe", "at": [7.6, -0.05, 6], "rotation": [0, -35, 0]},
+    {"do": "add", "asset": "kit.nature-canoe", "name": "Canoe", "at": [7.6, 0, 6], "rotation": [0, -35, 0]},
     {"do": "particles", "preset": "fire", "name": "Fire", "at": "Campfire", "amount": 0.8},
     {"do": "light", "type": "point", "name": "Fire light", "at": "Campfire", "color": "#FF9A3C", "intensity": 2.4, "range": 6},
     {"do": "blob", "likeness": "hesham", "name": "Hesham", "at": [0.6, 0.35, 1.4], "facing": 15},
     {"do": "clip", "character": "Hesham", "clip": "Wave", "at": 2.4},
-    {"do": "camera", "name": "Fly camera", "from": [0, 9, 22], "lookAt": [0, 0.8, 0], "focalLength": 32},
+    {"do": "camera", "name": "Fly camera", "from": [-1.8, 1.5, 6.6], "lookAt": "Hesham", "focalLength": 50},
     {"do": "cameraMove", "camera": "Fly camera", "move": "crane", "subject": "Hesham", "at": 0, "duration": 4},
     {"do": "cameraMove", "camera": "Fly camera", "move": "orbit", "subject": [0, 0.6, 0], "at": 4, "duration": 6},
     {"do": "overlay", "shape": "title", "name": "Title", "text": "Welcome to 3D-lowey", "at": [0, 0.62], "size": 0.8},
@@ -44,13 +44,13 @@ enum ShowcaseScripts {
         {"do": "add", "shape": "cube", "name": "Study wall", "at": [\(ox), 0, -1.4], "size": [7, 3.2, 0.1], "color": "palette:1"},
         {"do": "add", "asset": "kit.office-desk", "name": "Desk", "at": [\(ox), 0, -0.55]},
         {"do": "add", "asset": "kit.room-lamproundtable", "name": "Lamp", "relation": "on", "reference": "Desk", "offset": [-0.5, 0, -0.15]},
-        {"do": "add", "asset": "kit.props-chest", "name": "Enigma", "relation": "on", "reference": "Desk", "offset": [0.25, 0, -0.1]},
-        {"do": "scaleTo", "target": "Enigma", "meters": 0.18},
+        {"do": "add", "asset": "kit.room-radio", "name": "Enigma", "relation": "on", "reference": "Desk", "offset": [0.25, 0, -0.1]},
+        {"do": "scaleTo", "target": "Enigma", "meters": 0.26},
         {"do": "add", "asset": "kit.room-books", "name": "Books", "relation": "on", "reference": "Desk", "offset": [0.58, 0, -0.12]},
         {"do": "add", "shape": "cube", "name": "Army message", "size": [0.3, 0.006, 0.21], "color": "palette:0", "at": [\(ox), 0, 1.5]},
         {"do": "place", "target": "Army message", "relation": "on", "reference": "Desk", "offset": [-0.08, 0, 0.18]},
         {"do": "add", "asset": "kit.room-bookcaseopen", "name": "Bookcase", "relation": "beside_left", "reference": "Desk"},
-        {"do": "add", "asset": "kit.office-chairdesk", "name": "Chair", "relation": "in_front_of", "reference": "Desk"},
+        {"do": "add", "asset": "kit.office-chairdesk", "name": "Chair", "relation": "in_front_of", "reference": "Desk", "offset": [-0.75, 0, 0]},
         {"do": "light", "type": "point", "name": "Lamp light", "at": "Lamp", "color": "#FFB45C", "intensity": 2.6, "range": 4},
         {"do": "camera", "name": "Desk camera", "from": [\(number(x + 1.1)), 1.45, 2.3], "lookAt": "Army message", "focalLength": 42}
         """
@@ -89,7 +89,7 @@ enum ShowcaseScripts {
             ##"{"do": "set", "target": "Screen 5", "property": "accent", "value": true}"##,
             ##"{"do": "light", "type": "point", "name": "Screen light", "at": "Screen 5", "color": "#7FD4FF", "intensity": 2.2, "range": 5}"##,
             ##"{"do": "blob", "likeness": "hesham", "name": "Hesham", "at": [\##(number(x + 1.2)), 0, 0.4]}"##,
-            ##"{"do": "place", "target": "Hesham", "relation": "in_front_of", "reference": "Desk 5"}"##,
+            ##"{"do": "place", "target": "Hesham", "relation": "beside_right", "reference": "Desk 5"}"##,
             ##"{"do": "place", "target": "Hesham", "relation": "facing", "reference": "Screen 5"}"##,
             ##"{"do": "camera", "name": "Room camera", "from": [\##(number(x + 0.4)), 3.4, 7.2], "lookAt": "Desk 5", "focalLength": 30}"##
         ]
@@ -113,6 +113,7 @@ enum ShowcaseScripts {
         {"do": "add", "asset": "kit.lab-enemy-eyedrone", "name": "Robot", "at": [\(ox), 0, 0]},
         {"do": "transform", "target": "Robot", "position": [\(ox), 0.8, 0]},
         {"do": "set", "target": "Robot", "property": "accent", "value": true},
+        {"do": "set", "target": "Robot", "property": "airborne", "value": true},
         {"do": "add", "asset": "kit.nature-rock-talla", "name": "Rock 1", "at": [\(number(x + 3)), 0, 0]},
         {"do": "add", "asset": "kit.nature-rock-largea", "name": "Rock 2", "at": [\(number(x + 3)), 0, 3]},
         {"do": "add", "asset": "kit.nature-stone-talla", "name": "Rock 3", "at": [\(number(x - 3)), 0, 3]},
@@ -123,7 +124,7 @@ enum ShowcaseScripts {
         {"do": "place", "target": ["Rock 1", "Rock 2", "Rock 3", "Rock 4", "Rock 5", "Rock 6"], "relation": "around", "reference": "Robot", "radius": 3.6},
         {"do": "text", "name": "Question", "text": "?", "at": [\(ox), 1.7, 0], "size": 0.55, "color": "#FFC46B", "glow": 2},
         {"do": "light", "type": "point", "name": "Question light", "at": "Question", "color": "#FFC46B", "intensity": 2, "range": 5},
-        {"do": "camera", "name": "Cave camera", "from": [\(number(x + 1.4)), 0.45, 3.4], "lookAt": "Robot", "focalLength": 35}
+        {"do": "camera", "name": "Cave camera", "from": [\(number(x + 0.7)), 0.7, 1.9], "lookAt": "Robot", "focalLength": 35}
         """
         if animated {
             actions += """
