@@ -8,6 +8,18 @@
     "Computers",
     "Furniture"
    ]
+  },
+  {
+   "name": "Room & Desk",
+   "categories": [
+    "Seating",
+    "Tables",
+    "Storage",
+    "Beds",
+    "Lights",
+    "Decor",
+    "Walls & Floors"
+   ]
   }
  ],
  "assets": [
@@ -15,6 +27,11 @@
    "id": "office-desk",
    "set": "Office & Computers",
    "path": "Office-Computers/office-desk.loweyasset"
+  },
+  {
+   "id": "room-lamproundtable",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lamproundtable.loweyasset"
   }
  ]
 }

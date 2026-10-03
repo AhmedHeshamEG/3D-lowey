@@ -121,7 +121,7 @@ extension EditCommand: Codable {
 /// A Scene Script: a named list of commands and/or friendly actions (v2), applied as one undoable step.
 /// Commands are the raw vocabulary; actions are compiled by `ScriptCompiler` (names, spoken words, presets…).
 public struct SceneScript: Codable, Hashable, Sendable {
-    public static let currentVersion = 2
+    public static let currentVersion = 3
 
     public var version: Int
     public var title: String

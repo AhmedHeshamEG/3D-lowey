@@ -7,8 +7,18 @@ extension ScriptState {
 
     /// Every verb (and its aliases) → what it does.
     static let handlers: [String: Handler] = [
-        "add": { try $0.add($1) },
-        "place": { try $0.place($1) },
+        "add": { state, action in
+            if let query = state.string(action, "asset") { try state.addAsset(action, query: query) } else { try state.add(action) }
+        },
+        // v3: a relation places what's there; without one (v2) it finds a library model.
+        "place": { state, action in
+            if action["relation"] != nil { try state.relate(action) } else { try state.place(action) }
+        },
+        "relate": { try $0.relate($1) },
+        "scaleTo": { try $0.scaleTo($1) },
+        "scale_to": { try $0.scaleTo($1) },
+        "recolor": { try $0.recolor($1) },
+        "remove": { try $0.delete($1) },
         "text": { try $0.text($1) },
         "overlay": { try $0.overlay($1) },
         "particles": { try $0.particles($1) },

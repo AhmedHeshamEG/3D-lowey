@@ -10,8 +10,8 @@ final class KitTests: XCTestCase {
 
     func testTheKitLoadsWithItsMetadata() throws {
         let kit = try fixtureKit()
-        XCTAssertEqual(kit.sets.map(\.name), ["Office & Computers"])
-        let desk = try XCTUnwrap(kit.assets.first)
+        XCTAssertEqual(kit.sets.map(\.name), ["Office & Computers", "Room & Desk"])
+        let desk = try XCTUnwrap(kit.assets.first { $0.id.raw == "kit.office-desk" })
         XCTAssertEqual(desk.id.raw, "kit.office-desk")
         XCTAssertTrue(desk.isKit)
         XCTAssertEqual(desk.format, .glb)
@@ -31,13 +31,13 @@ final class KitTests: XCTestCase {
         var manifest = LibraryManifest()
         manifest.kit = kit.assets
         XCTAssertNotNil(manifest.asset("kit.office-desk"))
-        XCTAssertEqual(LibrarySearch.items(in: manifest, filter: .sets).count, 1)
+        XCTAssertEqual(LibrarySearch.items(in: manifest, filter: .sets).count, 2)
         XCTAssertEqual(LibrarySearch.search("desk", in: manifest).first?.name, "Desk")
         let data = try JSONEncoder().encode(manifest)
         XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("office-desk"), "the Kit isn't written into library.json")
         // The GLB loads through the reader the renderer uses.
         let root = try XCTUnwrap(Bundle.module.url(forResource: "Fixtures", withExtension: nil)).appendingPathComponent("Kit")
-        let model = try GLTFMeshReader.model(contentsOf: root.appendingPathComponent(manifest.kit[0].file))
+        let model = try GLTFMeshReader.model(contentsOf: root.appendingPathComponent(manifest.kit.first { $0.id.raw == "kit.office-desk" }!.file))
         XCTAssertFalse(model.parts.isEmpty)
     }
 }

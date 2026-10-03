@@ -590,3 +590,11 @@ only (`kit.` ids, never written to `library.json`), so projects using them open 
 (seeded noise, filters and oscillators shaped to the move each one sells), written once per project as WAV clips on
 the sound-effects track. They're ours, so CC0 by construction; identical on every device; and weigh nothing in the
 app. Each has a hit time, so attaching one to a word puts the whoosh's peak (not its start) on the word.
+
+**R46 — The relation solver came before the samples.** Phase 2 lists the samples (step 7) before Scene Script v3
+(step 9), but samples built from the Kit should be placed the way the AI will place things: by relation, with the
+Kit's surfaces and fronts. So `RelationSolver` and the v3 verbs (`place … relation`, `add … asset`, `scaleTo`,
+`recolor`) landed first, and the samples are built with them. Left and right are as seen from the reference's front
+(for something facing the camera, screen left and right). Things put `on` furniture face the way it faces. Every
+relation grounds what it places and slides it off anything it would intersect; `on` looks for a free spot on the
+surface, nearest its middle. v2 scripts upgrade on compile (aliases become verbs, v2's `place` becomes `add asset`).
