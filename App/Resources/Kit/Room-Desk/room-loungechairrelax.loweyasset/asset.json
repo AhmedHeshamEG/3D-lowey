@@ -1,0 +1,85 @@
+{
+ "author": "Kenney",
+ "category": "Seating",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-loungechairrelax",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Lounge chair relax",
+ "realSizeMeters": [
+  0.938,
+  1.206,
+  1.292
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "chair",
+  "couch",
+  "lounge",
+  "relax",
+  "room & desk",
+  "seating",
+  "sofa"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.3632,
+   "height": 0.44,
+   "max": [
+    0.296,
+    0.254
+   ],
+   "min": [
+    -0.296,
+    -0.358
+   ]
+  },
+  {
+   "area": 0.2082,
+   "height": 0.709,
+   "max": [
+    0.469,
+    0.139
+   ],
+   "min": [
+    -0.469,
+    -0.531
+   ]
+  },
+  {
+   "area": 0.1135,
+   "height": 0.211,
+   "max": [
+    0.296,
+    0.646
+   ],
+   "min": [
+    -0.296,
+    0.276
+   ]
+  },
+  {
+   "area": 0.1135,
+   "height": 0.244,
+   "max": [
+    0.296,
+    0.646
+   ],
+   "min": [
+    -0.296,
+    0.276
+   ]
+  }
+ ],
+ "triangles": 188
+}

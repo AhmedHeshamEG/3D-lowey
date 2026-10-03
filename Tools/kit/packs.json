@@ -1,0 +1,18 @@
+{
+  "comment": "Where the Kit comes from. Every pack is CC0; fetch-kit.py checks the licence file inside each download before using it.",
+  "packs": [
+    {"id": "kenney-furniture", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/furniture-kit", "models": "Models/GLTF format"},
+    {"id": "kenney-food", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/food-kit", "models": "Models/GLB format"},
+    {"id": "kenney-nature", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/nature-kit", "models": "Models/GLTF format"},
+    {"id": "kenney-city-commercial", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/city-kit-commercial", "models": "Models/GLB format"},
+    {"id": "kenney-city-suburban", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/city-kit-suburban", "models": "Models/GLB format"},
+    {"id": "kenney-city-roads", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/city-kit-roads", "models": "Models/GLB format"},
+    {"id": "kenney-car", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/car-kit", "models": "Models/GLB format"},
+    {"id": "kenney-space", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/space-kit", "models": "Models/GLTF format"},
+    {"id": "kenney-survival", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/survival-kit", "models": "Models/GLB format"},
+    {"id": "kenney-mini-market", "author": "Kenney", "source": "kenney", "page": "https://kenney.nl/assets/mini-market", "models": "Models/GLB format"},
+    {"id": "quaternius-scifi-essentials", "author": "Quaternius", "source": "itch", "page": "https://quaternius.itch.io/sci-fi-essentials-kit", "models": ""},
+    {"id": "quaternius-base-characters", "author": "Quaternius", "source": "itch", "page": "https://quaternius.itch.io/universal-base-characters", "models": ""},
+    {"id": "quaternius-animation-library", "author": "Quaternius", "source": "itch", "page": "https://quaternius.itch.io/universal-animation-library", "models": ""}
+  ]
+}

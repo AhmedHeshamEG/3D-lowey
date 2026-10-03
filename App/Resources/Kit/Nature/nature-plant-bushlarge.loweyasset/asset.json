@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Plants",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-plant-bushlarge",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Plant bush large",
+ "realSizeMeters": [
+  1.096,
+  0.711,
+  0.983
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "bush",
+  "flower",
+  "large",
+  "nature",
+  "plant",
+  "plants"
+ ],
+ "topSurfaces": [],
+ "triangles": 60
+}

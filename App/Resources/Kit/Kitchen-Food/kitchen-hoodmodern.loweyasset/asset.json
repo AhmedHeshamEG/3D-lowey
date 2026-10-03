@@ -1,0 +1,58 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-hoodmodern",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Hood modern",
+ "realSizeMeters": [
+  0.823,
+  0.765,
+  0.546
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "hood",
+  "kitchen",
+  "kitchen & food",
+  "modern"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.3622,
+   "height": 0.172,
+   "max": [
+    0.412,
+    0.273
+   ],
+   "min": [
+    -0.412,
+    -0.273
+   ]
+  },
+  {
+   "area": 0.0591,
+   "height": 0.765,
+   "max": [
+    0.182,
+    -0.11
+   ],
+   "min": [
+    -0.182,
+    -0.273
+   ]
+  }
+ ],
+ "triangles": 28
+}

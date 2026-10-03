@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Trees",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-tree-palmtall",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tree palm tall",
+ "realSizeMeters": [
+  3.028,
+  3.969,
+  3.028
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "nature",
+  "palm",
+  "plant",
+  "tall",
+  "tree",
+  "trees"
+ ],
+ "topSurfaces": [],
+ "triangles": 190
+}

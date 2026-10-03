@@ -1,0 +1,72 @@
+{
+ "author": "Kenney",
+ "category": "Seating",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-loungechair",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Lounge chair",
+ "realSizeMeters": [
+  0.938,
+  0.881,
+  0.785
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "chair",
+  "couch",
+  "lounge",
+  "room & desk",
+  "seating",
+  "sofa"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.3632,
+   "height": 0.44,
+   "max": [
+    0.296,
+    0.393
+   ],
+   "min": [
+    -0.296,
+    -0.22
+   ]
+  },
+  {
+   "area": 0.2082,
+   "height": 0.709,
+   "max": [
+    0.469,
+    0.278
+   ],
+   "min": [
+    -0.469,
+    -0.393
+   ]
+  },
+  {
+   "area": 0.0991,
+   "height": 0.881,
+   "max": [
+    0.287,
+    -0.22
+   ],
+   "min": [
+    -0.287,
+    -0.393
+   ]
+  }
+ ],
+ "triangles": 128
+}

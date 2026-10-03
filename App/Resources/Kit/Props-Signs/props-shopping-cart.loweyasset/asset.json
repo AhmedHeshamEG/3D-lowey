@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Shop",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-shopping-cart",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Shopping cart",
+ "realSizeMeters": [
+  0.705,
+  0.918,
+  1.126
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/mini-market",
+ "tags": [
+  "cart",
+  "props & signs",
+  "shop",
+  "shopping"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.317,
+   "height": 0.522,
+   "max": [
+    0.353,
+    0.563
+   ],
+   "min": [
+    -0.353,
+    -0.319
+   ]
+  },
+  {
+   "area": 0.2962,
+   "height": 0.816,
+   "max": [
+    0.353,
+    0.563
+   ],
+   "min": [
+    -0.353,
+    -0.26
+   ]
+  },
+  {
+   "area": 0.2756,
+   "height": 0.404,
+   "max": [
+    0.235,
+    0.445
+   ],
+   "min": [
+    -0.235,
+    -0.142
+   ]
+  },
+  {
+   "area": 0.2071,
+   "height": 0.287,
+   "max": [
+    0.176,
+    0.328
+   ],
+   "min": [
+    -0.176,
+    -0.26
+   ]
+  }
+ ],
+ "triangles": 384
+}

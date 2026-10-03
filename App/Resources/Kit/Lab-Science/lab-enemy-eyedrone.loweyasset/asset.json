@@ -1,0 +1,44 @@
+{
+ "author": "Quaternius",
+ "category": "Machines",
+ "clips": [
+  "Attack",
+  "BackFlip",
+  "Charging",
+  "Hit",
+  "Idle",
+  "Look"
+ ],
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-enemy-eyedrone",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Eye drone",
+ "realSizeMeters": [
+  0.698,
+  0.697,
+  0.625
+ ],
+ "rig": "skinned",
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "drone",
+  "enemy",
+  "eye",
+  "lab & science",
+  "machines",
+  "robot"
+ ],
+ "topSurfaces": [],
+ "triangles": 3530
+}

@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Tools",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-tool-shovel",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tool shovel",
+ "realSizeMeters": [
+  0.186,
+  0.759,
+  0.081
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "props & signs",
+  "shovel",
+  "tool",
+  "tools"
+ ],
+ "topSurfaces": [],
+ "triangles": 124
+}

@@ -571,3 +571,17 @@ turn rates follow the sticks with a time constant (the sidebar's Ease), moves st
 stops short of straight up, so a flown take reads as an operator's move. It writes the camera through the same path
 as the Director view's touch gestures: one undo step per flight, or the camera's keys while Perform records. A on a
 controller records or stops a take, B stops flying.
+
+**R44 — The Kit: 355 CC0 assets in nine Sets, all in the app (27 MB).** `Tools/fetch-kit.py` downloads Kenney packs
+from kenney.nl and Quaternius packs through itch.io's free-download flow (their official pages), refuses any pack
+whose own licence file doesn't say CC0, and converts the curated assets (`Tools/kit/curation.json`) into
+`.loweyasset` folders: a GLB scaled to metres from each pack's reference asset of known size, pivot at the base
+centre, facing +Z, toon-ready (normal, roughness and occlusion maps dropped, colour maps at most 512 px: the toon
+Looks don't use the rest, and the Quaternius props shrank from 300 MB to 4 MB), plus `asset.json` with the semantic
+metadata (real size, front, the surfaces things can stand on, tags, set, category, rig, clips, source, licence).
+Faceted and smooth variants aren't separate files: every Look picks its normals in the shader. Thumbnails are
+rendered by the app in the Ink Look the first time a tile shows and then cached, so they always match the renderer.
+The whole Kit fits the 150 MB budget with room to spare, so the Background Assets spike's fallback is taken: no
+download path (Apple-hosted Background Assets can't be exercised from CI or a sideloaded build anyway). CI checks the
+built Kit against the curation, its licences and the budget. Kit assets live in the library manifest at runtime
+only (`kit.` ids, never written to `library.json`), so projects using them open anywhere the app is installed.

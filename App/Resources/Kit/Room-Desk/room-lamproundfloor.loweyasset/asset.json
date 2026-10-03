@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Lights",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-lamproundfloor",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Lamp round floor",
+ "realSizeMeters": [
+  0.291,
+  1.647,
+  0.336
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "floor",
+  "lamp",
+  "light",
+  "lights",
+  "room & desk",
+  "round"
+ ],
+ "topSurfaces": [],
+ "triangles": 76
+}

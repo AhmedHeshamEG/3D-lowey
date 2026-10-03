@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Craft",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-rover",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Rover",
+ "realSizeMeters": [
+  0.681,
+  0.874,
+  0.794
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "craft",
+  "rover",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 172
+}

@@ -70,6 +70,8 @@ jobs:
           python-version: "3.12"
       - name: Blob measurements match the drawing (trace.json codegen)
         run: python Tools/gen-blob-measurements.py --check
+      - name: The Kit matches its curation, is CC0 and fits the budget
+        run: python Tools/fetch-kit.py check
       - name: Test against a fake iPad bridge
         working-directory: Tools/lowey
         run: |

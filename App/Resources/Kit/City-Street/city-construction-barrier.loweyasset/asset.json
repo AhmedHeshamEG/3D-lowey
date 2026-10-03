@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Street",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-construction-barrier",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Construction barrier",
+ "realSizeMeters": [
+  1.447,
+  1.388,
+  2.403
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-roads",
+ "tags": [
+  "barrier",
+  "city street",
+  "construction",
+  "street"
+ ],
+ "topSurfaces": [],
+ "triangles": 60
+}

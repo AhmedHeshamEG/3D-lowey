@@ -1,0 +1,84 @@
+{
+ "author": "Kenney",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-bookcaseopen",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Bookcase open",
+ "realSizeMeters": [
+  0.766,
+  1.685,
+  0.479
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "bookcase",
+  "books",
+  "open",
+  "room & desk",
+  "shelf",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.2772,
+   "height": 1.168,
+   "max": [
+    0.345,
+    0.201
+   ],
+   "min": [
+    -0.345,
+    -0.201
+   ]
+  },
+  {
+   "area": 0.2772,
+   "height": 1.628,
+   "max": [
+    0.345,
+    0.201
+   ],
+   "min": [
+    -0.345,
+    -0.201
+   ]
+  },
+  {
+   "area": 0.2772,
+   "height": 0.709,
+   "max": [
+    0.345,
+    0.201
+   ],
+   "min": [
+    -0.345,
+    -0.201
+   ]
+  },
+  {
+   "area": 0.2772,
+   "height": 0.249,
+   "max": [
+    0.345,
+    0.201
+   ],
+   "min": [
+    -0.345,
+    -0.201
+   ]
+  }
+ ],
+ "triangles": 320
+}

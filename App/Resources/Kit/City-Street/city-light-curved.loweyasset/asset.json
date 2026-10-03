@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Street",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-light-curved",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Light curved",
+ "realSizeMeters": [
+  0.534,
+  7.209,
+  2.403
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-roads",
+ "tags": [
+  "city street",
+  "curved",
+  "light",
+  "street"
+ ],
+ "topSurfaces": [],
+ "triangles": 92
+}

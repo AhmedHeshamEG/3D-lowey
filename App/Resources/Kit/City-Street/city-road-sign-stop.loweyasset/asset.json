@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Signs",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-road-sign-stop",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Road sign stop",
+ "realSizeMeters": [
+  0.828,
+  5.277,
+  1.476
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-roads",
+ "tags": [
+  "city street",
+  "road",
+  "sign",
+  "signs",
+  "stop",
+  "street"
+ ],
+ "topSurfaces": [],
+ "triangles": 104
+}

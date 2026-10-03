@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Ground",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-rocks-smalla",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Rocks small a",
+ "realSizeMeters": [
+  2.127,
+  0.238,
+  1.974
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "ground",
+  "rocks",
+  "small",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 60
+}

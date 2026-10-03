@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Decor",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-plantsmall2",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Plant small2",
+ "realSizeMeters": [
+  0.181,
+  0.268,
+  0.181
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "decor",
+  "flower",
+  "plant",
+  "room & desk",
+  "small2"
+ ],
+ "topSurfaces": [],
+ "triangles": 158
+}

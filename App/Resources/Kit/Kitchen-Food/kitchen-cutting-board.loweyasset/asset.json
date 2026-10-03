@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Tableware",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-cutting-board",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Cutting board",
+ "realSizeMeters": [
+  0.243,
+  0.025,
+  0.344
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "board",
+  "cutting",
+  "kitchen & food",
+  "tableware"
+ ],
+ "topSurfaces": [],
+ "triangles": 120
+}

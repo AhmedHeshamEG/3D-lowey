@@ -7,6 +7,29 @@ Only permissively licensed dependencies are allowed.
 | [CMU Pronouncing Dictionary](https://github.com/cmusphinx/cmudict) | cmudict.dict (2026 master) | BSD 2-clause | Word → mouth shapes for lip sync (converted by `Tools/make_visemes.py` into `LoweyCore/Resources/visemes.txt`) |
 | [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (laptop tool only) | ≥ 2 | MIT | `lowey-mcp`, the MCP server on the laptop (not shipped in the app) |
 
+## The Kit (shipped in the app, `App/Resources/Kit`)
+
+Every Kit asset is CC0 1.0 Universal (public domain). `Tools/fetch-kit.py` downloads each pack from its official page
+and refuses a pack whose own licence file doesn't say CC0; each asset's `asset.json` records its pack page and licence.
+
+| Pack | Author | Source | License |
+|---|---|---|---|
+| Furniture Kit | Kenney | https://kenney.nl/assets/furniture-kit | CC0 1.0 |
+| Food Kit | Kenney | https://kenney.nl/assets/food-kit | CC0 1.0 |
+| Nature Kit | Kenney | https://kenney.nl/assets/nature-kit | CC0 1.0 |
+| City Kit (Commercial) | Kenney | https://kenney.nl/assets/city-kit-commercial | CC0 1.0 |
+| City Kit (Suburban) | Kenney | https://kenney.nl/assets/city-kit-suburban | CC0 1.0 |
+| City Kit (Roads) | Kenney | https://kenney.nl/assets/city-kit-roads | CC0 1.0 |
+| Car Kit | Kenney | https://kenney.nl/assets/car-kit | CC0 1.0 |
+| Space Kit | Kenney | https://kenney.nl/assets/space-kit | CC0 1.0 |
+| Survival Kit | Kenney | https://kenney.nl/assets/survival-kit | CC0 1.0 |
+| Mini Market | Kenney | https://kenney.nl/assets/mini-market | CC0 1.0 |
+| Sci-Fi Essentials Kit | Quaternius | https://quaternius.itch.io/sci-fi-essentials-kit | CC0 1.0 |
+| Universal Base Characters | Quaternius | https://quaternius.itch.io/universal-base-characters | CC0 1.0 |
+| Universal Animation Library | Quaternius | https://quaternius.itch.io/universal-animation-library | CC0 1.0 |
+
+CC0 asks for nothing; Kenney and Quaternius are credited in the app (Settings ▸ About ▸ Licences) all the same.
+
 Build/CI tools (not shipped in the app): XcodeGen (MIT), SwiftLint (MIT), SwiftFormat (MIT), pytest (MIT).
 
 [hmm-kit](https://github.com/AhmedHeshamEG/hmm-kit) (in `Packages/HmmKit`) is the same author's shared package, not a

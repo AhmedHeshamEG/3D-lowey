@@ -1,0 +1,34 @@
+{
+ "author": "Quaternius",
+ "category": "Furniture",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-prop-mug",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Mug",
+ "realSizeMeters": [
+  0.128,
+  0.12,
+  0.093
+ ],
+ "set": "Office & Computers",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "cup",
+  "furniture",
+  "mug",
+  "office & computers",
+  "prop"
+ ],
+ "topSurfaces": [],
+ "triangles": 552
+}

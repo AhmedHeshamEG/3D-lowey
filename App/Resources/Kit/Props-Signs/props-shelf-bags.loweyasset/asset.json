@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Shop",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-shelf-bags",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Shelf bags",
+ "realSizeMeters": [
+  1.88,
+  2.029,
+  1.645
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/mini-market",
+ "tags": [
+  "bags",
+  "props & signs",
+  "shelf",
+  "shop"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.7733,
+   "height": 0.412,
+   "max": [
+    0.823,
+    0.572
+   ],
+   "min": [
+    -0.823,
+    -0.572
+   ]
+  },
+  {
+   "area": 0.7733,
+   "height": 0.452,
+   "max": [
+    0.823,
+    0.572
+   ],
+   "min": [
+    -0.823,
+    -0.572
+   ]
+  },
+  {
+   "area": 0.7733,
+   "height": 1.293,
+   "max": [
+    0.823,
+    0.572
+   ],
+   "min": [
+    -0.823,
+    -0.572
+   ]
+  },
+  {
+   "area": 0.7733,
+   "height": 1.334,
+   "max": [
+    0.823,
+    0.572
+   ],
+   "min": [
+    -0.823,
+    -0.572
+   ]
+  }
+ ],
+ "triangles": 892
+}

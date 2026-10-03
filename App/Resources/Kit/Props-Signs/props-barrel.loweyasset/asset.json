@@ -1,0 +1,81 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-barrel",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Barrel",
+ "realSizeMeters": [
+  0.619,
+  0.9,
+  0.619
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "barrel",
+  "props",
+  "props & signs"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.2046,
+   "height": 0.872,
+   "max": [
+    0.253,
+    0.253
+   ],
+   "min": [
+    -0.253,
+    -0.253
+   ]
+  },
+  {
+   "area": 0.1164,
+   "height": 0.9,
+   "max": [
+    0.309,
+    0.309
+   ],
+   "min": [
+    -0.309,
+    -0.309
+   ]
+  },
+  {
+   "area": 0.0553,
+   "height": 0.619,
+   "max": [
+    0.309,
+    0.309
+   ],
+   "min": [
+    -0.309,
+    -0.309
+   ]
+  },
+  {
+   "area": 0.0553,
+   "height": 0.113,
+   "max": [
+    0.309,
+    0.309
+   ],
+   "min": [
+    -0.309,
+    -0.309
+   ]
+  }
+ ],
+ "triangles": 412
+}

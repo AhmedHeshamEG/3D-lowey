@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Food",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-cake",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Cake",
+ "realSizeMeters": [
+  0.268,
+  0.115,
+  0.268
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "cake",
+  "food",
+  "kitchen & food"
+ ],
+ "topSurfaces": [],
+ "triangles": 750
+}

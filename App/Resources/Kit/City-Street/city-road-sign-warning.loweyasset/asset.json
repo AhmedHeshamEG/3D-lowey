@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Signs",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-road-sign-warning",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Road sign warning",
+ "realSizeMeters": [
+  0.826,
+  5.324,
+  1.572
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-roads",
+ "tags": [
+  "city street",
+  "road",
+  "sign",
+  "signs",
+  "street",
+  "warning"
+ ],
+ "topSurfaces": [],
+ "triangles": 104
+}

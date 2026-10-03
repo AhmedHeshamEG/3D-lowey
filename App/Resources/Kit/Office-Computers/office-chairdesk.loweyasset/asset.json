@@ -1,0 +1,84 @@
+{
+ "author": "Kenney",
+ "category": "Desks",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-chairdesk",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Chair desk",
+ "realSizeMeters": [
+  0.641,
+  1.163,
+  0.602
+ ],
+ "set": "Office & Computers",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "chair",
+  "desk",
+  "desks",
+  "office & computers",
+  "table",
+  "workspace"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.2495,
+   "height": 0.447,
+   "max": [
+    0.258,
+    0.301
+   ],
+   "min": [
+    -0.258,
+    -0.193
+   ]
+  },
+  {
+   "area": 0.0464,
+   "height": 0.474,
+   "max": [
+    0.321,
+    0.159
+   ],
+   "min": [
+    -0.321,
+    -0.212
+   ]
+  },
+  {
+   "area": 0.0312,
+   "height": 1.163,
+   "max": [
+    0.183,
+    -0.216
+   ],
+   "min": [
+    -0.183,
+    -0.301
+   ]
+  },
+  {
+   "area": 0.0299,
+   "height": 0.664,
+   "max": [
+    0.321,
+    0.104
+   ],
+   "min": [
+    -0.321,
+    -0.188
+   ]
+  }
+ ],
+ "triangles": 588
+}

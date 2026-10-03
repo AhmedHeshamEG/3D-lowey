@@ -1,0 +1,58 @@
+{
+ "author": "Kenney",
+ "category": "Beds",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-pillowlong",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Pillow long",
+ "realSizeMeters": [
+  0.74,
+  0.425,
+  0.169
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "beds",
+  "long",
+  "pillow",
+  "room & desk"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0326,
+   "height": 0.371,
+   "max": [
+    0.37,
+    0.0
+   ],
+   "min": [
+    -0.37,
+    -0.085
+   ]
+  },
+  {
+   "area": 0.0276,
+   "height": 0.366,
+   "max": [
+    0.313,
+    0.0
+   ],
+   "min": [
+    -0.313,
+    -0.085
+   ]
+  }
+ ],
+ "triangles": 50
+}

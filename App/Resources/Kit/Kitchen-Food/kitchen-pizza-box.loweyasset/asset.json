@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Tableware",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-pizza-box",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Pizza box",
+ "realSizeMeters": [
+  0.395,
+  0.37,
+  0.399
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "box",
+  "kitchen & food",
+  "pizza",
+  "tableware"
+ ],
+ "topSurfaces": [],
+ "triangles": 84
+}

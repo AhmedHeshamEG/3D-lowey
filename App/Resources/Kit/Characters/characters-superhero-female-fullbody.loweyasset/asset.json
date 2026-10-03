@@ -1,0 +1,39 @@
+{
+ "author": "Quaternius",
+ "category": "People",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "characters-superhero-female-fullbody",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Superhero female",
+ "realSizeMeters": [
+  1.651,
+  1.756,
+  0.299
+ ],
+ "rig": "humanoid",
+ "set": "Characters",
+ "source": "https://quaternius.itch.io/universal-base-characters",
+ "tags": [
+  "body",
+  "character",
+  "characters",
+  "female",
+  "full",
+  "human",
+  "people",
+  "person",
+  "superhero"
+ ],
+ "topSurfaces": [],
+ "triangles": 15060
+}

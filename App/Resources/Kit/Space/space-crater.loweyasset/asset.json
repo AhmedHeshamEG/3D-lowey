@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Ground",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-crater",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Crater",
+ "realSizeMeters": [
+  1.623,
+  0.267,
+  1.874
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "crater",
+  "ground",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 60
+}

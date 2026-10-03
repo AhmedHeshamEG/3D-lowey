@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-barrels",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Barrels",
+ "realSizeMeters": [
+  1.248,
+  0.794,
+  1.127
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "barrels",
+  "base",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 268
+}

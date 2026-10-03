@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Vehicles",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-tractor",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tractor",
+ "realSizeMeters": [
+  1.652,
+  1.972,
+  2.71
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/car-kit",
+ "tags": [
+  "city street",
+  "tractor",
+  "vehicles"
+ ],
+ "topSurfaces": [],
+ "triangles": 2044
+}

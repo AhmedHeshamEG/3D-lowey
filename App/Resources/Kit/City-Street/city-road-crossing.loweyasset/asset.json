@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Roads",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-road-crossing",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Road crossing",
+ "realSizeMeters": [
+  10.68,
+  0.214,
+  10.68
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-roads",
+ "tags": [
+  "city street",
+  "crossing",
+  "road",
+  "roads",
+  "street"
+ ],
+ "topSurfaces": [],
+ "triangles": 104
+}

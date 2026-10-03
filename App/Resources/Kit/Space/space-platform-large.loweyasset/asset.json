@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-platform-large",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Platform large",
+ "realSizeMeters": [
+  4.539,
+  0.227,
+  4.539
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "base",
+  "large",
+  "platform",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 76
+}

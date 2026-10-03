@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "sets": [
+  {
+   "name": "Office & Computers",
+   "categories": [
+    "Desks",
+    "Computers",
+    "Furniture"
+   ]
+  }
+ ],
+ "assets": [
+  {
+   "id": "office-desk",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk.loweyasset"
+  }
+ ]
+}

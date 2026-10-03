@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-machine-generator",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Machine generator",
+ "realSizeMeters": [
+  1.589,
+  0.908,
+  1.191
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "base",
+  "generator",
+  "machine",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 406
+}

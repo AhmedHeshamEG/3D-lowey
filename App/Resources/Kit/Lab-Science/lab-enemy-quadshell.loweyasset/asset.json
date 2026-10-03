@@ -1,0 +1,45 @@
+{
+ "author": "Quaternius",
+ "category": "Machines",
+ "clips": [
+  "Attack",
+  "Charge",
+  "Hit",
+  "Idle",
+  "Look",
+  "Run",
+  "TurnOff",
+  "Walk"
+ ],
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-enemy-quadshell",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Quad shell",
+ "realSizeMeters": [
+  1.412,
+  1.047,
+  1.38
+ ],
+ "rig": "skinned",
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "enemy",
+  "lab & science",
+  "machines",
+  "quad",
+  "shell"
+ ],
+ "topSurfaces": [],
+ "triangles": 7494
+}

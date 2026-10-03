@@ -1,0 +1,57 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-toaster",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Toaster",
+ "realSizeMeters": [
+  0.36,
+  0.249,
+  0.191
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "kitchen",
+  "kitchen & food",
+  "toaster"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0344,
+   "height": 0.248,
+   "max": [
+    0.152,
+    0.096
+   ],
+   "min": [
+    -0.133,
+    -0.096
+   ]
+  },
+  {
+   "area": 0.0204,
+   "height": 0.153,
+   "max": [
+    0.112,
+    0.073
+   ],
+   "min": [
+    -0.093,
+    -0.073
+   ]
+  }
+ ],
+ "triangles": 220
+}

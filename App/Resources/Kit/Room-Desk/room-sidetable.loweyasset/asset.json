@@ -1,0 +1,70 @@
+{
+ "author": "Kenney",
+ "category": "Tables",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-sidetable",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Side table",
+ "realSizeMeters": [
+  1.023,
+  0.736,
+  0.421
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "room & desk",
+  "side",
+  "table",
+  "tables"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.4312,
+   "height": 0.736,
+   "max": [
+    0.512,
+    0.211
+   ],
+   "min": [
+    -0.512,
+    -0.211
+   ]
+  },
+  {
+   "area": 0.3773,
+   "height": 0.679,
+   "max": [
+    0.493,
+    0.191
+   ],
+   "min": [
+    -0.493,
+    -0.191
+   ]
+  },
+  {
+   "area": 0.0176,
+   "height": 0.134,
+   "max": [
+    0.473,
+    0.115
+   ],
+   "min": [
+    -0.473,
+    -0.115
+   ]
+  }
+ ],
+ "triangles": 118
+}

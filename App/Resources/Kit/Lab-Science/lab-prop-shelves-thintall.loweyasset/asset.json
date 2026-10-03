@@ -1,0 +1,84 @@
+{
+ "author": "Quaternius",
+ "category": "Lab",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-shelves-thintall",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Shelves thin tall",
+ "realSizeMeters": [
+  0.961,
+  1.87,
+  0.379
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "lab",
+  "lab & science",
+  "prop",
+  "shelves",
+  "tall",
+  "thin"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.3247,
+   "height": 0.337,
+   "max": [
+    0.481,
+    0.187
+   ],
+   "min": [
+    -0.481,
+    -0.187
+   ]
+  },
+  {
+   "area": 0.3247,
+   "height": 0.848,
+   "max": [
+    0.481,
+    0.187
+   ],
+   "min": [
+    -0.481,
+    -0.187
+   ]
+  },
+  {
+   "area": 0.3247,
+   "height": 1.359,
+   "max": [
+    0.481,
+    0.187
+   ],
+   "min": [
+    -0.481,
+    -0.187
+   ]
+  },
+  {
+   "area": 0.3247,
+   "height": 1.87,
+   "max": [
+    0.481,
+    0.187
+   ],
+   "min": [
+    -0.481,
+    -0.187
+   ]
+  }
+ ],
+ "triangles": 4360
+}

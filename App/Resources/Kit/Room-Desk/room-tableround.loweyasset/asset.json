@@ -1,0 +1,58 @@
+{
+ "author": "Kenney",
+ "category": "Tables",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-tableround",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Table round",
+ "realSizeMeters": [
+  1.327,
+  0.702,
+  1.532
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "room & desk",
+  "round",
+  "table",
+  "tables"
+ ],
+ "topSurfaces": [
+  {
+   "area": 1.5243,
+   "height": 0.702,
+   "max": [
+    0.663,
+    0.766
+   ],
+   "min": [
+    -0.663,
+    -0.766
+   ]
+  },
+  {
+   "area": 0.0939,
+   "height": 0.096,
+   "max": [
+    0.191,
+    0.191
+   ],
+   "min": [
+    -0.191,
+    -0.191
+   ]
+  }
+ ],
+ "triangles": 80
+}

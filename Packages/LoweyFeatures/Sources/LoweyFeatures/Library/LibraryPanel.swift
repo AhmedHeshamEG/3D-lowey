@@ -8,7 +8,9 @@ import UIKit
 struct LibraryPanel: View {
     @Bindable var editor: EditorModel
     @State private var query = ""
-    @State private var filter: LibraryFilter = .all
+    @State private var filter: LibraryFilter = .sets
+    @State private var kitSet: String?
+    @State private var expanded: Set<String> = []
     @State private var importing = false
     @State private var editingItem: LibraryItem?
     @State private var editName = ""
@@ -41,7 +43,9 @@ struct LibraryPanel: View {
                 if library.importing > 0 {
                     Label("Importing \(library.importing)…", systemImage: "arrow.down.circle").font(.hmm(.footnote)).foregroundStyle(theme.text2)
                 }
-                if results.isEmpty {
+                if filter == .sets, query.isEmpty, !isSwapping {
+                    KitBrowser(editor: editor, selectedSet: $kitSet, expanded: $expanded)
+                } else if results.isEmpty {
                     HmmEmptyState(query.isEmpty ? "shippingbox" : "questionmark.folder",
                                   title: query.isEmpty ? "Your library is empty" : "Nothing called “\(query)” yet",
                                   message: "Import USDZ, glTF, GLB or OBJ models (a whole folder works), or build something and Save to library.",
@@ -50,6 +54,7 @@ struct LibraryPanel: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: HmmSpacing.s)], spacing: HmmSpacing.s) {
                         ForEach(results) { item in
                             LibraryTile(item: item, thumbnail: library.thumbnail(for: item))
+                                .onAppear { library.requestThumbnail(for: item) }
                                 .onTapGesture {
                                     HmmHaptics.play(.commit)
                                     editor.place(item)
@@ -117,11 +122,13 @@ struct LibraryPanel: View {
         if case let .prefab(prefab) = item, !editor.selection.isEmpty, editor.singleSelection?.kind.prefabID != prefab.id {
             Button("Replace with the selection", systemImage: "arrow.triangle.2.circlepath") { editor.updatePrefab(prefab.id) }
         }
-        Button("Remove from library", systemImage: "trash", role: .destructive) { library.remove(item) }
+        if !item.isKit {
+            Button("Remove from library", systemImage: "trash", role: .destructive) { library.remove(item) }
+        }
     }
 }
 
-private struct LibraryTile: View {
+struct LibraryTile: View {
     let item: LibraryItem
     let thumbnail: UIImage?
     @Environment(\.hmmTheme) private var theme

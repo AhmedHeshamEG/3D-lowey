@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Plants",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-plant-bush",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Plant bush",
+ "realSizeMeters": [
+  1.159,
+  0.716,
+  1.159
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "bush",
+  "flower",
+  "nature",
+  "plant",
+  "plants"
+ ],
+ "topSurfaces": [],
+ "triangles": 32
+}

@@ -1,0 +1,83 @@
+{
+ "author": "Kenney",
+ "category": "Desks",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-desk",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Desk",
+ "realSizeMeters": [
+  1.406,
+  0.736,
+  0.751
+ ],
+ "set": "Office & Computers",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "desk",
+  "desks",
+  "office & computers",
+  "table",
+  "workspace"
+ ],
+ "topSurfaces": [
+  {
+   "area": 1.0503,
+   "height": 0.736,
+   "max": [
+    0.703,
+    0.371
+   ],
+   "min": [
+    -0.703,
+    -0.376
+   ]
+  },
+  {
+   "area": 0.1183,
+   "height": 0.525,
+   "max": [
+    -0.231,
+    0.352
+   ],
+   "min": [
+    -0.607,
+    0.038
+   ]
+  },
+  {
+   "area": 0.0706,
+   "height": 0.545,
+   "max": [
+    -0.27,
+    0.313
+   ],
+   "min": [
+    -0.569,
+    0.077
+   ]
+  },
+  {
+   "area": 0.0477,
+   "height": 0.621,
+   "max": [
+    -0.231,
+    0.352
+   ],
+   "min": [
+    -0.607,
+    0.038
+   ]
+  }
+ ],
+ "triangles": 198
+}

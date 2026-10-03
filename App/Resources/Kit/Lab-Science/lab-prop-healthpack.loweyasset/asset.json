@@ -1,0 +1,83 @@
+{
+ "author": "Quaternius",
+ "category": "Lab",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-healthpack",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Health pack",
+ "realSizeMeters": [
+  0.302,
+  0.421,
+  0.122
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "health",
+  "lab",
+  "lab & science",
+  "pack",
+  "prop"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0316,
+   "height": 0.372,
+   "max": [
+    0.148,
+    0.056
+   ],
+   "min": [
+    -0.148,
+    -0.056
+   ]
+  },
+  {
+   "area": 0.0195,
+   "height": 0.356,
+   "max": [
+    0.149,
+    0.056
+   ],
+   "min": [
+    -0.149,
+    -0.056
+   ]
+  },
+  {
+   "area": 0.0151,
+   "height": 0.058,
+   "max": [
+    0.068,
+    0.056
+   ],
+   "min": [
+    -0.068,
+    -0.056
+   ]
+  },
+  {
+   "area": 0.0084,
+   "height": 0.116,
+   "max": [
+    0.052,
+    0.052
+   ],
+   "min": [
+    -0.052,
+    -0.052
+   ]
+  }
+ ],
+ "triangles": 2380
+}

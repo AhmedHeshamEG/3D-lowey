@@ -36,6 +36,11 @@ targets:
       - path: App/Sources
       - path: App/Shared
       - path: App/Resources
+        excludes: ["Kit/**"]
+      # The Kit ships as one folder (its assets keep their Set folders; tools/fetch-kit.py builds it).
+      - path: App/Resources/Kit
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: LoweyFeatures
       - target: LoweyWidgets

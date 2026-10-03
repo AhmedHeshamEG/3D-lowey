@@ -1,0 +1,84 @@
+{
+ "author": "Kenney",
+ "category": "Desks",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-desk-chair",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Desk chair",
+ "realSizeMeters": [
+  0.34,
+  0.667,
+  0.34
+ ],
+ "set": "Office & Computers",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "chair",
+  "desk",
+  "desks",
+  "office & computers",
+  "table",
+  "workspace"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0579,
+   "height": 0.383,
+   "max": [
+    0.17,
+    0.113
+   ],
+   "min": [
+    -0.17,
+    -0.057
+   ]
+  },
+  {
+   "area": 0.0266,
+   "height": 0.057,
+   "max": [
+    0.17,
+    0.17
+   ],
+   "min": [
+    -0.17,
+    -0.17
+   ]
+  },
+  {
+   "area": 0.0266,
+   "height": 0.071,
+   "max": [
+    0.113,
+    0.17
+   ],
+   "min": [
+    -0.113,
+    -0.17
+   ]
+  },
+  {
+   "area": 0.0193,
+   "height": 0.667,
+   "max": [
+    0.17,
+    -0.113
+   ],
+   "min": [
+    -0.17,
+    -0.17
+   ]
+  }
+ ],
+ "triangles": 88
+}

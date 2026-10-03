@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Street",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-tree-small",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tree small",
+ "realSizeMeters": [
+  1.894,
+  5.102,
+  2.186
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-suburban",
+ "tags": [
+  "city street",
+  "plant",
+  "small",
+  "street",
+  "tree"
+ ],
+ "topSurfaces": [],
+ "triangles": 42
+}

@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Trees",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-tree-palm",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tree palm",
+ "realSizeMeters": [
+  2.739,
+  4.434,
+  2.965
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "nature",
+  "palm",
+  "plant",
+  "tree",
+  "trees"
+ ],
+ "topSurfaces": [],
+ "triangles": 186
+}

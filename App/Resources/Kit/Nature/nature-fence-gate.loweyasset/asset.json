@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Camp",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-fence-gate",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Fence gate",
+ "realSizeMeters": [
+  2.928,
+  1.01,
+  0.205
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "camp",
+  "fence",
+  "gate",
+  "nature"
+ ],
+ "topSurfaces": [],
+ "triangles": 524
+}

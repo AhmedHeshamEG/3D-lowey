@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-satellitedish-large",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Satellite dish large",
+ "realSizeMeters": [
+  1.926,
+  1.848,
+  1.672
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "base",
+  "dish",
+  "large",
+  "satellite",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 186
+}

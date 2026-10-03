@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Food",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-apple",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Apple",
+ "realSizeMeters": [
+  0.082,
+  0.08,
+  0.082
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "apple",
+  "food",
+  "kitchen & food"
+ ],
+ "topSurfaces": [],
+ "triangles": 136
+}

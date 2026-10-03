@@ -1,0 +1,70 @@
+{
+ "author": "Kenney",
+ "category": "Shop",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-shopping-basket",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Shopping basket",
+ "realSizeMeters": [
+  0.823,
+  0.588,
+  0.823
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/mini-market",
+ "tags": [
+  "basket",
+  "props & signs",
+  "shop",
+  "shopping"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.2887,
+   "height": 0.118,
+   "max": [
+    0.353,
+    0.411
+   ],
+   "min": [
+    -0.353,
+    -0.411
+   ]
+  },
+  {
+   "area": 0.2887,
+   "height": 0.353,
+   "max": [
+    0.353,
+    0.411
+   ],
+   "min": [
+    -0.353,
+    -0.411
+   ]
+  },
+  {
+   "area": 0.0828,
+   "height": 0.588,
+   "max": [
+    0.353,
+    0.059
+   ],
+   "min": [
+    -0.353,
+    -0.059
+   ]
+  }
+ ],
+ "triangles": 288
+}

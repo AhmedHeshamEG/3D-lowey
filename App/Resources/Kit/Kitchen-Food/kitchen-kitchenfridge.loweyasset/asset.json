@@ -1,0 +1,83 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-kitchenfridge",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Kitchen fridge",
+ "realSizeMeters": [
+  0.823,
+  1.762,
+  0.559
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "cooking",
+  "fridge",
+  "kitchen",
+  "kitchen & food",
+  "refrigerator"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.413,
+   "height": 1.762,
+   "max": [
+    0.412,
+    0.222
+   ],
+   "min": [
+    -0.412,
+    -0.28
+   ]
+  },
+  {
+   "area": 0.3174,
+   "height": 0.166,
+   "max": [
+    0.36,
+    0.222
+   ],
+   "min": [
+    -0.36,
+    -0.218
+   ]
+  },
+  {
+   "area": 0.276,
+   "height": 1.373,
+   "max": [
+    0.36,
+    0.165
+   ],
+   "min": [
+    -0.36,
+    -0.218
+   ]
+  },
+  {
+   "area": 0.069,
+   "height": 1.71,
+   "max": [
+    0.36,
+    0.26
+   ],
+   "min": [
+    -0.36,
+    0.165
+   ]
+  }
+ ],
+ "triangles": 250
+}

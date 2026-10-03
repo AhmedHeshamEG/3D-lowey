@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-kitchencabinet",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Kitchen cabinet",
+ "realSizeMeters": [
+  0.823,
+  0.862,
+  0.862
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "cabinet",
+  "cooking",
+  "kitchen",
+  "kitchen & food"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.678,
+   "height": 0.747,
+   "max": [
+    0.412,
+    0.393
+   ],
+   "min": [
+    -0.412,
+    -0.431
+   ]
+  },
+  {
+   "area": 0.6622,
+   "height": 0.804,
+   "max": [
+    0.412,
+    0.431
+   ],
+   "min": [
+    -0.412,
+    -0.373
+   ]
+  },
+  {
+   "area": 0.5243,
+   "height": 0.163,
+   "max": [
+    0.36,
+    0.393
+   ],
+   "min": [
+    -0.36,
+    -0.335
+   ]
+  },
+  {
+   "area": 0.4968,
+   "height": 0.455,
+   "max": [
+    0.36,
+    0.354
+   ],
+   "min": [
+    -0.36,
+    -0.335
+   ]
+  }
+ ],
+ "triangles": 114
+}

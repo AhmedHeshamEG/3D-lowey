@@ -41,6 +41,8 @@ public struct LibraryAsset: Codable, Hashable, Sendable, Identifiable {
     public var favorite: Bool
     public var added: Date
     public var lastUsed: Date?
+    /// Kit assets: set, real size, front, surfaces (nil for imported models).
+    public var kit: KitInfo?
 
     public init(
         id: AssetID, name: String, tags: [String] = [], format: AssetFormat, file: String,
@@ -138,6 +140,8 @@ public struct LibraryManifest: Codable, Hashable, Sendable {
     public var prefabs: [Prefab]
     public var looks: [SavedLook]
     public var scripts: [ScriptAsset]
+    /// The Kit's assets (shipped with the app; never saved in `library.json`).
+    public var kit: [LibraryAsset] = []
 
     public init(assets: [LibraryAsset] = [], prefabs: [Prefab] = [], looks: [SavedLook] = [], scripts: [ScriptAsset] = []) {
         self.assets = assets
@@ -156,7 +160,9 @@ public struct LibraryManifest: Codable, Hashable, Sendable {
         scripts = try c.decodeIfPresent([ScriptAsset].self, forKey: .scripts) ?? []
     }
 
-    public func asset(_ id: AssetID) -> LibraryAsset? { assets.first { $0.id == id } }
+    public func asset(_ id: AssetID) -> LibraryAsset? {
+        id.raw.hasPrefix(KitIndex.idPrefix) ? kit.first { $0.id == id } : assets.first { $0.id == id }
+    }
     public func prefab(_ id: PrefabID) -> Prefab? { prefabs.first { $0.id == id } }
     public func look(_ id: SavedLookID) -> SavedLook? { looks.first { $0.id == id } }
     public func script(_ id: ScriptID) -> ScriptAsset? { scripts.first { $0.id == id } }
@@ -235,10 +241,11 @@ public enum LibraryItem: Hashable, Sendable, Identifiable {
 }
 
 public enum LibraryFilter: String, Sendable, CaseIterable {
-    case all, favorites, recent, models, prefabs, looks, scripts
+    case sets, all, favorites, recent, models, prefabs, looks, scripts
 
     public var displayName: String {
         switch self {
+        case .sets: "Sets"
         case .all: "All"
         case .favorites: "Favorites"
         case .recent: "Recent"
@@ -253,18 +260,20 @@ public enum LibraryFilter: String, Sendable, CaseIterable {
 /// Search-first library: rank by how well the query matches name and tags.
 public enum LibrarySearch {
     public static func items(in manifest: LibraryManifest, filter: LibraryFilter) -> [LibraryItem] {
-        let all: [LibraryItem] = manifest.assets.map(LibraryItem.asset)
+        let kit = manifest.kit.filter { $0.kit?.clipsOnly != true }
+        let all: [LibraryItem] = (manifest.assets + kit).map(LibraryItem.asset)
             + manifest.prefabs.map(LibraryItem.prefab)
             + manifest.looks.map(LibraryItem.look)
             + manifest.scripts.map(LibraryItem.script)
         switch filter {
+        case .sets: return kit.map(LibraryItem.asset)
         case .all: return all.sorted { $0.added > $1.added }
         case .favorites: return all.filter(\.favorite).sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         case .recent:
             return all.filter { $0.lastUsed != nil }
                 .sorted { ($0.lastUsed ?? .distantPast) > ($1.lastUsed ?? .distantPast) }
                 .prefix(24).map { $0 }
-        case .models: return manifest.assets.map(LibraryItem.asset).sorted { $0.added > $1.added }
+        case .models: return (manifest.assets + kit).map(LibraryItem.asset).sorted { $0.added > $1.added }
         case .prefabs: return manifest.prefabs.map(LibraryItem.prefab).sorted { $0.added > $1.added }
         case .looks: return manifest.looks.map(LibraryItem.look).sorted { $0.added > $1.added }
         case .scripts: return manifest.scripts.map(LibraryItem.script).sorted { $0.added > $1.added }

@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Tableware",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-soda-can",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Soda can",
+ "realSizeMeters": [
+  0.094,
+  0.147,
+  0.094
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "can",
+  "kitchen & food",
+  "soda",
+  "tableware"
+ ],
+ "topSurfaces": [],
+ "triangles": 164
+}

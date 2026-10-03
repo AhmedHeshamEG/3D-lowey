@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Walls & Floors",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-wallcorner",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Wall corner",
+ "realSizeMeters": [
+  1.053,
+  2.469,
+  1.053
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "corner",
+  "room & desk",
+  "wall",
+  "walls & floors"
+ ],
+ "topSurfaces": [],
+ "triangles": 28
+}

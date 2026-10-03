@@ -1,0 +1,36 @@
+{
+ "author": "Kenney",
+ "category": "Computers",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-computerscreen",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Computer screen",
+ "realSizeMeters": [
+  0.752,
+  0.564,
+  0.199
+ ],
+ "set": "Office & Computers",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "computer",
+  "computers",
+  "display",
+  "monitor",
+  "office & computers",
+  "pc",
+  "screen"
+ ],
+ "topSurfaces": [],
+ "triangles": 72
+}

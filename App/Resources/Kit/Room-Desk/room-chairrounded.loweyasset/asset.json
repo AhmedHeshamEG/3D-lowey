@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Seating",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-chairrounded",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Chair rounded",
+ "realSizeMeters": [
+  0.383,
+  0.871,
+  0.383
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "chair",
+  "room & desk",
+  "rounded",
+  "seating"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.1349,
+   "height": 0.421,
+   "max": [
+    0.191,
+    0.191
+   ],
+   "min": [
+    -0.191,
+    -0.191
+   ]
+  },
+  {
+   "area": 0.0352,
+   "height": 0.134,
+   "max": [
+    0.172,
+    0.172
+   ],
+   "min": [
+    -0.172,
+    -0.172
+   ]
+  },
+  {
+   "area": 0.0153,
+   "height": 0.862,
+   "max": [
+    0.096,
+    -0.115
+   ],
+   "min": [
+    -0.096,
+    -0.191
+   ]
+  },
+  {
+   "area": 0.0088,
+   "height": 0.641,
+   "max": [
+    0.115,
+    -0.134
+   ],
+   "min": [
+    -0.115,
+    -0.172
+   ]
+  }
+ ],
+ "triangles": 280
+}

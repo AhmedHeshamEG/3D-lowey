@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Trees",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-tree-detailed",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tree detailed",
+ "realSizeMeters": [
+  2.48,
+  3.901,
+  2.23
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "detailed",
+  "nature",
+  "plant",
+  "tree",
+  "trees"
+ ],
+ "topSurfaces": [],
+ "triangles": 402
+}

@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Food",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-muffin",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Muffin",
+ "realSizeMeters": [
+  0.128,
+  0.104,
+  0.111
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "food",
+  "kitchen & food",
+  "muffin"
+ ],
+ "topSurfaces": [],
+ "triangles": 84
+}

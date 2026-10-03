@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Decor",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-speaker",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Speaker",
+ "realSizeMeters": [
+  0.283,
+  1.219,
+  0.283
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "decor",
+  "room & desk",
+  "speaker"
+ ],
+ "topSurfaces": [],
+ "triangles": 228
+}

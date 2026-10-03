@@ -1,0 +1,58 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-kitchenblender",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Kitchen blender",
+ "realSizeMeters": [
+  0.26,
+  0.436,
+  0.209
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "blender",
+  "cooking",
+  "kitchen",
+  "kitchen & food"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0285,
+   "height": 0.163,
+   "max": [
+    0.052,
+    0.08
+   ],
+   "min": [
+    -0.079,
+    -0.071
+   ]
+  },
+  {
+   "area": 0.0179,
+   "height": 0.436,
+   "max": [
+    0.059,
+    0.087
+   ],
+   "min": [
+    -0.085,
+    -0.079
+   ]
+  }
+ ],
+ "triangles": 246
+}

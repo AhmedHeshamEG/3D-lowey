@@ -1,0 +1,72 @@
+{
+ "author": "Quaternius",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-crate-tarp",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Crate tarp",
+ "realSizeMeters": [
+  1.203,
+  1.098,
+  1.201
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "box",
+  "crate",
+  "lab & science",
+  "prop",
+  "storage",
+  "tarp"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.8741,
+   "height": 1.08,
+   "max": [
+    0.516,
+    0.532
+   ],
+   "min": [
+    -0.516,
+    -0.532
+   ]
+  },
+  {
+   "area": 0.2768,
+   "height": 1.064,
+   "max": [
+    0.516,
+    0.516
+   ],
+   "min": [
+    -0.516,
+    -0.516
+   ]
+  },
+  {
+   "area": 0.1581,
+   "height": 1.097,
+   "max": [
+    0.532,
+    0.266
+   ],
+   "min": [
+    -0.532,
+    -0.266
+   ]
+  }
+ ],
+ "triangles": 2964
+}

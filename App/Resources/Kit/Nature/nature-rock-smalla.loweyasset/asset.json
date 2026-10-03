@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Rocks",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-rock-smalla",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Rock small a",
+ "realSizeMeters": [
+  1.056,
+  0.56,
+  1.056
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "nature",
+  "rock",
+  "rocks",
+  "small",
+  "stone"
+ ],
+ "topSurfaces": [],
+ "triangles": 16
+}

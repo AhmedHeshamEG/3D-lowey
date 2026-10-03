@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Lights",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-lampsquareceiling",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Lamp square ceiling",
+ "realSizeMeters": [
+  0.23,
+  0.44,
+  0.23
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "ceiling",
+  "lamp",
+  "light",
+  "lights",
+  "room & desk",
+  "square"
+ ],
+ "topSurfaces": [],
+ "triangles": 60
+}

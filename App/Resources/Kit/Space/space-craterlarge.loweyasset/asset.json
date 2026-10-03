@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Ground",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-craterlarge",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Crater large",
+ "realSizeMeters": [
+  2.011,
+  0.272,
+  2.011
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "crater",
+  "ground",
+  "large",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 60
+}
