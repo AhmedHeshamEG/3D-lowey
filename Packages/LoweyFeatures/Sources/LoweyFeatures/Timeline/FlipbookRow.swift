@@ -123,7 +123,7 @@ private struct FlipbookCell: View {
 
     @ViewBuilder private var label: some View {
         if let number, width > 18 {
-            Text(String(number)).font(.hmmNumbers(.caption2)).foregroundStyle(theme.text).padding(.leading, 4)
+            Text(String(number)).font(.hmmNumbers(.caption)).foregroundStyle(theme.text).padding(.leading, 4)
         }
     }
 }

@@ -52,7 +52,7 @@ private struct FlyStick: View {
     var body: some View {
         ZStack {
             Circle().fill(theme.surface2.opacity(0.9)).overlay(Circle().stroke(theme.line, lineWidth: 1))
-            Text(label).font(.hmm(.caption2, weight: .semibold)).foregroundStyle(theme.text2).offset(y: Self.radius + 10)
+            Text(label).font(.hmm(.caption, weight: .semibold)).foregroundStyle(theme.text2).offset(y: Self.radius + 10)
             Circle()
                 .fill(theme.text.opacity(0.9))
                 .frame(width: 40, height: 40)
