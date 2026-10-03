@@ -23,6 +23,12 @@ struct AudioSheet: View {
                 }
             }
             Hint("Recording plays the timeline from the playhead, so you narrate over the animation. Imported sounds land at the playhead.")
+            PanelSection("Sound effects") {
+                FlowChips(items: Foley.allCases.map { sound in (sound.rawValue, sound.title) }, isOn: { _ in false }) { key in
+                    if let sound = Foley(rawValue: key) { editor.addFoley(sound, hitting: editor.snapToWords ? editor.wordSnapped(editor.time) : nil) }
+                }
+                Hint("Its hit lands on the playhead (on the nearest word with snapping on). In the transcript, pick a word: Sound here.")
+            }
             Toggle("Snap keys, cuts and the playhead to spoken words", isOn: $editor.snapToWords).font(.hmm(.body, weight: .semibold))
             if let id = editor.selectedAudio, let clip = editor.audioClip(id) {
                 ClipControls(editor: editor, clip: clip, languages: languages)

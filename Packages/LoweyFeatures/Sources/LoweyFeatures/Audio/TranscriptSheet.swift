@@ -103,6 +103,11 @@ private struct PhraseActions: View {
                             }
                         } label: { Label("Cut here to…", systemImage: "scissors") }
                     }
+                    Menu {
+                        ForEach(Foley.allCases) { sound in
+                            Button(sound.title) { editor.addFoleyOnWords(sound) }
+                        }
+                    } label: { Label("Sound here", systemImage: "speaker.wave.2") }
                     HmmPillButton("Marker", systemName: "flag") { editor.addMarkersForSelectedWords() }
                     HmmPillButton("Loop this", systemName: "repeat") {
                         if let range = editor.selectedWordRange { editor.updateTimeline("Loop") { $0.loop = range } }

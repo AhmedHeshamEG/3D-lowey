@@ -47,7 +47,7 @@ extension EditorModel {
         }
     }
 
-    private func addAudioClips(_ clips: [AudioClip], label: String) {
+    func addAudioClips(_ clips: [AudioClip], label: String) {
         updateTimeline(label) { timeline in
             timeline.audio += clips
             timeline.duration = max(timeline.duration, (clips.map(\.end).max() ?? 0).rounded(.up))

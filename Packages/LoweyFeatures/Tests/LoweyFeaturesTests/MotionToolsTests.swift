@@ -83,3 +83,24 @@ final class PoseFlowTests: XCTestCase {
         XCTAssertEqual(IKHandles.handles(of: blob, in: editor.baseScene).count, 2, "a Blob's hands are handles")
     }
 }
+
+@MainActor
+final class FoleyFlowTests: XCTestCase {
+    private var app: AppModel?
+
+    func testAWhooshLandsOnThePlayhead() throws {
+        let app = AppModel()
+        self.app = app
+        app.createProject(named: "Foley \(UUID().uuidString.prefix(6))", mood: .day, look: LookPreset.ink.id)
+        let editor = try XCTUnwrap(app.editor)
+        let clip = try XCTUnwrap(editor.addFoley(.whoosh, hitting: 2))
+        XCTAssertEqual(clip.role, .sfx)
+        XCTAssertEqual(clip.start + Foley.whoosh.hit, 2, accuracy: 1e-9)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: editor.audioFolder.appendingPathComponent(clip.file).path))
+        XCTAssertEqual(editor.timeline.audio.count, 1)
+        editor.addFoley(.whoosh, hitting: 4)
+        XCTAssertEqual(Set(editor.timeline.audio.map(\.file)).count, 1, "one file per sound")
+        editor.undo()
+        XCTAssertEqual(editor.timeline.audio.count, 1)
+    }
+}
