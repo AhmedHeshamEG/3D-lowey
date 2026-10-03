@@ -523,3 +523,45 @@ eye position and reveal), unlit in the object's colour, with an ID flag that kee
 them: they are lines already. A billboarding vertex shader would have needed its own prepass, shading and shadow
 pipelines for a few hundred vertices per drawing. Strokes join the selected ink drawing (a new one starts when
 nothing ink is selected), like drawing on the current layer; `reveal` writes a drawing on.
+
+**R35 — Frame rates resolve per object, every frame, in one place (`FrameRates`).** Own rate (keyable) → nearest
+ancestor's → characters take their Look's (Comic: twos) → cameras ones → the project's. Phase 1 stored a Look frame
+rate that nothing read; now it decides, and an animated `stepping` lets a character drop to twos for one beat.
+
+**R36 — Flipbooks are timeline tracks drawn as 2D, blended in the composite.** A track is drawings with hold lengths
+(the Dreams model) anchored to the camera (frame-height units, so 16:9 and 9:16 share one drawing) or to an object
+(metres on the camera-facing plane through its pivot, so it shrinks with distance). Normal tracks draw into the
+overlay image under titles and captions; multiply, screen and add tracks get one layer each, blended with the shot in
+sRGB like a painting app. Drawing past the last drawing holds it to the playhead and starts a new one, so drawing at
+the playhead is how you animate. The drawn-effects library is strokes too, so every effect stays editable. Speed lines
+are parallel streaks behind the mover (Western comic), not radial focus lines.
+
+**R37 — Motion paths, onion skin and smears are views of the keys, not new data.** Paths and smears read keys only
+(object + parents, `MotionPath`), so they're cheap enough to compute every frame and the same in every export; ghosts
+evaluate the whole scene at the neighbouring keys and are cached until the document or playhead frame changes. Ghosts
+skip the prepass (never picked, outlined or shadowed) and only appear with the select tool.
+
+**R38 — The graph editor edits the same per-segment easing the timeline already stored.** A segment's tangent
+handles are its cubic-Bézier easing (normalised between the two keys), so the graph, the Easing menu and Scene Scripts
+all speak one model and nothing old needed migrating. Rotations are drawn as the three turn angles.
+
+**R39 — Poses and IK handles are for Blobs and built characters; imported rigs pose through their clips.** Blob and
+puppet poses are values on objects the user owns (dials, joint rotations), so a pose is a set of property changes
+(keyed in Keyframe mode) and a mirror is a swap of left and right. Imported skinned rigs have no joint objects to key;
+their library of poses is their clip list. Poses are stored on the character (`poseLibrary`), so they travel with it.
+
+**R40 — Characters get an inverted-hull outline on top of the Look's lines; face decals are flat.** The hull (mesh
+pushed out along its normals, back faces, Look line colour, width scaled by the character and the Look's line width)
+gives the stable, thick silhouette the line pass can't promise on a moving character. Eyes, brows, mouth, cheeks and
+the hover glow are drawn unlit, like paint on the head, and get no hull; the line pass still draws their inner lines.
+
+**R41 — Blob measurements are generated from `trace.json` and checked in CI.** `Tools/gen-blob-measurements.py`
+reproduces the head profile, face placements and body size from the trace with the same rules as the Blender build
+(the numbers came out identical to the hand-copied ones), writes `BlobCharacter+Measurements.swift`, and CI fails if
+the committed file drifts. A Swift build plugin would have needed Python inside the package build on every machine;
+a checked generated file gives the same guarantee. The smirk strokes stay authored: they are a design simplification
+drawn over the traced mouth, not a measurement.
+
+**R42 — Built-in clips work on all three character types.** Built and imported characters retarget the humanoid
+clips; a Blob, which has no skeleton, plays the same ten clips written for its dials (hand reach, head turn, jaw,
+squash, lift, lean), on the same clip tracks with the same crossfades, added on top of keys and face performances.

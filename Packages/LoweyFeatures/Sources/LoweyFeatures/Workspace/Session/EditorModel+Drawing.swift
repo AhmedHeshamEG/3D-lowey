@@ -104,6 +104,45 @@ extension EditorModel {
         perform(.setShadowPaint(id, dabs), coalesceKey: gesture)
     }
 
+    /// Paints a designed shadow shape on the selection (a character's preset goes on its head), one undo step.
+    func applyShadowPreset(_ preset: ShadowPreset) {
+        let targets = Array(Set(selection.compactMap { shadowTarget(for: $0) }))
+        let commands = targets.compactMap { id -> EditCommand? in
+            guard let object = baseScene.objects[id], let bounds = localBounds(of: object) else { return nil }
+            return .setShadowPaint(id, preset.dabs(in: bounds))
+        }
+        guard !commands.isEmpty else {
+            app.show("Select something to paint (a character, a head, a shape)")
+            return
+        }
+        perform(.batch("Shadows: \(preset.title)", commands))
+        HmmHaptics.play(.commit)
+    }
+
+    /// What a preset paints for a selected object: a character's head surface, else the object itself.
+    func shadowTarget(for id: ObjectID) -> ObjectID? {
+        let scene = baseScene
+        if scene.objects[id]?[.rigStandard] != nil {
+            let subtree = scene.subtree(of: id)
+            let head = subtree.first { scene.objects[$0]?[.faceRole]?.stringValue == "head" || scene.objects[$0]?[.bone]?.stringValue == "head" }
+            if let head, let surface = scene.subtree(of: head).first(where: { scene.objects[$0]?.kind.hasSurface == true && $0 != head }) {
+                return surface
+            }
+        }
+        return scene.objects[id]?.kind.hasSurface == true ? id : nil
+    }
+
+    /// An object's own (unscaled) bounds, for placing preset shadows.
+    func localBounds(of object: SceneObject) -> Bounds? {
+        let unit = Bounds(min: Vec3(-0.5, 0, -0.5), max: Vec3(0.5, 1, 0.5))
+        switch object.kind {
+        case let .primitive(shape): return PrimitiveMesh.bounds(shape)
+        case let .drawing(recipe): return DrawingMesher.mesh(for: recipe).bounds
+        case let .asset(id): return library.manifest.asset(id)?.bounds ?? unit
+        default: return unit
+        }
+    }
+
     func clearShadowPaint() {
         let painted = selection.filter { !(baseScene.objects[$0]?.shadowDabs.isEmpty ?? true) }
         guard !painted.isEmpty else { return }

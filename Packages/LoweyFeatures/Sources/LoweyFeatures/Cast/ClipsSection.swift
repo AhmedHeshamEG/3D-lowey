@@ -46,6 +46,8 @@ struct ClipsSection: View {
 
     private var availableClips: [ClipRef] {
         if let (_, asset) = editor.selectedCharacter { return editor.availableClips(for: asset) }
+        // A Blob plays the built-in clips (written for its dials); a built character any humanoid clip.
+        if editor.isBlob(character) { return BuiltinClips.names.map { ClipRef(asset: BuiltinClips.assetID, name: $0) } }
         return editor.puppetClips()
     }
 

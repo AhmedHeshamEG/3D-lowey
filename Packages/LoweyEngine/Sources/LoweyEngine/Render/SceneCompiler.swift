@@ -16,6 +16,8 @@ final class SceneCompiler {
     var eye = SIMD3<Float>.zero
     /// The smear of the object being compiled (and its parts), applied on top of its world matrix.
     var activeDeform: simd_float4x4?
+    /// The outline width of the character part being compiled.
+    var activeHull: Float = 0
 
     init(device: MTLDevice, meshes: MeshCache, textures: TextureStore, models: ModelLibrary) {
         self.device = device
@@ -36,6 +38,10 @@ final class SceneCompiler {
         var depth = 0
         var ghost = false
         var deform: simd_float4x4?
+        /// Inside a character: its outline width (0 outside, and on face decals).
+        var hull: Float = 0
+        /// A face decal (eyes, brows, mouth…): drawn flat.
+        var decal = false
     }
 
     func compile(_ input: RenderInput, cameraPosition: SIMD3<Float>) -> RenderScene {
@@ -52,7 +58,9 @@ final class SceneCompiler {
             state.accent = inherited.accent || object.isAccent
             state.selected = inherited.selected || input.selection.contains(id)
             if let smear = input.smears[id] { state.deform = Self.matrix(smear) * (inherited.deform ?? matrix_identity_float4x4) }
+            outline(object, state: &state, input: input)
             activeDeform = state.deform
+            activeHull = state.hull
             compileObject(object, state: state, input: input, scene: &scene, lights: &lights, cameraPosition: cameraPosition)
             for child in object.children {
                 visit(child, in: objects, state)
@@ -62,6 +70,7 @@ final class SceneCompiler {
             visit(root, in: input.document.scene.objects, Inherited())
         }
         activeDeform = nil
+        activeHull = 0
         for ghost in input.ghosts {
             var state = Inherited()
             state.world = ghost.scene.objects[ghost.root]?.parent.map { ghost.scene.worldTransform(of: $0) } ?? .identity
@@ -141,6 +150,7 @@ final class SceneCompiler {
                                          custom: input.document.project.customLooks)
         var flags = ObjectFlags()
         if state.accent { flags.insert(.accent) }
+        if state.decal { flags.insert(.unlit) }
         if state.selected { flags.insert(.selected) }
         if object.isGlossy { flags.insert(.glossy) }
         uniforms.ids = SIMD4<UInt32>(objectIndex, scene.lookIndex(preset), flags.rawValue, 0)
@@ -156,8 +166,11 @@ final class SceneCompiler {
         let ghost = (base.ids.z & ObjectFlags.ghost.rawValue) != 0
         if texture != nil, !ghost { uniforms.ids.z |= ObjectFlags.textured.rawValue }
         let bounds = mesh.bounds.transformed(by: world)
-        scene.add(DrawItem(mesh: mesh, uniforms: uniforms, texture: ghost ? nil : texture, blended: uniforms.baseColor.w < 0.999,
-                           castsShadow: castsShadow && !ghost, worldBounds: bounds, ghost: ghost))
+        let blended = uniforms.baseColor.w < 0.999
+        let ink = (base.ids.z & ObjectFlags.ink.rawValue) != 0
+        scene.add(DrawItem(mesh: mesh, uniforms: uniforms, texture: ghost ? nil : texture, blended: blended,
+                           castsShadow: castsShadow && !ghost, worldBounds: bounds, ghost: ghost,
+                           hull: ghost || blended || ink ? 0 : activeHull))
     }
 
     /// A ghost: flat in its tint, see-through, not pickable (object index 0).
@@ -197,6 +210,19 @@ final class SceneCompiler {
 }
 
 extension SceneCompiler {
+    /// Characters get an outline (inverted hull) sized to them and their Look; face decals are flat and outline-free.
+    func outline(_ object: SceneObject, state: inout Inherited, input: RenderInput) {
+        if let role = object[.faceRole]?.stringValue, CharacterOutline.isDecal(role: role) {
+            state.hull = 0
+            state.decal = true
+            return
+        }
+        guard state.hull == 0, !state.decal, CharacterOutline.isCharacter(object.id, in: input.document.scene) else { return }
+        let preset = LookLibrary.resolve(state.lookOverride ?? input.document.effectiveLook.presetID, custom: input.document.project.customLooks)
+        let scale = abs(state.world.scale.y)
+        state.hull = Float(CharacterOutline.width(look: preset, scale: scale, lineWeight: object.lineWeight) ?? 0)
+    }
+
     /// A smear as a world-space matrix: stretch along the direction about the pivot, slid back by the shift.
     static func matrix(_ smear: Smear) -> simd_float4x4 {
         let n = smear.direction.float3

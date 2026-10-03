@@ -71,8 +71,12 @@ public enum Animator {
         }
         // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
         FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
-        // Blobs: the cartoon face (springy, squash & stretch, auto blink).
-        BlobRig.apply(to: &scene, document: document, time: time, overrides: overrides, animated: &animated)
+        // Blobs: their clips (dials, lift, lean), then the cartoon face (springy, squash & stretch, auto blink).
+        var blobLive = overrides
+        let current = scene
+        BlobClips.apply(to: &scene, document: document, sampleTime: { rates.sampleTime(time, for: $0, in: current) }, overrides: &blobLive,
+                        animated: &animated)
+        BlobRig.apply(to: &scene, document: document, time: time, overrides: blobLive, animated: &animated)
         // Rubber-hose limbs follow wherever their hands went.
         RubberHose.apply(to: &scene, animated: &animated)
         let camera = timeline.cutCamera(at: time).flatMap { scene.objects[$0] != nil ? $0 : nil }

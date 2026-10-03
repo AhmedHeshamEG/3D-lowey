@@ -124,6 +124,8 @@ struct Pipelines {
     let shadeStaticBlended: MTLRenderPipelineState
     let shadeSkinnedBlended: MTLRenderPipelineState
     let shadeGround: MTLRenderPipelineState
+    let hullStatic: MTLRenderPipelineState
+    let hullSkinned: MTLRenderPipelineState
     let sky: MTLRenderPipelineState
     let editor: MTLRenderPipelineState
     let grid: MTLRenderPipelineState
@@ -153,6 +155,8 @@ struct Pipelines {
         shadeStaticBlended = try builder.shading(vertex: "lw_vertexStatic", fragment: "lw_shade", skinned: false, blended: true)
         shadeSkinnedBlended = try builder.shading(vertex: "lw_vertexSkinned", fragment: "lw_shade", skinned: true, blended: true)
         shadeGround = try builder.shading(vertex: "lw_vertexGround", fragment: "lw_shadeGround", skinned: false, blended: false)
+        hullStatic = try builder.shading(vertex: "lw_vertexHull", fragment: "lw_shadeHull", skinned: false, blended: false)
+        hullSkinned = try builder.shading(vertex: "lw_vertexHullSkinned", fragment: "lw_shadeHull", skinned: true, blended: false)
         sky = try builder.sky()
         editor = try builder.editor(fragment: "lw_editorFragment")
         grid = try builder.editor(fragment: "lw_gridFragment")

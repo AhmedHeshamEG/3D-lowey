@@ -80,6 +80,8 @@ struct DrawItem {
     var worldBounds: Bounds
     /// An onion-skin ghost: shaded pass only (no prepass, so no picking, lines or contact shading).
     var ghost = false
+    /// A character part's outline (inverted hull) width in metres; 0 = none.
+    var hull: Float = 0
 }
 
 /// An editor helper (light bulb, camera box, particle emitter): drawn only on the stage, picked by its sphere.

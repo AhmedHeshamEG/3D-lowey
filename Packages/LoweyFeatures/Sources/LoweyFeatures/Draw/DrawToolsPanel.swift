@@ -67,6 +67,12 @@ struct DrawToolsPanel: View {
             }
             Hint("Paint on an object with the Pencil: its toon shadow follows your strokes (faces get clean, designed shadow shapes). "
                 + "Size and strength are the sidebar's sliders. Each stroke is one undo step.")
+            PanelSection("Presets") {
+                FlowChips(items: ShadowPreset.allCases.map { preset in (preset.rawValue, preset.title) }, isOn: { _ in false }) { key in
+                    if let preset = ShadowPreset(rawValue: key) { editor.applyShadowPreset(preset) }
+                }
+                Hint("On the selection; a character's goes on its head.")
+            }
             if editor.selectionHasShadowPaint {
                 HmmPillButton("Clear the selection's shadow painting", systemName: "eraser", role: .destructive) { editor.clearShadowPaint() }
             }

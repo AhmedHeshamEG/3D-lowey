@@ -68,6 +68,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Blob measurements match the drawing (trace.json codegen)
+        run: python Tools/gen-blob-measurements.py --check
       - name: Test against a fake iPad bridge
         working-directory: Tools/lowey
         run: |

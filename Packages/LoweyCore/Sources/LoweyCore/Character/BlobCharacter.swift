@@ -8,30 +8,16 @@ public enum BlobCharacter {
         public var behaviors: [Behavior]
     }
 
-    // MARK: Measurements (from Hesham's drawing, assets/avatar/trace.json; metres)
+    // MARK: Measurements (generated from Hesham's drawing: BlobCharacter+Measurements.swift; metres)
 
-    /// Head silhouette (radius, height above the head's bottom), bottom to peak.
-    static let headProfile: [(r: Double, y: Double)] = [
-        (0.0, 0.0), (0.0818, 0.0004), (0.2373, 0.0253), (0.3532, 0.0605), (0.4292, 0.0956), (0.4863, 0.1307), (0.5299, 0.1659),
-        (0.5647, 0.2010), (0.5915, 0.2362), (0.6120, 0.2713), (0.6270, 0.3064), (0.6371, 0.3416), (0.6423, 0.3767), (0.6435, 0.4119),
-        (0.6409, 0.4470), (0.6340, 0.4821), (0.6231, 0.5173), (0.6077, 0.5524), (0.5889, 0.5876), (0.5665, 0.6227), (0.5408, 0.6578),
-        (0.5116, 0.6930), (0.4802, 0.7281), (0.4458, 0.7633), (0.4078, 0.7984), (0.3669, 0.8335), (0.3219, 0.8687), (0.2714, 0.9038),
-        (0.2138, 0.9389), (0.1503, 0.9741), (0.0212, 1.0092), (0.0137, 1.0110), (0.0066, 1.0120), (0.0, 1.0124)
-    ]
     /// Front-to-back depth of the head relative to its width.
     static let headDepth = 0.92
     /// Where things sit: the head's bottom, the body (a drop) under it, the hover height.
     static let hover = 0.08
-    static let headBottom = 0.5993 + hover
-    static let bodyLength = 0.559
-    static let bodyRadius = 0.1987
+    static let headBottom = traceHeadBottom + hover
     static let bodyBottom = headBottom - 0.05 - bodyLength
-    /// Face placement (x from the centre line, y above the head's bottom).
-    static let eye = (x: 0.2238, y: 0.5901, rx: 0.0979, ry: 0.1063)
-    static let brow = (x: 0.2361, y: 0.7615)
-    static let cheek = (x: 0.333, y: 0.3816)
-    static let mouthY = 0.3069
-    /// The smirk with its curl (the rest mouth), as strokes: centre lines and half-widths, around the mouth's centre.
+    /// The smirk with its curl (the rest mouth), as strokes drawn over the traced mouth: centre lines around the mouth's
+    /// centre (a design simplification of the traced shape, so it can morph into every other mouth).
     static let smirkLine: [(x: Double, y: Double)] = [
         (-0.160, -0.008), (-0.120, -0.007), (-0.080, 0.000), (-0.040, -0.002), (0.000, -0.006), (0.050, -0.012), (0.100, -0.019),
         (0.150, -0.022), (0.200, -0.023), (0.235, -0.017), (0.245, -0.010)
