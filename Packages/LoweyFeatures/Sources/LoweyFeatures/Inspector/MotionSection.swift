@@ -70,6 +70,7 @@ struct MotionSection: View {
             Text("Ones").tag(Stepping?.some(.onOnes))
             Text("Twos").tag(Stepping?.some(.onTwos))
             Text("Threes").tag(Stepping?.some(.onThrees))
+            Text("Fours").tag(Stepping?.some(.onFours))
         }
         .pickerStyle(.segmented)
         .accessibilityLabel("Animated on")

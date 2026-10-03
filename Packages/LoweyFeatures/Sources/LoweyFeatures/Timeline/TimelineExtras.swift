@@ -102,6 +102,7 @@ struct TimelineSettingsSheet: View {
                 Text("On ones").tag(Stepping.onOnes)
                 Text("On twos").tag(Stepping.onTwos)
                 Text("On threes").tag(Stepping.onThrees)
+                Text("On fours").tag(Stepping.onFours)
             }
             .pickerStyle(.segmented)
             Hint("On twos looks hand-animated. Cameras stay smooth; any object can choose its own in the inspector.")

@@ -49,6 +49,7 @@ struct MyLookEditor: View {
                 Text("On ones").tag(Stepping.onOnes)
                 Text("On twos").tag(Stepping.onTwos)
                 Text("On threes").tag(Stepping.onThrees)
+                Text("On fours").tag(Stepping.onFours)
             }
             .pickerStyle(.segmented)
         }

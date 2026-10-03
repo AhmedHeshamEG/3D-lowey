@@ -218,9 +218,9 @@ public struct Track: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
-/// Stepping for the "on twos" look: animation sampled every N frames.
+/// Stepping for the "on twos" look: animation sampled every N frames (ones to fours).
 public enum Stepping: Int, Codable, Sendable, CaseIterable {
-    case onOnes = 1, onTwos = 2, onThrees = 3
+    case onOnes = 1, onTwos = 2, onThrees = 3, onFours = 4
 
     /// Quantizes `time` to the stepped frame grid at `fps`.
     public func quantize(_ time: Double, fps: Int) -> Double {
@@ -237,6 +237,7 @@ public enum Stepping: Int, Codable, Sendable, CaseIterable {
         case .onOnes: "ones"
         case .onTwos: "twos"
         case .onThrees: "threes"
+        case .onFours: "fours"
         }
     }
 
@@ -245,6 +246,7 @@ public enum Stepping: Int, Codable, Sendable, CaseIterable {
         case "ones": self = .onOnes
         case "twos": self = .onTwos
         case "threes": self = .onThrees
+        case "fours": self = .onFours
         default: return nil
         }
     }
