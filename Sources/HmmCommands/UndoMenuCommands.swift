@@ -34,10 +34,10 @@
 
         public var body: some Commands {
             CommandGroup(replacing: .undoRedo) {
-                Button(state.undoTitle, action: undo)
+                Button(LocalizedStringKey(state.undoTitle), action: undo)
                     .keyboardShortcut("z", modifiers: .command)
                     .disabled(!state.canUndo)
-                Button(state.redoTitle, action: redo)
+                Button(LocalizedStringKey(state.redoTitle), action: redo)
                     .keyboardShortcut("z", modifiers: [.command, .shift])
                     .disabled(!state.canRedo)
             }

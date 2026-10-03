@@ -109,7 +109,19 @@
     public extension Font {
         /// The hmm. type scale on SF Pro, scaling with Dynamic Type.
         static func hmm(_ size: HmmTypeScale, weight: Font.Weight = .regular) -> Font {
-            let style: Font.TextStyle = switch size {
+            .system(size.textStyle, design: .default, weight: weight)
+        }
+
+        /// Timecodes and counters: monospaced digits, scaling with Dynamic Type like the rest of the chrome.
+        static func hmmNumbers(_ size: HmmTypeScale = .footnote, weight: Font.Weight = .semibold) -> Font {
+            .system(size.textStyle, design: .default, weight: weight).monospacedDigit()
+        }
+    }
+
+    extension HmmTypeScale {
+        /// The Dynamic Type style each step of the scale follows.
+        var textStyle: Font.TextStyle {
+            switch self {
             case .caption: .caption
             case .footnote: .footnote
             case .body: .subheadline
@@ -118,12 +130,6 @@
             case .title2: .title2
             case .title1: .largeTitle
             }
-            return .system(style, design: .default, weight: weight)
-        }
-
-        /// Timecodes and counters: monospaced digits.
-        static func hmmNumbers(_ size: HmmTypeScale = .footnote, weight: Font.Weight = .semibold) -> Font {
-            .system(size: size.rawValue, weight: weight, design: .default).monospacedDigit()
         }
     }
 #endif

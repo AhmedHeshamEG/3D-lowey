@@ -33,12 +33,12 @@
                 if let symbol {
                     Image(systemName: symbol).foregroundStyle(tint)
                 }
-                Text(message.text)
+                Text(LocalizedStringKey(message.text))
                     .font(.hmm(.body, weight: .semibold))
                     .foregroundStyle(theme.text)
                     .multilineTextAlignment(.leading)
                 if let title = message.actionTitle, let action {
-                    Button(title, action: action)
+                    Button(LocalizedStringKey(title), action: action)
                         .font(.hmm(.body, weight: .semibold))
                         .foregroundStyle(theme.accent)
                 }
@@ -117,10 +117,10 @@
                     .symbolRenderingMode(.hierarchical)
                     .font(.system(size: 40, weight: .medium))
                     .foregroundStyle(theme.text2)
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .font(.hmm(.headline, weight: .semibold))
                     .foregroundStyle(theme.text)
-                Text(message)
+                Text(LocalizedStringKey(message))
                     .font(.hmm(.body))
                     .foregroundStyle(theme.text2)
                     .multilineTextAlignment(.center)

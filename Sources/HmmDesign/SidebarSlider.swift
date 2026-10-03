@@ -65,7 +65,7 @@
                     }
             )
             .accessibilityElement()
-            .accessibilityLabel(title)
+            .accessibilityLabel(Text(LocalizedStringKey(title)))
             .accessibilityValue(format(value))
             .accessibilityAdjustableAction { direction in
                 let step = (range.upperBound - range.lowerBound) / 20
