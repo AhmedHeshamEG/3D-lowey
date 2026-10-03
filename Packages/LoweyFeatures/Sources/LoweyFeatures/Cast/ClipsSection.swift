@@ -28,6 +28,7 @@ struct ClipsSection: View {
                 ForEach(track.segments) { segment in
                     SegmentRow(editor: editor, segment: segment)
                 }
+                if editor.selectedClips.count > 1 { PickedClips(editor: editor) }
                 Toggle("Feet stay on the ground", isOn: Binding(get: { track.ik.feetOnGround }, set: { value in editor.setIK { $0.feetOnGround = value } }))
                 Toggle("Walk in place (a path moves it)", isOn: Binding(get: { track.ik.inPlace }, set: { value in editor.setIK { $0.inPlace = value } }))
                 lookAtMenu(track)
@@ -74,6 +75,14 @@ private struct SegmentRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.xxs) {
             HStack {
+                Button {
+                    editor.pickClip(segment.id, additive: true)
+                } label: {
+                    Image(systemName: editor.selectedClips.contains(segment.id) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(editor.selectedClips.contains(segment.id) ? theme.accent : theme.text2)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Pick \(segment.clip.name)")
                 Text(segment.clip.name).font(.hmm(.body, weight: .semibold))
                 Text("\(NumberFormat.short(segment.start))–\(NumberFormat.short(segment.end)) s").font(.hmmNumbers(.caption)).foregroundStyle(theme.text2)
                 Spacer()
@@ -90,5 +99,27 @@ private struct SegmentRow: View {
         }
         .padding(HmmSpacing.xs)
         .background(RoundedRectangle(cornerRadius: HmmRadius.control).fill(theme.surface2.opacity(0.7)))
+    }
+}
+
+/// Several picked clips changed together.
+private struct PickedClips: View {
+    let editor: EditorModel
+    @State private var speed = 1.0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: HmmSpacing.xs) {
+            Text("\(editor.selectedClips.count) clips picked").font(.hmm(.body, weight: .semibold))
+            HStack(spacing: HmmSpacing.xs) {
+                HmmPillButton("Loop all", systemName: "repeat") { editor.setPickedClips(loop: true) }
+                HmmPillButton("Remove", systemName: "trash", role: .destructive) { editor.removePickedClips() }
+                HmmButton("xmark", label: "Done", size: 36) { editor.selectedClips = [] }
+            }
+            LabeledSlider(title: "Speed (all)", value: speed, range: 0.1 ... 3, format: { String(format: "%.2g×", $0) }, set: { value in
+                speed = value
+                editor.setPickedClips(speed: value)
+            }, done: editor.endGesture)
+            Hint("Drag a picked clip in the timeline to move them all.")
+        }
     }
 }

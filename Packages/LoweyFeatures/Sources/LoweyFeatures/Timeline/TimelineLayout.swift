@@ -28,6 +28,7 @@ final class TimelineLayout {
     /// What a drag on the lanes does, decided once as it starts.
     enum LaneDrag {
         case moveKeys
+        case moveClips
         case pan(start: Double)
         case scrollRows(start: CGFloat)
         case marquee(origin: CGPoint)
@@ -40,8 +41,10 @@ final class TimelineLayout {
     var rowScroll: CGFloat = 0
     var viewportHeight: CGFloat = 0
     var laneWidth: CGFloat = 0
-    /// Live offset of the selected keys while dragged.
+    /// Live offset of the selected keys (or picked clips) while dragged.
     var keyDrag: Double?
+    /// The Pencil's loop over the lanes (selects the keys inside it).
+    var lasso: [CGPoint] = []
     var composeDrag: (ids: Set<ObjectID>, delta: Double)?
     var marquee: CGRect?
     var marqueeKeys: Set<KeyRef> = []
@@ -146,6 +149,29 @@ final class TimelineLayout {
         let location = point.x - Self.labelWidth
         guard let best = keys.min(by: { abs(x($0.time) - location) < abs(x($1.time) - location) }), abs(x(best.time) - location) < 14 else { return nil }
         return best
+    }
+
+    /// The clip segment under a point in the lanes' space.
+    func clip(at point: CGPoint) -> ClipSegment? {
+        guard point.x >= Self.labelWidth, case let .object(id)? = row(at: point.y) else { return nil }
+        let ids = members(of: id)
+        let moment = time(at: point.x - Self.labelWidth)
+        return timeline.clipTracks.filter { ids.contains($0.target) }.flatMap(\.segments).first { moment >= $0.start && moment <= $0.end }
+    }
+
+    /// The keys inside a loop drawn over the lanes (key dots at their row's middle).
+    func keys(inside loop: [CGPoint]) -> Set<KeyRef> {
+        guard loop.count >= 3 else { return [] }
+        var result = Set<KeyRef>()
+        for slot in slots {
+            guard let row = slot.row else { continue }
+            let y = slot.minY + slot.height / 2
+            for key in KeySelection.all(in: timeline, tracks: Set(trackIDs(for: row))) {
+                let point = CGPoint(x: Self.labelWidth + x(key.time), y: y)
+                if EditorModel.polygon(loop, contains: point) { result.insert(key) }
+            }
+        }
+        return result
     }
 
     /// Audio, word and effect rows handle their own touches.

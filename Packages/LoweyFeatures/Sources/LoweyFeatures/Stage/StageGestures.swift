@@ -36,6 +36,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         case moveOverlay(ObjectID, last: CGPoint)
         /// Dragging a dot of the motion path (its position key at that time).
         case pathKey(time: Double)
+        /// Dragging a character's hand or foot.
+        case ik(IKHandle)
         case none
     }
 

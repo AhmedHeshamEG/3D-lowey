@@ -55,3 +55,31 @@ final class MotionToolsTests: XCTestCase {
         XCTAssertNil(editor.baseScene.objects[cube]?[.smear])
     }
 }
+
+@MainActor
+final class PoseFlowTests: XCTestCase {
+    private var app: AppModel?
+
+    func testSaveMirrorAndApplyPoses() throws {
+        let app = AppModel()
+        self.app = app
+        app.createProject(named: "Poses \(UUID().uuidString.prefix(6))", mood: .day, look: LookPreset.ink.id)
+        let editor = try XCTUnwrap(app.editor)
+        editor.buildBlob(.hesham)
+        let blob = try XCTUnwrap(editor.poseCharacter)
+        editor.perform(.setProperties([PropertyChange(object: blob, key: .handLeftY, value: .float(0.9)),
+                                       PropertyChange(object: blob, key: .headYaw, value: .float(20))]))
+        editor.savePose(of: blob, named: "Hand up")
+        let pose = try XCTUnwrap(editor.poses(of: blob).first)
+        XCTAssertEqual(pose.dials[.handLeftY], .float(0.9))
+        editor.mirrorPose(of: blob)
+        XCTAssertEqual(editor.baseScene.objects[blob]?[.handRightY], .float(0.9), "the other hand goes up")
+        XCTAssertEqual(editor.baseScene.objects[blob]?[.headYaw], .float(-20))
+        editor.applyPose(pose, to: blob)
+        XCTAssertEqual(editor.baseScene.objects[blob]?[.handLeftY], .float(0.9))
+        XCTAssertNil(editor.baseScene.objects[blob]?[.handRightY])
+        editor.deletePose(pose.id, of: blob)
+        XCTAssertTrue(editor.poses(of: blob).isEmpty)
+        XCTAssertEqual(IKHandles.handles(of: blob, in: editor.baseScene).count, 2, "a Blob's hands are handles")
+    }
+}

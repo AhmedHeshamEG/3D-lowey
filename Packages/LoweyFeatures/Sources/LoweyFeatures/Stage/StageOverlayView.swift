@@ -34,6 +34,7 @@ struct StageOverlayView: View {
             }
             OverlaySelectionFrames(editor: editor)
             MotionPathMarks(editor: editor)
+            IKHandleMarks(editor: editor)
             PickedStrokes(editor: editor)
             FlipbookOnionSkin(editor: editor)
             if editor.flipbook.livePoints.count > 1 {
@@ -146,6 +147,25 @@ private struct MotionPathMarks: View {
                     .frame(width: 12, height: 12)
                     .position(dot.point)
             }
+        }
+    }
+}
+
+/// A character's hands and feet you can drag (Keyframe and Perform modes).
+private struct IKHandleMarks: View {
+    let editor: EditorModel
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        let revision = editor.displayRevision + Int(editor.viewYaw)
+        let handles = revision >= 0 ? editor.ikHandlesOnScreen() : []
+        ForEach(handles, id: \.handle.id) { item in
+            Circle()
+                .stroke(theme.accent, lineWidth: 2.5)
+                .background(Circle().fill(theme.accent.opacity(0.18)))
+                .frame(width: 26, height: 26)
+                .position(item.point)
+                .accessibilityLabel(item.handle.name)
         }
     }
 }

@@ -110,6 +110,8 @@ final class EditorModel {
     var timelineStart: Double = 0
     var timelineCollapsed = false
     var selectedKeys: Set<KeyRef> = []
+    /// Picked clip segments (ids), moved and changed together.
+    var selectedClips: Set<String> = []
     var keyBoxSelect = false
     var expandedObjects: Set<ObjectID> = []
     var collapsedGroups: Set<ObjectID> = []

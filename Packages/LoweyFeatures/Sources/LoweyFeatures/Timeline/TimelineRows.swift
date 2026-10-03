@@ -113,8 +113,12 @@ private struct Spans: View {
             }
             for track in editor.timeline.clipTracks where ids.contains(track.target) {
                 for segment in track.segments {
-                    let rect = CGRect(x: layout.x(segment.start), y: 3, width: max(CGFloat(segment.duration * layout.pps), 4), height: size.height - 10)
-                    context.fill(Path(roundedRect: rect, cornerRadius: 5), with: .color(Color.teal.opacity(0.3)))
+                    let picked = editor.selectedClips.contains(segment.id)
+                    let shift = picked ? layout.keyDrag ?? 0 : 0
+                    let rect = CGRect(x: layout.x(segment.start + shift), y: 3, width: max(CGFloat(segment.duration * layout.pps), 4),
+                                      height: size.height - 10)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 5), with: .color(Color.teal.opacity(picked ? 0.6 : 0.3)))
+                    if picked { context.stroke(Path(roundedRect: rect, cornerRadius: 5), with: .color(.white.opacity(0.9)), lineWidth: 1.5) }
                     context.draw(Text(segment.clip.name).font(.system(size: 10, weight: .semibold)).foregroundColor(.white.opacity(0.8)),
                                  at: CGPoint(x: rect.minX + 6, y: rect.midY), anchor: .leading)
                 }
