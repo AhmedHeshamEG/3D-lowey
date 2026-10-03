@@ -2,8 +2,8 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Draw: solid shapes in 3D (tube, ribbon, extrude, lathe) on a guide, and the Shadow Brush. The Pencil draws,
-/// fingers keep moving the view.
+/// Draw: ink strokes and solid shapes in 3D on a guide, and the Shadow Brush. The Pencil draws, fingers keep moving
+/// the view.
 struct DrawToolsPanel: View {
     @Bindable var editor: EditorModel
 
@@ -11,6 +11,8 @@ struct DrawToolsPanel: View {
         HmmPanel("Draw", width: 360, close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.m) {
                 HStack(spacing: HmmSpacing.xs) {
+                    ChoiceChip(title: "Ink", systemName: "pencil.tip", isOn: editor.tool == .ink) { editor.tool = .ink }
+                        .accessibilityIdentifier("tool-ink")
                     ChoiceChip(title: "Solid shape", systemName: "scribble.variable", isOn: editor.tool == .draw) { editor.tool = .draw }
                         .accessibilityIdentifier("tool-draw")
                     ChoiceChip(title: "Shadow Brush", systemName: "circle.lefthalf.striped.horizontal", isOn: editor.tool == .shadowBrush) {
@@ -18,40 +20,28 @@ struct DrawToolsPanel: View {
                     }
                     .accessibilityIdentifier("tool-shadow-brush")
                 }
-                if editor.tool == .shadowBrush {
-                    shadowBrush
-                } else {
-                    solidShape
+                switch editor.tool {
+                case .shadowBrush: shadowBrush
+                case .draw: solidShape
+                default: InkSection(editor: editor)
                 }
             }
         }
-        .onAppear { if !editor.tool.paints { editor.tool = .draw } }
+        .onAppear { if !editor.tool.paints { editor.tool = .ink } }
     }
 
     private var solidShape: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.s) {
             PanelSection("Becomes") {
                 TileGrid(minimum: 74) {
-                    ForEach(DrawingRecipe.Style.allCases, id: \.self) { style in
+                    ForEach(DrawingRecipe.Style.solid, id: \.self) { style in
                         TileButton(title: style.title, systemName: style.systemImage) { editor.draw.style = style }
                             .overlay(RoundedRectangle(cornerRadius: HmmRadius.card).stroke(Color.accentColor, lineWidth: editor.draw.style == style ? 2 : 0))
                     }
                 }
                 Hint(editor.draw.style.hint)
             }
-            PanelSection("Draws on") {
-                FlowChips(items: GuideKind.allCases.map { ($0.rawValue, $0.title) }, isOn: { $0 == editor.draw.guide.rawValue }) { key in
-                    if let kind = GuideKind(rawValue: key) { editor.draw.guide = kind }
-                }
-                if editor.draw.guide == .plane {
-                    FlowChips(items: PlaneLock.allCases.map { ($0.rawValue, $0.title) }, isOn: { $0 == editor.draw.planeLock.rawValue }) { key in
-                        if let lock = PlaneLock(rawValue: key) { editor.draw.planeLock = lock }
-                    }
-                    LabeledSlider(title: "Plane offset", value: editor.draw.planeOffset, range: -3 ... 3) { editor.draw.planeOffset = $0 }
-                } else if editor.draw.guide != .object {
-                    LabeledSlider(title: "Guide size", value: editor.draw.guideSize, range: 0.3 ... 6) { editor.draw.guideSize = $0 }
-                }
-            }
+            GuideSection(editor: editor)
             if editor.draw.style == .extrude {
                 LabeledSlider(title: "Depth", value: editor.draw.extrudeDepth, range: 0.02 ... 3) { editor.draw.extrudeDepth = $0 }
             }
@@ -87,7 +77,7 @@ struct DrawOptionsBar: View {
 
     var body: some View {
         HStack(spacing: HmmSpacing.xs) {
-            ForEach(DrawingRecipe.Style.allCases, id: \.self) { style in
+            ForEach(DrawingRecipe.Style.solid, id: \.self) { style in
                 ChoiceChip(title: style.title, systemName: style.systemImage, isOn: editor.draw.style == style) { editor.draw.style = style }
             }
             HmmButton("arrow.left.and.right.righttriangle.left.righttriangle.right", label: "Mirror", isOn: editor.draw.mirror, size: 36) {
@@ -118,12 +108,16 @@ struct ShadowBrushOptionsBar: View {
 }
 
 extension DrawingRecipe.Style {
+    /// The solid-shape styles (ink has its own tool).
+    static let solid: [DrawingRecipe.Style] = [.tube, .ribbon, .extrude, .lathe]
+
     var title: String {
         switch self {
         case .tube: "Tube"
         case .ribbon: "Ribbon"
         case .extrude: "Extrude"
         case .lathe: "Lathe"
+        case .ink: "Ink"
         }
     }
 
@@ -133,6 +127,7 @@ extension DrawingRecipe.Style {
         case .ribbon: "wave.3.right"
         case .extrude: "square.stack.3d.up"
         case .lathe: "rotate.3d"
+        case .ink: "pencil.tip"
         }
     }
 
@@ -142,6 +137,7 @@ extension DrawingRecipe.Style {
         case .ribbon: "Flat strips on the surface."
         case .extrude: "Draw a closed outline: it becomes a solid."
         case .lathe: "Draw half a profile: it spins into a vase, a trunk or a tower."
+        case .ink: "Pencil lines in 3D that always face the camera."
         }
     }
 }

@@ -14,6 +14,8 @@ extension SceneCompiler {
         switch object.kind {
         case let .primitive(shape):
             compilePrimitive(shape, object: object, state: state, base: base, casts: casts, scene: &scene)
+        case let .drawing(recipe) where recipe.style == .ink:
+            compileInk(recipe, object: object, state: state, base: base, casts: object[.castsShadow]?.boolValue ?? false, scene: &scene)
         case let .drawing(recipe):
             if let mesh = mesh(.drawing(recipe), dabs: object.shadowDabs, label: object.name, make: {
                 DrawingMesher.mesh(for: recipe).shaded(.smooth)

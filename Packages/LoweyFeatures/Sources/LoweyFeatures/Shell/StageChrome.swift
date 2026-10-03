@@ -68,11 +68,19 @@ struct StageChrome: View {
     private var trailingCluster: some View {
         HmmCornerCluster([
             item(.build, "plus", "Build"),
-            item(.draw, editor.tool == .shadowBrush ? "circle.lefthalf.striped.horizontal" : "pencil.tip", "Draw", on: editor.tool.paints),
+            item(.draw, drawIcon, "Draw", on: editor.tool.paints),
             item(.transform, gizmoIcon, "Transform"),
             item(.cast, "person.2", "Cast"),
             item(.library, "books.vertical", "Library")
         ])
+    }
+
+    private var drawIcon: String {
+        switch editor.tool {
+        case .shadowBrush: "circle.lefthalf.striped.horizontal"
+        case .draw: "scribble.variable"
+        default: "pencil.tip"
+        }
     }
 
     private func item(_ panel: ClusterPanel, _ systemName: String, _ label: String, on: Bool = false) -> HmmClusterItem {

@@ -38,9 +38,12 @@ public struct ObjectFactory: Sendable {
         case .ribbon: "Ribbon"
         case .extrude: "Extrusion"
         case .lathe: "Lathe"
+        case .ink: "Ink"
         }
         var object = SceneObject(id: ids.next(), name: name, kind: .drawing(recipe), transform: transform)
         object[.color] = .color(color)
+        // Ink is line art: drawn flat in its own colour, no shadow of its own.
+        if recipe.style == .ink { object[.castsShadow] = .bool(false) }
         return object
     }
 

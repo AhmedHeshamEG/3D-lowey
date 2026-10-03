@@ -31,6 +31,9 @@ extension EditCommand: HmmCommands.EditCommand {
             }
             return .setTracks(order.compactMap { latest[$0] })
         }
+        // Whole-value replacements of one object (an eraser or a brush stroke) keep only the latest value.
+        if case let .setKind(a, _) = first, case let .setKind(b, _) = second, a == b { return second }
+        if case let .setShadowPaint(a, _) = first, case let .setShadowPaint(b, _) = second, a == b { return second }
         if case let .batch(label, commands) = first {
             return .batch(label, commands + [second])
         }
@@ -56,6 +59,9 @@ extension EditCommand: HmmCommands.EditCommand {
             }
             return .setTracks(merged + a)
         }
+        // The earlier inverse already restores the value from before the gesture.
+        if case let .setKind(a, _) = earlier, case let .setKind(b, _) = later, a == b { return earlier }
+        if case let .setShadowPaint(a, _) = earlier, case let .setShadowPaint(b, _) = later, a == b { return earlier }
         return .batch(earlier.label, [later, earlier])
     }
 }

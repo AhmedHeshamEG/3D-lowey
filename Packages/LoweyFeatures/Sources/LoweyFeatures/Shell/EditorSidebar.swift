@@ -25,6 +25,10 @@ struct EditorSidebar: View {
                                      format: { String(format: "%.2g×", $0) }))
         }
         switch editor.tool {
+        case .ink:
+            return (HmmSidebarSlider("Width", value: $editor.ink.width, in: 0.001 ... 0.05, format: { "\(Int(($0 * 2000).rounded())) mm" }),
+                    HmmSidebarSlider("Opacity", value: inkOpacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" },
+                                     onEditingChanged: { if !$0 { editor.endGesture() } }))
         case .draw:
             return (HmmSidebarSlider("Width", value: $editor.draw.width, in: 0.005 ... 0.4, format: { "\(Int(($0 * 100).rounded())) cm" }),
                     HmmSidebarSlider("Smoothing", value: $editor.draw.smoothing, in: 0 ... 1))
@@ -38,12 +42,23 @@ struct EditorSidebar: View {
     }
 }
 
+extension EditorSidebar {
+    /// New strokes' opacity, and the selected ink drawing's.
+    var inkOpacity: Binding<Double> {
+        Binding(get: { editor.activeInk?.opacity ?? editor.ink.opacity }, set: { value in
+            editor.ink.opacity = value
+            editor.setInkOpacity(value)
+        })
+    }
+}
+
 /// Bottom centre of the stage: the options of the tool in use.
 struct ToolOptionsBar: View {
     let editor: EditorModel
 
     var body: some View {
         switch editor.tool {
+        case .ink: InkOptionsBar(editor: editor)
         case .draw: DrawOptionsBar(editor: editor)
         case .shadowBrush: ShadowBrushOptionsBar(editor: editor)
         case .scatter: ScatterOptionsBar(editor: editor)

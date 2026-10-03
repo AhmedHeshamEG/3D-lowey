@@ -86,6 +86,7 @@ public enum StrokeFilter {
 /// Turns a `DrawingRecipe` into triangles.
 public enum DrawingMesher {
     public static func mesh(for recipe: DrawingRecipe) -> MeshData {
+        if recipe.style == .ink { return InkMesher.mesh(for: recipe) }
         var result = MeshData()
         for stroke in recipe.strokes where !stroke.points.isEmpty {
             switch recipe.style {
@@ -97,6 +98,8 @@ public enum DrawingMesher {
                 result.append(extrude(outline: stroke.points, normal: recipe.normal, depth: recipe.depth))
             case .lathe:
                 result.append(lathe(profile: stroke.points, segments: max(3, recipe.segments)))
+            case .ink:
+                break
             }
         }
         return result

@@ -12,6 +12,8 @@ final class SceneCompiler {
     let meshes: MeshCache
     let textures: TextureStore
     let models: ModelLibrary
+    /// The camera of the frame being compiled (ink strokes turn to face it).
+    var eye = SIMD3<Float>.zero
 
     init(device: MTLDevice, meshes: MeshCache, textures: TextureStore, models: ModelLibrary) {
         self.device = device
@@ -34,6 +36,7 @@ final class SceneCompiler {
 
     func compile(_ input: RenderInput, cameraPosition: SIMD3<Float>) -> RenderScene {
         var scene = RenderScene()
+        eye = cameraPosition
         _ = scene.lookIndex(input.document.lookPreset)
         var lights: [(LightData, Float)] = []
         let objects = input.document.scene.objects

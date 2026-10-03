@@ -513,3 +513,13 @@ answering a UI query (the app idle, the query never returning). Each UI test now
 engine tests (R32). When the test runner itself hangs before it connects, no per-test retry runs, so the engine and
 UI steps run `xcodebuild test` a second time; the build is incremental, so the second attempt costs only the tests.
 A test that fails every time still fails the build, and each retry and attempt shows in the log.
+
+## 2.0 — Remaster, phase 2
+
+**R34 — Ink strokes are a drawing style, meshed toward the camera every frame.** `DrawingRecipe.Style.ink` keeps the
+strokes (points + pressure widths) like the solid styles, so guides, mirror, Scene Scripts, export and undo all work
+unchanged. The renderer builds each ink drawing as flat ribbons facing the frame's camera (`InkMesher`, cached by
+eye position and reveal), unlit in the object's colour, with an ID flag that keeps the line pass from outlining
+them: they are lines already. A billboarding vertex shader would have needed its own prepass, shading and shadow
+pipelines for a few hundred vertices per drawing. Strokes join the selected ink drawing (a new one starts when
+nothing ink is selected), like drawing on the current layer; `reveal` writes a drawing on.

@@ -180,10 +180,12 @@ public struct PresetBuilder: Sendable {
         case .fadeOut:
             return [(id, .opacity, [k(0, .float(object.opacity), .easeIn), k(d, .float(0))])]
         case .typewriter:
-            // Text and overlays type themselves out (and arrows draw themselves).
+            // Text and overlays type themselves out (and arrows draw themselves); ink drawings write themselves on.
             switch object.kind {
             case .text, .overlay:
                 return [(id, .reveal, [k(0, .float(0), .linear), k(d, .float(1))])]
+            case let .drawing(recipe) where recipe.style == .ink:
+                return [(id, .reveal, [k(0, .float(0), .easeInOut), k(d, .float(1))])]
             default:
                 break
             }

@@ -24,6 +24,7 @@ using namespace metal;
 #define LW_FLAG_SKINNED 8u
 #define LW_FLAG_UNLIT 16u
 #define LW_FLAG_GLOSSY 32u
+#define LW_FLAG_INK 64u
 
 // ID buffer packing: 20 bits object, 4 bits look, 8 bits flags.
 #define LW_ID_OBJECT_MASK 0xFFFFFu

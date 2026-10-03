@@ -30,6 +30,7 @@ final class EditorModel {
     var selection: [ObjectID] = [] {
         didSet {
             guard selection != oldValue else { return }
+            if !inkStrokes.isEmpty { inkStrokes = [] }
             if AppIdentity.isUITesting { trail("sel=[\(selection.compactMap { scene.objects[$0]?.name }.joined(separator: ","))]") }
             refreshSelectionOverlay()
         }
@@ -57,6 +58,9 @@ final class EditorModel {
     }
 
     var shadowBrush = ShadowBrushSettings()
+    var ink = InkSettings()
+    /// Strokes picked in the selected ink drawing (Ink ▸ Select strokes).
+    var inkStrokes: Set<Int> = []
     var scatter = ScatterPanelSettings()
     /// The current colour: new blockout, strokes and "paint" use it.
     var currentColor: ColorValue = .palette(0)

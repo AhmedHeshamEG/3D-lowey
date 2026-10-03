@@ -35,12 +35,13 @@ public struct LoweyMenuCommands: Commands {
         CommandMenu("Tools") {
             Button("Select") { tool(.select, panel: nil) }.keyboardShortcut("1", modifiers: .command)
             Button("Build") { panel(.build) }.keyboardShortcut("2", modifiers: .command)
-            Button("Draw") { tool(.draw, panel: .draw) }.keyboardShortcut("3", modifiers: .command)
+            Button("Draw") { tool(.ink, panel: .draw) }.keyboardShortcut("3", modifiers: .command)
             Button("Transform") { panel(.transform) }.keyboardShortcut("4", modifiers: .command)
             Button("Look") { panel(.look) }.keyboardShortcut("5", modifiers: .command)
             Divider()
             Button("Library") { panel(.library) }.keyboardShortcut("l", modifiers: .command)
             Button("Cast") { panel(.cast) }
+            Button("Solid Shape") { tool(.draw, panel: .draw) }
             Button("Shadow Brush") { tool(.shadowBrush, panel: .draw) }
             Button("Lasso") { tool(.lasso, panel: nil) }
         }

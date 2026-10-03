@@ -33,6 +33,7 @@ struct StageOverlayView: View {
                     .position(preview.center)
             }
             OverlaySelectionFrames(editor: editor)
+            PickedStrokes(editor: editor)
             if let hover = editor.hoverPoint {
                 hoverRing(at: hover)
             }
@@ -44,6 +45,7 @@ struct StageOverlayView: View {
     private func hoverRing(at point: CGPoint) -> some View {
         let radius: CGFloat = switch editor.tool {
         case .draw: max(6, 40 * CGFloat(editor.draw.width / 0.05)) * 0.3
+        case .ink: editor.ink.mode == .erase ? CGFloat(editor.ink.eraserRadius) : 4
         case .shadowBrush: max(10, CGFloat(editor.shadowBrush.radius) * 120)
         default: 6
         }
@@ -73,6 +75,23 @@ private struct OverlaySelectionFrames: View {
                 .frame(width: box.width + 16, height: box.height + 16)
                 .rotationEffect(.radians(-placement.angle))
                 .position(x: rect.minX + CGFloat(placement.center.x), y: rect.minY + CGFloat(placement.center.y))
+        }
+    }
+}
+
+/// Picked ink strokes, traced in the accent colour.
+private struct PickedStrokes: View {
+    let editor: EditorModel
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        // Redraws when the scene, the camera or the picked strokes change.
+        let revision = editor.displayRevision + Int(editor.viewYaw)
+        let paths = editor.tool == .ink && !editor.inkStrokes.isEmpty && revision >= 0 ? editor.selectedStrokePaths() : []
+        ForEach(paths.indices, id: \.self) { index in
+            Path { path in path.addLines(paths[index]) }
+                .stroke(theme.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                .shadow(color: .black.opacity(0.35), radius: 1)
         }
     }
 }

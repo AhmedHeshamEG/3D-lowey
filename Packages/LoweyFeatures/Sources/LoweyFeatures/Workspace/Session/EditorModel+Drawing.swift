@@ -6,7 +6,7 @@ import LoweyCore
 extension EditorModel {
     /// The guide the drawing tool draws on now.
     var currentGuide: GuideSurface? {
-        guard tool == .draw, let stage else { return nil }
+        guard tool == .draw || (tool == .ink && ink.mode == .draw), let stage else { return nil }
         let target = stage.viewpoint.target
         let center = selectionBounds.map { Vec3($0.center.x, $0.min.y, $0.center.z) } ?? Vec3(target.x, 0, target.z)
         let size = draw.guideSize

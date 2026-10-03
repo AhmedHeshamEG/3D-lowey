@@ -121,6 +121,7 @@ extension EditorModel {
         scatterPreview = nil
         if tool == .scatter, selection.isEmpty { app.show("Select what to scatter first (a tree, a rock…), then drag an area") }
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
+        if tool != .ink { inkStrokes = [] }
         refreshSelectionOverlay()
         refreshGuide()
     }
@@ -130,7 +131,7 @@ extension EditorModel {
     func cameraMoved(_ viewpoint: Viewpoint) {
         if projection != viewpoint.projection { projection = viewpoint.projection }
         if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
-        if tool == .draw { refreshGuide() }
+        if tool.usesGuide { refreshGuide() }
         viewpointSaveTask?.cancel()
         viewpointSaveTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(0.6))

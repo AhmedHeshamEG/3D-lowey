@@ -108,6 +108,8 @@ struct ObjectFlags: OptionSet {
     static let skinned = ObjectFlags(rawValue: 8)
     static let unlit = ObjectFlags(rawValue: 16)
     static let glossy = ObjectFlags(rawValue: 32)
+    /// Ink strokes: line art, so the line pass draws no outlines around them.
+    static let ink = ObjectFlags(rawValue: 64)
 }
 
 /// Buffer indices, as in LoweyCommon.h.

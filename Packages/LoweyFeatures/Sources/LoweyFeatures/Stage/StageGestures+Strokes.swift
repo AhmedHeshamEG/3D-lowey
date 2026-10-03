@@ -12,6 +12,10 @@ extension StageGestures {
             brushStroke(recognizer, editor: editor, stage: stage)
             return
         }
+        if editor.tool == .ink, editor.ink.mode != .draw {
+            inkEditStroke(recognizer, editor: editor, stage: stage)
+            return
+        }
         switch recognizer.state {
         case .began:
             snapped = nil
@@ -31,7 +35,11 @@ extension StageGestures {
         case .ended:
             continueStroke(recognizer, editor: editor, stage: stage)
             stage.showStrokePreview(nil, color: .white)
-            editor.commitStroke(points: strokePoints, pressures: strokePressures, normals: strokeNormals, guide: strokeGuide)
+            if editor.tool == .ink {
+                editor.commitInkStroke(points: strokePoints, pressures: strokePressures)
+            } else {
+                editor.commitStroke(points: strokePoints, pressures: strokePressures, normals: strokeNormals, guide: strokeGuide)
+            }
             consumedSamples = 0
             snapped = nil
         default:
@@ -53,7 +61,7 @@ extension StageGestures {
 
     /// Draw, then hold: the stroke becomes the clean shape it was meant to be.
     func snapToQuickShape() {
-        guard let editor, let stage, editor.tool == .draw, stroke.state == .began || stroke.state == .changed,
+        guard let editor, let stage, editor.tool.usesGuide, stroke.state == .began || stroke.state == .changed,
               let anchor = stroke.samples.last?.location else { return }
         let points = stroke.samples.map { Vec2(Double($0.location.x), Double($0.location.y)) }
         guard let shape = QuickShape.fit(points) else { return }
@@ -97,7 +105,7 @@ extension StageGestures {
             }
             guard let hit else { continue }
             // Tubes sit on the surface instead of half buried in it.
-            let lift = editor.draw.style == .tube ? editor.draw.width * 0.5 : 0.002
+            let lift = editor.tool == .draw && editor.draw.style == .tube ? editor.draw.width * 0.5 : 0.002
             strokePoints.append(hit.point + hit.normal * lift)
             strokePressures.append(sample.pressure)
             strokeNormals.append(hit.normal)
@@ -106,6 +114,13 @@ extension StageGestures {
 
     private func updatePreview(editor: EditorModel, stage: StageView) {
         guard strokePoints.count >= 2 else { return }
+        if editor.tool == .ink {
+            let widths = strokePressures.map { editor.ink.width * (0.25 + 0.75 * $0) }
+            let preview = DrawingRecipe.Stroke(points: strokePoints, widths: widths)
+            let mesh = InkMesher.ribbon(preview, eye: Vec3(stage.camera.position), planeNormal: strokeNormals.last ?? .unitY)
+            stage.showStrokePreview(mesh, color: editor.currentColor.resolved(in: editor.look.palette))
+            return
+        }
         let widths = strokePressures.map { editor.draw.width * (0.35 + 0.65 * $0) }
         let thin = editor.draw.style == .extrude || editor.draw.style == .lathe
         let preview = DrawingRecipe.Stroke(points: strokePoints, widths: thin ? widths.map { _ in 0.012 } : widths)

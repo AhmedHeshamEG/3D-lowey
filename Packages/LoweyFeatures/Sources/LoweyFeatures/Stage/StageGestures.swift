@@ -71,6 +71,9 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     var snapped: (shape: QuickShape.Result, anchor: CGPoint, pressure: Double)?
     /// The Shadow Brush's target and its world mesh (raycast on the CPU for every sample).
     var brushTarget: (id: ObjectID, mesh: MeshData)?
+    /// Ink ▸ Erase / Select: the Pencil's path, and where a drag of picked strokes was last.
+    var inkPath: [CGPoint] = []
+    var inkDragLast: CGPoint?
 
     /// How far orbit, pan and zoom go per finger movement (Settings ▸ Speed).
     var navigationSpeed: Double { AppSettings.navigationFactor }
@@ -117,7 +120,7 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         let finger = NSNumber(value: UITouch.TouchType.direct.rawValue)
         stroke.isEnabled = painting
         if painting {
-            let pencilOnly = editor.tool == .shadowBrush || editor.draw.pencilOnly
+            let pencilOnly = editor.tool == .shadowBrush || (editor.tool == .ink && editor.ink.mode != .draw) || editor.draw.pencilOnly
             stroke.allowedTouchTypes = pencilOnly ? [pencil] : [pencil, finger]
             oneFingerPan.allowedTouchTypes = pencilOnly ? [finger] : []
             oneFingerPan.isEnabled = pencilOnly
