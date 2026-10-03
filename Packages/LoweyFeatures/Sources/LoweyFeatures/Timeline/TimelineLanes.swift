@@ -35,7 +35,7 @@ struct TimelineLanes: View {
         .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
         .simultaneousGesture(laneDrag)
         .simultaneousGesture(marqueePress, including: editor.timelineMode == .compose ? .subviews : .all)
-        .gesture(PencilLasso { point, state in pencilLasso(point, state: state) }, including: editor.timelineMode == .compose ? .subviews : .all)
+        .gesture(PencilLasso { point, state in pencilLasso(point, state: state) })
         .overlay(alignment: .topTrailing) { scrollIndicator }
         .onAppear { layout.viewportHeight = height }
         .onChange(of: height) { _, value in layout.viewportHeight = value }

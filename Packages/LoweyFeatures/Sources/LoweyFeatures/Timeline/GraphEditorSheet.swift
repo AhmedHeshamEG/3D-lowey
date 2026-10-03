@@ -58,8 +58,9 @@ struct GraphEditorSheet: View {
 
     /// The object's graphable properties.
     private func properties(of target: ObjectID) -> some View {
-        let tracks = editor.timeline.tracks.filter { $0.target == target && $0.keyframes.first.flatMap { GraphCurves.components($0.value) } != nil }
-        return FlowChips(items: tracks.map { ($0.id.raw, $0.property.spec?.label ?? $0.property.rawValue) }, isOn: { $0 == trackID.raw }) { key in
+        let tracks = editor.timeline.tracks.filter { track in track.target == target && Self.isCurve(track) }
+        let items: [(String, String)] = tracks.map { track in (track.id.raw, track.property.spec?.label ?? track.property.rawValue) }
+        return FlowChips(items: items, isOn: { $0 == trackID.raw }) { key in
             trackID = TrackID(raw: key)
             picked = 0
             hidden = []
@@ -76,8 +77,8 @@ struct GraphEditorSheet: View {
             }
             .stroke(theme.accent.opacity(0.5), lineWidth: 1)
             ForEach(frame.components, id: \.self) { index in
-                Path { path in path.addLines(GraphCurves.curve(track, component: index, from: frame.times.lowerBound, to: frame.times.upperBound,
-                                                               count: 160).map { frame.point(time: $0.time, value: $0.value) }) }
+                let points = curvePoints(track, component: index, frame: frame)
+                Path { path in path.addLines(points) }
                     .stroke(Self.color(index, of: componentsCount(track)), lineWidth: index == component ? 2.5 : 1.5)
             }
             handles(track, frame: frame)
@@ -87,6 +88,16 @@ struct GraphEditorSheet: View {
                 }
             }
         }
+    }
+
+    private func curvePoints(_ track: Track, component index: Int, frame: GraphFrame) -> [CGPoint] {
+        let samples = GraphCurves.curve(track, component: index, from: frame.times.lowerBound, to: frame.times.upperBound, count: 160)
+        return samples.map { sample in frame.point(time: sample.time, value: sample.value) }
+    }
+
+    static func isCurve(_ track: Track) -> Bool {
+        guard let first = track.keyframes.first else { return false }
+        return GraphCurves.components(first.value) != nil
     }
 
     private func componentsCount(_ track: Track) -> Int {

@@ -131,9 +131,15 @@ private struct MotionPathMarks: View {
     let editor: EditorModel
     @Environment(\.hmmTheme) private var theme
 
-    var body: some View {
+    /// Redrawn when the scene or the camera changes; hidden while playing.
+    private var currentPath: (points: [CGPoint], dots: [(time: Double, point: CGPoint)]) {
         let revision = editor.displayRevision + Int(editor.viewYaw)
-        let path = revision >= 0 && !editor.isPlaying ? editor.motionPathOnScreen() : ([], [])
+        guard revision >= 0, !editor.isPlaying else { return ([], []) }
+        return editor.motionPathOnScreen()
+    }
+
+    var body: some View {
+        let path = currentPath
         if path.points.count > 1 {
             Path { line in line.addLines(path.points) }
                 .stroke(theme.accent.opacity(0.85), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round, dash: [2, 5]))

@@ -23,6 +23,13 @@ public struct FlipbookPixelStroke: Hashable, Sendable {
     public var widths: [Double]
     public var color: RGBA
     public var filled: Bool
+
+    public init(points: [Vec2], widths: [Double], color: RGBA, filled: Bool) {
+        self.points = points
+        self.widths = widths
+        self.color = color
+        self.filled = filled
+    }
 }
 
 /// One visible flipbook drawing at a moment.

@@ -16,8 +16,7 @@ struct FlipbookSection: View {
                 }
             }
             PanelSection("Tracks") {
-                FlowChips(items: editor.flipbookTracks.map { ($0.id, $0.name) } + [("new", "New track")],
-                          isOn: { $0 == editor.flipbook.track }) { key in
+                FlowChips(items: trackChoices, isOn: { $0 == editor.flipbook.track }) { key in
                     if key == "new" { editor.startNewFlipbook() } else { editor.flipbook.track = key }
                 }
                 .accessibilityIdentifier("flipbook-tracks")
@@ -36,6 +35,17 @@ struct FlipbookSection: View {
             Hint("Width and opacity are the sidebar's sliders.")
         }
         .font(.hmm(.body))
+    }
+
+    private var trackChoices: [(String, String)] {
+        var choices: [(String, String)] = editor.flipbookTracks.map { track in (track.id, track.name) }
+        choices.append(("new", "New track"))
+        return choices
+    }
+
+    private func drawingTitle(_ track: FlipbookTrack) -> String {
+        let current = editor.activeFlipbookFrame.map { String($0 + 1) } ?? "–"
+        return "Drawing \(current) of \(track.frames.count)"
     }
 
     private var trackHint: String {
@@ -78,7 +88,7 @@ struct FlipbookSection: View {
     }
 
     private func drawings(_ track: FlipbookTrack) -> some View {
-        PanelSection("Drawing \(editor.activeFlipbookFrame.map { "\($0 + 1)" } ?? "–") of \(track.frames.count)") {
+        PanelSection(drawingTitle(track)) {
             HStack(spacing: HmmSpacing.xs) {
                 HmmButton("plus.rectangle.on.rectangle", label: "New drawing after this", size: 40) { editor.addFlipbookDrawing() }
                 HmmButton("square.on.square", label: "Duplicate drawing", size: 40) { editor.duplicateFlipbookDrawing() }

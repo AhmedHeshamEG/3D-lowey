@@ -26,14 +26,14 @@ struct FlipbookRow: View {
             ZStack(alignment: .leading) {
                 ForEach(cells, id: \.offset) { cell in
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(cell.repeat ? theme.text.opacity(0.08) : (cell.index == current ? theme.accent.opacity(0.7) : theme.text.opacity(0.18)))
+                        .fill(fill(for: cell))
                         .overlay(alignment: .leading) {
                             if !cell.repeat, cell.width > 18 {
                                 Text("\(cell.index + 1)").font(.hmmNumbers(.caption2)).foregroundStyle(theme.text).padding(.leading, 4)
                             }
                         }
                         .frame(width: max(cell.width - 1, 2), height: TimelineLayout.rowHeight - 8)
-                        .offset(x: cell.x + CGFloat((drag ?? 0) * layout.pps))
+                        .offset(x: cell.x + shift)
                         .onTapGesture { editor.showFlipbookDrawing(cell.index, of: track.id) }
                 }
             }
@@ -71,6 +71,16 @@ struct FlipbookRow: View {
     }
 
     private var isActive: Bool { editor.flipbook.track == track.id }
+
+    /// How far the cells follow a drag.
+    private var shift: CGFloat {
+        CGFloat((drag ?? 0) * layout.pps)
+    }
+
+    private func fill(for cell: Cell) -> Color {
+        if cell.repeat { return theme.text.opacity(0.08) }
+        return cell.index == current ? theme.accent.opacity(0.7) : theme.text.opacity(0.18)
+    }
 
     private var current: Int? {
         isActive ? editor.activeFlipbookFrame : nil

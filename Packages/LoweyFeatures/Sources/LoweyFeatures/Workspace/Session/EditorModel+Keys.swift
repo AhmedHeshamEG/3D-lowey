@@ -78,8 +78,11 @@ extension EditorModel {
     /// The first key of the selection's first curve (position, rotation, scale or a number), where the graph opens.
     var firstGraphKey: KeyRef? {
         let ids = Set(selection)
-        guard let track = timeline.tracks.first(where: { ids.contains($0.target) && $0.keyframes.first.flatMap { GraphCurves.components($0.value) } != nil }),
-              let first = track.keyframes.first else { return nil }
+        let curve: (Track) -> Bool = { track in
+            guard ids.contains(track.target), let first = track.keyframes.first else { return false }
+            return GraphCurves.components(first.value) != nil
+        }
+        guard let track = timeline.tracks.first(where: curve), let first = track.keyframes.first else { return nil }
         return KeyRef(track: track.id, time: first.time)
     }
 
