@@ -800,6 +800,7 @@
             "scatter",
             "set",
             "text",
+            "transcript",
             "transform"
           ]
         }
@@ -2151,6 +2152,56 @@
             "required": [
               "text"
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "do": {
+                "const": "transcript"
+              }
+            }
+          },
+          "then": {
+            "description": "Words with known timings on a voiceover clip (a script, a laptop TTS).",
+            "properties": {
+              "clip": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "from": {
+                "type": "number"
+              },
+              "to": {
+                "type": "number"
+              },
+              "language": {
+                "type": "string"
+              },
+              "words": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "w",
+                    "t"
+                  ],
+                  "properties": {
+                    "w": {
+                      "type": "string"
+                    },
+                    "t": {
+                      "type": "number"
+                    },
+                    "e": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         {

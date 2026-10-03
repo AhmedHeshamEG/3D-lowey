@@ -637,3 +637,16 @@ proposes for real, recompiled against the scene as it is then. The v1 routes sta
 `hmm-bridge` (its CLI is `hmm-bridge`, and `lowey-link` / `lowey-mcp` remain as aliases).
 `schemas/scene-script.v3.schema.json` lists every verb with its fields, and a Core test fails if the compiler and the
 schema disagree.
+
+**R50 — The skill is rewritten around looking; its evals score what the app measures.** The 1.x skill is archived in
+`skills/_legacy/lowey`. The new one follows PROMPT §12.3: a director loop in `SKILL.md` (read → beats → shot list →
+build → observe → critique → fix, at most three rounds; animate → contact sheet → fix, at most two), short modules,
+style notes with references and reasons, `lessons.md` seeded with the 1.x failures and the bugs perception found in
+the 2.0 samples. `reference/tools.md` is generated from the MCP server's own schemas (`Tools/gen-skill-tools.py`, checked
+in CI). `evals/run_evals.py` drives Claude through the same sixteen tools against a real app, one fresh scene per brief
+(the bridge gained `POST /v2/scenes/new` for this, outside the sixteen), and scores each brief from `observe` and
+`contact_sheet` rather than from the model's own account; a Ground or Scale fail fails a brief whatever its score.
+Voiceover briefs get a silent clip and their words through a new `transcript` verb (known words and timings on a
+voiceover — also how a laptop TTS can sync). The evals are not run in CI: it has no paired iPad, no simulator bridge
+reachable from a model, and no API key. The harness's parsing, scoring and bookkeeping are tested; the runs are
+Hesham's to do on his iPad.

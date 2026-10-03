@@ -251,6 +251,10 @@ class Bridge:
             payload["steps"] = steps
         return self.post("/v2/commit", payload)
 
+    def new_scene(self, name: str) -> dict:
+        """A fresh scene in the open project, opened (the evals harness starts each brief this way)."""
+        return self.post("/v2/scenes/new", {"name": name})
+
     def add_media(self, path: pathlib.Path, at: float | None = None, placement: str = "card") -> dict:
         """A picture or video (a clip, a Manim render) into the open scene, playing from `at` seconds.
         placement "card": a thin card standing in the 3D world; "overlay": flat over the frame (transparent graphics)."""

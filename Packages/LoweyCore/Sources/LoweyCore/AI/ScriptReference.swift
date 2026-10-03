@@ -56,6 +56,7 @@ public enum ScriptReference {
     {"do":"overlay","shape":"title|label|arrow|highlight|cross|question|exclamation|check|circle|rectangle|triangle|star","text":"1941","at":[0,0.55],"size":1.5,"follow":"Paper"}
     {"do":"flipbook","fx":"speedLines|impactBurst|sweatDrop|sparkle|smear","anchor":"Robot","at":{"word":"boom"},"until":3.2,"color":"#FFFFFF"}
     {"do":"effect","kind":"flash|shake|speedLines|zoomBlur|glitch","at":{"word":"Nobody"},"duration":0.4,"strength":1}
+    {"do":"transcript","text":"Two plus two equals four.","from":0.2,"to":3.6}   (or "words":[{"w":"Two","t":0.2,"e":0.4}]: known timings)
     {"do":"marker","name":"enigma","at":{"word":"Enigma"}}   {"do":"captions","style":"punchy|subtitle|pill|outline","position":"bottom"}
     {"do":"length","seconds":12,"fps":30}
 

@@ -216,6 +216,35 @@ extension ScriptState {
         try run(.setTimeline(copy), label: "\(scene.objects[character]?.name ?? "Character") plays \(name) at \(format(at))")
     }
 
+    /// `{"do": "transcript", "text": "Two plus two equals four.", "from": 0.2, "to": 3.6}` (or "words": [{"w","t","e"}]):
+    /// the words of a voiceover whose timings are known (a script, a TTS on the laptop), so things can sync to them.
+    mutating func transcript(_ action: JSONValue) throws {
+        let clipID = string(action, "clip")
+        guard let clip = timeline.audio.first(where: { clipID == nil ? $0.role == .voiceover : $0.id == clipID }) else {
+            throw fail("transcript needs a voiceover clip on the timeline (add the audio first)")
+        }
+        // Timeline seconds → the audio file's own time.
+        let fileTime = { (time: Double) in time - clip.start + clip.offset }
+        let words: [TranscriptWord]
+        if let list = action["words"]?.arrayValue {
+            words = list.compactMap { entry in
+                guard let text = entry["w"]?.stringValue, let start = entry["t"]?.numberValue else { return nil }
+                return TranscriptWord(text: text, start: fileTime(start), end: fileTime(entry["e"]?.numberValue ?? start + 0.3))
+            }
+        } else if let text = string(action, "text") {
+            let from = number(action, "from") ?? clip.start
+            let to = number(action, "to") ?? clip.end
+            guard to > from else { throw fail("transcript needs “to” after “from”") }
+            words = TranscriptEditing.words(from: text, start: fileTime(from), end: fileTime(to))
+        } else {
+            throw fail("transcript needs “text” (spread over from…to) or “words” [{w, t, e}]")
+        }
+        var copy = timeline
+        copy.transcripts.removeAll { $0.clip == clip.id }
+        copy.transcripts.append(Transcript(clip: clip.id, language: string(action, "language") ?? "en-US", words: words))
+        try run(.setTimeline(copy), label: "Transcript: \(words.count) words on “\(clip.name)”")
+    }
+
     mutating func lipSync(_ action: JSONValue) throws {
         let character = try target(action["character"] ?? action["target"])
         var words = timeline.words

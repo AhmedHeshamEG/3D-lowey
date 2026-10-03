@@ -72,11 +72,15 @@ jobs:
         run: python Tools/gen-blob-measurements.py --check
       - name: The Kit matches its curation, is CC0 and fits the budget
         run: python Tools/fetch-kit.py check
-      - name: Test against a fake iPad bridge
+      - name: The Scene Script v3 schema matches its generator
+        run: python Tools/gen-script-schema.py --check
+      - name: Test against a fake iPad bridge (the 16 MCP tools, the CLI, the evals harness)
         working-directory: Tools/lowey
         run: |
           pip install -e ".[test]"
           pytest -q
+      - name: The skill's tool reference is generated from the MCP server
+        run: python Tools/gen-skill-tools.py --check
 
   engine:
     name: LoweyEngine (Metal renderer) build + render tests

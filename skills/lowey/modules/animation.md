@@ -1,34 +1,35 @@
-# Cartoon animation (how things should move)
+# Animation
 
-The reference is Looney Tunes and Adobe Character Animator: poses that snap, overshoot and settle; exaggeration over
-realism; timing that lands on the words. The rig does the in-betweens: **your job is poses and timing.**
+The app does the in-betweens; you choose **poses, timing and where it lands**. Say the intent with `animate`
+(enter, exit, emphasise, react, walk_to, look_at, talk, idle); reach for presets, clips and keys only when the intent
+vocabulary doesn't say it.
 
-## The principles you actually use here
+## Timing and spacing
 
-- **Pose to pose.** Key the extremes (the expression, where the hand ends up), not the path. Step-like changes are
-  fine: the springs make them bounce.
-- **Anticipation.** Before a big action, a small opposite one: a quick `squash` −0.4 for 0.1 s before a shocked
-  stretch, a hand pulling back before a throw. 3–5 frames.
-- **Overshoot & settle.** Built into blob faces and hands. For objects, use presets that overshoot (`popIn`,
-  `bounce`, easing `backOut`/`elastic`).
-- **Squash & stretch.** The `squash` channel (−1…1) on a blob's root squashes/stretches the head from the neck;
-  surprised/shocked expressions do it for you. Keep volume: never squash and shrink at once.
-- **Holds.** After a hit, hold the pose 0.3–0.8 s so the viewer reads it. Constant motion reads as nothing.
-- **Exaggeration.** If a reaction is worth showing, make it big: `shocked` not `surprised`, a punch-in on the face.
-- **Secondary motion.** Hats and hair follow through by themselves; add a `wiggle` on a prop when it lands.
-- **Timing = meaning.** Fast (0.15–0.3 s) is funny and punchy; slow (1–2 s) is heavy or thoughtful.
+- Fast (0.15–0.3 s) is funny and punchy; slow (1–2 s) is heavy or thoughtful.
+- Ease in and out (the default). Linear motion only for machines and constant things (a conveyor, a clock hand).
+- **Holds**: after every hit hold the pose 0.3–0.8 s so it reads. Constant motion reads as nothing.
+- **Anticipation**: before a big move a small opposite one (a squash before a jump; a pull back before a throw), 3–5
+  frames. Big moves without it feel weightless.
+- **Arcs**: living things move in arcs, not ruler lines. `walk_to` arcs for you; for keys, add a middle key off the line.
+- **Overlap and follow-through**: hats, hair and the Blob's springs follow through by themselves; add a `wiggle` on a
+  prop when it lands.
 
-## Recipes
+## Ones, twos, fours
 
-- **Wave:** key `Me/Hand R` position up and out at the word, then 3 small left-right keys 0.15 s apart, then down.
-- **Point at something:** hand toward the object at the word before its name; `thinking` or `smug` face.
-- **Double take:** look away (`lookX` keys 0 → 0.6), 0.4 s later snap back (`lookX` 0) with `shocked` and a
-  `snapZoom` on the face.
-- **Jump for joy:** root up 0.4 m with `backOut` easing, `laugh` expression, squash −0.3 on the landing.
-- **Sad shrink:** `sad` expression, root scale 0.9 over 1 s, camera `pullOut`.
+- On ones (24 fps): smooth, cinematic, the Ink Look.
+- On twos: the Comic Look's snap; action beats; hand-drawn feel. `animate(..., frame_rate="twos")` per object, or the
+  Look's stepping for the scene.
+- On fours: deliberate limited animation (a held pose that jumps); rare.
+- Mixed rates are a style: the character on twos, the camera on ones.
 
-## Don'ts
+## Syncing to words
 
-- Don't key face channels by hand (brows, eyeWide…) when an expression says it.
-- Don't animate everything at once; one focus per beat.
-- Don't fill silence with motion; holds are part of the joke.
+- Peaks land **on** the word: the pop-in's overshoot, the punch-in's stop, the impact frame.
+- Anticipate by −0.1 to −0.3 s so the motion *arrives* on the word.
+- The contact sheet counts moves landing within 0.25 s of a word; a third or more should.
+
+## Check with `contact_sheet`
+
+Fix what the Motion line flags: ruler-straight paths (add an arc), no holds (insert a hold after the hit), a glide at
+one speed (ease it, or break it into a move and a settle), moves off the words (retime to `{"word": …}`).

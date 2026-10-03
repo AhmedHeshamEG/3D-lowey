@@ -28,7 +28,7 @@ final class ObserveTests: XCTestCase {
 
     func testEveryViewOfACube() async throws {
         let document = TestScenes.lookCheck(look: LookPreset.ink.id, mood: .day)
-        let session = try TestDocuments.session(document, catalog: AssetCatalog(manifest: LibraryManifest()) { _ in nil })
+        let session = try TestDocuments.session(document)
         let observation = try await session.observe(at: 0, longSide: 640, views: Set(ObserveView.allCases), subject: "Cube",
                                                     library: LibraryManifest())
         XCTAssertEqual(Set(observation.images.keys), Set(ObserveView.allCases))
@@ -40,10 +40,10 @@ final class ObserveTests: XCTestCase {
         XCTAssertEqual(report.frame.subject, "Cube")
         XCTAssertNotNil(report.frame.contrast, "measured from pixels")
         XCTAssertNotNil(report.frame.palette)
-        XCTAssertNotEqual(report.checks.first { $0.name == "Read" }?.result, .skipped)
+        XCTAssertNotEqual(report.checks.first { $0.name == "Read" }?.result, RubricCheck.Result.skipped)
         XCTAssertEqual(report.object(named: "Pip")?.isCharacter, true)
         // The silhouette is black where the cube is and white elsewhere.
-        let silhouette = try XCTUnwrap(observation.images[.silhouette])
+        let silhouette = try XCTUnwrap(observation.images[ObserveView.silhouette])
         let dark = GoldenImage.coverage(silhouette)
         XCTAssertGreaterThan(dark.content, 0.01)
         XCTAssertLessThan(dark.content, 0.5)

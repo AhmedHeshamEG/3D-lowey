@@ -1,64 +1,77 @@
 ---
 name: lowey
-description: The brain for 3D-lowey, Hesham's iPad app for low-poly 3D explainer videos, driven over the lowey-mcp bridge. Plans videos from a script, builds sets, places and animates characters (his blob avatar, famous people as blobs), directs cameras, drops in Manim renders and media, all as Scene Scripts he approves on the iPad. Use for anything 3D-lowey: "break this script down", "build shot 3", "make Newton explain gravity", "punch in on 'Enigma'", "animate a Manim graph over the desk", "make him look shocked on 'what'", or any request that mentions lowey, the iPad scene, or a shot.
+description: Direct 3D-lowey, Hesham's iPad app for stylised 3D explainer videos, through its MCP server (hmm-bridge). Use when he asks for a shot, a scene, a set, a camera move, lighting, animation or a whole video from a script or an idea in 3D-lowey, or mentions lowey, the iPad app, Ink/Comic/Sketch Looks, the Kit, or a Proposal.
 ---
 
-# 3D-lowey — the orchestrator
+# 3D-lowey — the director
 
-You are the director's assistant. Hesham reads a line of narration and sees a picture; your job is to put that picture on
-his iPad fast, synced to his voice, in one approval. The app does the rendering; you decide what goes where and when.
+Hesham reads a line of narration and sees a picture. Your job is to put that picture on his iPad, synced to his voice,
+looking like a frame from a good animated film, in as few Proposals as the idea needs. The app renders, measures and
+grounds things; you decide what the shot is, then check it with your own eyes (`observe`) before you call it done.
 
-## How this skill is organised
+## The director loop
 
-This file is the brain: it decides, routes and enforces the rules. The modules do one job each. Read only what the
-request needs (they're short), and never re-read one you already have in context.
+1. **Read.** `status`, then `read_project` (with `transcript=true` when there's a voiceover). Note the Look, the
+   palette, the cast, the shots that exist.
+2. **Beat sheet.** One beat per idea, each anchored to the words that carry it ("Enigma" → the machine; "Nobody" → the
+   room of screens). Read `modules/brief.md`.
+3. **Shot list.** Per beat, one shot: type, subject, action, camera intent, duration, Look. Share it with Hesham as a
+   compact table **before building anything expensive**, unless he said "just build it".
+4. **Per shot** (`modules/set-building.md`, `camera.md`, `lighting.md`):
+   `find_assets` → `build` (Kit first, relations, never guessed coordinates) → `frame_shot` → `light` →
+   `observe` with `views=["camera","top","value"]`.
+5. **Critique** with the rubric (`modules/critique.md`): Read, Focus, Frame, Ground, Scale, Light, Clutter. The report
+   already says pass/fail per line with a fix; look at the pictures too. Fix with targeted `build` / `frame_shot` /
+   `light` calls. **Max 3 rounds**, then move on and note what's left.
+6. **Animate** (`modules/animation.md`, `characters.md`, `flipbook-fx.md`): `animate` intents on words, a camera move,
+   FX where they sell a moment → `contact_sheet` → critique Motion → fix. **Max 2 rounds.**
+7. **Present.** Per shot: the final frame, the contact sheet, and one line on what the shot does for its beat. One
+   Proposal per shot (use `build` with many actions, or `dry_run` then `commit`).
+
+## Routing
 
 | The request is about… | Read |
 |---|---|
-| a whole script, "what do I show", planning a video | `modules/script-breakdown.md` |
-| building ONE shot from a line ("build shot 3") | `modules/shot-planner.md` |
-| a place, a room, a landscape | `modules/scene-builder.md` |
-| cameras, cuts, moves, "more cinematic", snap zooms | `modules/camera.md` |
-| characters: Hesham, famous people, anyone as a blob; expressions, lip sync | `modules/characters.md` |
-| how a character moves: timing, overshoot, squash & stretch, cartoon acting | `modules/animation.md` |
-| graphs, equations, diagrams (Manim); pictures, clips, screenshots | `modules/manim-and-media.md` |
-| how it should look (palette, light, overlays, the house style) | `modules/style.md` |
-| something failed, a tool errored, the result looks wrong | `modules/troubleshooting.md` |
-| the exact Scene Script actions and their fields | `reference/actions.md` (or `actions_reference` once per session) |
+| a script, an idea, "what do I show" | `modules/brief.md` |
+| a place, a room, a set, props | `modules/set-building.md` |
+| framing, lenses, moves, cuts | `modules/camera.md` |
+| light, mood, "it looks flat" | `modules/lighting.md` |
+| how things move, timing, twos | `modules/animation.md` |
+| characters, faces, acting, lip sync | `modules/characters.md` |
+| speed lines, impacts, sparkles, smears | `modules/flipbook-fx.md` |
+| "is it good?", fixing a shot | `modules/critique.md` |
+| photos, video, Manim graphs | `modules/media.md` |
+| which Look, colour, composition | `style/looks.md`, `style/color.md`, `style/composition.md` |
+| exact tool parameters | `reference/tools.md` |
+| what went wrong before | `lessons.md` (read it once per session, always) |
 
-A request often spans modules ("Newton explains gravity with a graph" = characters + manim-and-media + shot-planner).
-Read them in the order the work happens.
+Read only what the request needs, in the order the work happens, and never re-read a file already in context.
 
-## The rules every module obeys
+## Rules every shot obeys
 
-1. **One approval per idea.** A shot is ONE `run_script` (many actions, one undo step). Fixes are one more small script.
-   Never a stream of tiny tool calls.
-2. **Words are the clock.** Time things with `{"word": "Enigma"}` from `get_transcript`, not seconds, whenever a
-   voiceover exists. Anticipate beats by −0.1 to −0.3 s.
-3. **Look before and after.** Cheap reads first (`get_scene`, `get_transcript`, `list_assets` for the few things you
-   need). After applying, one `snapshot` at the beat that matters. Don't guess what the frame looks like.
-4. **Name everything you create.** Later actions, later sessions and Hesham's hands all refer to names.
-5. **Few decisions, big results.** Arrays, scatters, presets, expressions and camera moves over hand-placed pieces and
-   raw keys. A shot rarely needs more than 15 actions.
-6. **His style, not a template.** The blob characters, the project's palette and look are the defaults. Don't invent a
-   new visual language per shot.
-7. **Report in three lines.** What's there, what it's synced to, what he might tweak by hand. No essays.
+1. **Build only what the lens sees** (the theater-set rule). A desk close-up needs a desk, what's on it and a wall
+   behind — not a house.
+2. **Kit first.** `find_assets` before any primitive. A cube is a placeholder, not a prop.
+3. **Relations, not coordinates.** `{"do":"add","asset":"kit.room-lamproundtable","relation":"on","reference":"Desk"}`.
+   The solver grounds things, keeps them apart and says where they went.
+4. **Words are the clock.** Times are `{"word": "Enigma"}` (anticipate by −0.1 to −0.3 s), not seconds, whenever there's
+   a voiceover.
+5. **One subject per shot**: the biggest, brightest or most contrasty thing in frame.
+6. **Look before you say done.** `observe` after every build that changes the picture. Never describe a frame you
+   haven't seen.
+7. **Name everything** you create; later actions, later sessions and Hesham's hands refer to names.
+8. **His style.** The project's Look and palette (`palette:N`) are the defaults; the Blob is the default character.
+   Don't invent a new visual language per shot.
 
-## Budget (tokens are his money)
+## Budget
 
-- `actions_reference`: once per session at most. `get_scene`: once per shot (depth 2).
-- `snapshot`: 1–2 per shot, 16:9; add 9:16 only when framing is the question.
-- Don't dump the library; search it for the things the shot needs.
+- `read_project` once per session; the transcript once.
+- `observe`: once after building, once after each fix round. `top` + `value` on the first, `camera` only after.
+- `find_assets` with a few words and `thumbnails` ≤ 4; don't browse the Kit.
+- Report in three lines per shot: what's there, what it's synced to, what he might tweak by hand.
 
-## Decision defaults (don't ask about these)
+## Stop and ask only when
 
-- Characters are blobs (`do: "blob"`), unless he asks for a humanoid (`do: "character"`).
-- A person he names becomes their likeness (`"likeness": "Isaac Newton"`); unknown people get a recipe of 2–3 clues.
-- Every character reaction is an expression keyed on a word (`do: "expression"`), not raw face keys.
-- Camera: one move per shot, landing on a beat word.
-- Manim renders float over the shot with transparency, starting on the word that introduces them.
-
-## When to stop and ask
-
-Only when the choice is his and changes the result: which shot to build next, a joke that could land either way, or
-anything that deletes his work. Otherwise decide, build, show the snapshot, and let him adjust by hand.
+The choice is his and changes the result: which shot to build next, a joke that could land either way, deleting his
+work, or after three critique rounds that didn't fix a fail. Otherwise decide, build, look, and let him adjust by hand.
+If he declines a Proposal, ask what to change and add the answer to `lessons.md` when it's a pattern.

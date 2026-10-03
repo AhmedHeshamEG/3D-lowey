@@ -46,6 +46,7 @@ extension ScriptState {
         "effect": { try $0.effect($1) },
         "clip": { try $0.clip($1) },
         "lipSync": { try $0.lipSync($1) },
+        "transcript": { try $0.transcript($1) },
         "marker": { try $0.marker($1) },
         "captions": { try $0.captions($1) },
         "delete": { try $0.delete($1) },

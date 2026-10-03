@@ -20,7 +20,9 @@ extension BridgeModel {
             v2("POST", "/v2/observe") { model, request in await model.observeRoute(request) },
             v2("POST", "/v2/contact_sheet") { model, request in await model.contactSheetRoute(request) },
             v2("POST", "/v2/commit") { model, request in await model.commit(request) },
-            v2("POST", "/v2/media") { model, request in await model.v2Media(request) }
+            v2("POST", "/v2/media") { model, request in await model.v2Media(request) },
+            // Not one of the sixteen tools: the evals harness starts each brief in a fresh scene.
+            v2("POST", "/v2/scenes/new") { model, request in await model.newScene(request) }
         ]
     }
 
@@ -151,6 +153,15 @@ extension BridgeModel {
         let preview = ScriptPreview(before: editor.document, after: result.document, report: result.report)
         return await propose(script, result: result, preview: preview, editor: editor, source: request.headers["x-lowey-client"] ?? "AI",
                              views: [.camera], subject: nil)
+    }
+
+    private func newScene(_ request: HTTPRequest) async -> HTTPResponse {
+        guard let editor = app.editor else { return .error(409, "Open a project on the iPad first") }
+        struct Body: Decodable { var name: String? }
+        let name = (try? request.json(Body.self))?.name
+        guard let id = await editor.newScene(named: name) else { return .error(500, "Couldn't add a scene") }
+        notify("scene")
+        return .json(["scene": editor.baseScene.name, "id": id.raw])
     }
 
     // MARK: Seeing

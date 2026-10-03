@@ -114,6 +114,19 @@ final class DirectorVerbTests: XCTestCase {
         XCTAssertThrowsError(try run(#"{"do": "intent", "target": "Hesham", "what": "walk_to"}"#))
     }
 
+    func testTranscriptPutsKnownWordsOnTheVoiceover() throws {
+        let spread = try run(#"{"do": "transcript", "text": "Two plus two equals four.", "from": 1, "to": 3}"#)
+        let words = spread.document.scene.timeline.words
+        XCTAssertEqual(words.map(\.text), ["Two", "plus", "two", "equals", "four."])
+        XCTAssertEqual(try XCTUnwrap(words.first).start, 1, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(words.last).end, 3, accuracy: 1e-9)
+        let timed = try run(#"{"do": "transcript", "words": [{"w": "Then", "t": 0.5, "e": 0.8}, {"w": "BOOM", "t": 1.2}]}"#)
+        XCTAssertEqual(timed.document.scene.timeline.words.map(\.start), [0.5, 1.2])
+        XCTAssertEqual(timed.document.scene.timeline.transcripts.count, 1, "replaces the clip's transcript")
+        XCTAssertThrowsError(try run(#"{"do": "transcript", "clip": "nope", "text": "x"}"#))
+        XCTAssertThrowsError(try run(#"{"do": "transcript"}"#))
+    }
+
     func testTheLookVerbSetsTheLookAndPerObjectLooks() throws {
         let result = try run(#"{"do": "look", "look": "comic", "mood": "dusk", "perObject": {"Door": "sketch"}}"#)
         XCTAssertEqual(result.document.effectiveLook.presetID, "comic")
