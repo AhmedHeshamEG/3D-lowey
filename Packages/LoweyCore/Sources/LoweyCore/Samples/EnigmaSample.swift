@@ -1,8 +1,8 @@
 import Foundation
 
-/// The canonical test: the three static sets of the Enigma video,
-/// built only from blockout, drawing recipes and lights — through the same commands
-/// the UI uses. Ships as a sample project and doubles as a round-trip test fixture.
+/// The canonical test: the three static sets of the Enigma video, built only from blockout, drawing recipes and lights
+/// through the same commands the UI uses. A regression fixture for the engine, export and file format (the Theater
+/// ships `Showcase.enigma`, the same story rebuilt from the Kit in Ink, Comic and Sketch).
 public enum EnigmaSample {
     public static let projectName = "Enigma — sets"
 

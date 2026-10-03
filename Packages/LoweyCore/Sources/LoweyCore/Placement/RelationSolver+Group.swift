@@ -5,11 +5,14 @@ extension RelationSolver {
     func group(_ targets: [ObjectID], _ relation: Relation, ref: Frame, reference: ObjectID?, offset: Vec3) throws -> [Placement] {
         let refName = reference.flatMap { scene.objects[$0]?.name } ?? "the reference"
         let shapes = targets.map { shape(of: $0) }
-        let floor = ref.box.min.y
+        let floor = floorUnder(ref.box, excluding: Set(targets + (reference.map { [$0] } ?? [])))
         switch relation {
         case let .around(radius):
-            let widest = shapes.map { max($0.size.x, $0.size.z) }.max() ?? 0.5
-            let ring = radius ?? (max(ref.box.size.x, ref.box.size.z) / 2 + widest / 2 + gap * 3)
+            // Turned to face the middle, a target's box can be as wide as its diagonal.
+            let widest = shapes.map { ($0.size.x * $0.size.x + $0.size.z * $0.size.z).squareRoot() }.max() ?? 0.5
+            // Never so tight that neighbours touch: the chord between two must fit the widest.
+            let apart = targets.count > 1 ? (widest + gap * 2) / (2 * sin(.pi / Double(targets.count))) : 0
+            let ring = max(radius ?? (max(ref.box.size.x, ref.box.size.z) / 2 + widest / 2 + gap * 3), apart)
             let center = Vec3(ref.box.center.x, floor, ref.box.center.z)
             return targets.enumerated().map { index, target in
                 let angle = ref.yaw + Double(index) / Double(targets.count) * 2 * .pi
@@ -60,6 +63,21 @@ extension RelationSolver {
     }
 
     func name(of id: ObjectID) -> String { scene.objects[id]?.name ?? id.raw }
+
+    /// The floor under a box: the highest top (or Kit surface) below it, else the ground (0). Things grouped around a
+    /// floating reference still stand on the floor.
+    func floorUnder(_ box: Bounds, excluding: Set<ObjectID>) -> Double {
+        var floor = 0.0
+        for other in scene.roots where !excluding.contains(other) {
+            guard let below = bounds.worldBounds(of: other, in: scene), below.max.x > box.min.x, below.min.x < box.max.x,
+                  below.max.z > box.min.z, below.min.z < box.max.z, let frame = frame(of: other) else { continue }
+            let heights = kitInfo(other)?.surfaces.isEmpty == false ? surfaces(of: other, frame: frame).map(\.height) : [below.max.y]
+            for height in heights where height <= box.min.y + 0.01 {
+                floor = max(floor, height)
+            }
+        }
+        return floor
+    }
 
     /// The target with its box's middle at `point` and its bottom on `floor`.
     func grounded(_ target: ObjectID, shape: Bounds, at point: Vec3, floor: Double) -> Transform {

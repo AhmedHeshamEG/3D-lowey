@@ -15,6 +15,7 @@ extension ScriptState {
             if action["relation"] != nil { try state.relate(action) } else { try state.place(action) }
         },
         "relate": { try $0.relate($1) },
+        "flipbook": { try $0.flipbook($1) },
         "scaleTo": { try $0.scaleTo($1) },
         "scale_to": { try $0.scaleTo($1) },
         "recolor": { try $0.recolor($1) },

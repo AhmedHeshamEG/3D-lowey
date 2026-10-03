@@ -28,7 +28,9 @@ extension ScriptState {
     /// `{"do": "add", "asset": "desk lamp", "name": "Lamp", "relation": "on", "reference": "Desk"}`: a Kit or library
     /// model found by search, at its real size, then placed by relation when one is given.
     mutating func addAsset(_ action: JSONValue, query: String) throws {
-        let results = LibrarySearch.search(query, in: context.library).compactMap { item -> LibraryAsset? in
+        // An id ("kit.office-desk") names exactly one asset; anything else is a search.
+        let exact = context.library.asset(AssetID(raw: query)).map { [$0] } ?? []
+        let results = exact + LibrarySearch.search(query, in: context.library).compactMap { item -> LibraryAsset? in
             if case let .asset(asset) = item, asset.kit?.clipsOnly != true { return asset }
             return nil
         }

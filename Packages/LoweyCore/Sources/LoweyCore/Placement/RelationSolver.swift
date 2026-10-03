@@ -99,6 +99,10 @@ public struct RelationSolver {
     /// The target's box relative to its pivot (its own size, as turned now).
     func shape(of id: ObjectID, rotation: Quat? = nil) -> Bounds {
         guard let object = scene.objects[id] else { return .unitBase }
+        let world = scene.worldTransform(of: id)
+        if object.children.isEmpty, let local = bounds.localBounds(of: object) {
+            return local.transformed(by: Transform(position: .zero, rotation: rotation ?? world.rotation, scale: world.scale))
+        }
         var local = scene
         var moved = object
         moved.parent = nil

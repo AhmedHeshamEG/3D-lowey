@@ -19,7 +19,7 @@ struct TourOverlay: View {
     private let steps: [Step] = [
         Step(title: "This is the stage", text: "One finger orbits, two pan and pinch. Double-tap something to frame it. Tap to select.",
              systemImage: "hand.draw", alignment: .center, action: { $0.openPanel = nil }),
-        Step(title: "Make things, top right", text: "Build shapes, lights and words; draw solids; transform; the cast; your library.",
+        Step(title: "Make things, top right", text: "Build shapes, lights and words; draw ink, solids, flipbooks; transform; the cast; the Kit's models.",
              systemImage: "plus", alignment: .topTrailing, action: { $0.openPanel = .build }),
         Step(title: "The look, top left", text: "Ink, Comic, Sketch, Clay or Low-poly, the mood and the palette. Actions and select live here too.",
              systemImage: "paintpalette", alignment: .topLeading, action: { $0.openPanel = .look }),
@@ -36,7 +36,7 @@ struct TourOverlay: View {
                  editor.pause()
                  editor.directorView = false
              }),
-        Step(title: "Share it", text: "Actions ▸ Export: YouTube, Shorts, GIF, stills. It renders in the background. Have fun!",
+        Step(title: "Share it", text: "Actions ▸ Export: YouTube, Shorts, GIF, stills. It renders in the background. Every gesture is in Settings ▸ Gestures.",
              systemImage: "square.and.arrow.up", alignment: .topLeading, action: { $0.openPanel = .actions })
     ]
 

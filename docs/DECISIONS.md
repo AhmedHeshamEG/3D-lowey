@@ -598,3 +598,11 @@ Kit's surfaces and fronts. So `RelationSolver` and the v3 verbs (`place … rela
 (for something facing the camera, screen left and right). Things put `on` furniture face the way it faces. Every
 relation grounds what it places and slides it off anything it would intersect; `on` looks for a free spot on the
 surface, nearest its middle. v2 scripts upgrade on compile (aliases become verbs, v2's `place` becomes `add asset`).
+
+**R47 — The shipped samples are new, built from the Kit; the 1.x samples stay as fixtures.** The Theater's Welcome
+island (Ink, golden hour) and Enigma story (a desk at night in Ink, a room of computers in Comic on twos, a cave robot
+in Sketch with one accent, and the narrated story cut on the voiceover's words) are Scene Script v3 built with the
+Kit and the relation solver, so they show what the app and the AI actually make. A Core test builds them from the real
+Kit and fails if anything floats or intersects. The primitive-built 1.x samples (`IslandSample`, `EnigmaSample` and
+its opening and story) keep driving the engine, export and file-format tests, which check exact names and frames;
+rewriting those around Kit models would test less, not more.

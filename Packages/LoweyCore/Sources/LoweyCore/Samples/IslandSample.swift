@@ -1,7 +1,7 @@
 import Foundation
 
-/// The welcome project: a small low-poly island at golden hour with a camera fly-through — built with the same
-/// Scene Script actions anyone (or any AI) can write. It doubles as the first thing the tour shows.
+/// The 1.x welcome island, built from primitives: kept as a regression fixture for the renderer and the package format
+/// (the Theater ships `Showcase.island`, built from the Kit).
 public enum IslandSample {
     public static let projectName = "Welcome island"
 
