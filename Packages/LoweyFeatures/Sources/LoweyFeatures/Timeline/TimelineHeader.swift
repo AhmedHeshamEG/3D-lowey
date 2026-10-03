@@ -120,6 +120,10 @@ private struct KeyControls: View {
         }
         .accessibilityIdentifier("key-select-menu")
         if !editor.selectedKeys.isEmpty { selectedKeyMenus }
+        if editor.selectedKeys.isEmpty, let key = editor.firstGraphKey {
+            HmmButton("point.topleft.down.to.point.bottomright.curvepath", label: "Graph editor", size: 36) { editor.graphKey = key }
+                .accessibilityIdentifier("graph-editor")
+        }
         if editor.hasKeyClipboard { HmmPillButton("Paste", systemName: "doc.on.clipboard") { editor.pasteKeys() } }
     }
 
@@ -129,7 +133,7 @@ private struct KeyControls: View {
                 Button(choice.title) { editor.setEasing(choice.easing) }
             }
             Divider()
-            Button("Edit the curve…", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
+            Button("Graph editor…", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
                 editor.graphKey = editor.selectedKeys.min { $0.time < $1.time }
             }
         } label: {
