@@ -103,7 +103,9 @@ struct StageChrome: View {
 
     private var bottomRow: some View {
         HStack(alignment: .bottom, spacing: HmmSpacing.s) {
-            if showsJoystick, !editor.selection.isEmpty, editor.tool == .select, editor.performPhase == .idle, !editor.directorView {
+            if editor.flying {
+                FlyPad(editor: editor).transition(.scale.combined(with: .opacity))
+            } else if showsJoystick, !editor.selection.isEmpty, editor.tool == .select, editor.performPhase == .idle, !editor.directorView {
                 JoystickPad(editor: editor).transition(.scale.combined(with: .opacity))
             }
             Spacer()

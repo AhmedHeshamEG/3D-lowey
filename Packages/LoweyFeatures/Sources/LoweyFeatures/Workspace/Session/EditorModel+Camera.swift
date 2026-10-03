@@ -16,6 +16,7 @@ extension EditorModel {
 
     func setDirectorView(_ on: Bool) {
         guard on != directorView else { return }
+        if !on { stopFlying() }
         if on, shotCamera == nil {
             app.show("Add a camera first (Build ▸ Camera saves this view)")
             return
@@ -110,14 +111,14 @@ extension EditorModel {
 
     /// Places and aims the camera (a new one when there is none) at the selected subject: a shot type and a
     /// composition, the same solver the AI uses.
-    func frameShot(_ type: ShotType, composition: Composition, focalLength: Double? = nil) {
+    func frameShot(_ type: ShotType, composition: Composition, focalLength: Double? = nil, side: Double = 1) {
         let subjects = selection.filter { displayed.scene.objects[$0]?.kind != .camera }
         guard let first = subjects.first, let subject = shotSubject(first) else {
             app.show("Select the subject to frame first")
             return
         }
         let other = subjects.dropFirst().first.flatMap(shotSubject)
-        let solution = FrameShot.solve(subject, type: type, composition: composition, focalLength: focalLength, other: other,
+        let solution = FrameShot.solve(subject, type: type, composition: composition, focalLength: focalLength, other: other, side: side,
                                        aspect: deliveryFraming.aspect)
         var commands: [EditCommand] = []
         let cameraID: ObjectID
@@ -151,7 +152,7 @@ extension EditorModel {
 
     // MARK: Operating the camera by touch (Director view)
 
-    private func setCameraWorld(_ world: CoreTransform, gesture: String) {
+    func setCameraWorld(_ world: CoreTransform, gesture: String) {
         guard let camera = editedCamera, let object = displayed.scene.objects[camera] else { return }
         if performPhase == .recording, performTargets.contains(camera) {
             beginCameraTake(camera)
@@ -167,7 +168,7 @@ extension EditorModel {
         ]), coalesceKey: gesture)
     }
 
-    private var editedCameraWorld: CoreTransform? {
+    var editedCameraWorld: CoreTransform? {
         guard let camera = editedCamera else { return nil }
         if performPhase == .recording, let override = performOverride[camera] { return override }
         return displayed.scene.worldTransform(of: camera)

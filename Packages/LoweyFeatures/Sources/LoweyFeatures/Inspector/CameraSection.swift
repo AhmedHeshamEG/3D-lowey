@@ -9,6 +9,7 @@ struct CameraSection: View {
     @Bindable var editor: EditorModel
     let camera: ObjectID
     @State private var shotType: ShotType = .medium
+    @State private var fromLeft = false
     @State private var composition: Composition = .center
     @State private var moveDuration: Double?
     @State private var moveStrength = 1.0
@@ -63,10 +64,22 @@ struct CameraSection: View {
             Picker("Composition", selection: $composition) {
                 ForEach(Composition.allCases) { Text($0.title).tag($0) }
             }
-            HmmPillButton("Frame it", systemName: "camera.viewfinder", prominent: true) { editor.frameShot(shotType, composition: composition) }
-                .disabled(!editor.selection.contains { $0 != camera })
-                .accessibilityIdentifier("frame-shot")
+            Toggle("From the subject's left", isOn: $fromLeft)
+            HmmPillButton("Frame it", systemName: "camera.viewfinder", prominent: true) {
+                editor.frameShot(shotType, composition: composition, side: fromLeft ? -1 : 1)
+            }
+            .disabled(!editor.selection.contains { $0 != camera })
+            .accessibilityIdentifier("frame-shot")
             Hint("Select the camera and the subject (two subjects for a two-shot or over-the-shoulder).")
+            HmmPillButton(editor.flying ? "Stop flying" : "Fly it", systemName: "gamecontroller") {
+                if editor.flying {
+                    editor.stopFlying()
+                } else {
+                    editor.startFlying()
+                }
+            }
+            .accessibilityIdentifier("fly-camera")
+            Hint("Fly the camera with the on-screen sticks or a game controller; record in Perform to keep the move.")
         }
     }
 

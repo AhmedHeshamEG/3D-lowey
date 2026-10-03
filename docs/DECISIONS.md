@@ -565,3 +565,9 @@ drawn over the traced mouth, not a measurement.
 **R42 — Built-in clips work on all three character types.** Built and imported characters retarget the humanoid
 clips; a Blob, which has no skeleton, plays the same ten clips written for its dials (hand reach, head turn, jaw,
 squash, lift, lean), on the same clip tracks with the same crossfades, added on top of keys and face performances.
+
+**R43 — Fly is a flight model with a short ease, fed by the on-screen sticks or any game controller.** Velocity and
+turn rates follow the sticks with a time constant (the sidebar's Ease), moves stay level with the ground and tilt
+stops short of straight up, so a flown take reads as an operator's move. It writes the camera through the same path
+as the Director view's touch gestures: one undo step per flight, or the camera's keys while Perform records. A on a
+controller records or stops a take, B stops flying.

@@ -19,6 +19,12 @@ struct EditorSidebar: View {
     }
 
     private var sliders: (HmmSidebarSlider, HmmSidebarSlider) {
+        if editor.flying {
+            return (HmmSidebarSlider("Fly speed", value: Binding(get: { editor.flyer.flight.speed }, set: { editor.flyer.flight.speed = $0 }),
+                                     in: 0.3 ... 20, format: { String(format: "%.2g m/s", $0) }),
+                    HmmSidebarSlider("Ease", value: Binding(get: { editor.flyer.flight.response }, set: { editor.flyer.flight.response = $0 }),
+                                     in: 0.05 ... 1.2, format: { String(format: "%.2g s", $0) }))
+        }
         if editor.timelineMode == .perform, editor.performPhase != .idle || editor.tool == .select {
             return (HmmSidebarSlider("Filtering", value: $editor.performSettings.smoothing, in: 0 ... 1),
                     HmmSidebarSlider("Sensitivity", value: $editor.performSettings.sensitivity, in: 0.25 ... 3,

@@ -124,6 +124,8 @@ final class EditorModel {
     var performSliderKey: PropertyKey?
     var graphKey: KeyRef?
     var virtualCameraActive = false
+    /// Flying the shot camera (sticks or a game controller).
+    var flying = false
     var virtualCameraScale: Double = 1
 
     // MARK: Words, sound, scripts, export
@@ -192,6 +194,7 @@ final class EditorModel {
 
     @ObservationIgnored var overlayCache = StageOverlayCache()
     @ObservationIgnored var motionCache = MotionViewCache()
+    @ObservationIgnored let flyer = FlyPerformer()
     @ObservationIgnored let store: ProjectStore
     @ObservationIgnored private let saver: DocumentSaver
     @ObservationIgnored private var autosaveTask: Task<Void, Never>?
