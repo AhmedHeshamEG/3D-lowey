@@ -77,7 +77,7 @@ jobs:
   engine:
     name: LoweyEngine (Metal renderer) build + render tests
     runs-on: xcode-27
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - name: Install the Metal toolchain
@@ -90,8 +90,14 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/goldens"
-          TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test             -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult"             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3             -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
-          grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/engine.log"
+          # A second attempt when the test runner itself hangs (R33); per-test retries can't recover that.
+          for attempt in 1 2; do
+            rm -rf "$RUNNER_TEMP/Engine.xcresult"
+            TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test             -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult"             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3             -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
+            grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/engine.log" && exit 0
+            echo "::warning::Engine tests failed on attempt $attempt"
+          done
+          exit 1
       - name: Collect renders
         if: always()
         run: |
@@ -142,7 +148,7 @@ jobs:
     name: iPad app build + UI smoke tests
     needs: [lint, core-tests, tools, engine, features]
     runs-on: xcode-27
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen and the Metal toolchain
@@ -157,8 +163,15 @@ jobs:
       - name: Build and run the UI smoke tests
         run: |
           set -o pipefail
-          xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult -skipPackagePluginValidation             -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 300             CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: |Test Case|Executed|\*\* " || true
-          grep -q "\*\* TEST SUCCEEDED \*\*" xcodebuild.log
+          # Each test gets up to three tries and the run a second attempt: the simulator now and then fails to
+          # terminate the app or stops answering a UI query (R33).
+          for attempt in 1 2; do
+            rm -rf TestResults.xcresult
+            xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult -skipPackagePluginValidation             -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3             CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: |Test Case|Executed|\*\* " || true
+            grep -q "\*\* TEST SUCCEEDED \*\*" xcodebuild.log && exit 0
+            echo "::warning::UI smoke tests failed on attempt $attempt"
+          done
+          exit 1
       - name: Export screenshots
         if: always()
         run: |

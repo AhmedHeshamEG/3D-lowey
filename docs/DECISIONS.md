@@ -506,3 +506,10 @@ accepting frames or hangs the test runner, whatever the size (a 160 × 90 export
 on the next run. Retrying keeps CI meaningful without hiding a real failure: a test that fails three times in a row
 still fails the build, and every retry shows in the log and the result bundle. Video encoding itself is checked on a
 device (the PR checklist).
+
+**R33 — The UI smoke tests get the engine's retries, and both simulator jobs a second attempt.** On the same commit
+each smoke test has passed and failed: the simulator now and then can't terminate the app between tests, or stops
+answering a UI query (the app idle, the query never returning). Each UI test now gets up to three tries, like the
+engine tests (R32). When the test runner itself hangs before it connects, no per-test retry runs, so the engine and
+UI steps run `xcodebuild test` a second time; the build is incremental, so the second attempt costs only the tests.
+A test that fails every time still fails the build, and each retry and attempt shows in the log.

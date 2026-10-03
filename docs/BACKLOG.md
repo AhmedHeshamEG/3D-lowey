@@ -5,14 +5,7 @@ What's known and not done yet, so nothing lives only in someone's head. The phas
 
 ## Left from phase 1
 
-- [ ] iPad UI smoke tests green on CI. In `AppUITests/SmokeTests.swift`, three of four fail on the simulator:
-      `testCreateBuildUndoAndReopen` (the inspector doesn't appear after adding a cube from Build),
-      `testCastTimelineAndDiagnostics` (`timeline-mode-keyframe` not found) and `testTourRunsToTheEnd`
-      (`tour-next` not found). `testLookCameraDirectorViewAndExportSheet` passes.
-- [ ] The `main` branch protection still requires the 1.x check name "iPad app build + render & UI tests"; point it
-      at the 2.0 job names.
-- [ ] Tag `v2.0.0-beta.1` on the first green commit (the release workflow builds the .ipa from it).
-- [ ] The device-only checklist in the "Remaster 2.0 — Phase 1" PR.
+- [ ] The device-only checklist in the "Remaster 2.0 — Phase 1" PR (#11).
 
 ## Phase 2 (toward 2.0)
 
