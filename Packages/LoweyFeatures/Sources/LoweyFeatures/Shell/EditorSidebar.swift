@@ -25,6 +25,9 @@ struct EditorSidebar: View {
                                      format: { String(format: "%.2g×", $0) }))
         }
         switch editor.tool {
+        case .flipbook:
+            return (HmmSidebarSlider("Width", value: $editor.flipbook.width, in: 0.5 ... 24, format: { "\(Int(($0 * 2).rounded())) pt" }),
+                    HmmSidebarSlider("Opacity", value: $editor.flipbook.opacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" }))
         case .ink:
             return (HmmSidebarSlider("Width", value: $editor.ink.width, in: 0.001 ... 0.05, format: { "\(Int(($0 * 2000).rounded())) mm" }),
                     HmmSidebarSlider("Opacity", value: inkOpacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" },
@@ -59,6 +62,7 @@ struct ToolOptionsBar: View {
     var body: some View {
         switch editor.tool {
         case .ink: InkOptionsBar(editor: editor)
+        case .flipbook: FlipbookOptionsBar(editor: editor)
         case .draw: DrawOptionsBar(editor: editor)
         case .shadowBrush: ShadowBrushOptionsBar(editor: editor)
         case .scatter: ScatterOptionsBar(editor: editor)

@@ -12,6 +12,10 @@ extension StageGestures {
             brushStroke(recognizer, editor: editor, stage: stage)
             return
         }
+        if editor.tool == .flipbook {
+            flipbookStroke(recognizer, editor: editor)
+            return
+        }
         if editor.tool == .ink, editor.ink.mode != .draw {
             inkEditStroke(recognizer, editor: editor, stage: stage)
             return

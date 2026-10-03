@@ -49,7 +49,7 @@ extension StageGestures {
             guard !editor.selection.isEmpty, let center = stage.groundPoint(at: point) else { return .orbit }
             editor.scatterPreview = (point, 0)
             return .scatter(center: center)
-        case .ink, .draw, .shadowBrush:
+        case .ink, .draw, .shadowBrush, .flipbook:
             return .orbit
         case .select:
             return beginSelectDrag(at: point, editor: editor, stage: stage)

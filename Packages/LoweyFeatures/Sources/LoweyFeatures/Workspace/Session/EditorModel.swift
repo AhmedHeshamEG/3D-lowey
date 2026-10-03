@@ -59,6 +59,8 @@ final class EditorModel {
 
     var shadowBrush = ShadowBrushSettings()
     var ink = InkSettings()
+    var flipbook = FlipbookSettings()
+    var animationView = AnimationViewSettings()
     /// Strokes picked in the selected ink drawing (Ink ▸ Select strokes).
     var inkStrokes: Set<Int> = []
     var scatter = ScatterPanelSettings()

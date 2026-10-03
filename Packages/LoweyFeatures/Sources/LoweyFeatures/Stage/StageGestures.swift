@@ -120,7 +120,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         let finger = NSNumber(value: UITouch.TouchType.direct.rawValue)
         stroke.isEnabled = painting
         if painting {
-            let pencilOnly = editor.tool == .shadowBrush || (editor.tool == .ink && editor.ink.mode != .draw) || editor.draw.pencilOnly
+            let erasing = (editor.tool == .ink && editor.ink.mode != .draw) || (editor.tool == .flipbook && editor.flipbook.mode == .erase)
+            let pencilOnly = editor.tool == .shadowBrush || erasing || editor.draw.pencilOnly
             stroke.allowedTouchTypes = pencilOnly ? [pencil] : [pencil, finger]
             oneFingerPan.allowedTouchTypes = pencilOnly ? [finger] : []
             oneFingerPan.isEnabled = pencilOnly

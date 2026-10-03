@@ -47,6 +47,10 @@ struct TimelineRowView: View {
             WordsRow(editor: editor, layout: layout, width: width).frame(height: TimelineLayout.wordsRowHeight)
         case .effects:
             EffectsRow(editor: editor, layout: layout, width: width).frame(height: TimelineLayout.wordsRowHeight)
+        case let .flipbook(id):
+            if let track = editor.timeline.flipbook(id) {
+                FlipbookRow(editor: editor, layout: layout, track: track, width: width)
+            }
         }
     }
 }

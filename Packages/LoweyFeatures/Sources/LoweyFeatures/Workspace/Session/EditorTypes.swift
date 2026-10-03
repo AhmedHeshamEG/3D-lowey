@@ -14,6 +14,8 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case draw
     /// Paint shadow shapes onto a surface (push the shadow in or pull it out).
     case shadowBrush
+    /// Frame-by-frame 2D drawing over the shot (flipbook tracks).
+    case flipbook
     /// Drag on the ground to scatter copies of the selection.
     case scatter
 
@@ -26,6 +28,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .ink: "Ink"
         case .draw: "Solid shape"
         case .shadowBrush: "Shadow Brush"
+        case .flipbook: "Flipbook"
         case .scatter: "Scatter"
         }
     }
@@ -37,12 +40,13 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .ink: "pencil.tip"
         case .draw: "scribble.variable"
         case .shadowBrush: "circle.lefthalf.striped.horizontal"
+        case .flipbook: "book.pages"
         case .scatter: "circle.hexagongrid"
         }
     }
 
     /// Tools where the Pencil (and, if allowed, a finger) paints instead of navigating.
-    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush }
+    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook }
 
     /// Tools that draw on a guide surface.
     public var usesGuide: Bool { self == .ink || self == .draw }

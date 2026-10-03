@@ -15,6 +15,8 @@ struct DrawToolsPanel: View {
                         .accessibilityIdentifier("tool-ink")
                     ChoiceChip(title: "Solid shape", systemName: "scribble.variable", isOn: editor.tool == .draw) { editor.tool = .draw }
                         .accessibilityIdentifier("tool-draw")
+                    ChoiceChip(title: "Flipbook", systemName: "book.pages", isOn: editor.tool == .flipbook) { editor.tool = .flipbook }
+                        .accessibilityIdentifier("tool-flipbook")
                     ChoiceChip(title: "Shadow Brush", systemName: "circle.lefthalf.striped.horizontal", isOn: editor.tool == .shadowBrush) {
                         editor.tool = .shadowBrush
                     }
@@ -23,6 +25,7 @@ struct DrawToolsPanel: View {
                 switch editor.tool {
                 case .shadowBrush: shadowBrush
                 case .draw: solidShape
+                case .flipbook: FlipbookSection(editor: editor)
                 default: InkSection(editor: editor)
                 }
             }

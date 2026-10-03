@@ -70,6 +70,9 @@ public extension EditCommand {
         case let .setTracks(edits):
             return try Self.applySetTracks(edits, in: &document)
 
+        case let .setFlipbooks(edits):
+            return Self.applySetFlipbooks(edits, in: &document)
+
         case let .batch(label, commands):
             var inverses: [EditCommand] = []
             var changes = ChangeSet()
@@ -190,6 +193,24 @@ public extension EditCommand {
             document.scene.timeline.tracks = tracks
         }
         return (.setTracks(inverse.reversed()), ChangeSet(objects: changed, scene: true))
+    }
+
+    private static func applySetFlipbooks(_ edits: [FlipbookEdit], in document: inout Document) -> Applied {
+        var inverse: [FlipbookEdit] = []
+        for edit in edits {
+            var flipbooks = document.scene.timeline.flipbooks
+            if let existing = flipbooks.firstIndex(where: { $0.id == edit.id }) {
+                inverse.append(FlipbookEdit(id: edit.id, track: flipbooks[existing], index: existing))
+                if let track = edit.track { flipbooks[existing] = track } else { flipbooks.remove(at: existing) }
+            } else if let track = edit.track {
+                flipbooks.insert(track, at: min(max(edit.index ?? flipbooks.count, 0), flipbooks.count))
+                inverse.append(FlipbookEdit(id: edit.id, track: nil))
+            } else {
+                continue
+            }
+            document.scene.timeline.flipbooks = flipbooks
+        }
+        return (.setFlipbooks(inverse.reversed()), ChangeSet(scene: true))
     }
 
     // MARK: Hierarchy primitives

@@ -65,12 +65,27 @@ public final class ShotBuilder {
             let from = RenderCamera.shot(transition.from, in: animated.scene, fallback: viewpoint, aspect: aspect)
             request.transition = (from, animated.scene.objects[transition.from].map(CameraLens.init), transition.kind, transition.progress)
         }
-        request.overlay = overlayImage(animated, camera: camera, framing: framing, size: size, captions: captions)
+        let flipbooks = flipbookDraws(animated, camera: camera, size: size)
+        request.overlay = overlayImage(animated, camera: camera, framing: framing, size: size, captions: captions,
+                                       flipbooks: flipbooks.filter { $0.blend == .normal })
+        request.flipbookLayers = FlipbookPainter.layers(flipbooks, pixels: size) { context in
+            context.translateBy(x: 0, y: size.height)
+            context.scaleBy(x: 1, y: -1)
+        }
         return request
     }
 
     /// Overlays (titles, labels, arrows…) and captions drawn by Core Graphics at the frame's size (nil when none).
-    public func overlayImage(_ animated: AnimatedScene, camera: RenderCamera, framing: Framing, size: CGSize, captions: Bool) -> CGImage? {
+    /// The flipbook drawings showing at the moment, laid out for a frame of `size` pixels.
+    public func flipbookDraws(_ animated: AnimatedScene, camera: RenderCamera, size: CGSize) -> [FlipbookDraw] {
+        guard !timeline.flipbooks.isEmpty else { return [] }
+        let pose = CoreTransform(position: Vec3(camera.position), rotation: Quat(camera.orientation))
+        let layout = FlipbookLayout(width: Double(size.width), height: Double(size.height), camera: pose, fieldOfView: Double(camera.fieldOfView))
+        return layout.draws(timeline, scene: animated.scene, palette: document.palette, at: animated.time)
+    }
+
+    public func overlayImage(_ animated: AnimatedScene, camera: RenderCamera, framing: Framing, size: CGSize, captions: Bool,
+                             flipbooks: [FlipbookDraw] = []) -> CGImage? {
         let cameraTransform = CoreTransform(position: Vec3(camera.position), rotation: Quat(camera.orientation))
         let placements = OverlayLayout.placements(in: animated.scene, palette: document.palette, width: Double(size.width),
                                                   height: Double(size.height), time: animated.time) { point in
@@ -79,7 +94,7 @@ public final class ShotBuilder {
         let settings = timeline.captions
         let burns = captions && (settings?.enabled ?? false) && (settings?.burnIn ?? false) && !timeline.transcripts.isEmpty
         let caption = burns ? Captions.page(at: animated.time, in: pages(for: framing)) : nil
-        guard !placements.isEmpty || caption != nil else { return nil }
+        guard !placements.isEmpty || caption != nil || !flipbooks.isEmpty else { return nil }
         let width = Int(size.width.rounded())
         let height = Int(size.height.rounded())
         guard width > 0, height > 0,
@@ -88,6 +103,7 @@ public final class ShotBuilder {
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: 1, y: -1)
+        FlipbookPainter.draw(flipbooks, in: context)
         OverlayRenderer.draw(placements, in: context, size: size, image: mediaImage)
         if let caption, let settings {
             OverlayRenderer.drawCaption(caption.page, activeWord: caption.word, settings: settings, in: context, size: size)

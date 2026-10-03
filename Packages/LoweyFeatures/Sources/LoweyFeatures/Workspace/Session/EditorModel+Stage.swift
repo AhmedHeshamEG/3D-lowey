@@ -39,7 +39,9 @@ extension EditorModel {
             request.screen = ScreenEffects.state(at: time, effects: timeline.effects, fps: timeline.fps)
             request.guides = FramingGuides(aspect: deliveryFraming.aspect, thirds: showsThirds, safeAreas: showsSafeAreas)
         }
-        request.overlay = stageOverlay(for: stage, director: director != nil)
+        let overlay = stageOverlay(for: stage, director: director != nil)
+        request.overlay = overlay.image
+        request.flipbookLayers = overlay.layers
         if director != nil {
             var editor = stage.editorScene(showsSelection: false)
             editor.showsGrid = false
@@ -122,6 +124,7 @@ extension EditorModel {
         if tool == .scatter, selection.isEmpty { app.show("Select what to scatter first (a tree, a rock…), then drag an area") }
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
         if tool != .ink { inkStrokes = [] }
+        if tool == .flipbook, flipbook.track == nil { flipbook.track = timeline.flipbooks.last?.id }
         refreshSelectionOverlay()
         refreshGuide()
     }
@@ -187,13 +190,13 @@ extension EditorModel {
     }
 
     /// Titles, labels and captions over the stage, drawn into the frame they'll be delivered in.
-    private func stageOverlay(for stage: StageView, director: Bool) -> CGImage? {
+    private func stageOverlay(for stage: StageView, director: Bool) -> StageOverlayCache.Entry {
         let rect = frameRect
         let scale = stage.contentScaleFactor
         let pixels = CGSize(width: stage.bounds.width * scale, height: stage.bounds.height * scale)
         let key = StageOverlayCache.Key(revision: session.revision, frame: timeline.frame(for: time), size: pixels, rect: rect,
                                         director: director, viewpoint: director ? nil : stage.viewpoint)
-        if let cached = overlayCache.image(for: key) { return cached }
+        if let cached = overlayCache.entry(for: key) { return cached }
         let camera = director ? directorShot(in: stage.bounds.size)?.camera : nil
         let pose = camera.map { CoreTransform(position: Vec3($0.position), rotation: Quat($0.orientation)) }
             ?? CoreTransform(position: Vec3(stage.camera.position), rotation: Quat(stage.camera.orientation))
@@ -204,9 +207,13 @@ extension EditorModel {
             OverlayLayout.project(point, camera: pose, fieldOfView: fieldOfView, aspect: aspect)
         }
         let caption = director ? currentCaption(for: rect) : nil
-        let image = OverlayCanvas.draw(placements, caption: caption, rect: rect, pixels: pixels, scale: scale) { [weak self] in self?.mediaImage($0) }
-        overlayCache.store(image, for: key)
-        return image
+        let flipbooks = stageFlipbookLayout().map { $0.layout.draws(timeline, scene: displayed.scene, palette: document.palette, at: time) } ?? []
+        let image = OverlayCanvas.draw(placements, caption: caption, flipbooks: flipbooks.filter { $0.blend == .normal }, rect: rect, pixels: pixels,
+                                       scale: scale) { [weak self] in self?.mediaImage($0) }
+        let layers = FlipbookPainter.layers(flipbooks, pixels: pixels) { OverlayCanvas.prepare($0, rect: rect, pixels: pixels, scale: scale) }
+        let entry = StageOverlayCache.Entry(image: image, layers: layers)
+        overlayCache.store(entry, for: key)
+        return entry
     }
 
     /// The caption page shown at the playhead (burnt-in captions, Director view only).
@@ -235,25 +242,36 @@ enum DirectorFrame {
 /// Draws overlays (and a caption) into a stage-sized transparent image.
 enum OverlayCanvas {
     @MainActor
-    static func draw(_ placements: [OverlayPlacement], caption: (page: CaptionPage, word: Int?, settings: CaptionSettings)?, rect: CGRect,
-                     pixels: CGSize, scale: CGFloat, image: (String) -> CGImage?) -> CGImage? {
-        guard !placements.isEmpty || caption != nil, pixels.width >= 1, pixels.height >= 1,
+    static func draw(_ placements: [OverlayPlacement], caption: (page: CaptionPage, word: Int?, settings: CaptionSettings)?,
+                     flipbooks: [FlipbookDraw], rect: CGRect, pixels: CGSize, scale: CGFloat, image: (String) -> CGImage?) -> CGImage? {
+        guard !placements.isEmpty || caption != nil || !flipbooks.isEmpty, pixels.width >= 1, pixels.height >= 1,
               let context = CGContext(data: nil, width: Int(pixels.width), height: Int(pixels.height), bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        context.translateBy(x: 0, y: pixels.height)
-        context.scaleBy(x: scale, y: -scale)
-        context.translateBy(x: rect.minX, y: rect.minY)
+        prepare(context, rect: rect, pixels: pixels, scale: scale)
+        FlipbookPainter.draw(flipbooks, in: context)
         OverlayRenderer.draw(placements, in: context, size: rect.size, image: image)
         if let caption {
             OverlayRenderer.drawCaption(caption.page, activeWord: caption.word, settings: caption.settings, in: context, size: rect.size)
         }
         return context.makeImage()
     }
+
+    /// Top-left origin, points, the delivery frame's corner at the origin.
+    static func prepare(_ context: CGContext, rect: CGRect, pixels: CGSize, scale: CGFloat) {
+        context.translateBy(x: 0, y: pixels.height)
+        context.scaleBy(x: scale, y: -scale)
+        context.translateBy(x: rect.minX, y: rect.minY)
+    }
 }
 
-/// The last overlay image, kept while nothing that changes it changes.
+/// The last overlay image (and flipbook layers), kept while nothing that changes them changes.
 struct StageOverlayCache {
+    struct Entry {
+        var image: CGImage?
+        var layers: [FlipbookBlend: CGImage]
+    }
+
     struct Key: Equatable {
         var revision: Int
         var frame: Int
@@ -264,14 +282,14 @@ struct StageOverlayCache {
     }
 
     private var key: Key?
-    private var image: CGImage?
+    private var cached: Entry?
 
-    func image(for key: Key) -> CGImage?? {
-        self.key == key ? .some(image) : nil
+    func entry(for key: Key) -> Entry? {
+        self.key == key ? cached : nil
     }
 
-    mutating func store(_ image: CGImage?, for key: Key) {
+    mutating func store(_ entry: Entry, for key: Key) {
         self.key = key
-        self.image = image
+        cached = entry
     }
 }

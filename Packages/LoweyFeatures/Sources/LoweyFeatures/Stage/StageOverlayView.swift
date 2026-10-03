@@ -34,6 +34,12 @@ struct StageOverlayView: View {
             }
             OverlaySelectionFrames(editor: editor)
             PickedStrokes(editor: editor)
+            FlipbookOnionSkin(editor: editor)
+            if editor.flipbook.livePoints.count > 1 {
+                Path { path in path.addLines(editor.flipbook.livePoints) }
+                    .stroke(editor.currentColor.swatch(in: editor.look.palette),
+                            style: StrokeStyle(lineWidth: CGFloat(editor.flipbook.width * 2), lineCap: .round, lineJoin: .round))
+            }
             if let hover = editor.hoverPoint {
                 hoverRing(at: hover)
             }
@@ -45,7 +51,8 @@ struct StageOverlayView: View {
     private func hoverRing(at point: CGPoint) -> some View {
         let radius: CGFloat = switch editor.tool {
         case .draw: max(6, 40 * CGFloat(editor.draw.width / 0.05)) * 0.3
-        case .ink: editor.ink.mode == .erase ? CGFloat(editor.ink.eraserRadius) : 4
+        case .ink: CGFloat(editor.ink.mode == .erase ? editor.ink.eraserRadius : 4)
+        case .flipbook: CGFloat(editor.flipbook.mode == .erase ? editor.flipbook.eraserRadius : editor.flipbook.width)
         case .shadowBrush: max(10, CGFloat(editor.shadowBrush.radius) * 120)
         default: 6
         }
@@ -92,6 +99,27 @@ private struct PickedStrokes: View {
             Path { path in path.addLines(paths[index]) }
                 .stroke(theme.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
                 .shadow(color: .black.opacity(0.35), radius: 1)
+        }
+    }
+}
+
+/// The flipbook drawings around the one at the playhead: earlier ones red, later ones green, fading with distance.
+private struct FlipbookOnionSkin: View {
+    let editor: EditorModel
+
+    var body: some View {
+        let revision = editor.displayRevision + Int(editor.viewYaw)
+        let skins = revision >= 0 ? editor.flipbookOnionSkin() : []
+        ForEach(skins.indices, id: \.self) { index in
+            let skin = skins[index]
+            Path { path in
+                for outline in skin.outlines {
+                    path.addLines(outline)
+                    path.closeSubpath()
+                }
+            }
+            .fill(skin.before ? Color(red: 1, green: 0.32, blue: 0.3) : Color(red: 0.3, green: 0.85, blue: 0.45))
+            .opacity(0.45 * skin.fade)
         }
     }
 }

@@ -22,6 +22,7 @@ final class TimelineLayout {
         case audio(String)
         case words
         case effects
+        case flipbook(String)
     }
 
     /// What a drag on the lanes does, decided once as it starts.
@@ -81,6 +82,7 @@ final class TimelineLayout {
         var result: [Row] = timeline.audio.map { .audio($0.id) }
         if !timeline.transcripts.isEmpty { result.append(.words) }
         if !timeline.effects.isEmpty { result.append(.effects) }
+        result += timeline.flipbooks.map { .flipbook($0.id) }
         for entry in outline {
             result.append(.object(entry.id))
             if editor.expandedObjects.contains(entry.id) {
@@ -103,7 +105,7 @@ final class TimelineLayout {
         case .track: rowHeight - 4
         case .audio: audioRowHeight
         case .words, .effects: wordsRowHeight
-        case .object: rowHeight
+        case .object, .flipbook: rowHeight
         }
     }
 
@@ -129,7 +131,7 @@ final class TimelineLayout {
             let ids = members(of: id)
             return timeline.tracks.filter { ids.contains($0.target) }.map(\.id)
         case let .track(id): return [id]
-        case .audio, .words, .effects: return []
+        case .audio, .words, .effects, .flipbook: return []
         }
     }
 
@@ -149,7 +151,7 @@ final class TimelineLayout {
     /// Audio, word and effect rows handle their own touches.
     func isOwnGestureRow(at y: CGFloat) -> Bool {
         switch row(at: y) {
-        case .audio, .words, .effects: true
+        case .audio, .words, .effects, .flipbook: true
         default: false
         }
     }

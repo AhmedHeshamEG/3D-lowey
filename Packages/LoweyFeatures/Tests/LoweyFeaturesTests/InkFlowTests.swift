@@ -47,7 +47,7 @@ final class InkFlowTests: XCTestCase {
         let before = try XCTUnwrap(editor.activeInk.flatMap(editor.inkRecipe))
         editor.scaleInkStrokes(by: 2)
         let thicker = try XCTUnwrap(editor.activeInk.flatMap(editor.inkRecipe))
-        XCTAssertEqual(thicker.strokes[1].widths[5], before.strokes[1].widths[5] * 2, accuracy: 1e-9)
+        XCTAssertEqual(thicker.strokes[1].widths[0], before.strokes[1].widths[0] * 2, accuracy: 1e-9, "a straight line keeps its two ends")
         XCTAssertEqual(thicker.strokes[0], before.strokes[0])
         editor.moveInkStrokes(byWorld: Vec3(0, 0, 1), gesture: "drag")
         editor.moveInkStrokes(byWorld: Vec3(0, 0, 1), gesture: "drag")

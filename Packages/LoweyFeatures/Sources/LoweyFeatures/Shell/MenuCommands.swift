@@ -42,6 +42,7 @@ public struct LoweyMenuCommands: Commands {
             Button("Library") { panel(.library) }.keyboardShortcut("l", modifiers: .command)
             Button("Cast") { panel(.cast) }
             Button("Solid Shape") { tool(.draw, panel: .draw) }
+            Button("Flipbook") { tool(.flipbook, panel: .draw) }
             Button("Shadow Brush") { tool(.shadowBrush, panel: .draw) }
             Button("Lasso") { tool(.lasso, panel: nil) }
         }

@@ -79,6 +79,7 @@ struct StageChrome: View {
         switch editor.tool {
         case .shadowBrush: "circle.lefthalf.striped.horizontal"
         case .draw: "scribble.variable"
+        case .flipbook: "book.pages"
         default: "pencil.tip"
         }
     }
