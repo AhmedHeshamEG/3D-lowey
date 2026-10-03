@@ -25,7 +25,8 @@ extension EditorModel {
         let earliest = pickedSegments.map(\.start).min() ?? 0
         let shift = max(delta, -earliest)
         guard abs(shift) > 1e-6 else { return }
-        updatePickedClips("Move clips") { $0.start = timeline.snapped($0.start + shift) }
+        let fps = Double(timeline.fps)
+        updatePickedClips("Move clips") { $0.start = (($0.start + shift) * fps).rounded() / fps }
     }
 
     func setPickedClips(loop: Bool) {

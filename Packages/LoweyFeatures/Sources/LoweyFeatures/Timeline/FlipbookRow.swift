@@ -25,14 +25,7 @@ struct FlipbookRow: View {
                 }
             ZStack(alignment: .leading) {
                 ForEach(cells, id: \.offset) { cell in
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(fill(for: cell))
-                        .overlay(alignment: .leading) {
-                            if !cell.repeat, cell.width > 18 {
-                                Text("\(cell.index + 1)").font(.hmmNumbers(.caption2)).foregroundStyle(theme.text).padding(.leading, 4)
-                            }
-                        }
-                        .frame(width: max(cell.width - 1, 2), height: TimelineLayout.rowHeight - 8)
+                    FlipbookCell(number: cell.isRepeat ? nil : cell.index + 1, width: cell.width, fill: fill(for: cell))
                         .offset(x: cell.x + shift)
                         .onTapGesture { editor.showFlipbookDrawing(cell.index, of: track.id) }
                 }
@@ -78,7 +71,7 @@ struct FlipbookRow: View {
     }
 
     private func fill(for cell: Cell) -> Color {
-        if cell.repeat { return theme.text.opacity(0.08) }
+        if cell.isRepeat { return theme.text.opacity(0.08) }
         return cell.index == current ? theme.accent.opacity(0.7) : theme.text.opacity(0.18)
     }
 
@@ -91,7 +84,7 @@ struct FlipbookRow: View {
         var index: Int
         var x: CGFloat
         var width: CGFloat
-        var `repeat`: Bool
+        var isRepeat: Bool
     }
 
     /// One cell per drawing; a looping track's repeats up to its end (at most a few hundred).
@@ -104,12 +97,33 @@ struct FlipbookRow: View {
         while time < end - 1e-6, result.count < 400 {
             for (index, frame) in track.frames.enumerated() where time < end - 1e-6 {
                 let length = min(Double(frame.hold) / fps, end - time)
-                result.append(Cell(offset: result.count, index: index, x: layout.x(time), width: CGFloat(length * layout.pps), repeat: pass > 0))
+                result.append(Cell(offset: result.count, index: index, x: layout.x(time), width: CGFloat(length * layout.pps), isRepeat: pass > 0))
                 time += length
             }
             pass += 1
             if !track.loops || track.frames.isEmpty { break }
         }
         return result
+    }
+}
+
+/// One drawing's cell: as wide as its hold, numbered when there's room.
+private struct FlipbookCell: View {
+    let number: Int?
+    let width: CGFloat
+    let fill: Color
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 4, style: .continuous)
+            .fill(fill)
+            .overlay(alignment: .leading) { label }
+            .frame(width: max(width - 1, 2), height: TimelineLayout.rowHeight - 8)
+    }
+
+    @ViewBuilder private var label: some View {
+        if let number, width > 18 {
+            Text(String(number)).font(.hmmNumbers(.caption2)).foregroundStyle(theme.text).padding(.leading, 4)
+        }
     }
 }
