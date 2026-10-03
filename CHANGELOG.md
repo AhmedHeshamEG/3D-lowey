@@ -2,10 +2,7 @@
 
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first.
 
-## [2.0.0-beta.1] — A new engine, Looks, and a layout without modes
-
-Not tagged yet: the tag waits for a fully green CI run (three iPad UI smoke tests still fail; see
-[docs/BACKLOG.md](docs/BACKLOG.md#left-from-phase-1)).
+## [2.0.0-beta.1] — 2026-10-03 — A new engine, Looks, and a layout without modes
 
 The remaster's first half: everything 1.4.3 did, on a new renderer, in a new layout. Projects from 1.x open as they
 are. Every 1.x feature and what happened to it is in [docs/MIGRATION.md](docs/MIGRATION.md).
