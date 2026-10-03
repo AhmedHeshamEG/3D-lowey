@@ -189,6 +189,7 @@ final class EditorModel {
     }()
 
     @ObservationIgnored var overlayCache = StageOverlayCache()
+    @ObservationIgnored var motionCache = MotionViewCache()
     @ObservationIgnored let store: ProjectStore
     @ObservationIgnored private let saver: DocumentSaver
     @ObservationIgnored private var autosaveTask: Task<Void, Never>?

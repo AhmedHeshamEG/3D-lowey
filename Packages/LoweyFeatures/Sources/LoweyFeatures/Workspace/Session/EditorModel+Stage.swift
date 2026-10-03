@@ -30,9 +30,11 @@ extension EditorModel {
     /// The frame the stage draws now.
     func stageFrame(for stage: StageView) -> StageFrame? {
         let director = directorShot(in: stage.bounds.size)
-        let input = RenderInput(document: displayDocument, time: time, poses: displayed.poses, selection: director == nil ? Set(selection) : [],
+        var input = RenderInput(document: displayDocument, time: time, poses: displayed.poses, selection: director == nil ? Set(selection) : [],
                                 hidden: director?.id, showsHelpers: director == nil, mediaImage: { [weak self] key in self?.mediaImage(key) },
                                 catalog: library.catalog, lightBudget: 16)
+        if !isPlaying { input.ghosts = onionGhosts() }
+        input.smears = Smear.smears(in: document, at: time)
         var request = FrameRequest(input: input, camera: stage.camera, frameIndex: timeline.frame(for: time))
         if let director {
             request.lens = displayed.scene.objects[director.id].map(CameraLens.init)

@@ -17,6 +17,22 @@ public struct AssetCatalog: Sendable {
     public static let empty = AssetCatalog(manifest: LibraryManifest()) { _ in URL(fileURLWithPath: "/") }
 }
 
+/// A tinted see-through copy of an object as it is at another moment (the 3D onion skin): drawn on the stage only,
+/// never picked, no shadow, no outline.
+public struct Ghost {
+    public var scene: Scene
+    public var root: ObjectID
+    public var tint: RGBA
+    public var opacity: Double
+
+    public init(scene: Scene, root: ObjectID, tint: RGBA, opacity: Double) {
+        self.scene = scene
+        self.root = root
+        self.tint = tint
+        self.opacity = opacity
+    }
+}
+
 /// What one frame shows, before any GPU work.
 public struct RenderInput {
     /// The document with its scene evaluated at `time` (animation applied).
@@ -34,6 +50,10 @@ public struct RenderInput {
     public var catalog: AssetCatalog
     /// Point / spot lights that shine at once (the nearest to the camera win).
     public var lightBudget: Int
+    /// Onion-skin ghosts (stage only).
+    public var ghosts: [Ghost] = []
+    /// Objects stretched along fast moves this frame (`Smear.smears`).
+    public var smears: [ObjectID: Smear] = [:]
 
     public init(document: Document, time: Double = 0, poses: [ObjectID: [LoweyCore.Transform]] = [:], selection: Set<ObjectID> = [],
                 hidden: ObjectID? = nil, showsHelpers: Bool = false, mediaImage: @escaping (String) -> CGImage? = { _ in nil },
@@ -58,6 +78,8 @@ struct DrawItem {
     var blended: Bool
     var castsShadow: Bool
     var worldBounds: Bounds
+    /// An onion-skin ghost: shaded pass only (no prepass, so no picking, lines or contact shading).
+    var ghost = false
 }
 
 /// An editor helper (light bulb, camera box, particle emitter): drawn only on the stage, picked by its sphere.

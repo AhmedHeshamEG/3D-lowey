@@ -33,6 +33,7 @@ struct StageOverlayView: View {
                     .position(preview.center)
             }
             OverlaySelectionFrames(editor: editor)
+            MotionPathMarks(editor: editor)
             PickedStrokes(editor: editor)
             FlipbookOnionSkin(editor: editor)
             if editor.flipbook.livePoints.count > 1 {
@@ -120,6 +121,31 @@ private struct FlipbookOnionSkin: View {
             }
             .fill(skin.before ? Color(red: 1, green: 0.32, blue: 0.3) : Color(red: 0.3, green: 0.85, blue: 0.45))
             .opacity(0.45 * skin.fade)
+        }
+    }
+}
+
+/// The selection's motion path: the arc it travels, a dot per position key (the one at the playhead filled).
+private struct MotionPathMarks: View {
+    let editor: EditorModel
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        let revision = editor.displayRevision + Int(editor.viewYaw)
+        let path = revision >= 0 && !editor.isPlaying ? editor.motionPathOnScreen() : ([], [])
+        if path.points.count > 1 {
+            Path { line in line.addLines(path.points) }
+                .stroke(theme.accent.opacity(0.85), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round, dash: [2, 5]))
+                .shadow(color: .black.opacity(0.3), radius: 1)
+            ForEach(path.dots.indices, id: \.self) { index in
+                let dot = path.dots[index]
+                let current = abs(dot.time - editor.time) < 0.5 / Double(editor.timeline.fps)
+                Circle()
+                    .fill(current ? theme.accent : theme.background)
+                    .overlay(Circle().stroke(theme.accent, lineWidth: 2))
+                    .frame(width: 12, height: 12)
+                    .position(dot.point)
+            }
         }
     }
 }

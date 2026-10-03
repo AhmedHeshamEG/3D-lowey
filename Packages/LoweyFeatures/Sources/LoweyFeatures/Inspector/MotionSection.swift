@@ -25,6 +25,7 @@ struct MotionSection: View {
             }
             BehaviorList(editor: editor)
             stepping
+            AnimationViewOptions(editor: editor)
             TileGrid(minimum: 96) {
                 TileButton(title: "Fall", systemName: "arrow.down.to.line") { editor.simulatePhysics(.fall) }
                 TileButton(title: "Explode", systemName: "burst") { editor.simulatePhysics(.explode) }

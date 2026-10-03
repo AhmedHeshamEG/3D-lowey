@@ -7,7 +7,7 @@ import simd
 extension SceneCompiler {
     func compileSurface(_ object: SceneObject, state: Inherited, input: RenderInput, scene: inout RenderScene) {
         let pickID = state.pickAs ?? object.id
-        let index = scene.index(for: pickID, lineWeight: Float(object.lineWeight))
+        let index = state.ghost ? 0 : scene.index(for: pickID, lineWeight: Float(object.lineWeight))
         let base = uniforms(for: object, state: state, input: input, scene: &scene, objectIndex: index)
         let world = state.world.matrix
         let casts = object[.castsShadow]?.boolValue ?? true

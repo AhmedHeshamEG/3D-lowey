@@ -110,6 +110,8 @@ struct ObjectFlags: OptionSet {
     static let glossy = ObjectFlags(rawValue: 32)
     /// Ink strokes: line art, so the line pass draws no outlines around them.
     static let ink = ObjectFlags(rawValue: 64)
+    /// An onion-skin ghost (CPU side only: ghosts never reach the ID buffer).
+    static let ghost = ObjectFlags(rawValue: 128)
 }
 
 /// Buffer indices, as in LoweyCommon.h.

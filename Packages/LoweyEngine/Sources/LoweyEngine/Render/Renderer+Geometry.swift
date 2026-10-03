@@ -91,7 +91,7 @@ extension LoweyRenderer {
             encoder.setVertexBytes(&uniforms, length: MemoryLayout<FrameUniforms>.stride, index: BufferIndex.frame)
             encoder.setVertexBytes(&index, length: 4, index: BufferIndex.cascade)
             encoder.setVertexBuffer(gpu.joints, offset: 0, index: BufferIndex.joints)
-            for run in Self.runs(ordered, where: { $0.castsShadow && !$0.blended }) {
+            for run in Self.runs(ordered, where: { $0.castsShadow && !$0.blended && !$0.ghost }) {
                 let item = ordered[run.start]
                 encoder.setRenderPipelineState(item.mesh.isSkinned ? device.pipelines.shadowSkinned : device.pipelines.shadowStatic)
                 draw(item.mesh, run: run, encoder: encoder, objects: gpu.objects)
@@ -141,7 +141,7 @@ extension LoweyRenderer {
             encoder.drawIndexedPrimitives(type: .triangle, indexCount: groundMesh.indexCount, indexType: .uint32,
                                           indexBuffer: groundMesh.indices, indexBufferOffset: 0)
         }
-        for run in Self.runs(ordered, where: { $0.uniforms.baseColor.w > 0.02 }) {
+        for run in Self.runs(ordered, where: { $0.uniforms.baseColor.w > 0.02 && !$0.ghost }) {
             let item = ordered[run.start]
             encoder.setRenderPipelineState(item.mesh.isSkinned ? device.pipelines.prepassSkinned : device.pipelines.prepassStatic)
             draw(item.mesh, run: run, encoder: encoder, objects: gpu.objects)

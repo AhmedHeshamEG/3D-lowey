@@ -311,7 +311,8 @@ public struct PropertySpec: Sendable, Hashable {
         .glossy: PropertySpec(type: .bool, animatable: false, label: "Glossy"),
         .accent: PropertySpec(type: .bool, animatable: false, label: "Accent"),
         .bevel: PropertySpec(type: .float, animatable: false, label: "Bevel"),
-        .bevelSegments: PropertySpec(type: .int, animatable: false, label: "Bevel segments")
+        .bevelSegments: PropertySpec(type: .int, animatable: false, label: "Bevel segments"),
+        .smear: PropertySpec(type: .float, animatable: true, label: "Smear")
     ]
 }
 

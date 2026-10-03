@@ -34,6 +34,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         case perform(planeY: Double, last: Vec3)
         case aimCamera
         case moveOverlay(ObjectID, last: CGPoint)
+        /// Dragging a dot of the motion path (its position key at that time).
+        case pathKey(time: Double)
         case none
     }
 

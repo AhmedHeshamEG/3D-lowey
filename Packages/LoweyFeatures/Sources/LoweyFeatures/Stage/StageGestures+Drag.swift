@@ -58,6 +58,10 @@ extension StageGestures {
 
     private func beginSelectDrag(at point: CGPoint, editor: EditorModel, stage: StageView) -> DragKind {
         guard !editor.directorView else { return .orbit }
+        if let time = editor.motionPathKey(at: point) {
+            editor.setTime(time)
+            return .pathKey(time: time)
+        }
         if editor.gizmoMode == .rotate, let (axis, grab) = stage.pickRotationRing(at: point), let pivot = editor.rotationPivot,
            let ring = ringDrag(axis: axis, pivot: pivot, grab: grab, start: point, stage: stage) {
             return .turn(ring)
@@ -118,6 +122,8 @@ extension StageGestures {
         case let .moveOverlay(id, last):
             editor.moveOverlay(id, by: CGSize(width: point.x - last.x, height: point.y - last.y), gesture: gestureKey)
             drag = .moveOverlay(id, last: point)
+        case let .pathKey(time):
+            editor.moveMotionPathKey(at: time, to: point, gesture: gestureKey)
         case .none:
             break
         }
@@ -172,7 +178,7 @@ extension StageGestures {
             scatterRadius = 0
         case .perform:
             editor.performTouchEnded()
-        case .turn, .orbit, .aimCamera, .moveOverlay, .none:
+        case .turn, .orbit, .aimCamera, .moveOverlay, .pathKey, .none:
             break
         }
         editor.endGesture()

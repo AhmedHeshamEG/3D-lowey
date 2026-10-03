@@ -56,8 +56,9 @@ public final class ShotBuilder {
         let transition = timeline.transition(at: time, fallback: document.scene.activeCamera)
         let mainID = transition?.to ?? animated.camera
         let camera = RenderCamera.shot(mainID, in: animated.scene, fallback: viewpoint, aspect: aspect)
-        let input = RenderInput(document: evaluated, time: time, poses: animated.poses, mediaImage: mediaImage, catalog: catalog,
+        var input = RenderInput(document: evaluated, time: time, poses: animated.poses, mediaImage: mediaImage, catalog: catalog,
                                 lightBudget: 16)
+        input.smears = Smear.smears(in: document, at: time)
         var request = FrameRequest(input: input, camera: camera, lens: mainID.flatMap { animated.scene.objects[$0] }.map(CameraLens.init),
                                    screen: ScreenEffects.state(at: time, effects: timeline.effects, fps: timeline.fps), frameIndex: frameIndex,
                                    renderScale: renderScale, transparent: transparent)
