@@ -5,6 +5,7 @@ import SwiftUI
 /// The menu bar (iPadOS 26) with every keyboard shortcut. It acts on the open project.
 public struct LoweyMenuCommands: Commands {
     let app: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     public init(app: AppModel) {
         self.app = app
@@ -35,24 +36,29 @@ public struct LoweyMenuCommands: Commands {
         CommandMenu("Tools") {
             Button("Select") { tool(.select, panel: nil) }.keyboardShortcut("1", modifiers: .command)
             Button("Build") { panel(.build) }.keyboardShortcut("2", modifiers: .command)
-            Button("Draw") { tool(.draw, panel: .draw) }.keyboardShortcut("3", modifiers: .command)
+            Button("Draw") { tool(.ink, panel: .draw) }.keyboardShortcut("3", modifiers: .command)
             Button("Transform") { panel(.transform) }.keyboardShortcut("4", modifiers: .command)
             Button("Look") { panel(.look) }.keyboardShortcut("5", modifiers: .command)
             Divider()
             Button("Library") { panel(.library) }.keyboardShortcut("l", modifiers: .command)
             Button("Cast") { panel(.cast) }
+            Button("Solid Shape") { tool(.draw, panel: .draw) }
+            Button("Flipbook") { tool(.flipbook, panel: .draw) }
             Button("Shadow Brush") { tool(.shadowBrush, panel: .draw) }
             Button("Lasso") { tool(.lasso, panel: nil) }
         }
         CommandMenu("Scene") {
             Button("Frame Selection") { editor?.frameSelection() }.keyboardShortcut("f", modifiers: .command)
             Button("Director View") { editor.map { $0.setDirectorView(!$0.directorView) } }.keyboardShortcut("d", modifiers: [.command, .option])
+            Button("Fly the Camera") { editor.map { $0.flying ? $0.stopFlying() : $0.startFlying() } }.keyboardShortcut("y", modifiers: [.command, .option])
             Button("Hide Interface") { editor?.chromeHidden.toggle() }.keyboardShortcut("f", modifiers: [.command, .control])
             Divider()
             Button("Export…") { editor?.sheet = .export }.keyboardShortcut("e", modifiers: .command)
             Button("Paste a Scene Script") { editor?.importScriptFromClipboard() }.keyboardShortcut("v", modifiers: [.command, .option])
             Button("AI & Laptop Bridge…") { editor?.sheet = .bridge }.keyboardShortcut("b", modifiers: [.command, .shift])
             Button("Scripts…") { editor?.openScript(nil) }
+            Divider()
+            Button("New Monitor Window") { openWindow(id: LoweyWindow.monitor) }.keyboardShortcut("n", modifiers: [.command, .option])
         }
         CommandMenu("Timeline") {
             Button("Play / Pause") { editor?.togglePlay() }

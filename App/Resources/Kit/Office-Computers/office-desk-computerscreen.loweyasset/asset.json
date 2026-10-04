@@ -1,0 +1,88 @@
+{
+ "author": "Kenney",
+ "category": "Desks",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-desk-computerscreen",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Desk computer screen",
+ "realSizeMeters": [
+  1.191,
+  1.447,
+  0.511
+ ],
+ "set": "Office & Computers",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "computer",
+  "desk",
+  "desks",
+  "display",
+  "monitor",
+  "office & computers",
+  "pc",
+  "screen",
+  "table",
+  "workspace"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.2028,
+   "height": 0.511,
+   "max": [
+    0.596,
+    -0.085
+   ],
+   "min": [
+    -0.596,
+    -0.255
+   ]
+  },
+  {
+   "area": 0.1883,
+   "height": 0.851,
+   "max": [
+    0.596,
+    0.255
+   ],
+   "min": [
+    -0.596,
+    0.085
+   ]
+  },
+  {
+   "area": 0.1014,
+   "height": 1.447,
+   "max": [
+    0.596,
+    0.255
+   ],
+   "min": [
+    -0.596,
+    0.17
+   ]
+  },
+  {
+   "area": 0.0299,
+   "height": 0.071,
+   "max": [
+    0.596,
+    -0.085
+   ],
+   "min": [
+    -0.596,
+    -0.255
+   ]
+  }
+ ],
+ "triangles": 108
+}

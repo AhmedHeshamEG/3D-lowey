@@ -1,0 +1,59 @@
+{
+ "author": "Kenney",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-cardboardboxclosed",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Cardboard box closed",
+ "realSizeMeters": [
+  0.407,
+  0.538,
+  0.407
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "box",
+  "cardboard",
+  "closed",
+  "room & desk",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.043,
+   "height": 0.461,
+   "max": [
+    0.203,
+    0.203
+   ],
+   "min": [
+    0.0,
+    -0.203
+   ]
+  },
+  {
+   "area": 0.043,
+   "height": 0.442,
+   "max": [
+    0.203,
+    0.203
+   ],
+   "min": [
+    0.0,
+    -0.203
+   ]
+  }
+ ],
+ "triangles": 60
+}

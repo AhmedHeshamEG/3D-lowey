@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Vehicles",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-race",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Race",
+ "realSizeMeters": [
+  1.6,
+  0.902,
+  3.15
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/car-kit",
+ "tags": [
+  "city street",
+  "race",
+  "vehicles"
+ ],
+ "topSurfaces": [],
+ "triangles": 1952
+}

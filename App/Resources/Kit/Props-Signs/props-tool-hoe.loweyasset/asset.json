@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Tools",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-tool-hoe",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tool hoe",
+ "realSizeMeters": [
+  0.222,
+  0.628,
+  0.186
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "hoe",
+  "props & signs",
+  "tool",
+  "tools"
+ ],
+ "topSurfaces": [],
+ "triangles": 58
+}

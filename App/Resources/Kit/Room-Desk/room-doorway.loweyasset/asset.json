@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Walls & Floors",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-doorway",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Doorway",
+ "realSizeMeters": [
+  0.931,
+  1.933,
+  0.217
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "doorway",
+  "room & desk",
+  "walls & floors"
+ ],
+ "topSurfaces": [],
+ "triangles": 188
+}

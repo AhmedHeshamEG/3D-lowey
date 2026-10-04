@@ -22,6 +22,11 @@ struct LoweyApp: App {
             }
         }
         .commands { LoweyMenuCommands(app: app) }
+        // The shot, live, in its own window (beside the editor in Stage Manager, or on an external display).
+        WindowGroup(id: LoweyWindow.monitor) {
+            MonitorRoot()
+                .environment(app)
+        }
         .onChange(of: phase) { _, phase in
             guard UIDevice.current.userInterfaceIdiom != .phone else { return }
             switch phase {

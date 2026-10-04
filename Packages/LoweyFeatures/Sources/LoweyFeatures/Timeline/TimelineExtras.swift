@@ -2,83 +2,6 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// The curve leaving a key: presets, or drag the two handles.
-struct EasingEditor: View {
-    let editor: EditorModel
-    let key: KeyRef
-    @State private var handles: (Double, Double, Double, Double) = (0.42, 0, 0.58, 1)
-    @Environment(\.hmmTheme) private var theme
-
-    var body: some View {
-        HmmSheet("Curve", subtitle: "How the motion speeds up and slows down between this key and the next.") {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: HmmSpacing.xs) {
-                    ForEach(EasingChoice.allCases) { choice in
-                        ChoiceChip(title: choice.title, isOn: false) {
-                            editor.setEasing(choice.easing)
-                            handles = choice.bezier
-                        }
-                    }
-                }
-            }
-            GeometryReader { geometry in
-                let side = min(geometry.size.width, geometry.size.height)
-                let box = CGRect(x: (geometry.size.width - side) / 2 + 20, y: 20, width: side - 40, height: side - 40)
-                ZStack(alignment: .topLeading) {
-                    Path { $0.addRect(box) }.stroke(theme.line, lineWidth: 1)
-                    Path { path in
-                        let easing = currentEasing
-                        for index in 0 ... 60 {
-                            let t = Double(index) / 60
-                            let point = CGPoint(x: box.minX + CGFloat(t) * box.width, y: box.maxY - CGFloat(easing.apply(t)) * box.height)
-                            if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
-                        }
-                    }
-                    .stroke(theme.accent, lineWidth: 3)
-                    handle(box: box, first: true)
-                    handle(box: box, first: false)
-                }
-            }
-            .frame(minHeight: 260)
-        }
-        .onAppear { if case let .cubicBezier(a, b, c, d) = keyEasing { handles = (a, b, c, d) } }
-    }
-
-    private var keyEasing: Easing { editor.timeline.track(key.track)?.key(at: key.time)?.easing ?? .easeInOut }
-
-    private var currentEasing: Easing {
-        if case .cubicBezier = keyEasing { return .cubicBezier(handles.0, handles.1, handles.2, handles.3) }
-        return keyEasing
-    }
-
-    private func handle(box: CGRect, first: Bool) -> some View {
-        let anchor = first ? CGPoint(x: box.minX, y: box.maxY) : CGPoint(x: box.maxX, y: box.minY)
-        let point = CGPoint(x: box.minX + CGFloat(first ? handles.0 : handles.2) * box.width, y: box.maxY - CGFloat(first ? handles.1 : handles.3) * box.height)
-        return ZStack(alignment: .topLeading) {
-            Path { path in
-                path.move(to: anchor)
-                path.addLine(to: point)
-            }
-            .stroke(theme.text.opacity(0.5), lineWidth: 1)
-            Circle()
-                .fill(theme.text)
-                .frame(width: 28, height: 28)
-                .position(point)
-                .gesture(DragGesture()
-                    .onChanged { value in
-                        let x = min(max(Double((value.location.x - box.minX) / box.width), 0), 1)
-                        let y = min(max(Double((box.maxY - value.location.y) / box.height), -0.5), 1.5)
-                        handles = first ? (x, y, handles.2, handles.3) : (handles.0, handles.1, x, y)
-                    }
-                    .onEnded { _ in
-                        if editor.selectedKeys.isEmpty { editor.selectedKeys = [key] }
-                        editor.setEasing(.cubicBezier(handles.0, handles.1, handles.2, handles.3))
-                    })
-                .accessibilityLabel(first ? "First handle" : "Second handle")
-        }
-    }
-}
-
 /// Frame rate, length, the project's stepping.
 struct TimelineSettingsSheet: View {
     let editor: EditorModel
@@ -102,6 +25,7 @@ struct TimelineSettingsSheet: View {
                 Text("On ones").tag(Stepping.onOnes)
                 Text("On twos").tag(Stepping.onTwos)
                 Text("On threes").tag(Stepping.onThrees)
+                Text("On fours").tag(Stepping.onFours)
             }
             .pickerStyle(.segmented)
             Hint("On twos looks hand-animated. Cameras stay smooth; any object can choose its own in the inspector.")
@@ -138,7 +62,7 @@ struct PerformValueSlider: View {
             Menu {
                 Button("Move, size and turn (touch)") { editor.performSliderKey = nil }
                 ForEach(options) { option in
-                    Button(option.title) {
+                    Button(LocalizedStringKey(option.title)) {
                         editor.performSliderKey = option.key
                         value = editor.singleSelection?[option.key]?.floatValue ?? option.range.lowerBound
                     }

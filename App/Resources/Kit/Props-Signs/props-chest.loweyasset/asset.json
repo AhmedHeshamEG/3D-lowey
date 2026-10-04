@@ -1,0 +1,76 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "clips": [
+  "open",
+  "close",
+  "open-close"
+ ],
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-chest",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Chest",
+ "realSizeMeters": [
+  0.681,
+  0.673,
+  0.712
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "box",
+  "chest",
+  "props",
+  "props & signs",
+  "treasure"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.1839,
+   "height": 0.086,
+   "max": [
+    0.214,
+    0.23
+   ],
+   "min": [
+    -0.214,
+    -0.199
+   ]
+  },
+  {
+   "area": 0.1653,
+   "height": 0.66,
+   "max": [
+    0.325,
+    0.14
+   ],
+   "min": [
+    -0.325,
+    -0.109
+   ]
+  },
+  {
+   "area": 0.1543,
+   "height": 0.347,
+   "max": [
+    0.325,
+    0.341
+   ],
+   "min": [
+    -0.325,
+    -0.31
+   ]
+  }
+ ],
+ "triangles": 322
+}

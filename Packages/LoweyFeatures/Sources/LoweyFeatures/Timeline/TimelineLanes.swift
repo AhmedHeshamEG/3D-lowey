@@ -1,6 +1,7 @@
 import HmmDesign
 import LoweyCore
 import SwiftUI
+import UIKit
 
 /// The rows under the ruler, with one gesture layer over them: tap a key (or empty time), drag selected keys,
 /// box-select (Select mode, or touch and hold then drag), scroll sideways through time, up and down through rows.
@@ -24,6 +25,7 @@ struct TimelineLanes: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .overlay(alignment: .topLeading) { marquee }
+            .overlay(alignment: .topLeading) { lassoPath }
             .offset(y: -layout.scrollOffset)
         }
         .frame(width: width + TimelineLayout.labelWidth, height: height, alignment: .topLeading)
@@ -33,6 +35,7 @@ struct TimelineLanes: View {
         .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
         .simultaneousGesture(laneDrag)
         .simultaneousGesture(marqueePress, including: editor.timelineMode == .compose ? .subviews : .all)
+        .gesture(PencilLasso { point, state in pencilLasso(point, state: state) })
         .overlay(alignment: .topTrailing) { scrollIndicator }
         .onAppear { layout.viewportHeight = height }
         .onChange(of: height) { _, value in layout.viewportHeight = value }
@@ -57,6 +60,34 @@ struct TimelineLanes: View {
         }
     }
 
+    @ViewBuilder private var lassoPath: some View {
+        if layout.lasso.count > 1 {
+            Path { path in
+                path.addLines(layout.lasso)
+                path.closeSubpath()
+            }
+            .fill(theme.accent.opacity(0.1))
+            .overlay(Path { $0.addLines(layout.lasso) }.stroke(theme.accent, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// The Pencil draws a loop over the lanes: the keys inside it are picked (added to the pick in Select mode).
+    private func pencilLasso(_ point: CGPoint, state: UIGestureRecognizer.State) {
+        switch state {
+        case .began:
+            layout.momentum.stop()
+            layout.lasso = [layout.toContent(point)]
+        case .changed:
+            layout.lasso.append(layout.toContent(point))
+        case .ended:
+            editor.selectKeys(layout.keys(inside: layout.lasso), additive: editor.keyBoxSelect)
+            layout.lasso = []
+        default:
+            layout.lasso = []
+        }
+    }
+
     @ViewBuilder private var scrollIndicator: some View {
         if layout.maxScroll > 0.5, layout.viewportHeight > 20 {
             let bar = max(layout.viewportHeight * layout.viewportHeight / max(layout.contentHeight, 1), 24)
@@ -74,6 +105,10 @@ struct TimelineLanes: View {
         SpatialTapGesture(coordinateSpace: .named(TimelineLayout.lanesSpace)).onEnded { tap in
             let location = layout.toContent(tap.location)
             guard location.x >= TimelineLayout.labelWidth, !layout.isOwnGestureRow(at: location.y) else { return }
+            if editor.timelineMode != .compose, layout.key(at: location) == nil, let clip = layout.clip(at: location) {
+                editor.pickClip(clip.id, additive: editor.keyBoxSelect || !editor.selectedClips.isEmpty)
+                return
+            }
             if let hit = layout.key(at: location) {
                 if editor.keyBoxSelect {
                     editor.selectedKeys.formSymmetricDifference([hit])
@@ -129,10 +164,15 @@ struct TimelineLanes: View {
         guard start.x >= TimelineLayout.labelWidth, !layout.isOwnGestureRow(at: start.y) else {
             return vertical ? .scrollRows(start: layout.scrollOffset) : .ignore
         }
+        if !layout.lasso.isEmpty { return .ignore }
         if editor.timelineMode != .compose {
             if let hit = layout.key(at: start), editor.selectedKeys.contains(hit) {
                 layout.keyDrag = 0
                 return .moveKeys
+            }
+            if let clip = layout.clip(at: start), editor.selectedClips.contains(clip.id) {
+                layout.keyDrag = 0
+                return .moveClips
             }
             if editor.keyBoxSelect { return .marquee(origin: start) }
         } else if startsOnSelectedBar(start) {
@@ -146,6 +186,8 @@ struct TimelineLanes: View {
         case .moveKeys:
             let earliest = editor.selectedKeys.map(\.time).min() ?? 0
             layout.keyDrag = max(Double(value.translation.width) / layout.pps, -earliest)
+        case .moveClips:
+            layout.keyDrag = Double(value.translation.width) / layout.pps
         case let .pan(start):
             editor.timelineStart = max(0, start - Double(value.translation.width) / layout.pps)
         case let .scrollRows(start):
@@ -161,6 +203,8 @@ struct TimelineLanes: View {
         switch layout.laneDrag {
         case .moveKeys:
             if let delta = layout.keyDrag { editor.moveSelectedKeys(by: delta) }
+        case .moveClips:
+            if let delta = layout.keyDrag { editor.shiftPickedClips(by: delta) }
         case .marquee:
             commitMarquee()
         case .pan:

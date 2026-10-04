@@ -26,7 +26,7 @@ public enum ExportError: Error, Equatable, CustomStringConvertible {
 @MainActor
 public final class ExportSession {
     public let builder: ShotBuilder
-    private let frames: FrameRenderer
+    let frames: FrameRenderer
     private let videoFrames = VideoFrames(exact: true)
     private let logger = Logger(subsystem: "studio.hmm.lowey", category: "export")
     /// Where a project media file lives (videos on cards and overlays, Manim renders).

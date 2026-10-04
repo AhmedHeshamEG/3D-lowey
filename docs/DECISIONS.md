@@ -513,3 +513,164 @@ answering a UI query (the app idle, the query never returning). Each UI test now
 engine tests (R32). When the test runner itself hangs before it connects, no per-test retry runs, so the engine and
 UI steps run `xcodebuild test` a second time; the build is incremental, so the second attempt costs only the tests.
 A test that fails every time still fails the build, and each retry and attempt shows in the log.
+
+## 2.0 — Remaster, phase 2
+
+**R34 — Ink strokes are a drawing style, meshed toward the camera every frame.** `DrawingRecipe.Style.ink` keeps the
+strokes (points + pressure widths) like the solid styles, so guides, mirror, Scene Scripts, export and undo all work
+unchanged. The renderer builds each ink drawing as flat ribbons facing the frame's camera (`InkMesher`, cached by
+eye position and reveal), unlit in the object's colour, with an ID flag that keeps the line pass from outlining
+them: they are lines already. A billboarding vertex shader would have needed its own prepass, shading and shadow
+pipelines for a few hundred vertices per drawing. Strokes join the selected ink drawing (a new one starts when
+nothing ink is selected), like drawing on the current layer; `reveal` writes a drawing on.
+
+**R35 — Frame rates resolve per object, every frame, in one place (`FrameRates`).** Own rate (keyable) → nearest
+ancestor's → characters take their Look's (Comic: twos) → cameras ones → the project's. Phase 1 stored a Look frame
+rate that nothing read; now it decides, and an animated `stepping` lets a character drop to twos for one beat.
+
+**R36 — Flipbooks are timeline tracks drawn as 2D, blended in the composite.** A track is drawings with hold lengths
+(the Dreams model) anchored to the camera (frame-height units, so 16:9 and 9:16 share one drawing) or to an object
+(metres on the camera-facing plane through its pivot, so it shrinks with distance). Normal tracks draw into the
+overlay image under titles and captions; multiply, screen and add tracks get one layer each, blended with the shot in
+sRGB like a painting app. Drawing past the last drawing holds it to the playhead and starts a new one, so drawing at
+the playhead is how you animate. The drawn-effects library is strokes too, so every effect stays editable. Speed lines
+are parallel streaks behind the mover (Western comic), not radial focus lines.
+
+**R37 — Motion paths, onion skin and smears are views of the keys, not new data.** Paths and smears read keys only
+(object + parents, `MotionPath`), so they're cheap enough to compute every frame and the same in every export; ghosts
+evaluate the whole scene at the neighbouring keys and are cached until the document or playhead frame changes. Ghosts
+skip the prepass (never picked, outlined or shadowed) and only appear with the select tool.
+
+**R38 — The graph editor edits the same per-segment easing the timeline already stored.** A segment's tangent
+handles are its cubic-Bézier easing (normalised between the two keys), so the graph, the Easing menu and Scene Scripts
+all speak one model and nothing old needed migrating. Rotations are drawn as the three turn angles.
+
+**R39 — Poses and IK handles are for Blobs and built characters; imported rigs pose through their clips.** Blob and
+puppet poses are values on objects the user owns (dials, joint rotations), so a pose is a set of property changes
+(keyed in Keyframe mode) and a mirror is a swap of left and right. Imported skinned rigs have no joint objects to key;
+their library of poses is their clip list. Poses are stored on the character (`poseLibrary`), so they travel with it.
+
+**R40 — Characters get an inverted-hull outline on top of the Look's lines; face decals are flat.** The hull (mesh
+pushed out along its normals, back faces, Look line colour, width scaled by the character and the Look's line width)
+gives the stable, thick silhouette the line pass can't promise on a moving character. Eyes, brows, mouth, cheeks and
+the hover glow are drawn unlit, like paint on the head, and get no hull; the line pass still draws their inner lines.
+
+**R41 — Blob measurements are generated from `trace.json` and checked in CI.** `Tools/gen-blob-measurements.py`
+reproduces the head profile, face placements and body size from the trace with the same rules as the Blender build
+(the numbers came out identical to the hand-copied ones), writes `BlobCharacter+Measurements.swift`, and CI fails if
+the committed file drifts. A Swift build plugin would have needed Python inside the package build on every machine;
+a checked generated file gives the same guarantee. The smirk strokes stay authored: they are a design simplification
+drawn over the traced mouth, not a measurement.
+
+**R42 — Built-in clips work on all three character types.** Built and imported characters retarget the humanoid
+clips; a Blob, which has no skeleton, plays the same ten clips written for its dials (hand reach, head turn, jaw,
+squash, lift, lean), on the same clip tracks with the same crossfades, added on top of keys and face performances.
+
+**R43 — Fly is a flight model with a short ease, fed by the on-screen sticks or any game controller.** Velocity and
+turn rates follow the sticks with a time constant (the sidebar's Ease), moves stay level with the ground and tilt
+stops short of straight up, so a flown take reads as an operator's move. It writes the camera through the same path
+as the Director view's touch gestures: one undo step per flight, or the camera's keys while Perform records. A on a
+controller records or stops a take, B stops flying.
+
+**R44 — The Kit: 355 CC0 assets in nine Sets, all in the app (27 MB).** `Tools/fetch-kit.py` downloads Kenney packs
+from kenney.nl and Quaternius packs through itch.io's free-download flow (their official pages), refuses any pack
+whose own licence file doesn't say CC0, and converts the curated assets (`Tools/kit/curation.json`) into
+`.loweyasset` folders: a GLB scaled to metres from each pack's reference asset of known size, pivot at the base
+centre, facing +Z, toon-ready (normal, roughness and occlusion maps dropped, colour maps at most 512 px: the toon
+Looks don't use the rest, and the Quaternius props shrank from 300 MB to 4 MB), plus `asset.json` with the semantic
+metadata (real size, front, the surfaces things can stand on, tags, set, category, rig, clips, source, licence).
+Faceted and smooth variants aren't separate files: every Look picks its normals in the shader. Thumbnails are
+rendered by the app in the Ink Look the first time a tile shows and then cached, so they always match the renderer.
+The whole Kit fits the 150 MB budget with room to spare, so the Background Assets spike's fallback is taken: no
+download path (Apple-hosted Background Assets can't be exercised from CI or a sideloaded build anyway). CI checks the
+built Kit against the curation, its licences and the budget. Kit assets live in the library manifest at runtime
+only (`kit.` ids, never written to `library.json`), so projects using them open anywhere the app is installed.
+
+**R45 — The foley set is synthesised, not sampled.** Whoosh, pop, impact, click and swell are generated by LoweyCore
+(seeded noise, filters and oscillators shaped to the move each one sells), written once per project as WAV clips on
+the sound-effects track. They're ours, so CC0 by construction; identical on every device; and weigh nothing in the
+app. Each has a hit time, so attaching one to a word puts the whoosh's peak (not its start) on the word.
+
+**R46 — The relation solver came before the samples.** Phase 2 lists the samples (step 7) before Scene Script v3
+(step 9), but samples built from the Kit should be placed the way the AI will place things: by relation, with the
+Kit's surfaces and fronts. So `RelationSolver` and the v3 verbs (`place … relation`, `add … asset`, `scaleTo`,
+`recolor`) landed first, and the samples are built with them. Left and right are as seen from the reference's front
+(for something facing the camera, screen left and right). Things put `on` furniture face the way it faces. Every
+relation grounds what it places and slides it off anything it would intersect; `on` looks for a free spot on the
+surface, nearest its middle. v2 scripts upgrade on compile (aliases become verbs, v2's `place` becomes `add asset`).
+
+**R47 — The shipped samples are new, built from the Kit; the 1.x samples stay as fixtures.** The Theater's Welcome
+island (Ink, golden hour) and Enigma story (a desk at night in Ink, a room of computers in Comic on twos, a cave robot
+in Sketch with one accent, and the narrated story cut on the voiceover's words) are Scene Script v3 built with the
+Kit and the relation solver, so they show what the app and the AI actually make. A Core test builds them from the real
+Kit and fails if anything floats or intersects. The primitive-built 1.x samples (`IslandSample`, `EnigmaSample` and
+its opening and story) keep driving the engine, export and file-format tests, which check exact names and frames;
+rewriting those around Kit models would test less, not more.
+
+**R48 — Perception measures geometry in Core and colour from the render.** `observe` (ShotReport) and
+`contact_sheet` are pure Swift in LoweyCore (`Perception/`), so every number is unit-tested on Linux against scenes
+where the answer is known (a floating cube reports `grounded: false` and a 100 cm gap). Coverage and visible % come
+from a small depth-tested CPU rasteriser (about 320 × 180) of the meshes the renderer drew (Core's own meshes, else
+boxes, in tests): exact enough to say "the lamp is 26% visible", deterministic everywhere. Contrast (ΔL* in the
+squinted value view), silhouette separation (each outline pixel against the pixel a short step out, past the ink
+line and glow the Looks draw on the edge), palette and the light read come from the rendered pixels; without them
+those rubric lines are `skipped`, never guessed. Intersections compare surfaces, not boxes (a chair tucked under a
+desk isn't intersecting), and set pieces (floors, walls, terrain over 6 m or 40% of the frame) may overlap each other.
+Things in the air on purpose carry `airborne` (`above` sets it; 3D words count as signs). Clutter counts copies of one
+model once (nine desks read as one pattern). Kit models may be half to twice their real size before Scale fails.
+Focus passes when the subject is the accent, the biggest, the brightest or the most contrasty thing in frame. Motion
+is measured on screen with velocities over a 0.17 s window, so animation on twos or fours isn't read as stop-start;
+anticipation isn't measured (it's in the critique module's checklist instead). The Engine adds the pictures: the
+camera view with set-of-marks, top/front/side diagrams from an orthographic camera with the shot camera drawn on,
+the value view, and the subject's silhouette from the ID buffer. Turning perception on the shipped samples found a
+chair blocking the desk push-in, Hesham hiding the one lit screen, the cave camera inside a rock and a chest scaled to
+a third of its size; all four were fixed.
+
+**R49 — MCP v2 is sixteen tools over one `build`.** The laptop's `hmm-bridge mcp` exposes the sixteen tools of PROMPT
+§12.2. Seven of them (`frame_shot`, `light`, `set_look`, `animate`, `camera_move`, `add_overlay`, `flipbook`) are
+small, typed front doors that each send one Scene Script v3 batch to `POST /v2/build`, so every change, however it
+arrives, is the same thing on the iPad: one Proposal with a preview thumbnail, one undo step, and a reply carrying an
+`observe` of the result. That needed three new v3 verbs in Core — `frameShot` (the camera solver), `lighting` (six
+recipes placed relative to the shot camera; re-lighting replaces the recipe's lamps) and `intent` (enter, exit,
+emphasise, react, walk_to, look_at, talk, idle, resolved to presets, clips, expressions, lip sync, keys and a look-at
+behaviour) — and `look` learned the Look itself and per-object Looks. A dry run returns a `proposal_id` that `commit`
+proposes for real, recompiled against the scene as it is then. The v1 routes stay for 1.x laptops; the package is
+`hmm-bridge` (its CLI is `hmm-bridge`, and `lowey-link` / `lowey-mcp` remain as aliases).
+`schemas/scene-script.v3.schema.json` lists every verb with its fields, and a Core test fails if the compiler and the
+schema disagree.
+
+**R50 — The skill is rewritten around looking; its evals score what the app measures.** The 1.x skill is archived in
+`skills/_legacy/lowey`. The new one follows PROMPT §12.3: a director loop in `SKILL.md` (read → beats → shot list →
+build → observe → critique → fix, at most three rounds; animate → contact sheet → fix, at most two), short modules,
+style notes with references and reasons, `lessons.md` seeded with the 1.x failures and the bugs perception found in
+the 2.0 samples. `reference/tools.md` is generated from the MCP server's own schemas (`Tools/gen-skill-tools.py`, checked
+in CI). `evals/run_evals.py` drives Claude through the same sixteen tools against a real app, one fresh scene per brief
+(the bridge gained `POST /v2/scenes/new` for this, outside the sixteen), and scores each brief from `observe` and
+`contact_sheet` rather than from the model's own account; a Ground or Scale fail fails a brief whatever its score.
+Voiceover briefs get a silent clip and their words through a new `transcript` verb (known words and timings on a
+voiceover — also how a laptop TTS can sync). The evals are not run in CI: it has no paired iPad, no simulator bridge
+reachable from a model, and no API key. The harness's parsing, scoring and bookkeeping are tested; the runs are
+Hesham's to do on his iPad.
+
+**R51 — Localisation, accessibility, windows and restoration (2.0).** English, Italian and Arabic live in one String
+Catalog in the app (`App/Resources/Localizable.xcstrings`, plus `InfoPlist.xcstrings` for the permission prompts).
+`Tools/strings.py` finds the chrome strings in the code (literals given to SwiftUI and the hmm. components, toasts,
+accessibility labels, and the titles enums return for display) and CI fails when one is missing or untranslated.
+hmm-kit's components now look their titles up in the app's catalog (changed upstream, then synced), so passing a
+String to `HmmPillButton` localises like a literal; toasts take a `String.LocalizationValue`. Interpolated strings are
+keyed the way SwiftUI keys them (integers `%lld`, the rest `%@`); English plurals built with `?:` inside a string are
+not in the catalog and stay English. Arabic mirrors the chrome; the timeline and the stage's overlays stay left to
+right (time and frame space aren't text). Accessibility: every tap target is a button to VoiceOver, panels scroll
+under large Dynamic Type and numbers scale too, animations go through the Reduce Motion-aware helpers, and Increase
+Contrast gets opaque outlined chrome like Reduce Transparency. Windows: one window edits (a stage edits one project
+at a time); another main window offers to take over or become a monitor, and the Monitor window (Actions ▸ Monitor,
+⌥⌘N) shows the shot live through its camera as it exports — beside the editor in Stage Manager or on an external
+display. The app reopens the project, scene, playhead, panel, Director view and timeline state it was left in.
+
+**R52 — App Store readiness without a Mac.** The icon follows the studio rule: one glyph on the accent (a faceted,
+ink-outlined cube on #FFB847), full bleed so the system's corners match the other apps, with a dark variant; it's
+drawn by `Tools/make_icon.py`. App Store screenshots come from UI tests on CI's iPad 13" and largest-iPhone
+simulators, with a launch flag that hides the UI-test overlays. The App Store variant is made by the TestFlight job
+from the same project by switching three Info.plist values (bridge off, no background audio) rather than keeping a
+second target. The TestFlight upload signs with an App Store Connect API key and is skipped, not failed, when the
+secrets aren't set. 2.0 is paid upfront: the StoreKit configuration exists for testing later purchases and is empty.

@@ -1,0 +1,45 @@
+{
+ "author": "Kenney",
+ "category": "Shop",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-column",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Column",
+ "realSizeMeters": [
+  1.706,
+  2.35,
+  1.706
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/mini-market",
+ "tags": [
+  "column",
+  "props & signs",
+  "shop"
+ ],
+ "topSurfaces": [
+  {
+   "area": 2.1821,
+   "height": 2.35,
+   "max": [
+    0.853,
+    0.853
+   ],
+   "min": [
+    -0.853,
+    -0.853
+   ]
+  }
+ ],
+ "triangles": 188
+}

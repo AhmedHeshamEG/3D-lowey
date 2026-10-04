@@ -30,6 +30,7 @@ final class EditorModel {
     var selection: [ObjectID] = [] {
         didSet {
             guard selection != oldValue else { return }
+            if !inkStrokes.isEmpty { inkStrokes = [] }
             if AppIdentity.isUITesting { trail("sel=[\(selection.compactMap { scene.objects[$0]?.name }.joined(separator: ","))]") }
             refreshSelectionOverlay()
         }
@@ -57,6 +58,11 @@ final class EditorModel {
     }
 
     var shadowBrush = ShadowBrushSettings()
+    var ink = InkSettings()
+    var flipbook = FlipbookSettings()
+    var animationView = AnimationViewSettings()
+    /// Strokes picked in the selected ink drawing (Ink ▸ Select strokes).
+    var inkStrokes: Set<Int> = []
     var scatter = ScatterPanelSettings()
     /// The current colour: new blockout, strokes and "paint" use it.
     var currentColor: ColorValue = .palette(0)
@@ -104,6 +110,8 @@ final class EditorModel {
     var timelineStart: Double = 0
     var timelineCollapsed = false
     var selectedKeys: Set<KeyRef> = []
+    /// Picked clip segments (ids), moved and changed together.
+    var selectedClips: Set<String> = []
     var keyBoxSelect = false
     var expandedObjects: Set<ObjectID> = []
     var collapsedGroups: Set<ObjectID> = []
@@ -116,6 +124,8 @@ final class EditorModel {
     var performSliderKey: PropertyKey?
     var graphKey: KeyRef?
     var virtualCameraActive = false
+    /// Flying the shot camera (sticks or a game controller).
+    var flying = false
     var virtualCameraScale: Double = 1
 
     // MARK: Words, sound, scripts, export
@@ -183,6 +193,8 @@ final class EditorModel {
     }()
 
     @ObservationIgnored var overlayCache = StageOverlayCache()
+    @ObservationIgnored var motionCache = MotionViewCache()
+    @ObservationIgnored let flyer = FlyPerformer()
     @ObservationIgnored let store: ProjectStore
     @ObservationIgnored private let saver: DocumentSaver
     @ObservationIgnored private var autosaveTask: Task<Void, Never>?
@@ -237,7 +249,7 @@ final class EditorModel {
             return true
         } catch {
             logger.error("Command failed: \(String(describing: error))")
-            app.show("That didn't work: \(error)", kind: .error)
+            app.show("That didn't work: \(String(describing: error))", kind: .error)
             HmmHaptics.play(.error)
             return false
         }
@@ -259,7 +271,7 @@ final class EditorModel {
             refreshDisplay(changes)
             afterChange()
         } catch {
-            app.show("Undo failed: \(error)", kind: .error)
+            app.show("Undo failed: \(String(describing: error))", kind: .error)
         }
     }
 
@@ -269,7 +281,7 @@ final class EditorModel {
             refreshDisplay(changes)
             afterChange()
         } catch {
-            app.show("Redo failed: \(error)", kind: .error)
+            app.show("Redo failed: \(String(describing: error))", kind: .error)
         }
     }
 
@@ -301,6 +313,7 @@ final class EditorModel {
         do {
             _ = try await saver.save(document, revision: revision, to: projectURL)
             lastSaved = Date()
+            SessionRestoration(self).save()
         } catch {
             app.show("Autosave failed: \(error.localizedDescription)", kind: .error)
         }

@@ -1,0 +1,85 @@
+{
+ "author": "Kenney",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-bookcaseclosedwide",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Bookcase closed wide",
+ "realSizeMeters": [
+  1.532,
+  1.513,
+  0.479
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "bookcase",
+  "books",
+  "closed",
+  "room & desk",
+  "shelf",
+  "storage",
+  "wide"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.7334,
+   "height": 1.513,
+   "max": [
+    0.766,
+    0.239
+   ],
+   "min": [
+    -0.766,
+    -0.239
+   ]
+  },
+  {
+   "area": 0.6116,
+   "height": 1.053,
+   "max": [
+    0.728,
+    0.201
+   ],
+   "min": [
+    -0.728,
+    -0.239
+   ]
+  },
+  {
+   "area": 0.6116,
+   "height": 0.594,
+   "max": [
+    0.728,
+    0.201
+   ],
+   "min": [
+    -0.728,
+    -0.239
+   ]
+  },
+  {
+   "area": 0.6116,
+   "height": 0.134,
+   "max": [
+    0.728,
+    0.201
+   ],
+   "min": [
+    -0.728,
+    -0.239
+   ]
+  }
+ ],
+ "triangles": 372
+}

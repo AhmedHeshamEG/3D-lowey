@@ -117,7 +117,7 @@ final class ScriptCompilerTests: XCTestCase {
         XCTAssertTrue(error(##"{"do": "set", "target": "Nope", "property": "color", "value": "#fff000"}"##).contains("no object called “Nope”"))
         XCTAssertTrue(error(##"{"do": "preset", "target": "A", "preset": "popIn", "at": {"word": "enigma"}}"##).contains("isn't in the transcript"))
         XCTAssertTrue(error(##"{"do": "add", "shape": "blob"}"##).contains("unknown shape"))
-        XCTAssertTrue(error(##"{"do": "place", "asset": "tiger"}"##).contains("nothing in the library"))
+        XCTAssertTrue(error(##"{"do": "place", "asset": "tiger"}"##).contains("nothing in the Kit or library"))
         XCTAssertTrue(error(##"{"do": "add"}, {"do": "cameraMove", "move": "pushIn"}"##).hasPrefix("Action 2:"))
         XCTAssertTrue(error(##"{"do": "set", "target": "A", "property": "color", "value": "red"}"##).contains("isn't a colour"))
     }

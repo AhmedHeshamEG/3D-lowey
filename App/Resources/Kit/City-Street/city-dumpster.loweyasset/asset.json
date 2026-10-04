@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Street",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-dumpster",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Dumpster",
+ "realSizeMeters": [
+  2.937,
+  2.237,
+  3.951
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-roads",
+ "tags": [
+  "city street",
+  "dumpster",
+  "street"
+ ],
+ "topSurfaces": [],
+ "triangles": 234
+}

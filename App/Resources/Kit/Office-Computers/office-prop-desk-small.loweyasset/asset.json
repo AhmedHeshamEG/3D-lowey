@@ -1,0 +1,49 @@
+{
+ "author": "Quaternius",
+ "category": "Furniture",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-prop-desk-small",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Desk small",
+ "realSizeMeters": [
+  1.445,
+  0.658,
+  0.721
+ ],
+ "set": "Office & Computers",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "desk",
+  "furniture",
+  "office & computers",
+  "prop",
+  "small",
+  "table",
+  "workspace"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.8716,
+   "height": 0.658,
+   "max": [
+    0.723,
+    0.36
+   ],
+   "min": [
+    -0.723,
+    -0.36
+   ]
+  }
+ ],
+ "triangles": 496
+}

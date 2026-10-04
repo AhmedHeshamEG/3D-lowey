@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-turret-single",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Turret single",
+ "realSizeMeters": [
+  1.362,
+  2.042,
+  1.639
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "base",
+  "single",
+  "space",
+  "turret"
+ ],
+ "topSurfaces": [],
+ "triangles": 576
+}

@@ -22,6 +22,7 @@ let package = Package(
             dependencies: [
                 .product(name: "HmmCommands", package: "HmmKit"),
                 .product(name: "HmmDocuments", package: "HmmKit"),
+                .product(name: "HmmPerception", package: "HmmKit"),
                 .product(name: "HmmTranscript", package: "HmmKit")
             ],
             path: "Sources/LoweyCore",

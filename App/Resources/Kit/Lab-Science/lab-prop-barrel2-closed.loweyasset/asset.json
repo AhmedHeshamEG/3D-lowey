@@ -1,0 +1,83 @@
+{
+ "author": "Quaternius",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-barrel2-closed",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Barrel2 closed",
+ "realSizeMeters": [
+  0.38,
+  0.537,
+  0.38
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "barrel2",
+  "closed",
+  "lab & science",
+  "prop",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.069,
+   "height": 0.115,
+   "max": [
+    0.148,
+    0.148
+   ],
+   "min": [
+    -0.148,
+    -0.148
+   ]
+  },
+  {
+   "area": 0.0622,
+   "height": 0.458,
+   "max": [
+    0.142,
+    0.142
+   ],
+   "min": [
+    -0.142,
+    -0.142
+   ]
+  },
+  {
+   "area": 0.0246,
+   "height": 0.089,
+   "max": [
+    0.123,
+    0.124
+   ],
+   "min": [
+    -0.123,
+    -0.124
+   ]
+  },
+  {
+   "area": 0.0246,
+   "height": 0.179,
+   "max": [
+    0.123,
+    0.124
+   ],
+   "min": [
+    -0.123,
+    -0.124
+   ]
+  }
+ ],
+ "triangles": 4180
+}

@@ -1,0 +1,48 @@
+{
+ "author": "Kenney",
+ "category": "Desks",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-deskcorner",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Desk corner",
+ "realSizeMeters": [
+  1.866,
+  0.736,
+  1.866
+ ],
+ "set": "Office & Computers",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "corner",
+  "desk",
+  "desks",
+  "office & computers",
+  "table",
+  "workspace"
+ ],
+ "topSurfaces": [
+  {
+   "area": 2.2294,
+   "height": 0.736,
+   "max": [
+    0.933,
+    0.933
+   ],
+   "min": [
+    -0.933,
+    -0.933
+   ]
+  }
+ ],
+ "triangles": 250
+}

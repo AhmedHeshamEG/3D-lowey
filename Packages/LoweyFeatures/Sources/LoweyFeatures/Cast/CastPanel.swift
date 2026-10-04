@@ -69,6 +69,7 @@ struct CharacterSections: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.m) {
             if editor.isBlob(character) { ExpressionTriggers(editor: editor, character: character) }
+            if PoseLibrary.character(of: character, in: editor.baseScene) == character { PoseSection(editor: editor, character: character) }
             ClipsSection(editor: editor, character: character)
             FaceSection(editor: editor, character: character)
             if editor.castType(of: character) == .puppet {

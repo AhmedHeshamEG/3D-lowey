@@ -1,0 +1,45 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-bottle",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Bottle",
+ "realSizeMeters": [
+  0.138,
+  0.403,
+  0.159
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "bottle",
+  "props",
+  "props & signs"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0064,
+   "height": 0.352,
+   "max": [
+    0.043,
+    0.05
+   ],
+   "min": [
+    -0.043,
+    -0.05
+   ]
+  }
+ ],
+ "triangles": 96
+}

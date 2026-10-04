@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Shopfronts",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-detail-awning",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Detail awning",
+ "realSizeMeters": [
+  3.712,
+  3.712,
+  1.373
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-commercial",
+ "tags": [
+  "awning",
+  "city street",
+  "detail",
+  "shopfronts"
+ ],
+ "topSurfaces": [],
+ "triangles": 40
+}

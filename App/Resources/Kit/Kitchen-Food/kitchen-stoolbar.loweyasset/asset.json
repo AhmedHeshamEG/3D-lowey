@@ -1,0 +1,70 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-stoolbar",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Stool bar",
+ "realSizeMeters": [
+  0.508,
+  0.833,
+  0.44
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "bar",
+  "kitchen",
+  "kitchen & food",
+  "stool"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.1678,
+   "height": 0.756,
+   "max": [
+    0.254,
+    0.22
+   ],
+   "min": [
+    -0.254,
+    -0.22
+   ]
+  },
+  {
+   "area": 0.1338,
+   "height": 0.833,
+   "max": [
+    0.227,
+    0.197
+   ],
+   "min": [
+    -0.227,
+    -0.197
+   ]
+  },
+  {
+   "area": 0.0266,
+   "height": 0.278,
+   "max": [
+    0.128,
+    0.122
+   ],
+   "min": [
+    -0.128,
+    -0.122
+   ]
+  }
+ ],
+ "triangles": 176
+}

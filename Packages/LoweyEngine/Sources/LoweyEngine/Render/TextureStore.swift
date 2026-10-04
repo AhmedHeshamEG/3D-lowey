@@ -10,6 +10,9 @@ final class TextureStore {
     private let loader: MTKTextureLoader
     private var entries: [String: (texture: MTLTexture, lastUse: UInt64, bytes: Int)] = [:]
     private var imageIdentity: [String: ObjectIdentifier] = [:]
+    /// Images held for keys whose image is remade every frame (the overlay, flipbook layers): while held, a newer
+    /// image can't get a freed one's identity and show its stale texture.
+    private var held: [String: CGImage] = [:]
     private var clock: UInt64 = 0
     private var bytes = 0
     var budget = 256 * 1024 * 1024
@@ -31,9 +34,11 @@ final class TextureStore {
     }
 
     /// A picture or video frame. `key` names the frame; the texture is replaced when the image object changes.
-    func texture(for image: CGImage, key: String, maxSide: Int) -> MTLTexture? {
+    /// `holdsImage` for keys that get a new image every frame.
+    func texture(for image: CGImage, key: String, maxSide: Int, holdsImage: Bool = false) -> MTLTexture? {
         let identity = ObjectIdentifier(image)
         if imageIdentity[key] == identity, let hit = lookup(key) { return hit }
+        if holdsImage { held[key] = image }
         let fitted = Self.fitted(image, maxSide: maxSide)
         guard let made = try? loader.newTexture(cgImage: fitted, options: options) else { return nil }
         imageIdentity[key] = identity
@@ -57,6 +62,7 @@ final class TextureStore {
             for (old, entry) in entries.sorted(by: { $0.value.lastUse < $1.value.lastUse }) where old != key {
                 entries[old] = nil
                 imageIdentity[old] = nil
+                held[old] = nil
                 bytes -= entry.bytes
                 if bytes <= budget * 3 / 4 { break }
             }
@@ -67,6 +73,7 @@ final class TextureStore {
     func removeAll() {
         entries.removeAll()
         imageIdentity.removeAll()
+        held.removeAll()
         bytes = 0
     }
 

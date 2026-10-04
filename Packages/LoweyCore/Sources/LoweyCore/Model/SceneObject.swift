@@ -34,6 +34,8 @@ public struct DrawingRecipe: Codable, Hashable, Sendable {
         case extrude
         /// Profile revolved around the local Y axis.
         case lathe
+        /// Pressure ribbons that always face the camera: line art in 3D (see `InkMesher`).
+        case ink
     }
 
     public struct Stroke: Codable, Hashable, Sendable {

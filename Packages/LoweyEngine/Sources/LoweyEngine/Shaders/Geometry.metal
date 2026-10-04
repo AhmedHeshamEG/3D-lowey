@@ -55,6 +55,39 @@ vertex SurfaceVaryings lw_vertexSkinned(SkinnedVertexIn in [[stage_in]], uint in
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Character outlines (inverted hull): the surface pushed out along its normal by the hull width (metres).
+
+static inline SurfaceVaryings lw_hull(SurfaceVaryings out, float width, constant FrameUniforms &frame) {
+    float4 world = float4(out.worldPosition + out.worldNormal * width, 1.0);
+    out.worldPosition = world.xyz;
+    out.viewPosition = (frame.view * world).xyz;
+    out.position = frame.viewProjection * world;
+    return out;
+}
+
+vertex SurfaceVaryings lw_vertexHull(VertexIn in [[stage_in]], uint instance [[instance_id]],
+                                      constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
+                                      constant FrameUniforms &frame [[buffer(LW_FRAME)]],
+                                      constant float &width [[buffer(LW_CASCADE)]]) {
+    constant ObjectUniforms &object = objects[instance];
+    SurfaceVaryings out = lw_hull(lw_surface(float4(in.position, 1.0), in.normal, in.uv, 0.0, object, frame), width, frame);
+    out.objectIndex = instance;
+    return out;
+}
+
+vertex SurfaceVaryings lw_vertexHullSkinned(SkinnedVertexIn in [[stage_in]], uint instance [[instance_id]],
+                                             constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
+                                             constant FrameUniforms &frame [[buffer(LW_FRAME)]],
+                                             constant float4x4 *palette [[buffer(LW_JOINTS)]],
+                                             constant float &width [[buffer(LW_CASCADE)]]) {
+    constant ObjectUniforms &object = objects[instance];
+    Skinned skinned = lw_skin(in.position, in.normal, in.joints, in.weights, palette, object.ids.w);
+    SurfaceVaryings out = lw_hull(lw_surface(skinned.position, skinned.normal, in.uv, 0.0, object, frame), width, frame);
+    out.objectIndex = instance;
+    return out;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 // Sun shadows (depth only, one cascade per pass)
 
 struct ShadowVaryings {

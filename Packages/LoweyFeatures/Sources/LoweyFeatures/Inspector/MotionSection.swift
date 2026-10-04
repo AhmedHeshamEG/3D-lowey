@@ -25,6 +25,7 @@ struct MotionSection: View {
             }
             BehaviorList(editor: editor)
             stepping
+            AnimationViewOptions(editor: editor)
             TileGrid(minimum: 96) {
                 TileButton(title: "Fall", systemName: "arrow.down.to.line") { editor.simulatePhysics(.fall) }
                 TileButton(title: "Explode", systemName: "burst") { editor.simulatePhysics(.explode) }
@@ -32,7 +33,7 @@ struct MotionSection: View {
             }
             Menu {
                 ForEach(PivotPlace.allCases, id: \.self) { place in
-                    Button(place.title) { editor.makeJoint(place) }
+                    Button(LocalizedStringKey(place.title)) { editor.makeJoint(place) }
                 }
             } label: {
                 Label("Make a puppet joint", systemImage: "figure.arms.open").font(.hmm(.body, weight: .semibold))
@@ -47,7 +48,7 @@ struct MotionSection: View {
     private var stagger: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.xs) {
             Picker("One after another", selection: $editor.stagger.order) {
-                ForEach(StaggerChoice.allCases) { Text($0.title).tag($0) }
+                ForEach(StaggerChoice.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             LabeledSlider(title: "Delay", value: editor.stagger.delay, range: 0 ... 0.5, format: { "\(NumberFormat.short($0)) s" }) {
                 editor.stagger.delay = $0
@@ -70,6 +71,7 @@ struct MotionSection: View {
             Text("Ones").tag(Stepping?.some(.onOnes))
             Text("Twos").tag(Stepping?.some(.onTwos))
             Text("Threes").tag(Stepping?.some(.onThrees))
+            Text("Fours").tag(Stepping?.some(.onFours))
         }
         .pickerStyle(.segmented)
         .accessibilityLabel("Animated on")
@@ -190,6 +192,6 @@ struct MetadataSection: View {
     }
 
     private func line(_ text: String) -> some View {
-        Text(text).font(.hmm(.footnote)).foregroundStyle(theme.text2)
+        Text(LocalizedStringKey(text)).font(.hmm(.footnote)).foregroundStyle(theme.text2)
     }
 }

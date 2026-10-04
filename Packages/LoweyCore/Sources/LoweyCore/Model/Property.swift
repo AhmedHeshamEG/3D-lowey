@@ -188,7 +188,7 @@ public struct PropertyKey: RawRepresentable, Hashable, Sendable, Codable, Compar
     public static let lightShadows: PropertyKey = "lightShadows"
     public static let opacity: PropertyKey = "opacity"
     // Animation
-    /// Per-object stepping ("inherit", "ones", "twos", "threes") — characters on twos, camera smooth.
+    /// Per-object frame rate ("ones" … "fours"; missing = inherit), animatable — characters on twos, camera smooth.
     public static let stepping: PropertyKey = "stepping"
     // Camera
     public static let fieldOfView: PropertyKey = "fieldOfView"
@@ -272,7 +272,7 @@ public struct PropertySpec: Sendable, Hashable {
         .spotAngle: PropertySpec(type: .float, animatable: true, label: "Spot angle"),
         .lightShadows: PropertySpec(type: .bool, animatable: false, label: "Shadows"),
         .opacity: PropertySpec(type: .float, animatable: true, label: "Opacity"),
-        .stepping: PropertySpec(type: .enumeration, animatable: false, label: "Stepping"),
+        .stepping: PropertySpec(type: .enumeration, animatable: true, label: "Frame rate"),
         .fieldOfView: PropertySpec(type: .float, animatable: true, label: "Field of view"),
         .focusDistance: PropertySpec(type: .float, animatable: true, label: "Focus distance"),
         .aperture: PropertySpec(type: .float, animatable: true, label: "Aperture"),
@@ -310,8 +310,10 @@ public struct PropertySpec: Sendable, Hashable {
         .rimStrength: PropertySpec(type: .float, animatable: true, label: "Rim light"),
         .glossy: PropertySpec(type: .bool, animatable: false, label: "Glossy"),
         .accent: PropertySpec(type: .bool, animatable: false, label: "Accent"),
+        .airborne: PropertySpec(type: .bool, animatable: false, label: "In the air on purpose"),
         .bevel: PropertySpec(type: .float, animatable: false, label: "Bevel"),
-        .bevelSegments: PropertySpec(type: .int, animatable: false, label: "Bevel segments")
+        .bevelSegments: PropertySpec(type: .int, animatable: false, label: "Bevel segments"),
+        .smear: PropertySpec(type: .float, animatable: true, label: "Smear")
     ]
 }
 

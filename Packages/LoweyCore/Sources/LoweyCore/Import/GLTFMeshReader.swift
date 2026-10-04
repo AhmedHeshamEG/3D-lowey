@@ -25,7 +25,7 @@ public enum GLTFMeshReader {
 
     // MARK: Nodes
 
-    /// Global transform of every node reachable from the default scene (or every root).
+    /// Global transform of every node, as the default scene places it (then every other root).
     static func globalTransforms(_ file: GLTFReader.File) -> [Int: Transform] {
         let nodes = file.array("nodes")
         var parentOf: [Int: Int] = [:]
@@ -42,6 +42,13 @@ public enum GLTFMeshReader {
             for child in nodes[index]["children"] as? [Int] ?? [] {
                 visit(child, parent: global, depth: depth + 1)
             }
+        }
+        // The default scene first: a node some exporters also list under a stray parent outside the scene (Kenney's
+        // "tmpParent") is placed where the scene puts it. Then anything the scene doesn't reach.
+        let scenes = file.array("scenes")
+        let sceneIndex = file.json["scene"] as? Int ?? 0
+        for index in sceneIndex < scenes.count ? scenes[sceneIndex]["nodes"] as? [Int] ?? [] : [] {
+            visit(index, parent: .identity, depth: 0)
         }
         for index in nodes.indices where parentOf[index] == nil {
             visit(index, parent: .identity, depth: 0)

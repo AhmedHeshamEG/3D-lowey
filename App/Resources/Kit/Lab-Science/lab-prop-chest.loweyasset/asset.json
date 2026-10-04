@@ -1,0 +1,91 @@
+{
+ "author": "Quaternius",
+ "category": "Storage",
+ "clips": [
+  "Close",
+  "Idle_Closed",
+  "Idle_Open",
+  "Open"
+ ],
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-chest",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Chest",
+ "realSizeMeters": [
+  1.291,
+  0.659,
+  0.686
+ ],
+ "rig": "skinned",
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "box",
+  "chest",
+  "lab & science",
+  "prop",
+  "storage",
+  "treasure"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.6248,
+   "height": 0.107,
+   "max": [
+    0.604,
+    0.305
+   ],
+   "min": [
+    -0.604,
+    -0.226
+   ]
+  },
+  {
+   "area": 0.3562,
+   "height": 0.615,
+   "max": [
+    0.609,
+    0.303
+   ],
+   "min": [
+    -0.609,
+    -0.22
+   ]
+  },
+  {
+   "area": 0.2971,
+   "height": 0.579,
+   "max": [
+    0.61,
+    0.294
+   ],
+   "min": [
+    -0.61,
+    -0.22
+   ]
+  },
+  {
+   "area": 0.1055,
+   "height": 0.64,
+   "max": [
+    0.609,
+    0.326
+   ],
+   "min": [
+    -0.609,
+    0.038
+   ]
+  }
+ ],
+ "triangles": 3422
+}

@@ -98,7 +98,7 @@ extension EditorModel {
                 faceCapture = capture
                 faceStatus = "Relax and look at the iPad…"
             } catch {
-                app.show("Face capture failed: \(error)", kind: .error)
+                app.show("Face capture failed: \(String(describing: error))", kind: .error)
             }
         }
     }

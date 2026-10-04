@@ -79,6 +79,8 @@ indirect enum MeshKey: Hashable {
     case picture(width: Int32, height: Int32)
     case asset(AssetID, part: Int)
     case painted(MeshKey, dabs: [ShadowDab])
+    /// Ink ribbons facing an eye (object-local, centimetres) with a reveal (per mille).
+    case ink(DrawingRecipe, eye: SIMD3<Int32>, reveal: Int32)
 
     /// Millimetre quantisation for size-dependent meshes (bevels, cards).
     static func mm(_ value: Double) -> Int32 {

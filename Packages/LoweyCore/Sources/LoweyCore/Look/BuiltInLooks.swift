@@ -112,6 +112,8 @@ public extension PropertyKey {
     static let glossy: PropertyKey = "glossy"
     /// Keeps its colour in the Sketch Look.
     static let accent: PropertyKey = "accent"
+    /// In the air on purpose (a drone, a hanging lamp): perception doesn't call it floating.
+    static let airborne: PropertyKey = "airborne"
     /// Primitive bevel radius in metres (0 = sharp).
     static let bevel: PropertyKey = "bevel"
     /// Primitive bevel segments (1…6).

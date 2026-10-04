@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Decor",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-books",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Books",
+ "realSizeMeters": [
+  0.288,
+  0.199,
+  0.181
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "books",
+  "decor",
+  "room & desk"
+ ],
+ "topSurfaces": [],
+ "triangles": 62
+}

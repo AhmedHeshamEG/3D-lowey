@@ -14,7 +14,7 @@ struct ScriptSheet: View {
                 TextField("Script name", text: $editor.scriptName).font(.hmm(.headline, weight: .semibold))
                 Menu {
                     ForEach(ScriptExamples.all, id: \.name) { example in
-                        Button(example.name) {
+                        Button(LocalizedStringKey(example.name)) {
                             editor.scriptName = example.name
                             editor.scriptSource = example.source
                         }
@@ -41,7 +41,7 @@ struct ScriptSheet: View {
                 .accessibilityIdentifier("script-editor")
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(editor.scriptLog.enumerated()), id: \.offset) { _, line in
-                    Text(line).font(.system(size: 12, design: .monospaced))
+                    Text(line).font(.system(.footnote, design: .monospaced))
                         .foregroundStyle(line.hasPrefix("⚠︎") ? theme.danger : theme.text2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -49,7 +49,7 @@ struct ScriptSheet: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("script-log")
             DisclosureGroup("What scripts can do") {
-                Text(Self.reference).font(.system(size: 12, design: .monospaced)).foregroundStyle(theme.text2).textSelection(.enabled)
+                Text(Self.reference).font(.system(.footnote, design: .monospaced)).foregroundStyle(theme.text2).textSelection(.enabled)
             }
             .font(.hmm(.body, weight: .semibold))
         }

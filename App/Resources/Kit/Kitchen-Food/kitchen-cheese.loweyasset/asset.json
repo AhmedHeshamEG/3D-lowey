@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Food",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-cheese",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Cheese",
+ "realSizeMeters": [
+  0.285,
+  0.092,
+  0.285
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "cheese",
+  "food",
+  "kitchen & food"
+ ],
+ "topSurfaces": [],
+ "triangles": 576
+}

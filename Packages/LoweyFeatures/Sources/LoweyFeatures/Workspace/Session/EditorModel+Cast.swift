@@ -105,7 +105,8 @@ extension EditorModel {
     /// and the built-in set for humanoids.
     func availableClips(for asset: LibraryAsset) -> [ClipRef] {
         var clips = asset.clips.map { ClipRef(asset: asset.id, name: $0) }
-        for other in library.manifest.assets where other.id != asset.id && other.rig == asset.rig {
+        // The library's own models and the Kit's (its animation library is a humanoid clip source).
+        for other in library.manifest.assets + library.manifest.kit where other.id != asset.id && other.rig == asset.rig {
             clips += other.clips.map { ClipRef(asset: other.id, name: $0) }
         }
         if asset.rig == .humanoid { clips += BuiltinClips.names.map { ClipRef(asset: BuiltinClips.assetID, name: $0) } }
@@ -115,7 +116,7 @@ extension EditorModel {
     /// Clips a built puppet can play: the built-in set, then every humanoid clip in the library.
     func puppetClips() -> [ClipRef] {
         var result = BuiltinClips.names.map { ClipRef(asset: BuiltinClips.assetID, name: $0) }
-        for asset in library.manifest.assets where asset.rig == .humanoid {
+        for asset in library.manifest.assets + library.manifest.kit where asset.rig == .humanoid {
             result += asset.clips.map { ClipRef(asset: asset.id, name: $0) }
         }
         return result

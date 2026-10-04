@@ -7,13 +7,15 @@ import simd
 extension SceneCompiler {
     func compileSurface(_ object: SceneObject, state: Inherited, input: RenderInput, scene: inout RenderScene) {
         let pickID = state.pickAs ?? object.id
-        let index = scene.index(for: pickID, lineWeight: Float(object.lineWeight))
+        let index = state.ghost ? 0 : scene.index(for: pickID, lineWeight: Float(object.lineWeight))
         let base = uniforms(for: object, state: state, input: input, scene: &scene, objectIndex: index)
         let world = state.world.matrix
         let casts = object[.castsShadow]?.boolValue ?? true
         switch object.kind {
         case let .primitive(shape):
             compilePrimitive(shape, object: object, state: state, base: base, casts: casts, scene: &scene)
+        case let .drawing(recipe) where recipe.style == .ink:
+            compileInk(recipe, object: object, state: state, base: base, casts: object[.castsShadow]?.boolValue ?? false, scene: &scene)
         case let .drawing(recipe):
             if let mesh = mesh(.drawing(recipe), dabs: object.shadowDabs, label: object.name, make: {
                 DrawingMesher.mesh(for: recipe).shaded(.smooth)

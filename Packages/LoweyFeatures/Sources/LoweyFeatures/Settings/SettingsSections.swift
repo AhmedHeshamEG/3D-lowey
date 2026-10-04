@@ -16,7 +16,7 @@ struct PreferencesForm: View {
     var body: some View {
         Section("Appearance") {
             Picker("Theme", selection: $themeMode) {
-                ForEach(HmmThemeMode.allCases) { Text($0.title).tag($0.rawValue) }
+                ForEach(HmmThemeMode.allCases) { Text(LocalizedStringKey($0.title)).tag($0.rawValue) }
             }
             Toggle("Sidebar on the right (left-handed)", isOn: $sidebarOnRight)
             Toggle("Haptics", isOn: $haptics)
@@ -62,6 +62,11 @@ struct AcknowledgementsView: View {
                     + "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the copyright notice, "
                     + "this list of conditions and the following disclaimer are kept. THIS SOFTWARE IS PROVIDED BY CARNEGIE MELLON UNIVERSITY \"AS IS\" "
                     + "AND ANY EXPRESSED OR IMPLIED WARRANTIES ARE DISCLAIMED.")
+                    .font(.hmm(.footnote))
+                Text("The Kit").font(.hmm(.headline, weight: .semibold))
+                Text("The models in the Library's Sets come from Kenney (kenney.nl: Furniture, Food, Nature, City, Car, Space, Survival and "
+                    + "Mini Market kits) and Quaternius (quaternius.com: Sci-Fi Essentials, Universal Base Characters, Universal Animation "
+                    + "Library). They are released under CC0 1.0 (public domain); we credit them because they deserve it.")
                     .font(.hmm(.footnote))
                 Text("Everything else in \(AppIdentity.displayName) (the renderer, the glTF reader, the characters) is our own code.")
                     .font(.hmm(.footnote))

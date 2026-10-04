@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-hangar-rounda",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Hangar round a",
+ "realSizeMeters": [
+  7.424,
+  3.404,
+  6.429
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "base",
+  "hangar",
+  "round",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 166
+}

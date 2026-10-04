@@ -1,0 +1,71 @@
+{
+ "author": "Quaternius",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-crate",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Crate",
+ "realSizeMeters": [
+  1.099,
+  1.051,
+  1.051
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "box",
+  "crate",
+  "lab & science",
+  "prop",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.489,
+   "height": 1.051,
+   "max": [
+    0.491,
+    0.5
+   ],
+   "min": [
+    -0.491,
+    -0.5
+   ]
+  },
+  {
+   "area": 0.4639,
+   "height": 1.038,
+   "max": [
+    0.473,
+    0.485
+   ],
+   "min": [
+    -0.473,
+    -0.485
+   ]
+  },
+  {
+   "area": 0.1272,
+   "height": 0.946,
+   "max": [
+    0.52,
+    0.525
+   ],
+   "min": [
+    -0.52,
+    -0.525
+   ]
+  }
+ ],
+ "triangles": 3984
+}

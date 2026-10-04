@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Craft",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-craft-speedera",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Craft speeder a",
+ "realSizeMeters": [
+  4.539,
+  1.815,
+  4.766
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "craft",
+  "space",
+  "spaceship",
+  "speeder",
+  "vehicle"
+ ],
+ "topSurfaces": [],
+ "triangles": 280
+}

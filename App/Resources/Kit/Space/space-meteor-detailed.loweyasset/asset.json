@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Ground",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-meteor-detailed",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Meteor detailed",
+ "realSizeMeters": [
+  1.965,
+  1.668,
+  1.872
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "detailed",
+  "ground",
+  "meteor",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 196
+}

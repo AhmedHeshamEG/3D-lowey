@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Beds",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-bedbunk",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Bed bunk",
+ "realSizeMeters": [
+  1.093,
+  1.628,
+  2.097
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "bed",
+  "beds",
+  "bunk",
+  "room & desk"
+ ],
+ "topSurfaces": [
+  {
+   "area": 1.9519,
+   "height": 0.393,
+   "max": [
+    0.493,
+    0.934
+   ],
+   "min": [
+    -0.493,
+    -1.048
+   ]
+  },
+  {
+   "area": 1.9519,
+   "height": 1.427,
+   "max": [
+    0.493,
+    0.934
+   ],
+   "min": [
+    -0.493,
+    -1.048
+   ]
+  },
+  {
+   "area": 1.2734,
+   "height": 0.44,
+   "max": [
+    0.493,
+    0.934
+   ],
+   "min": [
+    -0.493,
+    -0.358
+   ]
+  },
+  {
+   "area": 1.2734,
+   "height": 1.474,
+   "max": [
+    0.493,
+    0.934
+   ],
+   "min": [
+    -0.493,
+    -0.358
+   ]
+  }
+ ],
+ "triangles": 580
+}

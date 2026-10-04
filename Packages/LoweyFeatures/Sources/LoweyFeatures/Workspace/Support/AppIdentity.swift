@@ -23,5 +23,7 @@ public enum AppIdentity {
     /// Unit / render tests hosted in the app and UI tests: no bridge, no notifications, a clean sandbox.
     public static let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
     public static let isTestingTour = ProcessInfo.processInfo.arguments.contains("-ui-testing-tour")
+    /// App Store screenshots: UI testing without the debug overlays.
+    public static let isTakingScreenshots = ProcessInfo.processInfo.arguments.contains("-ui-testing-screenshots")
     public static let isHostingTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 }

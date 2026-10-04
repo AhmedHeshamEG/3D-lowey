@@ -1,0 +1,84 @@
+{
+ "author": "Quaternius",
+ "category": "Furniture",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "office-prop-shelves-wideshort",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Shelves wide short",
+ "realSizeMeters": [
+  1.385,
+  0.848,
+  0.379
+ ],
+ "set": "Office & Computers",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "furniture",
+  "office & computers",
+  "prop",
+  "shelves",
+  "short",
+  "wide"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.47,
+   "height": 0.337,
+   "max": [
+    0.692,
+    0.187
+   ],
+   "min": [
+    -0.692,
+    -0.187
+   ]
+  },
+  {
+   "area": 0.47,
+   "height": 0.848,
+   "max": [
+    0.692,
+    0.187
+   ],
+   "min": [
+    -0.692,
+    -0.187
+   ]
+  },
+  {
+   "area": 0.0717,
+   "height": 0.732,
+   "max": [
+    0.675,
+    0.175
+   ],
+   "min": [
+    -0.675,
+    -0.175
+   ]
+  },
+  {
+   "area": 0.0717,
+   "height": 0.219,
+   "max": [
+    0.675,
+    0.175
+   ],
+   "min": [
+    -0.675,
+    -0.175
+   ]
+  }
+ ],
+ "triangles": 2232
+}

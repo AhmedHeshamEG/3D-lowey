@@ -55,7 +55,7 @@ struct LookCard: View {
             .clipShape(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous)
                 .stroke(selected ? theme.accent : theme.line, lineWidth: selected ? 3 : 1))
-            Text(preset.name)
+            Text(LocalizedStringKey(preset.name))
                 .font(.hmm(.footnote, weight: .semibold))
                 .foregroundStyle(selected ? theme.accent : theme.text)
                 .lineLimit(1)

@@ -1,5 +1,6 @@
 import HmmBridge
 import LoweyCore
+import LoweyEngine
 @testable import LoweyFeatures
 import XCTest
 
@@ -102,6 +103,44 @@ final class EditorFlowTests: XCTestCase {
         XCTAssertLessThan(editor.baseScene.objects[sphere.id]?.shadowDabs.first?.amount ?? 0, 0, "pushes the shadow in")
         editor.undo()
         XCTAssertTrue(editor.baseScene.objects[sphere.id]?.shadowDabs.isEmpty ?? false, "the whole stroke undoes at once")
+    }
+
+    func testTheSessionReopensWhereYouLeftIt() async throws {
+        let editor = try makeEditor()
+        editor.addPrimitive(.cube)
+        editor.frameShot(.medium, composition: .center)
+        editor.setTime(1.5)
+        editor.openPanel = .look
+        editor.timelineCollapsed = true
+        let saved = SessionRestoration(editor)
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "restoration-\(UUID().uuidString)"))
+        saved.save(to: defaults)
+        XCTAssertEqual(SessionRestoration.load(from: defaults), saved)
+        XCTAssertEqual(saved.panel, "look")
+        XCTAssertTrue(saved.directorView, "framing a shot turns the Director view on")
+        editor.setTime(0)
+        editor.openPanel = nil
+        editor.timelineCollapsed = false
+        editor.setDirectorView(false)
+        await saved.apply(to: editor)
+        XCTAssertEqual(editor.time, 1.5, accuracy: 1e-9)
+        XCTAssertEqual(editor.openPanel, .look)
+        XCTAssertTrue(editor.timelineCollapsed)
+        XCTAssertTrue(editor.directorView)
+        SessionRestoration.clear(in: defaults)
+        XCTAssertNil(SessionRestoration.load(from: defaults))
+    }
+
+    func testTheMonitorDrawsTheShotAsItExports() throws {
+        let editor = try makeEditor()
+        editor.addPrimitive(.cube)
+        editor.frameShot(.medium, composition: .center)
+        let view = try StageView(device: RenderDevice.sharedDevice())
+        XCTAssertNil(editor.monitorFrame(for: view), "nothing to draw at zero size")
+        view.frame = CGRect(x: 0, y: 0, width: 320, height: 180)
+        let frame = try XCTUnwrap(editor.monitorFrame(for: view))
+        XCTAssertNotNil(frame.shotCamera, "through the shot camera")
+        XCTAssertEqual(editor.monitorCaption, try editor.baseScene.objects[XCTUnwrap(editor.shotCamera)]?.name)
     }
 
     func testFrameShotPlacesACameraOnTheSubject() throws {

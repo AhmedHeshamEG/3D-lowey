@@ -34,6 +34,10 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         case perform(planeY: Double, last: Vec3)
         case aimCamera
         case moveOverlay(ObjectID, last: CGPoint)
+        /// Dragging a dot of the motion path (its position key at that time).
+        case pathKey(time: Double)
+        /// Dragging a character's hand or foot.
+        case ik(IKHandle)
         case none
     }
 
@@ -71,6 +75,9 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     var snapped: (shape: QuickShape.Result, anchor: CGPoint, pressure: Double)?
     /// The Shadow Brush's target and its world mesh (raycast on the CPU for every sample).
     var brushTarget: (id: ObjectID, mesh: MeshData)?
+    /// Ink ▸ Erase / Select: the Pencil's path, and where a drag of picked strokes was last.
+    var inkPath: [CGPoint] = []
+    var inkDragLast: CGPoint?
 
     /// How far orbit, pan and zoom go per finger movement (Settings ▸ Speed).
     var navigationSpeed: Double { AppSettings.navigationFactor }
@@ -117,7 +124,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         let finger = NSNumber(value: UITouch.TouchType.direct.rawValue)
         stroke.isEnabled = painting
         if painting {
-            let pencilOnly = editor.tool == .shadowBrush || editor.draw.pencilOnly
+            let erasing = (editor.tool == .ink && editor.ink.mode != .draw) || (editor.tool == .flipbook && editor.flipbook.mode == .erase)
+            let pencilOnly = editor.tool == .shadowBrush || erasing || editor.draw.pencilOnly
             stroke.allowedTouchTypes = pencilOnly ? [pencil] : [pencil, finger]
             oneFingerPan.allowedTouchTypes = pencilOnly ? [finger] : []
             oneFingerPan.isEnabled = pencilOnly

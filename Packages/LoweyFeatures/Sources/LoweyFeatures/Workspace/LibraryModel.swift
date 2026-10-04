@@ -15,6 +15,11 @@ final class LibraryModel {
     private(set) var manifest = LibraryManifest()
     private(set) var thumbnails: [String: UIImage] = [:]
     private(set) var importing = 0
+    /// The Kit's Sets (Room & Desk, City Street…), shipped with the app.
+    private(set) var kitSets: [KitSet] = []
+    @ObservationIgnored private var kitIndex = KitIndex()
+    @ObservationIgnored private var thumbnailQueue: [LibraryItem] = []
+    @ObservationIgnored private var renderingThumbnails = false
     /// Bumped when a prefab changes, so open scenes redraw its instances.
     private(set) var prefabRevision = 0
     @ObservationIgnored let models: ModelLibrary
@@ -38,11 +43,17 @@ final class LibraryModel {
         }
     }
 
-    /// What the renderer needs to find model files.
+    /// What the renderer needs to find model files (the Kit's live in the app).
     var catalog: AssetCatalog {
         let store = store
-        return AssetCatalog(manifest: manifest) { store.fileURL(for: $0) }
+        let kitRoot = Self.kitRoot
+        return AssetCatalog(manifest: manifest) { asset in
+            asset.isKit ? kitRoot.appendingPathComponent(asset.file) : store.fileURL(for: asset)
+        }
     }
+
+    /// The Kit folder in the app bundle.
+    static var kitRoot: URL { Bundle.main.url(forResource: "Kit", withExtension: nil) ?? Bundle.main.bundleURL.appendingPathComponent("Kit") }
 
     func load() {
         do {
@@ -50,10 +61,24 @@ final class LibraryModel {
         } catch {
             logger.error("Library failed to load: \(String(describing: error))")
         }
+        loadKit()
         for item in LibrarySearch.items(in: manifest, filter: .all) {
             loadThumbnail(for: item)
         }
     }
+
+    private func loadKit() {
+        do {
+            kitIndex = try KitIndex.load(from: Self.kitRoot)
+            kitSets = kitIndex.sets
+            manifest.kit = kitIndex.assets
+        } catch {
+            logger.error("The Kit failed to load: \(String(describing: error))")
+        }
+    }
+
+    /// A Set's assets by category.
+    func browse(_ set: String) -> [(category: String, assets: [LibraryAsset])] { kitIndex.browse(set) }
 
     private func save() {
         do {
@@ -64,6 +89,8 @@ final class LibraryModel {
     }
 
     func replaceManifest(_ manifest: LibraryManifest) {
+        var manifest = manifest
+        manifest.kit = kitIndex.assets
         self.manifest = manifest
         save()
         for item in LibrarySearch.items(in: manifest, filter: .all) where thumbnails[item.thumbnailName] == nil {
@@ -92,6 +119,39 @@ final class LibraryModel {
         let url = store.thumbnailURL(for: item)
         if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
             thumbnails[item.thumbnailName] = image
+        }
+    }
+
+    /// PNG of a model's thumbnail for the bridge (rendered now when it hasn't been yet).
+    func thumbnailPNG(for item: LibraryItem) async -> Data? {
+        if thumbnails[item.thumbnailName] == nil { loadThumbnail(for: item) }
+        if thumbnails[item.thumbnailName] == nil, case let .asset(asset) = item {
+            let object = SceneObject(id: .make(), name: asset.name, kind: .asset(asset.id))
+            await renderThumbnail(of: SceneFragment(objects: [object], roots: [object.id]), named: item.thumbnailName)
+        }
+        return thumbnails[item.thumbnailName]?.pngData()
+    }
+
+    /// A Kit tile came on screen: its thumbnail is rendered in the Ink Look (once, then cached), one at a time.
+    func requestThumbnail(for item: LibraryItem) {
+        guard thumbnails[item.thumbnailName] == nil, case let .asset(asset) = item, asset.isKit else { return }
+        loadThumbnail(for: item)
+        guard thumbnails[item.thumbnailName] == nil, !thumbnailQueue.contains(item) else { return }
+        thumbnailQueue.append(item)
+        renderQueuedThumbnails()
+    }
+
+    private func renderQueuedThumbnails() {
+        guard !renderingThumbnails, !thumbnailQueue.isEmpty else { return }
+        renderingThumbnails = true
+        let item = thumbnailQueue.removeFirst()
+        Task { @MainActor in
+            if case let .asset(asset) = item {
+                let object = SceneObject(id: .make(), name: asset.name, kind: .asset(asset.id))
+                await renderThumbnail(of: SceneFragment(objects: [object], roots: [object.id]), named: item.thumbnailName)
+            }
+            renderingThumbnails = false
+            renderQueuedThumbnails()
         }
     }
 

@@ -28,6 +28,8 @@ public final class AppModel {
     var showsSettings = false
     /// A project changed on two devices: which version to keep.
     var pendingConflict: ProjectConflict?
+    /// The window that edits (Stage Manager can open more; the others offer to take over or become monitors).
+    var primaryWindow: UUID?
     @ObservationIgnored private(set) lazy var bridge = BridgeModel(app: self)
     /// Shows exports outside the app (Live Activity, notification); set by the app target.
     @ObservationIgnored public weak var exportReporter: (any ExportProgressReporting)?
@@ -67,6 +69,7 @@ public final class AppModel {
             showTour = !AppIdentity.isUITesting || AppIdentity.isTestingTour
         }
         refreshArchived()
+        if !showTour { await restoreSession() }
         if !AppIdentity.isUITesting, !AppIdentity.isHostingTests { bridge.restoreIfWanted() }
     }
 
@@ -118,16 +121,19 @@ public final class AppModel {
     /// Leaving the screen: save now, keep the bridge reachable if it's on, and mark a clean exit.
     public func sceneDidEnterBackground() {
         diagnostics.markClean()
+        rememberSession()
         bridge.enterBackground()
         if let editor { Task { await editor.saveNow(thumbnail: false) } }
     }
 
     // MARK: Toast
 
-    func show(_ message: String, kind: HmmToastMessage.Kind = .info) {
-        logger.info("\(message)")
-        diagnostics.log(message)
-        toast = HmmToastMessage(message, kind: kind)
+    /// A toast, in the user's language (the message is a String Catalog key; interpolations fill its placeholders).
+    func show(_ message: String.LocalizationValue, kind: HmmToastMessage.Kind = .info) {
+        let text = String(localized: message)
+        logger.info("\(text)")
+        diagnostics.log(text)
+        toast = HmmToastMessage(text, kind: kind)
     }
 
     // MARK: Opening and closing
@@ -166,6 +172,7 @@ public final class AppModel {
             await editor.saveNow(thumbnail: true)
             editor.tearDown()
             self.editor = nil
+            SessionRestoration.clear()
             refreshProjects()
         }
     }

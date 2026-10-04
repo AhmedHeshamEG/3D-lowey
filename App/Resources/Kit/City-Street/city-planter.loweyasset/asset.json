@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Street",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-planter",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Planter",
+ "realSizeMeters": [
+  3.599,
+  1.594,
+  2.699
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-suburban",
+ "tags": [
+  "city street",
+  "planter",
+  "street"
+ ],
+ "topSurfaces": [],
+ "triangles": 204
+}

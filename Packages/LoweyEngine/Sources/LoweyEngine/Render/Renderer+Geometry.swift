@@ -70,6 +70,23 @@ extension LoweyRenderer {
         encodePost(shot, request: request, gpu: gpu, targets: targets, commandBuffer: commandBuffer)
     }
 
+    /// Character outlines: each part pushed out along its normals, back faces only, in the line colour.
+    func encodeHulls(ordered: [DrawItem], gpu: FrameBuffers, encoder: MTLRenderCommandEncoder) -> Int {
+        let runs = Self.runs(ordered) { $0.hull > 0 }
+        guard !runs.isEmpty else { return 0 }
+        encoder.setCullMode(.front)
+        encoder.setDepthStencilState(device.pipelines.depthWrite)
+        for run in runs {
+            let item = ordered[run.start]
+            encoder.setRenderPipelineState(item.mesh.isSkinned ? device.pipelines.hullSkinned : device.pipelines.hullStatic)
+            var width = item.hull
+            encoder.setVertexBytes(&width, length: MemoryLayout<Float>.stride, index: BufferIndex.cascade)
+            draw(item.mesh, run: run, encoder: encoder, objects: gpu.objects)
+        }
+        encoder.setCullMode(.none)
+        return runs.count
+    }
+
     // MARK: Shadows
 
     func encodeShadows(frame: FrameUniforms, ordered: [DrawItem], gpu: FrameBuffers, commandBuffer: MTLCommandBuffer) {
@@ -91,7 +108,7 @@ extension LoweyRenderer {
             encoder.setVertexBytes(&uniforms, length: MemoryLayout<FrameUniforms>.stride, index: BufferIndex.frame)
             encoder.setVertexBytes(&index, length: 4, index: BufferIndex.cascade)
             encoder.setVertexBuffer(gpu.joints, offset: 0, index: BufferIndex.joints)
-            for run in Self.runs(ordered, where: { $0.castsShadow && !$0.blended }) {
+            for run in Self.runs(ordered, where: { $0.castsShadow && !$0.blended && !$0.ghost }) {
                 let item = ordered[run.start]
                 encoder.setRenderPipelineState(item.mesh.isSkinned ? device.pipelines.shadowSkinned : device.pipelines.shadowStatic)
                 draw(item.mesh, run: run, encoder: encoder, objects: gpu.objects)
@@ -141,7 +158,7 @@ extension LoweyRenderer {
             encoder.drawIndexedPrimitives(type: .triangle, indexCount: groundMesh.indexCount, indexType: .uint32,
                                           indexBuffer: groundMesh.indices, indexBufferOffset: 0)
         }
-        for run in Self.runs(ordered, where: { $0.uniforms.baseColor.w > 0.02 }) {
+        for run in Self.runs(ordered, where: { $0.uniforms.baseColor.w > 0.02 && !$0.ghost }) {
             let item = ordered[run.start]
             encoder.setRenderPipelineState(item.mesh.isSkinned ? device.pipelines.prepassSkinned : device.pipelines.prepassStatic)
             draw(item.mesh, run: run, encoder: encoder, objects: gpu.objects)
@@ -211,6 +228,7 @@ extension LoweyRenderer {
             draws += 1
             triangles += item.mesh.indexCount / 3 * run.count
         }
+        draws += encodeHulls(ordered: ordered, gpu: gpu, encoder: encoder)
         encoder.endEncoding()
         return draws
     }

@@ -20,6 +20,8 @@ public struct FrameRequest {
     public var transparent: Bool
     /// Overlays and captions, drawn by Core Graphics at the output size (premultiplied sRGB).
     public var overlay: CGImage?
+    /// Flipbook tracks that blend (multiply, screen, add), one image per mode at the output size.
+    public var flipbookLayers: [FlipbookBlend: CGImage] = [:]
     /// Stage-only drawing (grid, gizmo, helpers, guide, stroke preview).
     public var editor: EditorScene?
     /// Director view framing guides.
@@ -132,8 +134,12 @@ public final class LoweyRenderer: SceneRendering {
         let main = ShotContext(camera: request.camera, lens: request.lens, destination: targets.finished)
         try encodeShot(main, request: request, scene: scene, ordered: ordered, gpu: gpu, targets: targets, commandBuffer: commandBuffer,
                        report: &report)
-        let overlay = request.overlay.flatMap { textures.texture(for: $0, key: "overlay", maxSide: 8192) }
-        encodeComposite(request, targets: targets, overlay: overlay, output: output, commandBuffer: commandBuffer)
+        let overlay = request.overlay.flatMap { textures.texture(for: $0, key: "overlay", maxSide: 8192, holdsImage: true) }
+        var layers: [FlipbookBlend: MTLTexture] = [:]
+        for (blend, image) in request.flipbookLayers {
+            layers[blend] = textures.texture(for: image, key: "flipbook:" + blend.rawValue, maxSide: 8192, holdsImage: true)
+        }
+        encodeComposite(request, targets: targets, overlay: overlay, flipbooks: layers, output: output, commandBuffer: commandBuffer)
         if let editor = request.editor {
             encodeEditor(editor, request: request, scene: scene, targets: targets, output: output, commandBuffer: commandBuffer)
         }

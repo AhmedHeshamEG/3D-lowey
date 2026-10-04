@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Vehicles",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-van",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Van",
+ "realSizeMeters": [
+  1.846,
+  1.662,
+  3.385
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/car-kit",
+ "tags": [
+  "car",
+  "city street",
+  "van",
+  "vehicles"
+ ],
+ "topSurfaces": [],
+ "triangles": 2082
+}

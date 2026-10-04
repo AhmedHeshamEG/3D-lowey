@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Machines",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-machine-wirelesscable",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Machine wireless cable",
+ "realSizeMeters": [
+  1.702,
+  1.815,
+  1.362
+ ],
+ "set": "Lab & Science",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "cable",
+  "lab & science",
+  "machine",
+  "machines",
+  "wireless"
+ ],
+ "topSurfaces": [],
+ "triangles": 282
+}

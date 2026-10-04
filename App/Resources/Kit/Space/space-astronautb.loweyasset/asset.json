@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Crew",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-astronautb",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Astronaut b",
+ "realSizeMeters": [
+  1.097,
+  1.8,
+  0.749
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "astronaut",
+  "crew",
+  "person",
+  "space",
+  "spaceman"
+ ],
+ "topSurfaces": [],
+ "triangles": 314
+}

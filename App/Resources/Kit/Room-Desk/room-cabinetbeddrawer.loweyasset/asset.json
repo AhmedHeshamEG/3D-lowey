@@ -1,0 +1,83 @@
+{
+ "author": "Kenney",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-cabinetbeddrawer",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Cabinet bed drawer",
+ "realSizeMeters": [
+  0.509,
+  0.504,
+  0.416
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "bed",
+  "cabinet",
+  "drawer",
+  "room & desk",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.2097,
+   "height": 0.504,
+   "max": [
+    0.255,
+    0.204
+   ],
+   "min": [
+    -0.255,
+    -0.208
+   ]
+  },
+  {
+   "area": 0.1183,
+   "height": 0.105,
+   "max": [
+    0.188,
+    0.185
+   ],
+   "min": [
+    -0.188,
+    -0.13
+   ]
+  },
+  {
+   "area": 0.1183,
+   "height": 0.322,
+   "max": [
+    0.188,
+    0.185
+   ],
+   "min": [
+    -0.188,
+    -0.13
+   ]
+  },
+  {
+   "area": 0.0706,
+   "height": 0.342,
+   "max": [
+    0.149,
+    0.146
+   ],
+   "min": [
+    -0.149,
+    -0.091
+   ]
+  }
+ ],
+ "triangles": 182
+}

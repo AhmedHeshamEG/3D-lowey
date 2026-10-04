@@ -72,11 +72,11 @@ private struct ModePicker: View {
             ForEach(TimelineMode.allCases) { item in
                 Button {
                     HmmHaptics.play(.selection)
-                    withAnimation(.hmmSnappy) { mode = item }
+                    withHmmAnimation(.snappy) { mode = item }
                 } label: {
                     HStack(spacing: 5) {
                         Image(systemName: item.systemImage)
-                        if item == mode { Text(item.title) }
+                        if item == mode { Text(LocalizedStringKey(item.title)) }
                     }
                     .font(.hmm(.footnote, weight: .semibold))
                     .padding(.horizontal, item == mode ? 12 : 10)
@@ -112,7 +112,7 @@ private struct KeyControls: View {
         Menu {
             ForEach(KeyQuery.allCases) { query in
                 if query != .loop || editor.timeline.loop != nil {
-                    Button(query.title, systemImage: query.systemImage) { editor.selectKeys(query) }
+                    Button(LocalizedStringKey(query.title), systemImage: query.systemImage) { editor.selectKeys(query) }
                 }
             }
         } label: {
@@ -120,16 +120,20 @@ private struct KeyControls: View {
         }
         .accessibilityIdentifier("key-select-menu")
         if !editor.selectedKeys.isEmpty { selectedKeyMenus }
+        if editor.selectedKeys.isEmpty, let key = editor.firstGraphKey {
+            HmmButton("point.topleft.down.to.point.bottomright.curvepath", label: "Graph editor", size: 36) { editor.graphKey = key }
+                .accessibilityIdentifier("graph-editor")
+        }
         if editor.hasKeyClipboard { HmmPillButton("Paste", systemName: "doc.on.clipboard") { editor.pasteKeys() } }
     }
 
     @ViewBuilder private var selectedKeyMenus: some View {
         Menu {
             ForEach(EasingChoice.allCases) { choice in
-                Button(choice.title) { editor.setEasing(choice.easing) }
+                Button(LocalizedStringKey(choice.title)) { editor.setEasing(choice.easing) }
             }
             Divider()
-            Button("Edit the curve…", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
+            Button("Graph editor…", systemImage: "point.topleft.down.to.point.bottomright.curvepath") {
                 editor.graphKey = editor.selectedKeys.min { $0.time < $1.time }
             }
         } label: {

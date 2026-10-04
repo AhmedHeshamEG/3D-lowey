@@ -68,11 +68,20 @@ struct StageChrome: View {
     private var trailingCluster: some View {
         HmmCornerCluster([
             item(.build, "plus", "Build"),
-            item(.draw, editor.tool == .shadowBrush ? "circle.lefthalf.striped.horizontal" : "pencil.tip", "Draw", on: editor.tool.paints),
+            item(.draw, drawIcon, "Draw", on: editor.tool.paints),
             item(.transform, gizmoIcon, "Transform"),
             item(.cast, "person.2", "Cast"),
             item(.library, "books.vertical", "Library")
         ])
+    }
+
+    private var drawIcon: String {
+        switch editor.tool {
+        case .shadowBrush: "circle.lefthalf.striped.horizontal"
+        case .draw: "scribble.variable"
+        case .flipbook: "book.pages"
+        default: "pencil.tip"
+        }
     }
 
     private func item(_ panel: ClusterPanel, _ systemName: String, _ label: String, on: Bool = false) -> HmmClusterItem {
@@ -94,7 +103,9 @@ struct StageChrome: View {
 
     private var bottomRow: some View {
         HStack(alignment: .bottom, spacing: HmmSpacing.s) {
-            if showsJoystick, !editor.selection.isEmpty, editor.tool == .select, editor.performPhase == .idle, !editor.directorView {
+            if editor.flying {
+                FlyPad(editor: editor).transition(.scale.combined(with: .opacity))
+            } else if showsJoystick, !editor.selection.isEmpty, editor.tool == .select, editor.performPhase == .idle, !editor.directorView {
                 JoystickPad(editor: editor).transition(.scale.combined(with: .opacity))
             }
             Spacer()
@@ -136,7 +147,7 @@ private struct ViewControls: View {
         HStack(spacing: HmmSpacing.xxs) {
             Menu {
                 ForEach(ViewAxis.allCases, id: \.self) { axis in
-                    Button(axis.displayName) { editor.stage?.quickView(axis) }
+                    Button(LocalizedStringKey(axis.displayName)) { editor.stage?.quickView(axis) }
                 }
                 Divider()
                 Button(editor.projection == .orthographic ? "Perspective" : "Orthographic") { editor.toggleProjection() }

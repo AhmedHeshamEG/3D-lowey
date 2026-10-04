@@ -218,9 +218,9 @@ public struct Track: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
-/// Stepping for the "on twos" look: animation sampled every N frames.
+/// Stepping for the "on twos" look: animation sampled every N frames (ones to fours).
 public enum Stepping: Int, Codable, Sendable, CaseIterable {
-    case onOnes = 1, onTwos = 2, onThrees = 3
+    case onOnes = 1, onTwos = 2, onThrees = 3, onFours = 4
 
     /// Quantizes `time` to the stepped frame grid at `fps`.
     public func quantize(_ time: Double, fps: Int) -> Double {
@@ -237,6 +237,7 @@ public enum Stepping: Int, Codable, Sendable, CaseIterable {
         case .onOnes: "ones"
         case .onTwos: "twos"
         case .onThrees: "threes"
+        case .onFours: "fours"
         }
     }
 
@@ -245,6 +246,7 @@ public enum Stepping: Int, Codable, Sendable, CaseIterable {
         case "ones": self = .onOnes
         case "twos": self = .onTwos
         case "threes": self = .onThrees
+        case "fours": self = .onFours
         default: return nil
         }
     }
@@ -319,6 +321,8 @@ public struct Timeline: Hashable, Sendable {
     public var effects: [ScreenEffect]
     /// Captions from the transcript (nil = off).
     public var captions: CaptionSettings?
+    /// Frame-by-frame drawings over the shot.
+    public var flipbooks: [FlipbookTrack] = []
 
     public init(
         fps: Int = 30, duration: Double = 10, stepping: Stepping = .onOnes, tracks: [Track] = [],
@@ -399,6 +403,9 @@ public struct Timeline: Hashable, Sendable {
         for effect in effects {
             end = max(end, effect.end)
         }
+        for flipbook in flipbooks where !flipbook.loops {
+            end = max(end, flipbook.end(fps: fps, sceneDuration: duration))
+        }
         return end
     }
 
@@ -418,7 +425,7 @@ public struct Timeline: Hashable, Sendable {
 
 extension Timeline: Codable {
     private enum CodingKeys: String, CodingKey {
-        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts, effects, captions
+        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts, effects, captions, flipbooks
     }
 
     public init(from decoder: Decoder) throws {
@@ -436,6 +443,7 @@ extension Timeline: Codable {
         transcripts = try c.decodeIfPresent([Transcript].self, forKey: .transcripts) ?? []
         effects = try c.decodeIfPresent([ScreenEffect].self, forKey: .effects) ?? []
         captions = try c.decodeIfPresent(CaptionSettings.self, forKey: .captions)
+        flipbooks = try c.decodeIfPresent([FlipbookTrack].self, forKey: .flipbooks) ?? []
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -453,5 +461,6 @@ extension Timeline: Codable {
         if !transcripts.isEmpty { try c.encode(transcripts, forKey: .transcripts) }
         if !effects.isEmpty { try c.encode(effects, forKey: .effects) }
         try c.encodeIfPresent(captions, forKey: .captions)
+        if !flipbooks.isEmpty { try c.encode(flipbooks, forKey: .flipbooks) }
     }
 }

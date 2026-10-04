@@ -70,6 +70,22 @@ extension EditorModel {
         }
     }
 
+    /// Replaces a whole track (the graph editor's edits), one undo step.
+    func replaceTrack(_ track: Track, label: String) {
+        perform(.batch(label, [.setTracks([TrackEdit(track)])]))
+    }
+
+    /// The first key of the selection's first curve (position, rotation, scale or a number), where the graph opens.
+    var firstGraphKey: KeyRef? {
+        let ids = Set(selection)
+        let curve: (Track) -> Bool = { track in
+            guard ids.contains(track.target), let first = track.keyframes.first else { return false }
+            return GraphCurves.components(first.value) != nil
+        }
+        guard let track = timeline.tracks.first(where: curve), let first = track.keyframes.first else { return nil }
+        return KeyRef(track: track.id, time: first.time)
+    }
+
     func setEasing(_ easing: Easing) {
         perform(KeyOperations().setEasing(easing, for: Array(selectedKeys), in: timeline))
     }

@@ -12,7 +12,7 @@ struct TransformSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.xs) {
             Button {
-                withAnimation(.hmmSnappy) { open.toggle() }
+                withHmmAnimation(.snappy) { open.toggle() }
             } label: {
                 HStack {
                     HmmSectionHeader("Transform")
@@ -60,7 +60,7 @@ struct VectorRow: View {
 
     var body: some View {
         HStack(spacing: HmmSpacing.xxs) {
-            Text(label).font(.hmm(.footnote, weight: .semibold)).foregroundStyle(theme.text2).frame(width: 60, alignment: .leading)
+            Text(LocalizedStringKey(label)).font(.hmm(.footnote, weight: .semibold)).foregroundStyle(theme.text2).frame(width: 60, alignment: .leading)
             ForEach(CoreAxis.allCases, id: \.self) { axis in
                 NumberField(axis: axis, value: value[axis]) { newValue in
                     var copy = value

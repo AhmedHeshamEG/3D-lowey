@@ -54,7 +54,7 @@ struct TimelinePane: View {
         .background(theme.surface)
         .onAppear { if layout == nil { layout = TimelineLayout(editor: editor) } }
         .sheet(item: Binding(get: { editor.graphKey.map(IdentifiedKey.init) }, set: { editor.graphKey = $0?.key })) { item in
-            EasingEditor(editor: editor, key: item.key).presentationDetents([.medium])
+            GraphEditorSheet(editor: editor, key: item.key).presentationDetents([.medium, .large])
         }
         .alert("Marker", isPresented: Binding(get: { renamingMarker != nil }, set: { if !$0 { renamingMarker = nil } })) {
             TextField("Name (a word from the script)", text: $markerName)

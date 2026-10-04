@@ -102,8 +102,8 @@ extension LoweyRenderer {
 
     // MARK: Composite
 
-    func encodeComposite(_ request: FrameRequest, targets: FrameTargets, overlay: MTLTexture?, output: MTLTexture,
-                         commandBuffer: MTLCommandBuffer) {
+    func encodeComposite(_ request: FrameRequest, targets: FrameTargets, overlay: MTLTexture?, flipbooks: [FlipbookBlend: MTLTexture],
+                         output: MTLTexture, commandBuffer: MTLCommandBuffer) {
         guard let encoder = commandBuffer.makeComputeCommandEncoder() else { return }
         encoder.label = "Composite"
         var uniforms = CompositeUniforms()
@@ -126,11 +126,15 @@ extension LoweyRenderer {
         if let guides = request.guides {
             uniforms.guides = SIMD4<Float>(1, Float(guides.aspect ?? 0), guides.thirds ? 1 : 0, guides.safeAreas ? 1 : 0)
         }
-        uniforms.options = SIMD4<Float>(overlay == nil ? 0 : 1, request.transparent ? 1 : 0, request.transparent ? 0 : 1, 0)
+        let layerMask = (flipbooks[.multiply] == nil ? 0 : 1) + (flipbooks[.screen] == nil ? 0 : 2) + (flipbooks[.add] == nil ? 0 : 4)
+        uniforms.options = SIMD4<Float>(overlay == nil ? 0 : 1, request.transparent ? 1 : 0, request.transparent ? 0 : 1, Float(layerMask))
         encoder.setTexture(targets.finished, index: 0)
         encoder.setTexture(request.transition == nil ? targets.finished : targets.finishedOther, index: 1)
         encoder.setTexture(overlay ?? editorMeshes.white, index: 2)
         encoder.setTexture(output, index: 3)
+        encoder.setTexture(flipbooks[.multiply] ?? editorMeshes.white, index: 4)
+        encoder.setTexture(flipbooks[.screen] ?? editorMeshes.white, index: 5)
+        encoder.setTexture(flipbooks[.add] ?? editorMeshes.white, index: 6)
         encoder.setBytes(&uniforms, length: MemoryLayout<CompositeUniforms>.stride, index: 0)
         dispatch(encoder, device.pipelines.composite, width: output.width, height: output.height)
         encoder.endEncoding()

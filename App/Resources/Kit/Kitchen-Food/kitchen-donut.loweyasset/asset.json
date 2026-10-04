@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Food",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-donut",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Donut",
+ "realSizeMeters": [
+  0.103,
+  0.037,
+  0.119
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "donut",
+  "food",
+  "kitchen & food"
+ ],
+ "topSurfaces": [],
+ "triangles": 108
+}

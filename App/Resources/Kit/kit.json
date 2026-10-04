@@ -1,0 +1,1866 @@
+{
+ "version": 1,
+ "sets": [
+  {
+   "name": "Room & Desk",
+   "categories": [
+    "Seating",
+    "Tables",
+    "Storage",
+    "Beds",
+    "Lights",
+    "Decor",
+    "Walls & Floors"
+   ]
+  },
+  {
+   "name": "Office & Computers",
+   "categories": [
+    "Desks",
+    "Computers",
+    "Furniture"
+   ]
+  },
+  {
+   "name": "City Street",
+   "categories": [
+    "Buildings",
+    "Towers",
+    "Shopfronts",
+    "Houses",
+    "Street",
+    "Roads",
+    "Signs",
+    "Vehicles"
+   ]
+  },
+  {
+   "name": "Nature",
+   "categories": [
+    "Trees",
+    "Plants",
+    "Rocks",
+    "Camp"
+   ]
+  },
+  {
+   "name": "Space",
+   "categories": [
+    "Crew",
+    "Craft",
+    "Rocket",
+    "Base",
+    "Ground"
+   ]
+  },
+  {
+   "name": "Kitchen & Food",
+   "categories": [
+    "Kitchen",
+    "Food",
+    "Tableware"
+   ]
+  },
+  {
+   "name": "Lab & Science",
+   "categories": [
+    "Lab",
+    "Machines",
+    "Storage"
+   ]
+  },
+  {
+   "name": "Props & Signs",
+   "categories": [
+    "Props",
+    "Tools",
+    "Signs",
+    "Shop"
+   ]
+  },
+  {
+   "name": "Characters",
+   "categories": [
+    "People",
+    "Animations"
+   ]
+  }
+ ],
+ "assets": [
+  {
+   "id": "room-chair",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-chair.loweyasset"
+  },
+  {
+   "id": "room-chaircushion",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-chaircushion.loweyasset"
+  },
+  {
+   "id": "room-chairmoderncushion",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-chairmoderncushion.loweyasset"
+  },
+  {
+   "id": "room-chairrounded",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-chairrounded.loweyasset"
+  },
+  {
+   "id": "room-bench",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bench.loweyasset"
+  },
+  {
+   "id": "room-benchcushion",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-benchcushion.loweyasset"
+  },
+  {
+   "id": "room-loungechair",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungechair.loweyasset"
+  },
+  {
+   "id": "room-loungechairrelax",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungechairrelax.loweyasset"
+  },
+  {
+   "id": "room-loungedesignchair",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungedesignchair.loweyasset"
+  },
+  {
+   "id": "room-loungesofa",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungesofa.loweyasset"
+  },
+  {
+   "id": "room-loungesofacorner",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungesofacorner.loweyasset"
+  },
+  {
+   "id": "room-loungesofalong",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungesofalong.loweyasset"
+  },
+  {
+   "id": "room-loungedesignsofa",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungedesignsofa.loweyasset"
+  },
+  {
+   "id": "room-loungesofaottoman",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-loungesofaottoman.loweyasset"
+  },
+  {
+   "id": "room-table",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-table.loweyasset"
+  },
+  {
+   "id": "room-tableround",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-tableround.loweyasset"
+  },
+  {
+   "id": "room-tablecloth",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-tablecloth.loweyasset"
+  },
+  {
+   "id": "room-tablecoffee",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-tablecoffee.loweyasset"
+  },
+  {
+   "id": "room-tablecoffeeglass",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-tablecoffeeglass.loweyasset"
+  },
+  {
+   "id": "room-tablecoffeesquare",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-tablecoffeesquare.loweyasset"
+  },
+  {
+   "id": "room-sidetable",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-sidetable.loweyasset"
+  },
+  {
+   "id": "room-sidetabledrawers",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-sidetabledrawers.loweyasset"
+  },
+  {
+   "id": "room-bookcaseclosed",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bookcaseclosed.loweyasset"
+  },
+  {
+   "id": "room-bookcaseclosedwide",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bookcaseclosedwide.loweyasset"
+  },
+  {
+   "id": "room-bookcaseopen",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bookcaseopen.loweyasset"
+  },
+  {
+   "id": "room-bookcaseopenlow",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bookcaseopenlow.loweyasset"
+  },
+  {
+   "id": "room-cabinetbed",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-cabinetbed.loweyasset"
+  },
+  {
+   "id": "room-cabinetbeddrawer",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-cabinetbeddrawer.loweyasset"
+  },
+  {
+   "id": "room-cabinettelevision",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-cabinettelevision.loweyasset"
+  },
+  {
+   "id": "room-coatrackstanding",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-coatrackstanding.loweyasset"
+  },
+  {
+   "id": "room-cardboardboxclosed",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-cardboardboxclosed.loweyasset"
+  },
+  {
+   "id": "room-cardboardboxopen",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-cardboardboxopen.loweyasset"
+  },
+  {
+   "id": "room-beddouble",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-beddouble.loweyasset"
+  },
+  {
+   "id": "room-bedsingle",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bedsingle.loweyasset"
+  },
+  {
+   "id": "room-bedbunk",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bedbunk.loweyasset"
+  },
+  {
+   "id": "room-pillow",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-pillow.loweyasset"
+  },
+  {
+   "id": "room-pillowlong",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-pillowlong.loweyasset"
+  },
+  {
+   "id": "room-lamproundfloor",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lamproundfloor.loweyasset"
+  },
+  {
+   "id": "room-lamproundtable",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lamproundtable.loweyasset"
+  },
+  {
+   "id": "room-lampsquareceiling",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lampsquareceiling.loweyasset"
+  },
+  {
+   "id": "room-lampsquarefloor",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lampsquarefloor.loweyasset"
+  },
+  {
+   "id": "room-lampsquaretable",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lampsquaretable.loweyasset"
+  },
+  {
+   "id": "room-lampwall",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-lampwall.loweyasset"
+  },
+  {
+   "id": "room-ceilingfan",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-ceilingfan.loweyasset"
+  },
+  {
+   "id": "room-books",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-books.loweyasset"
+  },
+  {
+   "id": "room-pottedplant",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-pottedplant.loweyasset"
+  },
+  {
+   "id": "room-plantsmall1",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-plantsmall1.loweyasset"
+  },
+  {
+   "id": "room-plantsmall2",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-plantsmall2.loweyasset"
+  },
+  {
+   "id": "room-plantsmall3",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-plantsmall3.loweyasset"
+  },
+  {
+   "id": "room-rugrectangle",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-rugrectangle.loweyasset"
+  },
+  {
+   "id": "room-ruground",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-ruground.loweyasset"
+  },
+  {
+   "id": "room-rugsquare",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-rugsquare.loweyasset"
+  },
+  {
+   "id": "room-rugdoormat",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-rugdoormat.loweyasset"
+  },
+  {
+   "id": "room-bear",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-bear.loweyasset"
+  },
+  {
+   "id": "room-radio",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-radio.loweyasset"
+  },
+  {
+   "id": "room-televisionmodern",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-televisionmodern.loweyasset"
+  },
+  {
+   "id": "room-televisionvintage",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-televisionvintage.loweyasset"
+  },
+  {
+   "id": "room-speaker",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-speaker.loweyasset"
+  },
+  {
+   "id": "room-trashcan",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-trashcan.loweyasset"
+  },
+  {
+   "id": "room-wall",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-wall.loweyasset"
+  },
+  {
+   "id": "room-wallwindow",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-wallwindow.loweyasset"
+  },
+  {
+   "id": "room-walldoorway",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-walldoorway.loweyasset"
+  },
+  {
+   "id": "room-wallcorner",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-wallcorner.loweyasset"
+  },
+  {
+   "id": "room-wallhalf",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-wallhalf.loweyasset"
+  },
+  {
+   "id": "room-doorway",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-doorway.loweyasset"
+  },
+  {
+   "id": "room-floorfull",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-floorfull.loweyasset"
+  },
+  {
+   "id": "room-stairs",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-stairs.loweyasset"
+  },
+  {
+   "id": "room-paneling",
+   "set": "Room & Desk",
+   "path": "Room-Desk/room-paneling.loweyasset"
+  },
+  {
+   "id": "office-desk",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk.loweyasset"
+  },
+  {
+   "id": "office-deskcorner",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-deskcorner.loweyasset"
+  },
+  {
+   "id": "office-chairdesk",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-chairdesk.loweyasset"
+  },
+  {
+   "id": "office-desk-computer",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk-computer.loweyasset"
+  },
+  {
+   "id": "office-desk-computercorner",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk-computercorner.loweyasset"
+  },
+  {
+   "id": "office-desk-computerscreen",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk-computerscreen.loweyasset"
+  },
+  {
+   "id": "office-desk-chair",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk-chair.loweyasset"
+  },
+  {
+   "id": "office-desk-chairarms",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-desk-chairarms.loweyasset"
+  },
+  {
+   "id": "office-computerscreen",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-computerscreen.loweyasset"
+  },
+  {
+   "id": "office-computerkeyboard",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-computerkeyboard.loweyasset"
+  },
+  {
+   "id": "office-computermouse",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-computermouse.loweyasset"
+  },
+  {
+   "id": "office-laptop",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-laptop.loweyasset"
+  },
+  {
+   "id": "office-speakersmall",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-speakersmall.loweyasset"
+  },
+  {
+   "id": "office-prop-desk-l",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-desk-l.loweyasset"
+  },
+  {
+   "id": "office-prop-desk-medium",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-desk-medium.loweyasset"
+  },
+  {
+   "id": "office-prop-desk-small",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-desk-small.loweyasset"
+  },
+  {
+   "id": "office-prop-chair",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-chair.loweyasset"
+  },
+  {
+   "id": "office-prop-locker",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-locker.loweyasset"
+  },
+  {
+   "id": "office-prop-shelves-widetall",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-shelves-widetall.loweyasset"
+  },
+  {
+   "id": "office-prop-shelves-wideshort",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-shelves-wideshort.loweyasset"
+  },
+  {
+   "id": "office-prop-mug",
+   "set": "Office & Computers",
+   "path": "Office-Computers/office-prop-mug.loweyasset"
+  },
+  {
+   "id": "city-building-a",
+   "set": "City Street",
+   "path": "City-Street/city-building-a.loweyasset"
+  },
+  {
+   "id": "city-building-b",
+   "set": "City Street",
+   "path": "City-Street/city-building-b.loweyasset"
+  },
+  {
+   "id": "city-building-c",
+   "set": "City Street",
+   "path": "City-Street/city-building-c.loweyasset"
+  },
+  {
+   "id": "city-building-d",
+   "set": "City Street",
+   "path": "City-Street/city-building-d.loweyasset"
+  },
+  {
+   "id": "city-building-e",
+   "set": "City Street",
+   "path": "City-Street/city-building-e.loweyasset"
+  },
+  {
+   "id": "city-building-f",
+   "set": "City Street",
+   "path": "City-Street/city-building-f.loweyasset"
+  },
+  {
+   "id": "city-building-g",
+   "set": "City Street",
+   "path": "City-Street/city-building-g.loweyasset"
+  },
+  {
+   "id": "city-building-h",
+   "set": "City Street",
+   "path": "City-Street/city-building-h.loweyasset"
+  },
+  {
+   "id": "city-building-i",
+   "set": "City Street",
+   "path": "City-Street/city-building-i.loweyasset"
+  },
+  {
+   "id": "city-building-j",
+   "set": "City Street",
+   "path": "City-Street/city-building-j.loweyasset"
+  },
+  {
+   "id": "city-building-k",
+   "set": "City Street",
+   "path": "City-Street/city-building-k.loweyasset"
+  },
+  {
+   "id": "city-building-l",
+   "set": "City Street",
+   "path": "City-Street/city-building-l.loweyasset"
+  },
+  {
+   "id": "city-building-m",
+   "set": "City Street",
+   "path": "City-Street/city-building-m.loweyasset"
+  },
+  {
+   "id": "city-building-n",
+   "set": "City Street",
+   "path": "City-Street/city-building-n.loweyasset"
+  },
+  {
+   "id": "city-building-skyscraper-a",
+   "set": "City Street",
+   "path": "City-Street/city-building-skyscraper-a.loweyasset"
+  },
+  {
+   "id": "city-building-skyscraper-b",
+   "set": "City Street",
+   "path": "City-Street/city-building-skyscraper-b.loweyasset"
+  },
+  {
+   "id": "city-building-skyscraper-c",
+   "set": "City Street",
+   "path": "City-Street/city-building-skyscraper-c.loweyasset"
+  },
+  {
+   "id": "city-building-skyscraper-d",
+   "set": "City Street",
+   "path": "City-Street/city-building-skyscraper-d.loweyasset"
+  },
+  {
+   "id": "city-building-skyscraper-e",
+   "set": "City Street",
+   "path": "City-Street/city-building-skyscraper-e.loweyasset"
+  },
+  {
+   "id": "city-detail-awning",
+   "set": "City Street",
+   "path": "City-Street/city-detail-awning.loweyasset"
+  },
+  {
+   "id": "city-detail-awning-wide",
+   "set": "City Street",
+   "path": "City-Street/city-detail-awning-wide.loweyasset"
+  },
+  {
+   "id": "city-detail-overhang",
+   "set": "City Street",
+   "path": "City-Street/city-detail-overhang.loweyasset"
+  },
+  {
+   "id": "city-detail-parasol-a",
+   "set": "City Street",
+   "path": "City-Street/city-detail-parasol-a.loweyasset"
+  },
+  {
+   "id": "city-detail-parasol-b",
+   "set": "City Street",
+   "path": "City-Street/city-detail-parasol-b.loweyasset"
+  },
+  {
+   "id": "city-building-type-a",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-a.loweyasset"
+  },
+  {
+   "id": "city-building-type-b",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-b.loweyasset"
+  },
+  {
+   "id": "city-building-type-c",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-c.loweyasset"
+  },
+  {
+   "id": "city-building-type-d",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-d.loweyasset"
+  },
+  {
+   "id": "city-building-type-e",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-e.loweyasset"
+  },
+  {
+   "id": "city-building-type-f",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-f.loweyasset"
+  },
+  {
+   "id": "city-building-type-g",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-g.loweyasset"
+  },
+  {
+   "id": "city-building-type-h",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-h.loweyasset"
+  },
+  {
+   "id": "city-building-type-i",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-i.loweyasset"
+  },
+  {
+   "id": "city-building-type-j",
+   "set": "City Street",
+   "path": "City-Street/city-building-type-j.loweyasset"
+  },
+  {
+   "id": "city-fence",
+   "set": "City Street",
+   "path": "City-Street/city-fence.loweyasset"
+  },
+  {
+   "id": "city-fence-low",
+   "set": "City Street",
+   "path": "City-Street/city-fence-low.loweyasset"
+  },
+  {
+   "id": "city-planter",
+   "set": "City Street",
+   "path": "City-Street/city-planter.loweyasset"
+  },
+  {
+   "id": "city-tree-large",
+   "set": "City Street",
+   "path": "City-Street/city-tree-large.loweyasset"
+  },
+  {
+   "id": "city-tree-small",
+   "set": "City Street",
+   "path": "City-Street/city-tree-small.loweyasset"
+  },
+  {
+   "id": "city-path-long",
+   "set": "City Street",
+   "path": "City-Street/city-path-long.loweyasset"
+  },
+  {
+   "id": "city-driveway-long",
+   "set": "City Street",
+   "path": "City-Street/city-driveway-long.loweyasset"
+  },
+  {
+   "id": "city-light-curved",
+   "set": "City Street",
+   "path": "City-Street/city-light-curved.loweyasset"
+  },
+  {
+   "id": "city-light-square",
+   "set": "City Street",
+   "path": "City-Street/city-light-square.loweyasset"
+  },
+  {
+   "id": "city-traffic-light",
+   "set": "City Street",
+   "path": "City-Street/city-traffic-light.loweyasset"
+  },
+  {
+   "id": "city-construction-cone",
+   "set": "City Street",
+   "path": "City-Street/city-construction-cone.loweyasset"
+  },
+  {
+   "id": "city-construction-barrier",
+   "set": "City Street",
+   "path": "City-Street/city-construction-barrier.loweyasset"
+  },
+  {
+   "id": "city-construction-fence",
+   "set": "City Street",
+   "path": "City-Street/city-construction-fence.loweyasset"
+  },
+  {
+   "id": "city-dumpster",
+   "set": "City Street",
+   "path": "City-Street/city-dumpster.loweyasset"
+  },
+  {
+   "id": "city-electricity-pole",
+   "set": "City Street",
+   "path": "City-Street/city-electricity-pole.loweyasset"
+  },
+  {
+   "id": "city-bridge-pillar",
+   "set": "City Street",
+   "path": "City-Street/city-bridge-pillar.loweyasset"
+  },
+  {
+   "id": "city-road-straight",
+   "set": "City Street",
+   "path": "City-Street/city-road-straight.loweyasset"
+  },
+  {
+   "id": "city-road-bend",
+   "set": "City Street",
+   "path": "City-Street/city-road-bend.loweyasset"
+  },
+  {
+   "id": "city-road-crossroad",
+   "set": "City Street",
+   "path": "City-Street/city-road-crossroad.loweyasset"
+  },
+  {
+   "id": "city-road-intersection",
+   "set": "City Street",
+   "path": "City-Street/city-road-intersection.loweyasset"
+  },
+  {
+   "id": "city-road-end-round",
+   "set": "City Street",
+   "path": "City-Street/city-road-end-round.loweyasset"
+  },
+  {
+   "id": "city-road-crossing",
+   "set": "City Street",
+   "path": "City-Street/city-road-crossing.loweyasset"
+  },
+  {
+   "id": "city-road-side",
+   "set": "City Street",
+   "path": "City-Street/city-road-side.loweyasset"
+  },
+  {
+   "id": "city-road-roundabout",
+   "set": "City Street",
+   "path": "City-Street/city-road-roundabout.loweyasset"
+  },
+  {
+   "id": "city-road-sign-stop",
+   "set": "City Street",
+   "path": "City-Street/city-road-sign-stop.loweyasset"
+  },
+  {
+   "id": "city-road-sign-street",
+   "set": "City Street",
+   "path": "City-Street/city-road-sign-street.loweyasset"
+  },
+  {
+   "id": "city-road-sign-warning",
+   "set": "City Street",
+   "path": "City-Street/city-road-sign-warning.loweyasset"
+  },
+  {
+   "id": "city-sign-highway",
+   "set": "City Street",
+   "path": "City-Street/city-sign-highway.loweyasset"
+  },
+  {
+   "id": "city-sedan",
+   "set": "City Street",
+   "path": "City-Street/city-sedan.loweyasset"
+  },
+  {
+   "id": "city-suv",
+   "set": "City Street",
+   "path": "City-Street/city-suv.loweyasset"
+  },
+  {
+   "id": "city-taxi",
+   "set": "City Street",
+   "path": "City-Street/city-taxi.loweyasset"
+  },
+  {
+   "id": "city-police",
+   "set": "City Street",
+   "path": "City-Street/city-police.loweyasset"
+  },
+  {
+   "id": "city-ambulance",
+   "set": "City Street",
+   "path": "City-Street/city-ambulance.loweyasset"
+  },
+  {
+   "id": "city-firetruck",
+   "set": "City Street",
+   "path": "City-Street/city-firetruck.loweyasset"
+  },
+  {
+   "id": "city-van",
+   "set": "City Street",
+   "path": "City-Street/city-van.loweyasset"
+  },
+  {
+   "id": "city-truck",
+   "set": "City Street",
+   "path": "City-Street/city-truck.loweyasset"
+  },
+  {
+   "id": "city-delivery",
+   "set": "City Street",
+   "path": "City-Street/city-delivery.loweyasset"
+  },
+  {
+   "id": "city-hatchback-sports",
+   "set": "City Street",
+   "path": "City-Street/city-hatchback-sports.loweyasset"
+  },
+  {
+   "id": "city-garbage-truck",
+   "set": "City Street",
+   "path": "City-Street/city-garbage-truck.loweyasset"
+  },
+  {
+   "id": "city-tractor",
+   "set": "City Street",
+   "path": "City-Street/city-tractor.loweyasset"
+  },
+  {
+   "id": "city-race",
+   "set": "City Street",
+   "path": "City-Street/city-race.loweyasset"
+  },
+  {
+   "id": "nature-tree-default",
+   "set": "Nature",
+   "path": "Nature/nature-tree-default.loweyasset"
+  },
+  {
+   "id": "nature-tree-oak",
+   "set": "Nature",
+   "path": "Nature/nature-tree-oak.loweyasset"
+  },
+  {
+   "id": "nature-tree-detailed",
+   "set": "Nature",
+   "path": "Nature/nature-tree-detailed.loweyasset"
+  },
+  {
+   "id": "nature-tree-fat",
+   "set": "Nature",
+   "path": "Nature/nature-tree-fat.loweyasset"
+  },
+  {
+   "id": "nature-tree-tall",
+   "set": "Nature",
+   "path": "Nature/nature-tree-tall.loweyasset"
+  },
+  {
+   "id": "nature-tree-thin",
+   "set": "Nature",
+   "path": "Nature/nature-tree-thin.loweyasset"
+  },
+  {
+   "id": "nature-tree-cone",
+   "set": "Nature",
+   "path": "Nature/nature-tree-cone.loweyasset"
+  },
+  {
+   "id": "nature-tree-simple",
+   "set": "Nature",
+   "path": "Nature/nature-tree-simple.loweyasset"
+  },
+  {
+   "id": "nature-tree-pinetalla",
+   "set": "Nature",
+   "path": "Nature/nature-tree-pinetalla.loweyasset"
+  },
+  {
+   "id": "nature-tree-pinerounda",
+   "set": "Nature",
+   "path": "Nature/nature-tree-pinerounda.loweyasset"
+  },
+  {
+   "id": "nature-tree-pinesmalla",
+   "set": "Nature",
+   "path": "Nature/nature-tree-pinesmalla.loweyasset"
+  },
+  {
+   "id": "nature-tree-palm",
+   "set": "Nature",
+   "path": "Nature/nature-tree-palm.loweyasset"
+  },
+  {
+   "id": "nature-tree-palmtall",
+   "set": "Nature",
+   "path": "Nature/nature-tree-palmtall.loweyasset"
+  },
+  {
+   "id": "nature-tree-default-fall",
+   "set": "Nature",
+   "path": "Nature/nature-tree-default-fall.loweyasset"
+  },
+  {
+   "id": "nature-tree-oak-fall",
+   "set": "Nature",
+   "path": "Nature/nature-tree-oak-fall.loweyasset"
+  },
+  {
+   "id": "nature-tree-default-dark",
+   "set": "Nature",
+   "path": "Nature/nature-tree-default-dark.loweyasset"
+  },
+  {
+   "id": "nature-plant-bush",
+   "set": "Nature",
+   "path": "Nature/nature-plant-bush.loweyasset"
+  },
+  {
+   "id": "nature-plant-bushlarge",
+   "set": "Nature",
+   "path": "Nature/nature-plant-bushlarge.loweyasset"
+  },
+  {
+   "id": "nature-plant-bushdetailed",
+   "set": "Nature",
+   "path": "Nature/nature-plant-bushdetailed.loweyasset"
+  },
+  {
+   "id": "nature-grass",
+   "set": "Nature",
+   "path": "Nature/nature-grass.loweyasset"
+  },
+  {
+   "id": "nature-grass-large",
+   "set": "Nature",
+   "path": "Nature/nature-grass-large.loweyasset"
+  },
+  {
+   "id": "nature-flower-reda",
+   "set": "Nature",
+   "path": "Nature/nature-flower-reda.loweyasset"
+  },
+  {
+   "id": "nature-flower-yellowa",
+   "set": "Nature",
+   "path": "Nature/nature-flower-yellowa.loweyasset"
+  },
+  {
+   "id": "nature-flower-purplea",
+   "set": "Nature",
+   "path": "Nature/nature-flower-purplea.loweyasset"
+  },
+  {
+   "id": "nature-mushroom-red",
+   "set": "Nature",
+   "path": "Nature/nature-mushroom-red.loweyasset"
+  },
+  {
+   "id": "nature-mushroom-tangroup",
+   "set": "Nature",
+   "path": "Nature/nature-mushroom-tangroup.loweyasset"
+  },
+  {
+   "id": "nature-cactus-tall",
+   "set": "Nature",
+   "path": "Nature/nature-cactus-tall.loweyasset"
+  },
+  {
+   "id": "nature-cactus-short",
+   "set": "Nature",
+   "path": "Nature/nature-cactus-short.loweyasset"
+  },
+  {
+   "id": "nature-lily-large",
+   "set": "Nature",
+   "path": "Nature/nature-lily-large.loweyasset"
+  },
+  {
+   "id": "nature-rock-largea",
+   "set": "Nature",
+   "path": "Nature/nature-rock-largea.loweyasset"
+  },
+  {
+   "id": "nature-rock-largeb",
+   "set": "Nature",
+   "path": "Nature/nature-rock-largeb.loweyasset"
+  },
+  {
+   "id": "nature-rock-talla",
+   "set": "Nature",
+   "path": "Nature/nature-rock-talla.loweyasset"
+  },
+  {
+   "id": "nature-rock-smalla",
+   "set": "Nature",
+   "path": "Nature/nature-rock-smalla.loweyasset"
+  },
+  {
+   "id": "nature-stone-largea",
+   "set": "Nature",
+   "path": "Nature/nature-stone-largea.loweyasset"
+  },
+  {
+   "id": "nature-stone-talla",
+   "set": "Nature",
+   "path": "Nature/nature-stone-talla.loweyasset"
+  },
+  {
+   "id": "nature-stone-smalla",
+   "set": "Nature",
+   "path": "Nature/nature-stone-smalla.loweyasset"
+  },
+  {
+   "id": "nature-log",
+   "set": "Nature",
+   "path": "Nature/nature-log.loweyasset"
+  },
+  {
+   "id": "nature-log-stack",
+   "set": "Nature",
+   "path": "Nature/nature-log-stack.loweyasset"
+  },
+  {
+   "id": "nature-stump-round",
+   "set": "Nature",
+   "path": "Nature/nature-stump-round.loweyasset"
+  },
+  {
+   "id": "nature-stump-old",
+   "set": "Nature",
+   "path": "Nature/nature-stump-old.loweyasset"
+  },
+  {
+   "id": "nature-campfire-stones",
+   "set": "Nature",
+   "path": "Nature/nature-campfire-stones.loweyasset"
+  },
+  {
+   "id": "nature-campfire-logs",
+   "set": "Nature",
+   "path": "Nature/nature-campfire-logs.loweyasset"
+  },
+  {
+   "id": "nature-tent-detailedclosed",
+   "set": "Nature",
+   "path": "Nature/nature-tent-detailedclosed.loweyasset"
+  },
+  {
+   "id": "nature-tent-smallopen",
+   "set": "Nature",
+   "path": "Nature/nature-tent-smallopen.loweyasset"
+  },
+  {
+   "id": "nature-canoe",
+   "set": "Nature",
+   "path": "Nature/nature-canoe.loweyasset"
+  },
+  {
+   "id": "nature-fence-simple",
+   "set": "Nature",
+   "path": "Nature/nature-fence-simple.loweyasset"
+  },
+  {
+   "id": "nature-fence-gate",
+   "set": "Nature",
+   "path": "Nature/nature-fence-gate.loweyasset"
+  },
+  {
+   "id": "nature-bridge-wood",
+   "set": "Nature",
+   "path": "Nature/nature-bridge-wood.loweyasset"
+  },
+  {
+   "id": "nature-statue-head",
+   "set": "Nature",
+   "path": "Nature/nature-statue-head.loweyasset"
+  },
+  {
+   "id": "nature-statue-column",
+   "set": "Nature",
+   "path": "Nature/nature-statue-column.loweyasset"
+  },
+  {
+   "id": "nature-pot-large",
+   "set": "Nature",
+   "path": "Nature/nature-pot-large.loweyasset"
+  },
+  {
+   "id": "nature-sign",
+   "set": "Nature",
+   "path": "Nature/nature-sign.loweyasset"
+  },
+  {
+   "id": "space-astronauta",
+   "set": "Space",
+   "path": "Space/space-astronauta.loweyasset"
+  },
+  {
+   "id": "space-astronautb",
+   "set": "Space",
+   "path": "Space/space-astronautb.loweyasset"
+  },
+  {
+   "id": "space-alien",
+   "set": "Space",
+   "path": "Space/space-alien.loweyasset"
+  },
+  {
+   "id": "space-rover",
+   "set": "Space",
+   "path": "Space/space-rover.loweyasset"
+  },
+  {
+   "id": "space-craft-speedera",
+   "set": "Space",
+   "path": "Space/space-craft-speedera.loweyasset"
+  },
+  {
+   "id": "space-craft-cargoa",
+   "set": "Space",
+   "path": "Space/space-craft-cargoa.loweyasset"
+  },
+  {
+   "id": "space-craft-racer",
+   "set": "Space",
+   "path": "Space/space-craft-racer.loweyasset"
+  },
+  {
+   "id": "space-craft-miner",
+   "set": "Space",
+   "path": "Space/space-craft-miner.loweyasset"
+  },
+  {
+   "id": "space-monorail-trainfront",
+   "set": "Space",
+   "path": "Space/space-monorail-trainfront.loweyasset"
+  },
+  {
+   "id": "space-rocket-basea",
+   "set": "Space",
+   "path": "Space/space-rocket-basea.loweyasset"
+  },
+  {
+   "id": "space-rocket-finsa",
+   "set": "Space",
+   "path": "Space/space-rocket-finsa.loweyasset"
+  },
+  {
+   "id": "space-rocket-fuela",
+   "set": "Space",
+   "path": "Space/space-rocket-fuela.loweyasset"
+  },
+  {
+   "id": "space-rocket-topa",
+   "set": "Space",
+   "path": "Space/space-rocket-topa.loweyasset"
+  },
+  {
+   "id": "space-satellitedish",
+   "set": "Space",
+   "path": "Space/space-satellitedish.loweyasset"
+  },
+  {
+   "id": "space-satellitedish-large",
+   "set": "Space",
+   "path": "Space/space-satellitedish-large.loweyasset"
+  },
+  {
+   "id": "space-hangar-rounda",
+   "set": "Space",
+   "path": "Space/space-hangar-rounda.loweyasset"
+  },
+  {
+   "id": "space-hangar-smalla",
+   "set": "Space",
+   "path": "Space/space-hangar-smalla.loweyasset"
+  },
+  {
+   "id": "space-machine-generator",
+   "set": "Space",
+   "path": "Space/space-machine-generator.loweyasset"
+  },
+  {
+   "id": "space-machine-wireless",
+   "set": "Space",
+   "path": "Space/space-machine-wireless.loweyasset"
+  },
+  {
+   "id": "space-machine-barrel",
+   "set": "Space",
+   "path": "Space/space-machine-barrel.loweyasset"
+  },
+  {
+   "id": "space-structure",
+   "set": "Space",
+   "path": "Space/space-structure.loweyasset"
+  },
+  {
+   "id": "space-structure-detailed",
+   "set": "Space",
+   "path": "Space/space-structure-detailed.loweyasset"
+  },
+  {
+   "id": "space-turret-single",
+   "set": "Space",
+   "path": "Space/space-turret-single.loweyasset"
+  },
+  {
+   "id": "space-platform-large",
+   "set": "Space",
+   "path": "Space/space-platform-large.loweyasset"
+  },
+  {
+   "id": "space-corridor",
+   "set": "Space",
+   "path": "Space/space-corridor.loweyasset"
+  },
+  {
+   "id": "space-corridor-window",
+   "set": "Space",
+   "path": "Space/space-corridor-window.loweyasset"
+  },
+  {
+   "id": "space-gate-simple",
+   "set": "Space",
+   "path": "Space/space-gate-simple.loweyasset"
+  },
+  {
+   "id": "space-barrels",
+   "set": "Space",
+   "path": "Space/space-barrels.loweyasset"
+  },
+  {
+   "id": "space-pipe-straight",
+   "set": "Space",
+   "path": "Space/space-pipe-straight.loweyasset"
+  },
+  {
+   "id": "space-pipe-ring",
+   "set": "Space",
+   "path": "Space/space-pipe-ring.loweyasset"
+  },
+  {
+   "id": "space-meteor",
+   "set": "Space",
+   "path": "Space/space-meteor.loweyasset"
+  },
+  {
+   "id": "space-meteor-detailed",
+   "set": "Space",
+   "path": "Space/space-meteor-detailed.loweyasset"
+  },
+  {
+   "id": "space-crater",
+   "set": "Space",
+   "path": "Space/space-crater.loweyasset"
+  },
+  {
+   "id": "space-craterlarge",
+   "set": "Space",
+   "path": "Space/space-craterlarge.loweyasset"
+  },
+  {
+   "id": "space-rock-crystals",
+   "set": "Space",
+   "path": "Space/space-rock-crystals.loweyasset"
+  },
+  {
+   "id": "space-rock-crystalslargea",
+   "set": "Space",
+   "path": "Space/space-rock-crystalslargea.loweyasset"
+  },
+  {
+   "id": "space-rocks-smalla",
+   "set": "Space",
+   "path": "Space/space-rocks-smalla.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchencabinet",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchencabinet.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchencabinetdrawer",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchencabinetdrawer.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchencabinetupper",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchencabinetupper.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchenfridge",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchenfridge.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchenfridgelarge",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchenfridgelarge.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchenstove",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchenstove.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchensink",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchensink.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchenmicrowave",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchenmicrowave.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchencoffeemachine",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchencoffeemachine.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchenblender",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchenblender.loweyasset"
+  },
+  {
+   "id": "kitchen-toaster",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-toaster.loweyasset"
+  },
+  {
+   "id": "kitchen-kitchenbar",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-kitchenbar.loweyasset"
+  },
+  {
+   "id": "kitchen-stoolbar",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-stoolbar.loweyasset"
+  },
+  {
+   "id": "kitchen-hoodmodern",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-hoodmodern.loweyasset"
+  },
+  {
+   "id": "kitchen-apple",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-apple.loweyasset"
+  },
+  {
+   "id": "kitchen-banana",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-banana.loweyasset"
+  },
+  {
+   "id": "kitchen-bread",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-bread.loweyasset"
+  },
+  {
+   "id": "kitchen-burger",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-burger.loweyasset"
+  },
+  {
+   "id": "kitchen-cake",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-cake.loweyasset"
+  },
+  {
+   "id": "kitchen-cheese",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-cheese.loweyasset"
+  },
+  {
+   "id": "kitchen-croissant",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-croissant.loweyasset"
+  },
+  {
+   "id": "kitchen-donut",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-donut.loweyasset"
+  },
+  {
+   "id": "kitchen-egg",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-egg.loweyasset"
+  },
+  {
+   "id": "kitchen-fries",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-fries.loweyasset"
+  },
+  {
+   "id": "kitchen-hot-dog",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-hot-dog.loweyasset"
+  },
+  {
+   "id": "kitchen-ice-cream",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-ice-cream.loweyasset"
+  },
+  {
+   "id": "kitchen-pizza",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-pizza.loweyasset"
+  },
+  {
+   "id": "kitchen-salad",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-salad.loweyasset"
+  },
+  {
+   "id": "kitchen-sandwich",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-sandwich.loweyasset"
+  },
+  {
+   "id": "kitchen-sushi-salmon",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-sushi-salmon.loweyasset"
+  },
+  {
+   "id": "kitchen-taco",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-taco.loweyasset"
+  },
+  {
+   "id": "kitchen-tomato",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-tomato.loweyasset"
+  },
+  {
+   "id": "kitchen-watermelon",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-watermelon.loweyasset"
+  },
+  {
+   "id": "kitchen-carrot",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-carrot.loweyasset"
+  },
+  {
+   "id": "kitchen-orange",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-orange.loweyasset"
+  },
+  {
+   "id": "kitchen-lemon",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-lemon.loweyasset"
+  },
+  {
+   "id": "kitchen-pancakes",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-pancakes.loweyasset"
+  },
+  {
+   "id": "kitchen-waffle",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-waffle.loweyasset"
+  },
+  {
+   "id": "kitchen-cupcake",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-cupcake.loweyasset"
+  },
+  {
+   "id": "kitchen-muffin",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-muffin.loweyasset"
+  },
+  {
+   "id": "kitchen-cup-coffee",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-cup-coffee.loweyasset"
+  },
+  {
+   "id": "kitchen-mug",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-mug.loweyasset"
+  },
+  {
+   "id": "kitchen-plate",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-plate.loweyasset"
+  },
+  {
+   "id": "kitchen-plate-dinner",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-plate-dinner.loweyasset"
+  },
+  {
+   "id": "kitchen-bowl",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-bowl.loweyasset"
+  },
+  {
+   "id": "kitchen-frying-pan",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-frying-pan.loweyasset"
+  },
+  {
+   "id": "kitchen-pot",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-pot.loweyasset"
+  },
+  {
+   "id": "kitchen-cooking-knife",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-cooking-knife.loweyasset"
+  },
+  {
+   "id": "kitchen-cutting-board",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-cutting-board.loweyasset"
+  },
+  {
+   "id": "kitchen-glass-wine",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-glass-wine.loweyasset"
+  },
+  {
+   "id": "kitchen-bottle-ketchup",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-bottle-ketchup.loweyasset"
+  },
+  {
+   "id": "kitchen-soda-can",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-soda-can.loweyasset"
+  },
+  {
+   "id": "kitchen-pizza-box",
+   "set": "Kitchen & Food",
+   "path": "Kitchen-Food/kitchen-pizza-box.loweyasset"
+  },
+  {
+   "id": "lab-prop-healthpack",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-healthpack.loweyasset"
+  },
+  {
+   "id": "lab-prop-healthpack-tube",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-healthpack-tube.loweyasset"
+  },
+  {
+   "id": "lab-prop-syringe",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-syringe.loweyasset"
+  },
+  {
+   "id": "lab-prop-keycard",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-keycard.loweyasset"
+  },
+  {
+   "id": "lab-prop-shelves-thintall",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-shelves-thintall.loweyasset"
+  },
+  {
+   "id": "lab-prop-shelves-thinshort",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-shelves-thinshort.loweyasset"
+  },
+  {
+   "id": "lab-prop-satellitedish",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-satellitedish.loweyasset"
+  },
+  {
+   "id": "lab-enemy-eyedrone",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-enemy-eyedrone.loweyasset"
+  },
+  {
+   "id": "lab-enemy-quadshell",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-enemy-quadshell.loweyasset"
+  },
+  {
+   "id": "lab-machine-barrellarge",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-machine-barrellarge.loweyasset"
+  },
+  {
+   "id": "lab-machine-generatorlarge",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-machine-generatorlarge.loweyasset"
+  },
+  {
+   "id": "lab-machine-wirelesscable",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-machine-wirelesscable.loweyasset"
+  },
+  {
+   "id": "lab-prop-crate",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-crate.loweyasset"
+  },
+  {
+   "id": "lab-prop-crate-large",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-crate-large.loweyasset"
+  },
+  {
+   "id": "lab-prop-crate-tarp",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-crate-tarp.loweyasset"
+  },
+  {
+   "id": "lab-prop-barrel1",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-barrel1.loweyasset"
+  },
+  {
+   "id": "lab-prop-barrel2-closed",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-barrel2-closed.loweyasset"
+  },
+  {
+   "id": "lab-prop-chest",
+   "set": "Lab & Science",
+   "path": "Lab-Science/lab-prop-chest.loweyasset"
+  },
+  {
+   "id": "props-barrel",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-barrel.loweyasset"
+  },
+  {
+   "id": "props-box",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-box.loweyasset"
+  },
+  {
+   "id": "props-box-large",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-box-large.loweyasset"
+  },
+  {
+   "id": "props-chest",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-chest.loweyasset"
+  },
+  {
+   "id": "props-bucket",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-bucket.loweyasset"
+  },
+  {
+   "id": "props-bottle",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-bottle.loweyasset"
+  },
+  {
+   "id": "props-bedroll",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-bedroll.loweyasset"
+  },
+  {
+   "id": "props-campfire-pit",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-campfire-pit.loweyasset"
+  },
+  {
+   "id": "props-workbench",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-workbench.loweyasset"
+  },
+  {
+   "id": "props-workbench-anvil",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-workbench-anvil.loweyasset"
+  },
+  {
+   "id": "props-tent",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-tent.loweyasset"
+  },
+  {
+   "id": "props-cone",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-cone.loweyasset"
+  },
+  {
+   "id": "props-tool-axe",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-tool-axe.loweyasset"
+  },
+  {
+   "id": "props-tool-hammer",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-tool-hammer.loweyasset"
+  },
+  {
+   "id": "props-tool-shovel",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-tool-shovel.loweyasset"
+  },
+  {
+   "id": "props-tool-pickaxe",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-tool-pickaxe.loweyasset"
+  },
+  {
+   "id": "props-tool-hoe",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-tool-hoe.loweyasset"
+  },
+  {
+   "id": "props-signpost",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-signpost.loweyasset"
+  },
+  {
+   "id": "props-signpost-single",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-signpost-single.loweyasset"
+  },
+  {
+   "id": "props-cash-register",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-cash-register.loweyasset"
+  },
+  {
+   "id": "props-display-bread",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-display-bread.loweyasset"
+  },
+  {
+   "id": "props-display-fruit",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-display-fruit.loweyasset"
+  },
+  {
+   "id": "props-shelf-boxes",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-shelf-boxes.loweyasset"
+  },
+  {
+   "id": "props-shelf-bags",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-shelf-bags.loweyasset"
+  },
+  {
+   "id": "props-shopping-cart",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-shopping-cart.loweyasset"
+  },
+  {
+   "id": "props-shopping-basket",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-shopping-basket.loweyasset"
+  },
+  {
+   "id": "props-freezer",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-freezer.loweyasset"
+  },
+  {
+   "id": "props-column",
+   "set": "Props & Signs",
+   "path": "Props-Signs/props-column.loweyasset"
+  },
+  {
+   "id": "characters-superhero-male-fullbody",
+   "set": "Characters",
+   "path": "Characters/characters-superhero-male-fullbody.loweyasset"
+  },
+  {
+   "id": "characters-superhero-female-fullbody",
+   "set": "Characters",
+   "path": "Characters/characters-superhero-female-fullbody.loweyasset"
+  },
+  {
+   "id": "characters-ual1-standard",
+   "set": "Characters",
+   "path": "Characters/characters-ual1-standard.loweyasset"
+  }
+ ]
+}

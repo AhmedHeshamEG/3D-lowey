@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Food",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-sushi-salmon",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Sushi salmon",
+ "realSizeMeters": [
+  0.045,
+  0.037,
+  0.084
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/food-kit",
+ "tags": [
+  "food",
+  "kitchen & food",
+  "salmon",
+  "sushi"
+ ],
+ "topSurfaces": [],
+ "triangles": 96
+}

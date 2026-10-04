@@ -117,7 +117,7 @@ class Bridge:
         self.token = token or config.get("token")
         self.timeout = timeout
         if not self.host or self.host.startswith(":"):
-            raise BridgeError("No iPad yet. Run: lowey-link pair")
+            raise BridgeError("No iPad yet. Run: hmm-bridge pair")
 
     # -- plumbing -------------------------------------------------------------------------------------------------
     def request(self, method: str, path: str, body: bytes | None = None, query: dict[str, Any] | None = None,
@@ -151,7 +151,7 @@ class Bridge:
         try:
             connection.connect()
             connection.sock.settimeout(self.timeout)
-            headers = {"Content-Type": content_type, "X-Lowey-Client": os.environ.get("LOWEY_CLIENT", "Claude (lowey-mcp)")}
+            headers = {"Content-Type": content_type, "X-Lowey-Client": os.environ.get("LOWEY_CLIENT", "Claude (hmm-bridge)")}
             if self.token:
                 headers["Authorization"] = f"Bearer {self.token}"
             connection.request(method, target, body=body, headers=headers)
@@ -187,37 +187,6 @@ class Bridge:
         self.token = reply["token"]
         return self.token
 
-    def status(self) -> dict:
-        return self.get("/v1/status")
-
-    def scene(self, depth: int = 2) -> dict:
-        return self.get("/v1/scene", depth=depth)
-
-    def look(self) -> dict:
-        return self.get("/v1/look")
-
-    def assets(self, query: str = "", limit: int = 40) -> list:
-        return self.get("/v1/assets", q=query, limit=limit)
-
-    def transcript(self) -> dict:
-        return self.get("/v1/transcript")
-
-    def actions_reference(self) -> str:
-        return self.get("/v1/actions")
-
-    def script(self, title: str, actions: list[dict], dry_run: bool = False) -> dict:
-        return self.post("/v1/script", {"version": 2, "title": title, "actions": actions}, dryRun="1" if dry_run else None)
-
-    def snapshot(self, framing: str = "16:9", long_side: int = 1280, camera: bool = True, time: float | None = None) -> bytes:
-        payload: dict[str, Any] = {"framing": framing, "longSide": long_side, "camera": camera}
-        if time is not None:
-            payload["time"] = time
-        data, _ = self.request("POST", "/v1/snapshot", body=json.dumps(payload).encode())
-        return data
-
-    def undo(self) -> dict:
-        return self.post("/v1/undo")
-
     def renders(self) -> list[str]:
         return self.get("/v1/renders")
 
@@ -230,27 +199,78 @@ class Bridge:
                                content_type="application/octet-stream")
         return json.loads(data)
 
-    def import_media(self, path: pathlib.Path, at: float | None = None, placement: str = "card") -> dict:
-        """A picture or video (a clip, a Manim render) into the open scene, playing from `at` seconds.
-        placement "card": a thin card standing in the 3D world; "overlay": flat over the frame (transparent graphics)."""
-        query: dict[str, Any] = {"name": path.name, "as": placement}
-        if at is not None:
-            query["at"] = at
-        data, _ = self.request("POST", "/v1/media/import", body=path.read_bytes(), query=query, content_type="application/octet-stream")
-        return json.loads(data)
-
     def import_audio(self, path: pathlib.Path, role: str = "voiceover") -> dict:
         data, _ = self.request("POST", "/v1/audio/import", body=path.read_bytes(), query={"name": path.name, "role": role},
                                content_type="application/octet-stream")
         return json.loads(data)
 
+    # -- MCP v2 (the 16 tools) -------------------------------------------------------------------------------
+    def status(self) -> dict:
+        return self.get("/v2/status")
 
-def describe(reply: dict) -> str:
-    """A script reply as a few short lines (keeps tool results small)."""
-    lines = []
-    lines.append(("Applied. " if reply.get("applied") else "Not applied. ") + reply.get("message", ""))
-    lines += [f"- {line}" for line in reply.get("preview", [])]
-    created = reply.get("created") or {}
-    if created:
-        lines.append("Named: " + ", ".join(sorted(created)))
+    def read_project(self) -> dict:
+        return self.get("/v2/project")
+
+    def transcript(self) -> dict:
+        return self.get("/v2/transcript")
+
+    def actions(self) -> str:
+        return self.get("/v2/actions")
+
+    def find_assets(self, query: str = "", set_name: str | None = None, limit: int = 12) -> list:
+        return self.get("/v2/assets", q=query, set=set_name, limit=limit)
+
+    def thumbnail(self, asset_id: str) -> bytes:
+        data, _ = self.request("GET", "/v2/thumbnail", query={"id": asset_id})
+        return data
+
+    def build(self, actions: list[dict], title: str | None = None, dry_run: bool = False, views: list[str] | None = None,
+              subject: str | None = None) -> dict:
+        """Scene Script v3: one batch = one Proposal = one undo step. The reply has the diff and an observe of the result."""
+        payload: dict[str, Any] = {"title": title or "From Claude", "actions": actions, "dry_run": dry_run}
+        if views:
+            payload["views"] = views
+        if subject:
+            payload["subject"] = subject
+        return self.post("/v2/build", payload)
+
+    def observe(self, time: float | None = None, views: list[str] | None = None, framing: str | None = None,
+                subject: str | None = None, long_side: int = 1280) -> dict:
+        payload = {"time": time, "views": views, "framing": framing, "subject": subject, "long_side": long_side}
+        return self.post("/v2/observe", {k: v for k, v in payload.items() if v is not None})
+
+    def contact_sheet(self, start: float | None = None, end: float | None = None, frames: int = 6, subject: str | None = None) -> dict:
+        payload = {"from": start, "to": end, "frames": frames, "subject": subject}
+        return self.post("/v2/contact_sheet", {k: v for k, v in payload.items() if v is not None})
+
+    def commit(self, proposal_id: str | None = None, action: str = "commit", steps: int = 1) -> dict:
+        payload: dict[str, Any] = {"action": action}
+        if action == "commit":
+            payload["proposal_id"] = proposal_id
+        else:
+            payload["steps"] = steps
+        return self.post("/v2/commit", payload)
+
+    def new_scene(self, name: str) -> dict:
+        """A fresh scene in the open project, opened (the evals harness starts each brief this way)."""
+        return self.post("/v2/scenes/new", {"name": name})
+
+    def add_media(self, path: pathlib.Path, at: float | None = None, placement: str = "card") -> dict:
+        """A picture or video (a clip, a Manim render) into the open scene, playing from `at` seconds.
+        placement "card": a thin card standing in the 3D world; "overlay": flat over the frame (transparent graphics)."""
+        query: dict[str, Any] = {"name": path.name, "as": placement, "at": at}
+        data, _ = self.request("POST", "/v2/media", body=path.read_bytes(), query=query, content_type="application/octet-stream")
+        return json.loads(data)
+
+
+def describe_build(reply: dict) -> str:
+    """A build reply in a few lines: applied or not, the diff, what the observe says (keeps tool results small)."""
+    lines = [("Applied. " if reply.get("applied") else "Not applied. ") + reply.get("message", "")]
+    if reply.get("proposal_id"):
+        lines.append(f"proposal_id: {reply['proposal_id']}")
+    lines += [f"- {line}" for line in reply.get("diff", [])]
+    lines += [f"  · {line}" for line in reply.get("report", [])[:12]]
+    observe = reply.get("observe") or {}
+    if observe.get("summary"):
+        lines.append("Observe: " + observe["summary"])
     return "\n".join(lines)

@@ -26,7 +26,8 @@ public enum Animator {
         var scene = document.scene
         let palette = document.palette
         var animated = Set<ObjectID>()
-        applyTracks(timeline, to: &scene, at: time, palette: palette, animated: &animated)
+        let rates = FrameRates(document)
+        applyTracks(timeline, to: &scene, at: time, palette: palette, rates: rates, animated: &animated)
         for (id, values) in overrides {
             guard var object = scene.objects[id] else { continue }
             for (key, value) in values {
@@ -40,11 +41,11 @@ public enum Animator {
             let history: (ObjectID, Double) -> Vec3? = { id, earlier in
                 var past = document.scene
                 var ignored = Set<ObjectID>()
-                applyTracks(timeline, to: &past, at: earlier, palette: palette, animated: &ignored)
+                applyTracks(timeline, to: &past, at: earlier, palette: palette, rates: rates, animated: &ignored)
                 return past.objects[id] != nil ? past.worldTransform(of: id).position : nil
             }
             for behavior in timeline.behaviors where behavior.enabled && scene.objects[behavior.target] != nil {
-                let sampleTime = steppedTime(time, for: behavior.target, in: scene, timeline: timeline)
+                let sampleTime = rates.sampleTime(time, for: behavior.target, in: scene)
                 BehaviorEvaluator.apply(behavior, to: &scene, at: sampleTime, history: history)
                 animated.insert(behavior.target)
             }
@@ -52,7 +53,7 @@ public enum Animator {
         var poses: [ObjectID: [Transform]] = [:]
         for track in timeline.clipTracks {
             guard let object = scene.objects[track.target] else { continue }
-            let sampleTime = steppedTime(time, for: track.target, in: scene, timeline: timeline)
+            let sampleTime = rates.sampleTime(time, for: track.target, in: scene)
             let world = scene.worldTransform(of: track.target)
             let snapshot = scene
             let target: (ObjectID) -> Vec3? = { id in snapshot.objects[id] != nil ? snapshot.worldTransform(of: id).position : nil }
@@ -70,8 +71,12 @@ public enum Animator {
         }
         // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
         FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
-        // Blobs: the cartoon face (springy, squash & stretch, auto blink).
-        BlobRig.apply(to: &scene, document: document, time: time, overrides: overrides, animated: &animated)
+        // Blobs: their clips (dials, lift, lean), then the cartoon face (springy, squash & stretch, auto blink).
+        var blobLive = overrides
+        let current = scene
+        BlobClips.apply(to: &scene, document: document, sampleTime: { rates.sampleTime(time, for: $0, in: current) }, overrides: &blobLive,
+                        animated: &animated)
+        BlobRig.apply(to: &scene, document: document, time: time, overrides: blobLive, animated: &animated)
         // Rubber-hose limbs follow wherever their hands went.
         RubberHose.apply(to: &scene, animated: &animated)
         let camera = timeline.cutCamera(at: time).flatMap { scene.objects[$0] != nil ? $0 : nil }
@@ -83,11 +88,12 @@ public enum Animator {
     public static func keyedScene(_ document: Document, at time: Double) -> Scene {
         var scene = document.scene
         var ignored = Set<ObjectID>()
-        applyTracks(document.scene.timeline, to: &scene, at: time, palette: document.palette, animated: &ignored)
+        applyTracks(document.scene.timeline, to: &scene, at: time, palette: document.palette, rates: FrameRates(document), animated: &ignored)
         return scene
     }
 
-    static func applyTracks(_ timeline: Timeline, to scene: inout Scene, at time: Double, palette: Palette, animated: inout Set<ObjectID>) {
+    static func applyTracks(_ timeline: Timeline, to scene: inout Scene, at time: Double, palette: Palette, rates: FrameRates,
+                            animated: inout Set<ObjectID>) {
         var steppedTimes: [ObjectID: Double] = [:]
         for track in timeline.tracks {
             guard var object = scene.objects[track.target] else { continue }
@@ -95,7 +101,7 @@ public enum Animator {
             if let cached = steppedTimes[track.target] {
                 sampleTime = cached
             } else {
-                sampleTime = steppedTime(time, for: track.target, in: scene, timeline: timeline)
+                sampleTime = rates.sampleTime(time, for: track.target, in: scene)
                 steppedTimes[track.target] = sampleTime
             }
             guard let value = track.value(at: sampleTime, palette: palette) else { continue }
@@ -106,29 +112,6 @@ public enum Animator {
             }
             animated.insert(track.target)
         }
-    }
-
-    /// Time sampled for an object: its own stepping, else the project's — except cameras,
-    /// which stay smooth unless explicitly stepped (Spider-Verse: characters on twos, camera on ones).
-    public static func steppedTime(_ time: Double, for id: ObjectID, in scene: Scene, timeline: Timeline) -> Double {
-        guard let object = scene.objects[id] else { return time }
-        let stepping: Stepping
-        if let name = object.properties[.stepping]?.stringValue, let own = Stepping(name: name) {
-            stepping = own
-        } else if object.kind == .camera {
-            stepping = .onOnes
-        } else {
-            // Inherit from the nearest ancestor that sets it (a stepped character group steps its parts).
-            var inherited: Stepping?
-            for ancestor in scene.ancestors(of: id) {
-                if let name = scene.objects[ancestor]?.properties[.stepping]?.stringValue, let own = Stepping(name: name) {
-                    inherited = own
-                    break
-                }
-            }
-            stepping = inherited ?? timeline.stepping
-        }
-        return stepping.quantize(time, fps: timeline.fps)
     }
 }
 

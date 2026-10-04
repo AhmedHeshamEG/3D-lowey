@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Trees",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-tree-default-fall",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tree default fall",
+ "realSizeMeters": [
+  2.21,
+  5.0,
+  1.914
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "default",
+  "fall",
+  "nature",
+  "plant",
+  "tree",
+  "trees"
+ ],
+ "topSurfaces": [],
+ "triangles": 228
+}

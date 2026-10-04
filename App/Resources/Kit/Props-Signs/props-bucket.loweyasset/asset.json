@@ -1,0 +1,57 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-bucket",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Bucket",
+ "realSizeMeters": [
+  0.377,
+  0.502,
+  0.377
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "bucket",
+  "props",
+  "props & signs"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0113,
+   "height": 0.466,
+   "max": [
+    0.039,
+    0.133
+   ],
+   "min": [
+    -0.039,
+    -0.133
+   ]
+  },
+  {
+   "area": 0.0113,
+   "height": 0.484,
+   "max": [
+    0.039,
+    0.133
+   ],
+   "min": [
+    -0.039,
+    -0.133
+   ]
+  }
+ ],
+ "triangles": 68
+}

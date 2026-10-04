@@ -1,0 +1,36 @@
+{
+ "author": "Kenney",
+ "category": "Towers",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-building-skyscraper-e",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Building skyscraper e",
+ "realSizeMeters": [
+  12.019,
+  37.865,
+  11.527
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-commercial",
+ "tags": [
+  "building",
+  "city street",
+  "house",
+  "office",
+  "skyscraper",
+  "tower",
+  "towers"
+ ],
+ "topSurfaces": [],
+ "triangles": 1156
+}

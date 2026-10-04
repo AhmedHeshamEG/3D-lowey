@@ -1,0 +1,33 @@
+{
+ "author": "Quaternius",
+ "category": "Lab",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-syringe",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Syringe",
+ "realSizeMeters": [
+  0.08,
+  0.457,
+  0.08
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "lab",
+  "lab & science",
+  "prop",
+  "syringe"
+ ],
+ "topSurfaces": [],
+ "triangles": 1118
+}

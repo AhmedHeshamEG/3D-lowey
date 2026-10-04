@@ -1,0 +1,46 @@
+{
+ "author": "Kenney",
+ "category": "Kitchen",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "kitchen-kitchenbar",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Kitchen bar",
+ "realSizeMeters": [
+  0.823,
+  0.804,
+  0.402
+ ],
+ "set": "Kitchen & Food",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "bar",
+  "cooking",
+  "kitchen",
+  "kitchen & food"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.3311,
+   "height": 0.804,
+   "max": [
+    0.412,
+    0.201
+   ],
+   "min": [
+    -0.412,
+    -0.201
+   ]
+  }
+ ],
+ "triangles": 76
+}

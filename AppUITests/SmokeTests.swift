@@ -106,4 +106,29 @@ final class SmokeTests: XCTestCase {
         }
         XCTAssertFalse(app.descendants(matching: .any)["tour"].firstMatch.exists)
     }
+
+    /// Arabic: the chrome mirrors (the making tools move to the left, the document cluster to the right), the labels are
+    /// Arabic, and the timeline keeps time running left to right.
+    func testArabicIsRightToLeft() {
+        launch(["-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG"])
+        shot("Theater (ar)")
+        newProject("RTL")
+        let build = app.descendants(matching: .any)["Build"].firstMatch
+        let look = app.descendants(matching: .any)["Look"].firstMatch
+        XCTAssertTrue(build.waitForExistence(timeout: 10))
+        XCTAssertTrue(look.exists)
+        XCTAssertLessThan(build.frame.midX, look.frame.midX, "Build (top right in English) sits on the left in Arabic")
+        XCTAssertNotEqual(build.label, "Build", "the label is translated")
+        tap("Build")
+        shot("Build panel (ar)")
+    }
+
+    func testItalianLabels() {
+        launch(["-AppleLanguages", "(it)", "-AppleLocale", "it_IT"])
+        newProject("Italiano")
+        let undo = app.descendants(matching: .any)["Undo"].firstMatch
+        XCTAssertTrue(undo.waitForExistence(timeout: 10))
+        XCTAssertEqual(undo.label, "Annulla")
+        shot("Stage (it)")
+    }
 }

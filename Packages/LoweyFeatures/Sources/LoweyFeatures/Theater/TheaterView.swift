@@ -27,6 +27,7 @@ struct TheaterView: View {
                         ProjectCard(project: project, thumbnail: app.thumbnails[project.id], loop: app.loops[project.id],
                                     inICloud: app.storage.isICloud)
                             .onTapGesture { app.open(url: project.url) }
+                            .accessibilityAddTraits(.isButton)
                             .contextMenu { menu(for: project) }
                             .accessibilityIdentifier("project-\(project.info.name)")
                     }

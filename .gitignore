@@ -32,3 +32,6 @@ __pycache__/
 
 App/Widgets/Info.plist
 *.bak
+# Kit downloads (fetch-kit.py)
+Tools/kit/.cache/
+Tools/kit/__pycache__/

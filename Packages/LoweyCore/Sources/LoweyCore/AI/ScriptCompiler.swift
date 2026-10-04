@@ -43,7 +43,8 @@ public struct ScriptError: Error, Equatable, CustomStringConvertible {
 }
 
 public enum ScriptCompiler {
-    public static func compile(_ script: SceneScript, document: Document, context: ScriptContext) throws -> ScriptResult {
+    public static func compile(_ original: SceneScript, document: Document, context: ScriptContext) throws -> ScriptResult {
+        let script = ScriptMigration.upgraded(original)
         var state = ScriptState(document: document, context: context)
         for (index, command) in script.commands.enumerated() {
             do {
@@ -125,6 +126,8 @@ public struct ScriptPreview: Sendable {
 public extension SceneScript {
     /// Version with `actions` (v1 scripts only had raw commands; both still load).
     static let actionsVersion = 2
+    /// Version with relations (`place … relation`), real sizes and palette slots; v2 scripts upgrade on load.
+    static let relationsVersion = 3
 }
 
 // MARK: - Compiler state

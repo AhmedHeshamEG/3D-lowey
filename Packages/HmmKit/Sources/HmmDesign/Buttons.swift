@@ -40,7 +40,7 @@
             .buttonStyle(.plain)
             .modifier(OptionalGlass(enabled: !insideGlass, shape: Circle()))
             .opacity(isEnabled ? 1 : 0.35)
-            .accessibilityLabel(label)
+            .accessibilityLabel(Text(LocalizedStringKey(label)))
             .accessibilityIdentifier(label)
             .accessibilityAddTraits(isOn ? .isSelected : [])
             .hmmHoverHighlight()
@@ -77,7 +77,7 @@
             } label: {
                 HStack(spacing: HmmSpacing.xs) {
                     if let systemName { Image(systemName: systemName).symbolRenderingMode(.hierarchical) }
-                    Text(title).lineLimit(1)
+                    Text(LocalizedStringKey(title)).lineLimit(1)
                 }
                 .font(.hmm(.body, weight: .semibold))
                 .padding(.horizontal, HmmSpacing.m)

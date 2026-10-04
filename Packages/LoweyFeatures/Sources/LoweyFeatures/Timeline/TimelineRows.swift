@@ -47,6 +47,10 @@ struct TimelineRowView: View {
             WordsRow(editor: editor, layout: layout, width: width).frame(height: TimelineLayout.wordsRowHeight)
         case .effects:
             EffectsRow(editor: editor, layout: layout, width: width).frame(height: TimelineLayout.wordsRowHeight)
+        case let .flipbook(id):
+            if let track = editor.timeline.flipbook(id) {
+                FlipbookRow(editor: editor, layout: layout, track: track, width: width)
+            }
         }
     }
 }
@@ -86,6 +90,7 @@ private struct ObjectLabel: View {
         .frame(width: TimelineLayout.labelWidth, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture { editor.select(id) }
+        .accessibilityAddTraits(.isButton)
         .contextMenu {
             if isGroup { Button("Select everything inside", systemImage: "square.stack.3d.up") { editor.setSelection(editor.baseScene.subtree(of: id)) } }
         }
@@ -109,8 +114,12 @@ private struct Spans: View {
             }
             for track in editor.timeline.clipTracks where ids.contains(track.target) {
                 for segment in track.segments {
-                    let rect = CGRect(x: layout.x(segment.start), y: 3, width: max(CGFloat(segment.duration * layout.pps), 4), height: size.height - 10)
-                    context.fill(Path(roundedRect: rect, cornerRadius: 5), with: .color(Color.teal.opacity(0.3)))
+                    let picked = editor.selectedClips.contains(segment.id)
+                    let shift = picked ? layout.keyDrag ?? 0 : 0
+                    let rect = CGRect(x: layout.x(segment.start + shift), y: 3, width: max(CGFloat(segment.duration * layout.pps), 4),
+                                      height: size.height - 10)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 5), with: .color(Color.teal.opacity(picked ? 0.6 : 0.3)))
+                    if picked { context.stroke(Path(roundedRect: rect, cornerRadius: 5), with: .color(.white.opacity(0.9)), lineWidth: 1.5) }
                     context.draw(Text(segment.clip.name).font(.system(size: 10, weight: .semibold)).foregroundColor(.white.opacity(0.8)),
                                  at: CGPoint(x: rect.minX + 6, y: rect.midY), anchor: .leading)
                 }
@@ -185,6 +194,7 @@ private struct ComposeBar: View {
                         including: selected ? .all : .subviews
                     )
                     .onTapGesture { editor.select(id, additive: editor.keyBoxSelect) }
+                    .accessibilityAddTraits(.isButton)
             }
         }
         .frame(width: width, alignment: .leading)
@@ -222,6 +232,7 @@ struct CutRow: View {
                             editor.setTime(cut.time)
                             editor.selectCamera(cut.camera)
                         }
+                        .accessibilityAddTraits(.isButton)
                         .contextMenu { Button("Remove this cut", systemImage: "scissors", role: .destructive) { editor.removeCut(at: cut.time) } }
                 }
                 if cuts.isEmpty { Text("Select a camera and tap Cut here").font(.hmm(.caption)).foregroundStyle(theme.text3).padding(.leading, 8) }

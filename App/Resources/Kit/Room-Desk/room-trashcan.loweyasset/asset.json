@@ -1,0 +1,32 @@
+{
+ "author": "Kenney",
+ "category": "Decor",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-trashcan",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Trashcan",
+ "realSizeMeters": [
+  0.398,
+  0.819,
+  0.448
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "decor",
+  "room & desk",
+  "trashcan"
+ ],
+ "topSurfaces": [],
+ "triangles": 68
+}

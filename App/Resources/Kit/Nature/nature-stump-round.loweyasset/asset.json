@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Camp",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-stump-round",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Stump round",
+ "realSizeMeters": [
+  0.941,
+  0.605,
+  1.086
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "camp",
+  "nature",
+  "round",
+  "stump"
+ ],
+ "topSurfaces": [],
+ "triangles": 56
+}

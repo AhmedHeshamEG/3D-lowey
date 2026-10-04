@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-workbench-anvil",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Workbench anvil",
+ "realSizeMeters": [
+  0.844,
+  0.878,
+  0.774
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "anvil",
+  "props",
+  "props & signs",
+  "workbench"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.5827,
+   "height": 0.331,
+   "max": [
+    0.351,
+    0.387
+   ],
+   "min": [
+    -0.422,
+    -0.387
+   ]
+  },
+  {
+   "area": 0.1643,
+   "height": 0.774,
+   "max": [
+    0.204,
+    0.195
+   ],
+   "min": [
+    -0.403,
+    -0.164
+   ]
+  },
+  {
+   "area": 0.0823,
+   "height": 0.469,
+   "max": [
+    0.218,
+    0.259
+   ],
+   "min": [
+    -0.287,
+    -0.246
+   ]
+  },
+  {
+   "area": 0.0422,
+   "height": 0.7,
+   "max": [
+    0.422,
+    0.12
+   ],
+   "min": [
+    0.166,
+    -0.164
+   ]
+  }
+ ],
+ "triangles": 298
+}

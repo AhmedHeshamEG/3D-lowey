@@ -8,19 +8,20 @@
     }
 
     /// Floating chrome material: Liquid Glass with a dark tint so text stays legible over any content, or a solid
-    /// surface at 96 % with Reduce Transparency.
+    /// surface at 96 % with Reduce Transparency (opaque, with a stronger outline, with Increase Contrast).
     private struct HmmGlassModifier<S: Shape>: ViewModifier {
         @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+        @Environment(\.colorSchemeContrast) private var contrast
         @Environment(\.hmmTheme) private var theme
         let shape: S
         let interactive: Bool
         let tint: Color?
 
         func body(content: Content) -> some View {
-            if reduceTransparency {
+            if reduceTransparency || contrast == .increased {
                 content
-                    .background(theme.surface.opacity(0.96), in: shape)
-                    .overlay(shape.stroke(theme.line, lineWidth: 1))
+                    .background(theme.surface.opacity(contrast == .increased ? 1 : 0.96), in: shape)
+                    .overlay(shape.stroke(contrast == .increased ? theme.text2 : theme.line, lineWidth: contrast == .increased ? 1.5 : 1))
             } else {
                 let glassTint = tint ?? (theme.appearance == .dark ? Color.black.opacity(0.32) : Color.white.opacity(0.28))
                 content.glassEffect(interactive ? .regular.tint(glassTint).interactive() : .regular.tint(glassTint), in: shape)

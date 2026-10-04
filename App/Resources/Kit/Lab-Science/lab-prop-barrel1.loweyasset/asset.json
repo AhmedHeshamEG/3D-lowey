@@ -1,0 +1,58 @@
+{
+ "author": "Quaternius",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "lab-prop-barrel1",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Barrel1",
+ "realSizeMeters": [
+  0.506,
+  0.778,
+  0.454
+ ],
+ "set": "Lab & Science",
+ "source": "https://quaternius.itch.io/sci-fi-essentials-kit",
+ "tags": [
+  "barrel1",
+  "lab & science",
+  "prop",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0796,
+   "height": 0.738,
+   "max": [
+    0.173,
+    0.173
+   ],
+   "min": [
+    -0.173,
+    -0.173
+   ]
+  },
+  {
+   "area": 0.0358,
+   "height": 0.686,
+   "max": [
+    0.227,
+    0.227
+   ],
+   "min": [
+    -0.227,
+    -0.227
+   ]
+  }
+ ],
+ "triangles": 2352
+}

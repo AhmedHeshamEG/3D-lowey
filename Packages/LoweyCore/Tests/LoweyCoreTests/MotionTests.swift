@@ -113,7 +113,7 @@ final class MotionTests: XCTestCase {
         XCTAssertEqual(position(overridden, "b").x, 15, accuracy: 1e-6, "b inherits threes from a: frame 15 is on the grid")
         XCTAssertEqual(position(Animator.evaluate(document, at: 16.0 / 30.0).scene, "b").x, 15, accuracy: 1e-6)
         XCTAssertEqual(Stepping(name: "twos"), .onTwos)
-        XCTAssertNil(Stepping(name: "fours"))
+        XCTAssertNil(Stepping(name: "fives"))
         XCTAssertEqual(Stepping.onThrees.name, "threes")
     }
 

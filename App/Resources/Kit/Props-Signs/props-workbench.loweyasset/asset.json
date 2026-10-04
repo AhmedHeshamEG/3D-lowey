@@ -1,0 +1,81 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-workbench",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Workbench",
+ "realSizeMeters": [
+  0.852,
+  0.75,
+  0.774
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "props",
+  "props & signs",
+  "workbench"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.5827,
+   "height": 0.619,
+   "max": [
+    0.348,
+    0.387
+   ],
+   "min": [
+    -0.426,
+    -0.387
+   ]
+  },
+  {
+   "area": 0.132,
+   "height": 0.646,
+   "max": [
+    0.426,
+    0.302
+   ],
+   "min": [
+    -0.042,
+    -0.189
+   ]
+  },
+  {
+   "area": 0.0333,
+   "height": 0.511,
+   "max": [
+    0.286,
+    0.325
+   ],
+   "min": [
+    -0.365,
+    -0.325
+   ]
+  },
+  {
+   "area": 0.0312,
+   "height": 0.722,
+   "max": [
+    -0.139,
+    -0.002
+   ],
+   "min": [
+    -0.4,
+    -0.202
+   ]
+  }
+ ],
+ "triangles": 236
+}

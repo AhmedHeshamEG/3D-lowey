@@ -1,0 +1,34 @@
+{
+ "author": "Kenney",
+ "category": "Houses",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-building-type-b",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Building type b",
+ "realSizeMeters": [
+  16.448,
+  10.235,
+  10.257
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-suburban",
+ "tags": [
+  "building",
+  "city street",
+  "house",
+  "houses",
+  "type"
+ ],
+ "topSurfaces": [],
+ "triangles": 1748
+}

@@ -1,0 +1,47 @@
+{
+ "author": "Kenney",
+ "category": "Storage",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-coatrackstanding",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Coat rack standing",
+ "realSizeMeters": [
+  0.522,
+  1.474,
+  0.522
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "coat",
+  "rack",
+  "room & desk",
+  "standing",
+  "storage"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.0305,
+   "height": 1.195,
+   "max": [
+    0.234,
+    0.234
+   ],
+   "min": [
+    -0.234,
+    -0.234
+   ]
+  }
+ ],
+ "triangles": 190
+}

@@ -96,6 +96,10 @@ static inline EdgeHit lw_findEdge(texture2d<uint, access::read> ids, texture2d<f
             float4 neighbor = normalDepth.read(uint2(q));
             uint other = lw_idObject(neighborID);
             float strength = 0.0;
+            if ((lw_idFlags(neighborID) & LW_FLAG_INK) != 0u) {
+                // Ink strokes are lines already: no outline where they cross something.
+                continue;
+            }
             if (other != object) {
                 // Another object: a line on this side only if this side is nearer.
                 strength = (other == 0u || neighbor.w >= center.w - 0.01) ? 1.0 : 0.0;
@@ -138,10 +142,19 @@ kernel void lw_lines(texture2d<float, access::read> color [[texture(0)]],
         output.write(shaded, gid);
         return;
     }
+    if ((lw_idFlags(centerID) & LW_FLAG_INK) != 0u && (lw_idFlags(centerID) & LW_FLAG_SELECTED) == 0u) {
+        output.write(shaded, gid);
+        return;
+    }
     constant LookUniforms &look = looks[lw_idLook(centerID)];
     bool selected = (lw_idFlags(centerID) & LW_FLAG_SELECTED) != 0u && u.selection.w > 0.5;
     bool ink = look.lines.x > 0.5;
     float extra = u.scale.z;
+    if ((lw_idFlags(centerID) & LW_FLAG_INK) != 0u) {
+        // A selected ink stroke: only the selection outline.
+        ink = false;
+        extra = 0.0;
+    }
     if (!ink && extra <= 0.0 && !selected) {
         output.write(shaded, gid);
         return;

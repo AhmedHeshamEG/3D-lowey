@@ -9,44 +9,53 @@ extension EditorModel {
     }
 
     func switchScene(_ id: SceneID) {
+        Task { await openScene(id) }
+    }
+
+    /// Saves the open scene, then opens `id`.
+    func openScene(_ id: SceneID) async {
         guard id != baseScene.id else { return }
-        Task {
-            await saveNow(thumbnail: false)
-            do {
-                let (loaded, _) = try store.loadScene(id, in: projectURL)
-                var opened = session.document
-                opened.scene = loaded
-                opened.project = (try? store.loadProjectInfo(at: projectURL).info) ?? opened.project
-                session = EditSession(document: opened)
-                selection = []
-                selectedKeys = []
-                pause()
-                time = 0
-                previousAnimated = []
-                refreshDisplay()
-                stage?.setViewpoint(loaded.viewpoint, notify: false)
-                viewYaw = loaded.viewpoint.yaw
-                refreshSelectionOverlay()
-                refreshGuide()
-            } catch {
-                app.show("Couldn't open that scene: \(error.localizedDescription)", kind: .error)
-            }
+        await saveNow(thumbnail: false)
+        do {
+            let (loaded, _) = try store.loadScene(id, in: projectURL)
+            var opened = session.document
+            opened.scene = loaded
+            opened.project = (try? store.loadProjectInfo(at: projectURL).info) ?? opened.project
+            session = EditSession(document: opened)
+            selection = []
+            selectedKeys = []
+            pause()
+            time = 0
+            previousAnimated = []
+            refreshDisplay()
+            stage?.setViewpoint(loaded.viewpoint, notify: false)
+            viewYaw = loaded.viewpoint.yaw
+            refreshSelectionOverlay()
+            refreshGuide()
+        } catch {
+            app.show("Couldn't open that scene: \(error.localizedDescription)", kind: .error)
         }
     }
 
     func addScene() {
-        Task {
-            await saveNow(thumbnail: false)
-            do {
-                let new = try store.addScene(named: "Scene \(document.project.sceneOrder.count + 1)", to: projectURL)
-                session.updateProjectInfo { info in
-                    info.sceneOrder.append(new.id)
-                    info.sceneNames[new.id] = new.name
-                }
-                switchScene(new.id)
-            } catch {
-                app.show("Couldn't add a scene: \(error.localizedDescription)", kind: .error)
+        Task { await newScene(named: nil) }
+    }
+
+    /// Adds a scene to the project and opens it (nil when the project couldn't be written).
+    @discardableResult
+    func newScene(named name: String?) async -> SceneID? {
+        await saveNow(thumbnail: false)
+        do {
+            let new = try store.addScene(named: name ?? "Scene \(document.project.sceneOrder.count + 1)", to: projectURL)
+            session.updateProjectInfo { info in
+                info.sceneOrder.append(new.id)
+                info.sceneNames[new.id] = new.name
             }
+            await openScene(new.id)
+            return new.id
+        } catch {
+            app.show("Couldn't add a scene: \(error.localizedDescription)", kind: .error)
+            return nil
         }
     }
 

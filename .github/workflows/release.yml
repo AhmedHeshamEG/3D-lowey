@@ -148,3 +148,65 @@ jobs:
           PRERELEASE=""
           if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; fi
           gh release create "$TAG" Lowey.ipa --title "3D-lowey $TAG" --generate-notes $PRERELEASE
+
+  testflight:
+    # The App Store build: the AI bridge off and no background audio (App Review), signed with the App Store Connect
+    # API key, uploaded to TestFlight. It runs only for tags and only when the ASC secrets exist (docs/APPSTORE.md).
+    name: TestFlight (App Store build)
+    needs: gate
+    if: needs.gate.outputs.tag != ''
+    runs-on: xcode-27
+    timeout-minutes: 60
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: Are the App Store Connect secrets set?
+        id: secrets
+        run: |
+          if [[ -n "$ASC_KEY_ID" && -n "$ASC_ISSUER_ID" && -n "$ASC_KEY_P8" && -n "$TEAM_ID" ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No App Store Connect secrets: skipping TestFlight (see docs/APPSTORE.md)."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+      - name: Generate the App Store project
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          brew install xcodegen
+          xcodebuild -downloadComponent MetalToolchain
+          xcodegen generate
+          # The App Store build ships without the bridge (FeatureFlags) and without background audio.
+          /usr/libexec/PlistBuddy -c "Set :LoweyAIBridge false" -c "Set :LoweyBackgroundBridge false" \
+            -c "Delete :UIBackgroundModes" App/Info.plist
+      - name: Archive, export and upload
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p private_keys
+          echo "$ASC_KEY_P8" > "private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$PWD/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+                -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          xcodebuild archive -project Lowey.xcodeproj -scheme Lowey -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath Lowey.xcarchive -skipPackagePluginValidation "${AUTH[@]}" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION=${{ needs.gate.outputs.version }} CURRENT_PROJECT_VERSION=${{ github.run_number }}
+          cat > ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath Lowey.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath export "${AUTH[@]}"
+          rm -rf private_keys

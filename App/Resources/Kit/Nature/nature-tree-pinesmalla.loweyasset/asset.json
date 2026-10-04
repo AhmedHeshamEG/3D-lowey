@@ -1,0 +1,35 @@
+{
+ "author": "Kenney",
+ "category": "Trees",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-tree-pinesmalla",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Tree pine small a",
+ "realSizeMeters": [
+  1.464,
+  2.832,
+  1.464
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "nature",
+  "pine",
+  "plant",
+  "small",
+  "tree",
+  "trees"
+ ],
+ "topSurfaces": [],
+ "triangles": 164
+}

@@ -78,7 +78,7 @@ extension AppModel {
             let destination = try ProjectPackage.unpack(Data(contentsOf: url), into: projectStore)
             adoptAssets(of: destination)
         } catch {
-            show("Couldn't import: \(error)", kind: .error)
+            show("Couldn't import: \(String(describing: error))", kind: .error)
         }
     }
 
@@ -96,7 +96,7 @@ extension AppModel {
 
     func createIslandSample(open shouldOpen: Bool) {
         do {
-            let (info, scenes) = try IslandSample.build(ids: .random)
+            let (info, scenes) = try Showcase.island(kit: library.manifest.kit, ids: .random)
             var fresh = info
             fresh.id = .make()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
@@ -107,10 +107,10 @@ extension AppModel {
         }
     }
 
-    /// The Enigma sets and the narrated story (a placeholder narrator speaks each sentence at its time).
+    /// The Enigma sets (Ink, Comic, Sketch) and the narrated story (a placeholder narrator speaks each sentence at its time).
     func createEnigmaSample(open shouldOpen: Bool) {
         do {
-            let (info, scenes) = try EnigmaSample.buildFull(ids: .random)
+            let (info, scenes) = try Showcase.enigma(kit: library.manifest.kit, ids: .random)
             var fresh = info
             fresh.id = .make()
             fresh.created = Date()
@@ -129,7 +129,7 @@ extension AppModel {
 
     /// The 60-second tour happens on the welcome island (added if it isn't there).
     func startTour() {
-        if let island = projects.first(where: { $0.info.name == IslandSample.projectName }) {
+        if let island = projects.first(where: { $0.info.name == Showcase.islandName }) {
             open(url: island.url)
         } else {
             createIslandSample(open: true)

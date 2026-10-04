@@ -8,10 +8,14 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case select
     /// Draw a loop around things to select them.
     case lasso
+    /// Ink strokes: pressure lines in 3D that always face the camera (draw, erase, select strokes).
+    case ink
     /// Solid shapes drawn in 3D (tube, ribbon, extrude, lathe) on a guide.
     case draw
     /// Paint shadow shapes onto a surface (push the shadow in or pull it out).
     case shadowBrush
+    /// Frame-by-frame 2D drawing over the shot (flipbook tracks).
+    case flipbook
     /// Drag on the ground to scatter copies of the selection.
     case scatter
 
@@ -21,8 +25,10 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .select: "Select"
         case .lasso: "Lasso"
+        case .ink: "Ink"
         case .draw: "Solid shape"
         case .shadowBrush: "Shadow Brush"
+        case .flipbook: "Flipbook"
         case .scatter: "Scatter"
         }
     }
@@ -31,14 +37,19 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .select: "hand.point.up.left"
         case .lasso: "lasso"
+        case .ink: "pencil.tip"
         case .draw: "scribble.variable"
         case .shadowBrush: "circle.lefthalf.striped.horizontal"
+        case .flipbook: "book.pages"
         case .scatter: "circle.hexagongrid"
         }
     }
 
     /// Tools where the Pencil (and, if allowed, a finger) paints instead of navigating.
-    public var paints: Bool { self == .draw || self == .shadowBrush }
+    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook }
+
+    /// Tools that draw on a guide surface.
+    public var usesGuide: Bool { self == .ink || self == .draw }
 }
 
 /// The floating panels the corner clusters open. One at a time; tapping its button again closes it.
@@ -123,6 +134,42 @@ public struct DrawSettings: Equatable, Sendable {
     public var guideSize: Double = 1.5
     /// The Pencil draws and fingers navigate (off: a finger draws too).
     public var pencilOnly = true
+
+    public init() {}
+}
+
+/// What the Pencil does with ink: draw strokes, erase them, or pick strokes to edit.
+public enum InkMode: String, CaseIterable, Identifiable, Sendable {
+    case draw, erase, select
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .draw: "Draw"
+        case .erase: "Erase"
+        case .select: "Select strokes"
+        }
+    }
+
+    public var systemImage: String {
+        switch self {
+        case .draw: "pencil.tip"
+        case .erase: "eraser"
+        case .select: "lasso"
+        }
+    }
+}
+
+/// Ink strokes: width at full pressure, opacity and smoothing of new strokes, the eraser's size.
+public struct InkSettings: Equatable, Sendable {
+    public var mode: InkMode = .draw
+    /// Half-width in metres at full pressure.
+    public var width: Double = 0.006
+    public var opacity: Double = 1
+    public var smoothing: Double = 0.35
+    /// Eraser radius in points.
+    public var eraserRadius: Double = 14
 
     public init() {}
 }

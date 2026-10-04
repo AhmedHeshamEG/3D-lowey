@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Lights",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-ceilingfan",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Ceiling fan",
+ "realSizeMeters": [
+  0.871,
+  0.256,
+  1.005
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "ceiling",
+  "fan",
+  "lights",
+  "room & desk"
+ ],
+ "topSurfaces": [],
+ "triangles": 214
+}

@@ -1,0 +1,69 @@
+{
+ "author": "Kenney",
+ "category": "Props",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "props-bedroll",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Bedroll",
+ "realSizeMeters": [
+  0.812,
+  0.327,
+  1.59
+ ],
+ "set": "Props & Signs",
+ "source": "https://kenney.nl/assets/survival-kit",
+ "tags": [
+  "bedroll",
+  "props",
+  "props & signs"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.9335,
+   "height": 0.248,
+   "max": [
+    0.341,
+    0.795
+   ],
+   "min": [
+    -0.341,
+    -0.795
+   ]
+  },
+  {
+   "area": 0.7722,
+   "height": 0.32,
+   "max": [
+    0.341,
+    0.693
+   ],
+   "min": [
+    -0.341,
+    -0.68
+   ]
+  },
+  {
+   "area": 0.0968,
+   "height": 0.304,
+   "max": [
+    0.387,
+    0.693
+   ],
+   "min": [
+    -0.387,
+    -0.274
+   ]
+  }
+ ],
+ "triangles": 144
+}

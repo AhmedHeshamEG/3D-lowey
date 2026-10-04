@@ -215,6 +215,25 @@ fragment ShadeOut lw_shade(SurfaceVaryings in [[stage_in]], bool frontFacing [[f
     return out;
 }
 
+/// A character outline: the Look's ink, or the part's own colour darkened (as the Look draws its lines).
+fragment ShadeOut lw_shadeHull(SurfaceVaryings in [[stage_in]],
+                               constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
+                               constant LookUniforms *looks [[buffer(LW_LOOKS)]]) {
+    constant ObjectUniforms &object = objects[in.objectIndex];
+    constant LookUniforms &look = looks[object.ids.y];
+    float3 ink = look.lineInk.rgb;
+    if (look.lines.w < 0.5) {
+        float3 hsv = lw_rgbToHsv(max(object.baseColor.rgb, 0.0));
+        hsv.y = saturate(hsv.y * 1.25 + 0.05);
+        hsv.z *= (1.0 - look.lines.z);
+        ink = lw_hsvToRgb(hsv);
+    }
+    ShadeOut out;
+    out.color = float4(ink, 1.0);
+    out.light = 1.0;
+    return out;
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Ground: lit like every surface, faintly uneven, melting into the sky at its rim.
 

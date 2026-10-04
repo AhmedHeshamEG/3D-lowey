@@ -1,0 +1,82 @@
+{
+ "author": "Kenney",
+ "category": "Seating",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "room-chaircushion",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Chair cushion",
+ "realSizeMeters": [
+  0.383,
+  0.881,
+  0.383
+ ],
+ "set": "Room & Desk",
+ "source": "https://kenney.nl/assets/furniture-kit",
+ "tags": [
+  "chair",
+  "cushion",
+  "room & desk",
+  "seating"
+ ],
+ "topSurfaces": [
+  {
+   "area": 0.1349,
+   "height": 0.46,
+   "max": [
+    0.191,
+    0.191
+   ],
+   "min": [
+    -0.191,
+    -0.191
+   ]
+  },
+  {
+   "area": 0.0279,
+   "height": 0.134,
+   "max": [
+    0.172,
+    0.115
+   ],
+   "min": [
+    -0.172,
+    -0.115
+   ]
+  },
+  {
+   "area": 0.0176,
+   "height": 0.823,
+   "max": [
+    0.115,
+    -0.115
+   ],
+   "min": [
+    -0.115,
+    -0.191
+   ]
+  },
+  {
+   "area": 0.0117,
+   "height": 0.881,
+   "max": [
+    0.191,
+    -0.115
+   ],
+   "min": [
+    -0.191,
+    -0.191
+   ]
+  }
+ ],
+ "triangles": 198
+}

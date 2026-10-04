@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Plants",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-grass-large",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Grass large",
+ "realSizeMeters": [
+  1.197,
+  0.744,
+  1.194
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "grass",
+  "large",
+  "nature",
+  "plants"
+ ],
+ "topSurfaces": [],
+ "triangles": 224
+}

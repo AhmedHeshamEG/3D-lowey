@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Camp",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-campfire-logs",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Campfire logs",
+ "realSizeMeters": [
+  0.854,
+  0.183,
+  0.854
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "camp",
+  "campfire",
+  "logs",
+  "nature"
+ ],
+ "topSurfaces": [],
+ "triangles": 112
+}

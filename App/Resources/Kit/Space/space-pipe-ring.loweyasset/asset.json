@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Base",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "space-pipe-ring",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Pipe ring",
+ "realSizeMeters": [
+  2.096,
+  1.815,
+  2.269
+ ],
+ "set": "Space",
+ "source": "https://kenney.nl/assets/space-kit",
+ "tags": [
+  "base",
+  "pipe",
+  "ring",
+  "space"
+ ],
+ "topSurfaces": [],
+ "triangles": 144
+}

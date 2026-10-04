@@ -58,6 +58,20 @@ public extension LoweyRenderer {
         return PickHit(object: object, point: ray.point(at: distance), normal: Vec3(worldNormal).normalized, distance: distance)
     }
 
+    /// The whole ID buffer of the last frame (packed ids, top row first) and its size.
+    func idBuffer() -> (ids: [UInt32], width: Int, height: Int)? {
+        guard let targets, let buffer = device.device.makeBuffer(length: targets.width * targets.height * 4, options: .storageModeShared),
+              let commandBuffer = device.queue.makeCommandBuffer(), let blit = commandBuffer.makeBlitCommandEncoder() else { return nil }
+        let size = MTLSize(width: targets.width, height: targets.height, depth: 1)
+        blit.copy(from: targets.ids, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(), sourceSize: size, to: buffer,
+                  destinationOffset: 0, destinationBytesPerRow: targets.width * 4, destinationBytesPerImage: targets.width * targets.height * 4)
+        blit.endEncoding()
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        let pointer = buffer.contents().bindMemory(to: UInt32.self, capacity: targets.width * targets.height)
+        return (Array(UnsafeBufferPointer(start: pointer, count: targets.width * targets.height)), targets.width, targets.height)
+    }
+
     /// The object indices whose pixels fall inside a screen polygon (lasso) in the last frame, by bounds centre.
     func visibleObjects() -> [ObjectID] {
         lastScene?.objectIDs ?? []
@@ -74,9 +88,13 @@ public extension LoweyRenderer {
         return result
     }
 
-    /// An object's geometry in world space as last drawn (drawing on its surface).
-    func worldMesh(of id: ObjectID) -> MeshData? {
+    /// An object's geometry in world space as last drawn (drawing on its surface). Skinned parts are posed on the GPU,
+    /// so with `staticOnly` an object that has any comes back nil (the caller uses its catalogued box instead).
+    func worldMesh(of id: ObjectID, staticOnly: Bool = false) -> MeshData? {
         guard let scene = lastScene else { return nil }
+        if staticOnly, scene.items.contains(where: {
+            scene.objectID(forPacked: $0.uniforms.ids.x) == id && ($0.uniforms.ids.z & ObjectFlags.skinned.rawValue) != 0
+        }) { return nil }
         var result = MeshData()
         for item in scene.items where scene.objectID(forPacked: item.uniforms.ids.x) == id {
             var mesh = item.mesh.data

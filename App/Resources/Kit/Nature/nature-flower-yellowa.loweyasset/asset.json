@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Plants",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "nature-flower-yellowa",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Flower yellow a",
+ "realSizeMeters": [
+  0.466,
+  0.564,
+  0.53
+ ],
+ "set": "Nature",
+ "source": "https://kenney.nl/assets/nature-kit",
+ "tags": [
+  "flower",
+  "nature",
+  "plants",
+  "yellow"
+ ],
+ "topSurfaces": [],
+ "triangles": 76
+}

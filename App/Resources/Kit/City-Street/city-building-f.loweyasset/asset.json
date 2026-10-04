@@ -1,0 +1,33 @@
+{
+ "author": "Kenney",
+ "category": "Buildings",
+ "file": "model.glb",
+ "front": [
+  0.0,
+  0.0,
+  1.0
+ ],
+ "groundAnchor": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "id": "city-building-f",
+ "license": "CC0 1.0 Universal (public domain)",
+ "name": "Building f",
+ "realSizeMeters": [
+  7.796,
+  15.712,
+  9.559
+ ],
+ "set": "City Street",
+ "source": "https://kenney.nl/assets/city-kit-commercial",
+ "tags": [
+  "building",
+  "buildings",
+  "city street",
+  "house"
+ ],
+ "topSurfaces": [],
+ "triangles": 1794
+}
