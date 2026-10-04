@@ -42,27 +42,8 @@ struct StageOverlayView: View {
                     .stroke(editor.currentColor.swatch(in: editor.look.palette),
                             style: StrokeStyle(lineWidth: CGFloat(editor.flipbook.width * 2), lineCap: .round, lineJoin: .round))
             }
-            if let hover = editor.hoverPoint {
-                hoverRing(at: hover)
-            }
         }
         .allowsHitTesting(false)
-    }
-
-    /// The brush (or a pointer) under the hovering Pencil, shrinking as the tip comes closer.
-    private func hoverRing(at point: CGPoint) -> some View {
-        let radius: CGFloat = switch editor.tool {
-        case .draw: max(6, 40 * CGFloat(editor.draw.width / 0.05)) * 0.3
-        case .ink: CGFloat(editor.ink.mode == .erase ? editor.ink.eraserRadius : 4)
-        case .flipbook: CGFloat(editor.flipbook.mode == .erase ? editor.flipbook.eraserRadius : editor.flipbook.width)
-        case .shadowBrush: max(10, CGFloat(editor.shadowBrush.radius) * 120)
-        default: 6
-        }
-        let size = radius * 2 * (1 + CGFloat(editor.hoverHeight))
-        return Circle()
-            .stroke(theme.accent.opacity(0.9), lineWidth: 1.5)
-            .frame(width: size, height: size)
-            .position(point)
     }
 }
 

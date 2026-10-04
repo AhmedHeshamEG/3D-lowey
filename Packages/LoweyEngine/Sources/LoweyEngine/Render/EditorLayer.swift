@@ -25,6 +25,8 @@ public struct EditorScene {
     public var gizmo: (mode: GizmoMode, pivot: Vec3, size: Double)?
     public var guide: GuideSurface?
     public var strokePreview: (mesh: MeshData, color: RGBA)?
+    /// The hovering Pencil (drawn last, on top of everything).
+    public var pointer: PencilPointer?
     /// Radians per pixel (2·tan(fov/2) / height in pixels), for the grid's one-pixel lines.
     public var pixelAngle: Float = 0.0012
 
@@ -115,6 +117,11 @@ extension LoweyRenderer {
         encoder.setRenderPipelineState(device.pipelines.editor)
         for draw in editorDraws(editor, scene: scene) {
             encode(draw, encoder: encoder)
+        }
+        if let pointer = editor.pointer {
+            for draw in pointerDraws(pointer, camera: camera, aspect: Double(output.width) / Double(max(output.height, 1))) {
+                encode(draw, encoder: encoder)
+            }
         }
         encoder.endEncoding()
     }

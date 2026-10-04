@@ -85,8 +85,9 @@ final class EditorModel {
     var pickSlot = 0
     /// Lasso polygon, scatter circle and Pencil hover (screen space).
     var lassoPoints: [CGPoint] = []
-    var hoverPoint: CGPoint?
-    var hoverHeight: Double = 0
+    /// Where the Pencil hovers (the stage draws the point itself: `EditorModel+Pointer`).
+    @ObservationIgnored var hoverPoint: CGPoint?
+    @ObservationIgnored var brushResizing = false
     var scatterPreview: (center: CGPoint, radius: CGFloat)?
     /// The Director view: the stage shows the shot camera with the delivery frame (else the free Work view).
     var directorView = false {

@@ -37,6 +37,8 @@ public final class StageView: MTKView {
     public var showsGrid = true
     public private(set) var guide: GuideSurface?
     private var strokePreview: (MeshData, RGBA)?
+    /// The hovering Pencil, drawn in this view's own render pass.
+    public private(set) var pointer: PencilPointer?
     private var lastFrameStart: CFTimeInterval = 0
     public private(set) var lastReport: FrameReport?
 
@@ -210,6 +212,13 @@ public final class StageView: MTKView {
         redraw()
     }
 
+    /// Shows (or hides) the point under the hovering Pencil. Drawn by the next frame, in the same pass as the scene.
+    public func showPointer(_ newValue: PencilPointer?) {
+        guard newValue != pointer else { return }
+        pointer = newValue
+        redraw()
+    }
+
     public func showStrokePreview(_ mesh: MeshData?, color: RGBA) {
         strokePreview = mesh.flatMap { $0.isEmpty ? nil : ($0, color) }
         redraw()
@@ -232,6 +241,7 @@ public final class StageView: MTKView {
         if let pivot = gizmoPivot { scene.gizmo = (gizmoMode, pivot, gizmoScale) }
         scene.guide = guide
         scene.strokePreview = strokePreview
+        scene.pointer = pointer
         let pixels = Double(bounds.height * contentScaleFactor)
         if pixels > 1 { scene.pixelAngle = Float(2 * tan(Double(camera.fieldOfView) * .pi / 360) / pixels) }
         return scene
