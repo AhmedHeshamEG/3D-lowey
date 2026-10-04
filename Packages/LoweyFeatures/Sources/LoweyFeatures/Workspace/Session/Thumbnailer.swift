@@ -5,8 +5,8 @@ import ImageIO
 import LoweyCore
 import LoweyEngine
 
-/// Pictures of things, drawn by the same renderer as the stage: project thumbnails and their looping previews,
-/// library tiles (models, builds, Looks) and the character builder's portrait.
+/// Pictures of things, drawn by the same renderer as the stage: project thumbnails and their turntables (the Home
+/// cards), library tiles (models, builds, Looks) and the character builder's portrait.
 @MainActor
 final class Thumbnailer {
     static let loopFile = "thumbnail-loop.gif"
@@ -27,17 +27,26 @@ final class Thumbnailer {
         return try await renderer(models: models).image(request, width: width, height: height)
     }
 
-    /// The first seconds of a document through its shot camera, a few frames a second (Theater cards loop them).
-    func loop(_ document: Document, catalog: AssetCatalog, models: ModelLibrary = .shared, seconds: Double = 2.4, fps: Int = 8,
-              longSide: Int = 360) async throws -> [CGImage] {
-        let builder = ShotBuilder(document: document, catalog: catalog, models: models)
+    /// The scene slowly turning in its Look, one full turn around everything in it from the work view's height (the
+    /// Home card plays it while it's on screen). Empty when there's nothing to turn.
+    func turntable(_ document: Document, pitch: Double, catalog: AssetCatalog, models: ModelLibrary = .shared, frames: Int = 48,
+                   longSide: Int = 480) async throws -> [CGImage] {
+        let evaluated = Animator.evaluate(document, at: 0)
+        let scene = evaluated.scene
+        guard let bounds = SceneBounds(library: catalog.manifest).worldBounds(of: scene.roots, in: scene) else { return [] }
         let size = Framing.landscape.pixelSize(longSide: longSide)
-        let count = max(Int(min(seconds, max(document.scene.timeline.duration, 0.1)) * Double(fps)), 1)
+        let fieldOfView = 34.0
+        // Fit the bounding sphere's height in the frame (the landscape frame is wider than tall).
+        let radius = max(bounds.size.length / 2, 0.05)
+        let distance = radius / sin(fieldOfView * .pi / 360) * 1.08
+        let still = Document(project: document.project, scene: scene)
+        let start = document.scene.viewpoint.yaw
         var images: [CGImage] = []
-        for index in 0 ..< count {
-            let time = Double(index) / Double(fps)
-            let request = builder.request(at: time, framing: .landscape, size: CGSize(width: size.width, height: size.height),
-                                          frameIndex: builder.timeline.frame(for: time), captions: false)
+        for index in 0 ..< max(frames, 1) {
+            let viewpoint = Viewpoint(target: bounds.center, yaw: start + Double(index) * 360 / Double(max(frames, 1)),
+                                      pitch: min(max(pitch, 8), 40), distance: distance, fieldOfView: fieldOfView)
+            let input = RenderInput(document: still, poses: evaluated.poses, catalog: catalog)
+            let request = FrameRequest(input: input, camera: RenderCamera(viewpoint: viewpoint))
             try await images.append(renderer(models: models).image(request, width: size.width, height: size.height))
         }
         return images

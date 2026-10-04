@@ -3,13 +3,15 @@ import HmmDocuments
 import LoweyCore
 import SwiftUI
 
-/// The app's root: the Theater, or the open project. Universal gestures, the toast and the theme live here.
+/// The app's root: Home, with the open project over it. A card grows into the stage (the system zoom transition from
+/// the card's picture) and the stage shrinks back into it. Universal gestures, the toast and the theme live here and
+/// in the project's cover.
 public struct RootView: View {
     @Environment(AppModel.self) private var app
     @AppStorage(HmmThemeMode.storageKey) private var themeMode = HmmThemeMode.dark.rawValue
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// This window, among the app's windows (Stage Manager).
     @State private var windowID = UUID()
+    @Namespace private var zoom
 
     public init() {}
 
@@ -28,22 +30,27 @@ public struct RootView: View {
         @Bindable var app = app
         return ZStack {
             BackgroundFill()
-            if let editor = app.editor {
-                EditorScreen(editor: editor)
-                    .transition(.opacity)
-            } else {
-                TheaterView()
-                    .transition(.opacity)
-            }
+            TheaterView(zoom: zoom)
         }
         .hmmThemed(.lowey, mode: HmmThemeMode(rawValue: themeMode) ?? .dark)
         .hmmToast($app.toast)
-        .hmmUniversalGestures(HmmGestureActions(
-            undo: { app.editor?.undo() },
-            redo: { app.editor?.redo() },
-            toggleChrome: { app.editor?.chromeHidden.toggle() }
-        ))
-        .animation(HmmMotion.gentle.animation(reduceMotion: reduceMotion), value: app.editor == nil)
+        .fullScreenCover(item: $app.editor) { editor in
+            ZStack {
+                BackgroundFill()
+                EditorScreen(editor: editor)
+            }
+            .environment(app)
+            .hmmThemed(.lowey, mode: HmmThemeMode(rawValue: themeMode) ?? .dark)
+            .hmmToast($app.toast)
+            .hmmUniversalGestures(HmmGestureActions(
+                undo: { app.editor?.undo() },
+                redo: { app.editor?.redo() },
+                toggleChrome: { app.editor?.chromeHidden.toggle() }
+            ))
+            // Pinching and dragging belong to the stage: the project closes from Home in the corner, never by a swipe.
+            .interactiveDismissDisabled()
+            .navigationTransition(.zoom(sourceID: editor.document.project.id.raw, in: zoom))
+        }
         .sheet(item: $app.pendingConflict) { conflict in
             HmmConflictSheet(documentName: conflict.name, thisVersion: conflict.thisVersion,
                              otherVersion: conflict.versions.first ?? conflict.thisVersion) { choice in
