@@ -5,6 +5,7 @@ import SwiftUI
 /// The menu bar (iPadOS 26) with every keyboard shortcut. It acts on the open project.
 public struct LoweyMenuCommands: Commands {
     let app: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     public init(app: AppModel) {
         self.app = app
@@ -56,6 +57,8 @@ public struct LoweyMenuCommands: Commands {
             Button("Paste a Scene Script") { editor?.importScriptFromClipboard() }.keyboardShortcut("v", modifiers: [.command, .option])
             Button("AI & Laptop Bridge…") { editor?.sheet = .bridge }.keyboardShortcut("b", modifiers: [.command, .shift])
             Button("Scripts…") { editor?.openScript(nil) }
+            Divider()
+            Button("New Monitor Window") { openWindow(id: LoweyWindow.monitor) }.keyboardShortcut("n", modifiers: [.command, .option])
         }
         CommandMenu("Timeline") {
             Button("Play / Pause") { editor?.togglePlay() }

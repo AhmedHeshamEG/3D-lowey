@@ -249,7 +249,7 @@ final class EditorModel {
             return true
         } catch {
             logger.error("Command failed: \(String(describing: error))")
-            app.show("That didn't work: \(error)", kind: .error)
+            app.show("That didn't work: \(String(describing: error))", kind: .error)
             HmmHaptics.play(.error)
             return false
         }
@@ -271,7 +271,7 @@ final class EditorModel {
             refreshDisplay(changes)
             afterChange()
         } catch {
-            app.show("Undo failed: \(error)", kind: .error)
+            app.show("Undo failed: \(String(describing: error))", kind: .error)
         }
     }
 
@@ -281,7 +281,7 @@ final class EditorModel {
             refreshDisplay(changes)
             afterChange()
         } catch {
-            app.show("Redo failed: \(error)", kind: .error)
+            app.show("Redo failed: \(String(describing: error))", kind: .error)
         }
     }
 
@@ -313,6 +313,7 @@ final class EditorModel {
         do {
             _ = try await saver.save(document, revision: revision, to: projectURL)
             lastSaved = Date()
+            SessionRestoration(self).save()
         } catch {
             app.show("Autosave failed: \(error.localizedDescription)", kind: .error)
         }

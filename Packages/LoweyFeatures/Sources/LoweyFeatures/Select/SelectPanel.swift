@@ -135,6 +135,7 @@ private struct OutlinerRow: View {
         .background(RoundedRectangle(cornerRadius: HmmRadius.control).fill(isSelected ? theme.accent.opacity(0.18) : .clear))
         .contentShape(Rectangle())
         .onTapGesture(perform: select)
+        .accessibilityAddTraits(.isButton)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 

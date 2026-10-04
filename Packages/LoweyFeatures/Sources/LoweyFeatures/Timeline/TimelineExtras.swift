@@ -62,7 +62,7 @@ struct PerformValueSlider: View {
             Menu {
                 Button("Move, size and turn (touch)") { editor.performSliderKey = nil }
                 ForEach(options) { option in
-                    Button(option.title) {
+                    Button(LocalizedStringKey(option.title)) {
                         editor.performSliderKey = option.key
                         value = editor.singleSelection?[option.key]?.floatValue ?? option.range.lowerBound
                     }

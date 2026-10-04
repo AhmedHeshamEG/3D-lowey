@@ -52,6 +52,9 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
+        # English, Italian and Arabic (right to left) at 2.0: App/Resources/Localizable.xcstrings, InfoPlist.xcstrings.
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, it, ar]
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: true

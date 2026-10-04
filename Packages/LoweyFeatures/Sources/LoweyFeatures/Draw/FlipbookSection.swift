@@ -62,7 +62,7 @@ struct FlipbookSection: View {
                 editor.anchorFlipbook(to: key == "camera" ? .camera : .object(ObjectID(raw: key)))
             }
             Picker("Blend", selection: Binding(get: { track.blend }, set: { blend in editor.updateFlipbook("Blend") { $0.blend = blend } })) {
-                ForEach(FlipbookBlend.allCases, id: \.self) { Text($0.title).tag($0) }
+                ForEach(FlipbookBlend.allCases, id: \.self) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             .pickerStyle(.segmented)
             LabeledSlider(title: "Track opacity", value: track.opacity, range: 0 ... 1, format: { "\(Int(($0 * 100).rounded())) %" },

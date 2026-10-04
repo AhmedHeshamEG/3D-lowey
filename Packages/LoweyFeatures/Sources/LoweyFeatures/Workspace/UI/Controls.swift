@@ -16,7 +16,7 @@ struct LabeledSlider: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.xxs) {
             HStack {
-                Text(title).font(.hmm(.footnote, weight: .semibold)).foregroundStyle(theme.text2)
+                Text(LocalizedStringKey(title)).font(.hmm(.footnote, weight: .semibold)).foregroundStyle(theme.text2)
                 Spacer()
                 Text(format(value)).font(.hmmNumbers(.footnote)).foregroundStyle(theme.text2)
             }
@@ -44,7 +44,7 @@ struct ChoiceChip: View {
         } label: {
             HStack(spacing: HmmSpacing.xxs) {
                 if let systemName { Image(systemName: systemName) }
-                Text(title).lineLimit(1)
+                Text(LocalizedStringKey(title)).lineLimit(1)
             }
             .font(.hmm(.footnote, weight: .semibold))
             .padding(.horizontal, HmmSpacing.s)
@@ -73,7 +73,7 @@ struct TileButton: View {
         } label: {
             VStack(spacing: HmmSpacing.xxs) {
                 Image(systemName: systemName).symbolRenderingMode(.hierarchical).font(.system(size: 20, weight: .medium))
-                Text(title).font(.hmm(.caption, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(LocalizedStringKey(title)).font(.hmm(.caption, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity, minHeight: 60)
             .foregroundStyle(theme.text)
@@ -145,7 +145,7 @@ struct Hint: View {
     }
 
     var body: some View {
-        Text(text).font(.hmm(.caption)).foregroundStyle(theme.text2).fixedSize(horizontal: false, vertical: true)
+        Text(LocalizedStringKey(text)).font(.hmm(.caption)).foregroundStyle(theme.text2).fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -190,7 +190,7 @@ struct Badge: View {
     @Environment(\.hmmTheme) private var theme
 
     var body: some View {
-        Text(text)
+        Text(LocalizedStringKey(text))
             .font(.hmm(.caption, weight: .semibold))
             .padding(.horizontal, 7)
             .padding(.vertical, 2)

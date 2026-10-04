@@ -29,7 +29,7 @@ struct TranscriptSheet: View {
                         }
                     }
                     .onChange(of: current?.id) { _, id in
-                        if editor.isPlaying, let id { withAnimation(.hmmStandard) { proxy.scrollTo(id, anchor: .center) } }
+                        if editor.isPlaying, let id { withHmmAnimation(.standard) { proxy.scrollTo(id, anchor: .center) } }
                     }
                 }
                 if editor.wordSelection != nil { PhraseActions(editor: editor, fix: { fixText = editor.selectedWordText; fixing = true }) }
@@ -63,6 +63,7 @@ struct TranscriptSheet: View {
                     editor.jump(to: word)
                 }
             }
+            .accessibilityAddTraits(.isButton)
             .onLongPressGesture(minimumDuration: 0.3) {
                 anchor = index
                 editor.wordSelection = index ... index
@@ -87,13 +88,17 @@ private struct PhraseActions: View {
                     if !editor.selection.isEmpty {
                         Menu {
                             ForEach(AnimationPreset.allCases, id: \.self) { preset in
-                                Button(preset.title) { editor.attachToWords { $0.applyPreset(preset) } }
+                                Button(LocalizedStringKey(preset.title)) { editor.attachToWords { $0.applyPreset(preset) } }
                             }
                         } label: { Label("Animate the selection here", systemImage: "sparkles") }
                     }
                     Menu {
                         ForEach(CameraMove.allCases, id: \.self) { move in
-                            Button(move.title) { editor.attachToWords { $0.applyCameraMove(move, duration: $0.presetDuration ?? 1, strength: 1) } }
+                            Button(LocalizedStringKey(move.title)) { editor.attachToWords { $0.applyCameraMove(
+                                move,
+                                duration: $0.presetDuration ?? 1,
+                                strength: 1
+                            ) } }
                         }
                     } label: { Label("Camera move here", systemImage: "video") }
                     if !editor.cameras.isEmpty {
@@ -105,7 +110,7 @@ private struct PhraseActions: View {
                     }
                     Menu {
                         ForEach(Foley.allCases) { sound in
-                            Button(sound.title) { editor.addFoleyOnWords(sound) }
+                            Button(LocalizedStringKey(sound.title)) { editor.addFoleyOnWords(sound) }
                         }
                     } label: { Label("Sound here", systemImage: "speaker.wave.2") }
                     HmmPillButton("Marker", systemName: "flag") { editor.addMarkersForSelectedWords() }

@@ -74,6 +74,8 @@ jobs:
         run: python Tools/fetch-kit.py check
       - name: The Scene Script v3 schema matches its generator
         run: python Tools/gen-script-schema.py --check
+      - name: Every chrome string is in the String Catalog, in Italian and Arabic
+        run: python Tools/strings.py check
       - name: Test against a fake iPad bridge (the 16 MCP tools, the CLI, the evals harness)
         working-directory: Tools/lowey
         run: |

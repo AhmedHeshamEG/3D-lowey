@@ -56,7 +56,7 @@ extension EditorModel {
         } catch ExportError.cancelled {
             app.show("Export cancelled")
         } catch {
-            app.show("Export failed: \(error)", kind: .error)
+            app.show("Export failed: \(String(describing: error))", kind: .error)
             app.exportReporter?.exportFailed(id: id, title: baseScene.name, message: String(describing: error))
         }
         return nil
@@ -105,7 +105,7 @@ extension EditorModel {
                 }
                 exportResults = [url]
             } catch {
-                app.show("Export failed: \(error)", kind: .error)
+                app.show("Export failed: \(String(describing: error))", kind: .error)
             }
             exportProgress = nil
             exportTask = nil

@@ -63,7 +63,7 @@ private struct TextSection: View {
                 .accessibilityIdentifier("text-content")
             HmmPillButton("Apply", systemName: "checkmark") { editor.updateText(object.id) { $0.text = text } }
             Picker("Style", selection: Binding(get: { recipe.style }, set: { style in editor.updateText(object.id) { $0.style = style } })) {
-                ForEach(TextRecipe.Style.allCases) { Text($0.title).tag($0) }
+                ForEach(TextRecipe.Style.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             .pickerStyle(.segmented)
             LabeledSlider(title: "Depth", value: recipe.depth, range: 0.02 ... 1) { value in editor.updateText(object.id) { $0.depth = value } }

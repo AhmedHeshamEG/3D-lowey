@@ -57,7 +57,7 @@ struct JoystickPad: View {
             }
             .onEnded { _ in
                 stickHeld = false
-                withAnimation(.hmmSnappy) { stick = .zero }
+                withHmmAnimation(.snappy) { stick = .zero }
                 input.x = 0
                 input.y = 0
                 end()
@@ -78,7 +78,7 @@ struct JoystickPad: View {
             }
             .onEnded { _ in
                 slideHeld = false
-                withAnimation(.hmmSnappy) { slide = 0 }
+                withHmmAnimation(.snappy) { slide = 0 }
                 input.slide = 0
                 end()
             }

@@ -20,6 +20,7 @@ struct TimelineRuler: View {
                     MarkerFlag(marker: marker)
                         .offset(x: layout.x(marker.time) - 2)
                         .onTapGesture { editor.setTime(marker.time) }
+                        .accessibilityAddTraits(.isButton)
                         .onLongPressGesture { renameMarker(marker) }
                 }
             }

@@ -23,7 +23,9 @@ struct EditorScreen: View {
                     if editor.timelineCollapsed {
                         TransportBar(editor: editor)
                     } else {
+                        // Time runs left to right in every language (as on a ruler); the panels around it mirror.
                         TimelinePane(editor: editor)
+                            .environment(\.layoutDirection, .leftToRight)
                             .frame(height: min(max(timelineHeight, 150), geometry.size.height * 0.6))
                     }
                 }
@@ -61,7 +63,9 @@ struct EditorScreen: View {
                     }
                     return !items.isEmpty
                 }
+            // Overlays sit on 3D positions and frame coordinates: they never mirror.
             StageOverlayView(editor: editor)
+                .environment(\.layoutDirection, .leftToRight)
             if editor.chromeHidden {
                 ChromeRestoreButton(editor: editor)
             } else {

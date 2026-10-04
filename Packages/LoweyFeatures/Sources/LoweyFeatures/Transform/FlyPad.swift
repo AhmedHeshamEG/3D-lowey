@@ -52,7 +52,7 @@ private struct FlyStick: View {
     var body: some View {
         ZStack {
             Circle().fill(theme.surface2.opacity(0.9)).overlay(Circle().stroke(theme.line, lineWidth: 1))
-            Text(label).font(.hmm(.caption, weight: .semibold)).foregroundStyle(theme.text2).offset(y: Self.radius + 10)
+            Text(LocalizedStringKey(label)).font(.hmm(.caption, weight: .semibold)).foregroundStyle(theme.text2).offset(y: Self.radius + 10)
             Circle()
                 .fill(theme.text.opacity(0.9))
                 .frame(width: 40, height: 40)
@@ -72,7 +72,7 @@ private struct FlyStick: View {
                               JoystickPad.response(Double(translation.height / Self.radius))))
             }
             .onEnded { _ in
-                withAnimation(.hmmSnappy) { offset = .zero }
+                withHmmAnimation(.snappy) { offset = .zero }
                 changed(.zero)
             })
         .accessibilityLabel(label)
@@ -98,7 +98,7 @@ private struct FlyLift: View {
                 changed(JoystickPad.response(amount))
             }
             .onEnded { _ in
-                withAnimation(.hmmSnappy) { amount = 0 }
+                withHmmAnimation(.snappy) { amount = 0 }
                 changed(0)
             })
         .accessibilityLabel("Up and down")

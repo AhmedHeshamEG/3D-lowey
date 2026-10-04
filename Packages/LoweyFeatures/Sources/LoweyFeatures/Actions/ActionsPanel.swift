@@ -13,6 +13,7 @@ struct ActionsPanel: View {
     @State private var renamingScene = false
     @State private var sceneName = ""
     @State private var sharing: URL?
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         HmmPanel("Actions", width: 340, close: { editor.openPanel = nil }) {
@@ -28,6 +29,10 @@ struct ActionsPanel: View {
                     TileGrid {
                         TileButton(title: "Export", systemName: "square.and.arrow.up", identifier: "open-export") { open(.export) }
                         TileButton(title: "Project file", systemName: "doc.zipper") { shareProject() }
+                        // The shot in its own window: beside the editor in Stage Manager, or on an external display.
+                        TileButton(title: "Monitor", systemName: "rectangle.on.rectangle", identifier: "open-monitor") {
+                            openWindow(id: LoweyWindow.monitor)
+                        }
                     }
                 }
                 scenes

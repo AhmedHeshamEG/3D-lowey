@@ -91,7 +91,7 @@ extension EditorModel {
                 play(withAudio: false)
                 HmmHaptics.play(.commit)
             } catch {
-                app.show("Couldn't record: \(error)", kind: .error)
+                app.show("Couldn't record: \(String(describing: error))", kind: .error)
             }
         }
     }
@@ -243,7 +243,7 @@ extension EditorModel {
                 app.show("\(words.count) words. They're on the timeline now")
             } catch {
                 transcribing = nil
-                app.show("Transcription failed: \(error)", kind: .error)
+                app.show("Transcription failed: \(String(describing: error))", kind: .error)
             }
         }
     }

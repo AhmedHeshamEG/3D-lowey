@@ -90,6 +90,7 @@ private struct ObjectLabel: View {
         .frame(width: TimelineLayout.labelWidth, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture { editor.select(id) }
+        .accessibilityAddTraits(.isButton)
         .contextMenu {
             if isGroup { Button("Select everything inside", systemImage: "square.stack.3d.up") { editor.setSelection(editor.baseScene.subtree(of: id)) } }
         }
@@ -193,6 +194,7 @@ private struct ComposeBar: View {
                         including: selected ? .all : .subviews
                     )
                     .onTapGesture { editor.select(id, additive: editor.keyBoxSelect) }
+                    .accessibilityAddTraits(.isButton)
             }
         }
         .frame(width: width, alignment: .leading)
@@ -230,6 +232,7 @@ struct CutRow: View {
                             editor.setTime(cut.time)
                             editor.selectCamera(cut.camera)
                         }
+                        .accessibilityAddTraits(.isButton)
                         .contextMenu { Button("Remove this cut", systemImage: "scissors", role: .destructive) { editor.removeCut(at: cut.time) } }
                 }
                 if cuts.isEmpty { Text("Select a camera and tap Cut here").font(.hmm(.caption)).foregroundStyle(theme.text3).padding(.leading, 8) }

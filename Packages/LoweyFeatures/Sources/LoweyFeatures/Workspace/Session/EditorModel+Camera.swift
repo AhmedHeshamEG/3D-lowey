@@ -213,7 +213,7 @@ extension EditorModel {
         let controller = VirtualCameraController()
         controller.onPose = { [weak self] delta in self?.virtualCameraMoved(delta, from: start, camera: camera) }
         controller.onFailure = { [weak self] message in
-            self?.app.show(message, kind: .error)
+            self?.app.show(String.LocalizationValue(message), kind: .error)
             self?.stopVirtualCamera()
         }
         virtualCamera = controller

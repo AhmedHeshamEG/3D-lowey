@@ -650,3 +650,18 @@ Voiceover briefs get a silent clip and their words through a new `transcript` ve
 voiceover — also how a laptop TTS can sync). The evals are not run in CI: it has no paired iPad, no simulator bridge
 reachable from a model, and no API key. The harness's parsing, scoring and bookkeeping are tested; the runs are
 Hesham's to do on his iPad.
+
+**R51 — Localisation, accessibility, windows and restoration (2.0).** English, Italian and Arabic live in one String
+Catalog in the app (`App/Resources/Localizable.xcstrings`, plus `InfoPlist.xcstrings` for the permission prompts).
+`Tools/strings.py` finds the chrome strings in the code (literals given to SwiftUI and the hmm. components, toasts,
+accessibility labels, and the titles enums return for display) and CI fails when one is missing or untranslated.
+hmm-kit's components now look their titles up in the app's catalog (changed upstream, then synced), so passing a
+String to `HmmPillButton` localises like a literal; toasts take a `String.LocalizationValue`. Interpolated strings are
+keyed the way SwiftUI keys them (integers `%lld`, the rest `%@`); English plurals built with `?:` inside a string are
+not in the catalog and stay English. Arabic mirrors the chrome; the timeline and the stage's overlays stay left to
+right (time and frame space aren't text). Accessibility: every tap target is a button to VoiceOver, panels scroll
+under large Dynamic Type and numbers scale too, animations go through the Reduce Motion-aware helpers, and Increase
+Contrast gets opaque outlined chrome like Reduce Transparency. Windows: one window edits (a stage edits one project
+at a time); another main window offers to take over or become a monitor, and the Monitor window (Actions ▸ Monitor,
+⌥⌘N) shows the shot live through its camera as it exports — beside the editor in Stage Manager or on an external
+display. The app reopens the project, scene, playhead, panel, Director view and timeline state it was left in.

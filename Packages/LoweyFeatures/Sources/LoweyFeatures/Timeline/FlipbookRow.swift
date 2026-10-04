@@ -23,11 +23,13 @@ struct FlipbookRow: View {
                     editor.flipbook.track = track.id
                     editor.tool = .flipbook
                 }
+                .accessibilityAddTraits(.isButton)
             ZStack(alignment: .leading) {
                 ForEach(cells, id: \.offset) { cell in
                     FlipbookCell(number: cell.isRepeat ? nil : cell.index + 1, width: cell.width, fill: fill(for: cell))
                         .offset(x: cell.x + shift)
                         .onTapGesture { editor.showFlipbookDrawing(cell.index, of: track.id) }
+                        .accessibilityAddTraits(.isButton)
                 }
             }
             .frame(width: width, alignment: .leading)

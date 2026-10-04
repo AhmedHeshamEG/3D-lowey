@@ -8,12 +8,25 @@ public struct RootView: View {
     @Environment(AppModel.self) private var app
     @AppStorage(HmmThemeMode.storageKey) private var themeMode = HmmThemeMode.dark.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// This window, among the app's windows (Stage Manager).
+    @State private var windowID = UUID()
 
     public init() {}
 
     public var body: some View {
+        if app.primaryWindow == nil || app.primaryWindow == windowID {
+            main
+                .onAppear { if app.primaryWindow == nil { app.primaryWindow = windowID } }
+                .onDisappear { if app.primaryWindow == windowID { app.primaryWindow = nil } }
+        } else {
+            SecondaryWindowView { app.primaryWindow = windowID }
+                .hmmThemed(.lowey, mode: HmmThemeMode(rawValue: themeMode) ?? .dark)
+        }
+    }
+
+    private var main: some View {
         @Bindable var app = app
-        ZStack {
+        return ZStack {
             BackgroundFill()
             if let editor = app.editor {
                 EditorScreen(editor: editor)

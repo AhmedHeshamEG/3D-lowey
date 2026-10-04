@@ -58,7 +58,7 @@ struct InspectorPanel: View {
         if object.kind.hasSurface || object.kind == .group { LookOverrideSection(editor: editor, object: object) }
         MotionSection(editor: editor)
         if showsMore { MetadataSection(editor: editor, object: object) }
-        Button(showsMore ? "Less" : "More") { withAnimation(.hmmStandard) { showsMore.toggle() } }
+        Button(showsMore ? "Less" : "More") { withHmmAnimation(.standard) { showsMore.toggle() } }
             .font(.hmm(.body, weight: .semibold))
             .accessibilityIdentifier("inspector-more")
     }

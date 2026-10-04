@@ -40,7 +40,7 @@ public struct CompanionView: View {
             .clipShape(RoundedRectangle(cornerRadius: HmmRadius.panel, style: .continuous))
             Text("On the iPad: select your character, Cast ▸ My iPhone. Prop this phone up facing you, far enough to see your shoulders and hands.")
                 .font(.hmm(.body)).multilineTextAlignment(.center).foregroundStyle(theme.text2).padding(.horizontal, HmmSpacing.l)
-            Text(status).font(.hmm(.headline, weight: .semibold)).accessibilityIdentifier("companion-status")
+            Text(LocalizedStringKey(status)).font(.hmm(.headline, weight: .semibold)).accessibilityIdentifier("companion-status")
             HmmPillButton(running ? "Stop" : "Start", systemName: running ? "stop.fill" : "play.fill", prominent: !running) {
                 if running {
                     sender.stop()

@@ -147,7 +147,7 @@ private struct ViewControls: View {
         HStack(spacing: HmmSpacing.xxs) {
             Menu {
                 ForEach(ViewAxis.allCases, id: \.self) { axis in
-                    Button(axis.displayName) { editor.stage?.quickView(axis) }
+                    Button(LocalizedStringKey(axis.displayName)) { editor.stage?.quickView(axis) }
                 }
                 Divider()
                 Button(editor.projection == .orthographic ? "Perspective" : "Orthographic") { editor.toggleProjection() }

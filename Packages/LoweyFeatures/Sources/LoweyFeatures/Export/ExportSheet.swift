@@ -29,7 +29,7 @@ struct ExportSheet: View {
                 if custom { customControls }
                 if editor.timeline.loop != nil { Toggle("Only the loop", isOn: $onlyLoop) }
             }
-            Text(summary).font(.hmm(.footnote)).foregroundStyle(theme.text2)
+            Text(LocalizedStringKey(summary)).font(.hmm(.footnote)).foregroundStyle(theme.text2)
             progressOrStart
             results
         }

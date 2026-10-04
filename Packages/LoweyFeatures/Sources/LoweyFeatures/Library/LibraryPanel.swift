@@ -59,6 +59,7 @@ struct LibraryPanel: View {
                                     HmmHaptics.play(.commit)
                                     editor.place(item)
                                 }
+                                .accessibilityAddTraits(.isButton)
                                 .draggable(item.id)
                                 .contextMenu { menu(for: item) }
                         }

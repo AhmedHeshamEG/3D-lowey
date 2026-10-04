@@ -23,6 +23,7 @@ struct AudioRow: View {
             .frame(width: TimelineLayout.labelWidth)
             .contentShape(Rectangle())
             .onTapGesture { editor.selectedAudio = clip.id }
+            .accessibilityAddTraits(.isButton)
             lane
         }
         .background(editor.selectedAudio == clip.id ? clip.role.tint.opacity(0.08) : .clear)
@@ -113,6 +114,7 @@ struct WordsRow: View {
                 .padding(.leading, 10).frame(width: TimelineLayout.labelWidth, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture { editor.sheet = .transcript }
+                .accessibilityAddTraits(.isButton)
             Canvas { context, size in
                 var lastEnd: CGFloat = -1000
                 for word in words {
@@ -168,6 +170,7 @@ struct EffectsRow: View {
                                 drag = nil
                             })
                         .onTapGesture { editor.setTime(effect.start) }
+                        .accessibilityAddTraits(.isButton)
                         .contextMenu { Button("Delete", systemImage: "trash", role: .destructive) { editor.removeScreenEffect(effect.id) } }
                 }
             }

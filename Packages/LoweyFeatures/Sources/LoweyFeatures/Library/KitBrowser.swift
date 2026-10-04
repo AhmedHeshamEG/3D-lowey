@@ -40,6 +40,7 @@ struct KitBrowser: View {
                             HmmHaptics.play(.commit)
                             editor.place(item)
                         }
+                        .accessibilityAddTraits(.isButton)
                         .draggable(item.id)
                 }
             }

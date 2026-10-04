@@ -98,7 +98,7 @@ extension EditorModel {
         if let reply = current.reply {
             reply.resume(returning: apply)
         } else if apply, case let .failure(error) = applyScript(current.script) {
-            app.show("The script failed: \(error)", kind: .error)
+            app.show("The script failed: \(String(describing: error))", kind: .error)
         }
     }
 
@@ -118,7 +118,7 @@ extension EditorModel {
                 if self?.proposal?.id == made.id { self?.proposal?.thumbnail = thumbnail }
             }
         } catch {
-            app.show("The script has a problem: \(error)", kind: .error)
+            app.show("The script has a problem: \(String(describing: error))", kind: .error)
         }
     }
 

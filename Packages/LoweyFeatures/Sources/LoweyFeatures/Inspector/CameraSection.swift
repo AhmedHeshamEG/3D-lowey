@@ -59,10 +59,10 @@ struct CameraSection: View {
     private var frameShot: some View {
         PanelSection("Frame shot") {
             Picker("Shot", selection: $shotType) {
-                ForEach(ShotType.allCases) { Text($0.title).tag($0) }
+                ForEach(ShotType.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             Picker("Composition", selection: $composition) {
-                ForEach(Composition.allCases) { Text($0.title).tag($0) }
+                ForEach(Composition.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             Toggle("From the subject's left", isOn: $fromLeft)
             HmmPillButton("Frame it", systemName: "camera.viewfinder", prominent: true) {

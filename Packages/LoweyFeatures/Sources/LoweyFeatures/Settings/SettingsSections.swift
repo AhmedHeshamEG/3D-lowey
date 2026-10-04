@@ -16,7 +16,7 @@ struct PreferencesForm: View {
     var body: some View {
         Section("Appearance") {
             Picker("Theme", selection: $themeMode) {
-                ForEach(HmmThemeMode.allCases) { Text($0.title).tag($0.rawValue) }
+                ForEach(HmmThemeMode.allCases) { Text(LocalizedStringKey($0.title)).tag($0.rawValue) }
             }
             Toggle("Sidebar on the right (left-handed)", isOn: $sidebarOnRight)
             Toggle("Haptics", isOn: $haptics)

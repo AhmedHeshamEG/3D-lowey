@@ -99,7 +99,7 @@ struct FinishSection: View {
             row("Colour fringe", \.chromaticAberration)
             row("Retro", \.retro)
             Picker("Texture", selection: Binding(get: { post.texture }, set: { texture in editor.updatePost { $0.texture = texture } })) {
-                ForEach(PostSettings.Texture.allCases) { Text($0.title).tag($0) }
+                ForEach(PostSettings.Texture.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             .pickerStyle(.segmented)
             if post.texture != .none { row("Texture", \.textureStrength) }

@@ -55,7 +55,7 @@ private struct ClipControls: View {
         VStack(alignment: .leading, spacing: HmmSpacing.s) {
             HmmSectionHeader(clip.name)
             Picker("Kind", selection: Binding(get: { clip.role }, set: { role in editor.updateAudioClip(clip.id) { $0.role = role } })) {
-                ForEach(AudioRole.allCases) { Text($0.title).tag($0) }
+                ForEach(AudioRole.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
             .pickerStyle(.segmented)
             slider("Volume", clip.volume, 0 ... 2, NumberFormat.percent) { value, clip in clip.volume = value }
@@ -103,7 +103,7 @@ private struct ClipControls: View {
             if let status = editor.transcribing {
                 HStack(spacing: HmmSpacing.xs) {
                     ProgressView().controlSize(.small)
-                    Text(status).font(.hmm(.footnote))
+                    Text(LocalizedStringKey(status)).font(.hmm(.footnote))
                 }
             }
             Hint("Word timing runs on the iPad (Apple's speech recogniser; the language downloads once).")
@@ -131,7 +131,7 @@ private struct CaptionsSection: View {
                 .accessibilityIdentifier("captions-toggle")
             if let settings, settings.enabled {
                 Picker("Style", selection: Binding(get: { settings.style }, set: { style in editor.updateCaptions { $0.style = style } })) {
-                    ForEach(CaptionSettings.Style.allCases) { Text($0.title).tag($0) }
+                    ForEach(CaptionSettings.Style.allCases) { Text(LocalizedStringKey($0.title)).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 Picker("Where", selection: Binding(get: { settings.position }, set: { position in editor.updateCaptions { $0.position = position } })) {
