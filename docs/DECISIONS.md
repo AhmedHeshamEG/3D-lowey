@@ -665,3 +665,11 @@ Contrast gets opaque outlined chrome like Reduce Transparency. Windows: one wind
 at a time); another main window offers to take over or become a monitor, and the Monitor window (Actions ▸ Monitor,
 ⌥⌘N) shows the shot live through its camera as it exports — beside the editor in Stage Manager or on an external
 display. The app reopens the project, scene, playhead, panel, Director view and timeline state it was left in.
+
+**R52 — App Store readiness without a Mac.** The icon follows the studio rule: one glyph on the accent (a faceted,
+ink-outlined cube on #FFB847), full bleed so the system's corners match the other apps, with a dark variant; it's
+drawn by `Tools/make_icon.py`. App Store screenshots come from UI tests on CI's iPad 13" and largest-iPhone
+simulators, with a launch flag that hides the UI-test overlays. The App Store variant is made by the TestFlight job
+from the same project by switching three Info.plist values (bridge off, no background audio) rather than keeping a
+second target. The TestFlight upload signs with an App Store Connect API key and is skipped, not failed, when the
+secrets aren't set. 2.0 is paid upfront: the StoreKit configuration exists for testing later purchases and is empty.

@@ -52,6 +52,8 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
+        # Export compliance: no encryption of our own (the bridge is plain HTTP on the local network; iCloud is the system's).
+        ITSAppUsesNonExemptEncryption: false
         # English, Italian and Arabic (right to left) at 2.0: App/Resources/Localizable.xcstrings, InfoPlist.xcstrings.
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, it, ar]
@@ -181,6 +183,8 @@ schemes:
         LoweyUITests: [test]
     run:
       config: Debug
+      # 2.0 is paid upfront with no in-app purchases; the configuration is ready for testing any that come later.
+      storeKitConfiguration: Config/Lowey.storekit
     test:
       config: Debug
       targets:

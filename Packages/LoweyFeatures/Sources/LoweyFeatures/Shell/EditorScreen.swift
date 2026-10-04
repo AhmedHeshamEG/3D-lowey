@@ -75,7 +75,7 @@ struct EditorScreen: View {
             }
             if editor.faceActive { FacePreviewPanel(editor: editor, monitor: editor.faceMonitor) }
             if showsHUD { PerformanceHUDOverlay(monitor: editor.performance) }
-            if AppIdentity.isUITesting { DebugTrail(editor: editor) }
+            if AppIdentity.isUITesting, !AppIdentity.isTakingScreenshots { DebugTrail(editor: editor) }
         }
         .clipped()
     }

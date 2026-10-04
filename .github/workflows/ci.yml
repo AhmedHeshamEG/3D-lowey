@@ -182,11 +182,36 @@ jobs:
             echo "::warning::UI smoke tests failed on attempt $attempt"
           done
           exit 1
+      - name: iPhone 6.9" App Store screenshot (the face companion)
+        if: success()
+        run: |
+          set -o pipefail
+          PHONE=$(python3 Tools/pick-simulator.py --iphone)
+          xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=$PHONE" -derivedDataPath DerivedData             -resultBundlePath PhoneScreenshots.xcresult -skipPackagePluginValidation -only-testing:LoweyUITests/ScreenshotTests/testIPhoneCompanion             CODE_SIGNING_ALLOWED=NO | grep -E "error:|Test Case|\*\* " || true
       - name: Export screenshots
         if: always()
         run: |
-          mkdir -p attachments
+          mkdir -p attachments app-store
           xcrun xcresulttool export attachments --path TestResults.xcresult --output-path attachments || true
+          mkdir -p attachments/phone
+          xcrun xcresulttool export attachments --path PhoneScreenshots.xcresult --output-path attachments/phone || true
+          # The App Store set under readable names.
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          for manifest in pathlib.Path("attachments").glob("**/manifest.json"):
+              for test in json.loads(manifest.read_text()):
+                  for item in test["attachments"]:
+                      name = item["suggestedHumanReadableName"]
+                      if name.startswith("AppStore-"):
+                          shutil.copy(manifest.parent / item["exportedFileName"], pathlib.Path("app-store") / (name.split("_0_")[0] + ".png"))
+          PY
+          ls app-store || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-store-screenshots
+          path: app-store
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         if: always()
         with:
