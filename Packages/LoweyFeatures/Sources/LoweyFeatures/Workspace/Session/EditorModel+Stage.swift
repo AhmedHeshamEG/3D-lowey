@@ -36,7 +36,7 @@ extension EditorModel {
                                 hidden: director?.id, showsHelpers: director == nil, mediaImage: { [weak self] key in self?.mediaImage(key) },
                                 catalog: library.catalog, lightBudget: 16)
         if !isPlaying { input.ghosts = onionGhosts() }
-        input.smears = Smear.smears(in: document, at: time)
+        input.smears = smears()
         var request = FrameRequest(input: input, camera: stage.camera, frameIndex: timeline.frame(for: time))
         if let director {
             request.lens = displayed.scene.objects[director.id].map(CameraLens.init)
@@ -53,6 +53,17 @@ extension EditorModel {
             request.editor = editor
         }
         return StageFrame(request: request, shotCamera: director?.camera)
+    }
+
+    /// Smears at the playhead, kept until the document or the time changes (a hovering Pencil redraws the stage at
+    /// 120 Hz with neither changing; the scan copied every object on each of those frames).
+    func smears() -> [ObjectID: Smear] {
+        let key = MotionViewCache.SmearKey(revision: session.revision, time: time, previewing: historyPreview != nil)
+        if motionCache.smearKey == key { return motionCache.smears }
+        let result = Smear.smears(in: historyPreview ?? document, at: time)
+        motionCache.smearKey = key
+        motionCache.smears = result
+        return result
     }
 
     /// The camera the shot is seen through at the playhead (cuts, else the active camera).

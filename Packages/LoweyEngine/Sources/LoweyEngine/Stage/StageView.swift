@@ -40,6 +40,7 @@ public final class StageView: MTKView {
     /// The hovering Pencil, drawn in this view's own render pass.
     public private(set) var pointer: PencilPointer?
     private var lastFrameStart: CFTimeInterval = 0
+    private let signposts = HmmSignposts(subsystem: "studio.h.maquette", category: "stage")
     public private(set) var lastReport: FrameReport?
     /// The CPU time the last frame took to build and encode (seconds); with the GPU time, the frame's real work.
     public private(set) var lastEncodeTime: Double = 0
@@ -270,14 +271,14 @@ extension StageView: MTKViewDelegate {
         let start = CACurrentMediaTime()
         let total = lastFrameStart > 0 ? start - lastFrameStart : 0
         lastFrameStart = start
-        guard var frame = frameSource?(self), let drawable = currentDrawable,
+        guard var frame = signposts.interval("Build frame", { frameSource?(self) }), let drawable = currentDrawable,
               let commandBuffer = renderDevice.queue.makeCommandBuffer() else { return }
         commandBuffer.label = "Stage"
         frame.request.camera = frame.shotCamera ?? camera
         frame.request.renderScale = dynamicScale.scale
         if frame.request.editor == nil { frame.request.editor = editorScene(showsSelection: true) }
         do {
-            lastReport = try renderer.encode(frame.request, to: drawable.texture, commandBuffer: commandBuffer)
+            lastReport = try signposts.interval("Encode frame") { try renderer.encode(frame.request, to: drawable.texture, commandBuffer: commandBuffer) }
         } catch {
             return
         }
@@ -285,10 +286,13 @@ extension StageView: MTKViewDelegate {
         lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in
             let gpu = buffer.gpuEndTime - buffer.gpuStartTime
-            Task { @MainActor in
-                guard let self else { return }
-                let scale = self.dynamicScale.update(gpuTime: gpu, thermal: .current)
-                self.onFrameTime?(gpu, total, scale)
+            // A plain hop to the main queue: a Task per frame was an allocation 120 times a second.
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    let scale = self.dynamicScale.update(gpuTime: gpu, thermal: .current)
+                    self.onFrameTime?(gpu, total, scale)
+                }
             }
         }
         commandBuffer.commit()
