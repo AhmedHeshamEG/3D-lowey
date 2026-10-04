@@ -58,7 +58,7 @@ final class TierRenderTests: XCTestCase {
         }
         XCTAssertEqual(scale.scale, 0.6, accuracy: 0.001)
         _ = scale.update(gpuTime: 0.001, thermal: .serious)
-        XCTAssertLessThanOrEqual(scale.scale, 0.6 + 0.25 * 0.25 + 0.001)
+        XCTAssertLessThanOrEqual(scale.scale, 0.85 * 0.75 + 0.001)
         scale.enabled = false
         XCTAssertEqual(scale.update(gpuTime: 0.03, thermal: .nominal), 1, "Full-resolution stage means full resolution on every tier")
     }

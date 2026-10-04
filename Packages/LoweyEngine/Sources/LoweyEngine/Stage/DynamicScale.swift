@@ -27,9 +27,9 @@ public struct DynamicScale: Sendable, Equatable {
             scale = 1
             return scale
         }
-        // Thermal `.serious` lowers the preview before frames drop (CONTEXT §6).
-        let span = range.upperBound - range.lowerBound
-        let cap: Float = thermal >= .critical ? range.lowerBound : (thermal >= .serious ? range.lowerBound + span * 0.25 : range.upperBound)
+        // Thermal `.serious` lowers the preview before frames drop (CONTEXT §6): three quarters of the tier's top.
+        let serious = max(range.lowerBound, range.upperBound * 0.75)
+        let cap: Float = thermal >= .critical ? range.lowerBound : (thermal >= .serious ? serious : range.upperBound)
         if gpuTime > budget * 0.92 {
             scale = max(scale - 0.05, range.lowerBound)
             calm = 0
