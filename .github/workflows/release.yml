@@ -31,11 +31,7 @@ env:
 jobs:
   gate:
     name: Only commits CI passed
-    # Never for a commit marked [build-only] (CONTEXT §7).
-    if: >-
-      (github.event_name == 'push' ||
-       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')) &&
-      !contains(github.event.workflow_run.head_commit.message, '[build-only]')
+    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.check.outputs.sha }}
@@ -53,6 +49,12 @@ jobs:
           set -euo pipefail
           if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
             SHA="${{ github.event.workflow_run.head_sha }}"
+            # Never for a commit marked [build-only] in its subject (CONTEXT §7). Only the subject: a squash merge's
+            # body lists every branch commit, and one that merely mentions the marker mustn't stop a release.
+            if git log -1 --format=%s "$SHA" | grep -qF "[build-only]"; then
+              echo "::notice::$SHA is marked [build-only]: no release build."
+              exit 0
+            fi
             TAG=""
             VERSION=$(git show "$SHA:Config/Branding.xcconfig" | grep '^MARKETING_VERSION' | awk -F'= ' '{print $2}')
             echo "CI passed on $SHA (main)."
@@ -89,6 +91,7 @@ jobs:
   ipa:
     name: Build Maquette.ipa
     needs: gate
+    if: needs.gate.outputs.sha != ''
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
@@ -162,7 +165,7 @@ jobs:
     # API key, uploaded to TestFlight. It runs only for tags and only when the ASC secrets exist (docs/APPSTORE.md).
     name: TestFlight (App Store build)
     needs: gate
-    if: needs.gate.outputs.tag != ''
+    if: needs.gate.outputs.sha != '' && needs.gate.outputs.tag != ''
     runs-on: xcode-27
     timeout-minutes: 60
     env:
