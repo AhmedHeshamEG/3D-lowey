@@ -59,6 +59,7 @@ extension EditorModel {
         refreshOperationsLibrary()
         var object = factory.primitive(shape, color: currentColor)
         object.name = ObjectFactory.uniqueName(shape.displayName, in: scene)
+        if newShapeScale != 1 { object.transform.scale *= newShapeScale }
         object = operations.placeOnGround(object, at: dropPoint(at: screenPoint))
         if screenPoint == nil { object = operations.nudgedToFreeSpot(object, in: scene) }
         if perform(operations.add(object)) { select(object.id) }
@@ -245,7 +246,8 @@ extension EditorModel {
     func beginSwap() {
         guard let target = selection.first else { return }
         libraryPurpose = .swap(target)
-        openPanel = .library
+        modelPage = .library
+        openPanel = .model
     }
 }
 

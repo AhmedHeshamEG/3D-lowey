@@ -2,14 +2,16 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Everything floating over the stage: the two corner clusters and the panel each opens, the sidebar, the inspector,
-/// the Director view toggle and the view controls.
+/// Everything floating over the stage (docs/LAYOUT.md): the two corner clusters and the panel each opens, the sidebar,
+/// the inspector beside the selection, and the bottom row (joystick, tool options, the timeline control and views).
 struct StageChrome: View {
     @Bindable var editor: EditorModel
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(AppSettings.sidebarOnRight) private var sidebarOnRight = false
-    @AppStorage(AppSettings.showsJoystick) private var showsJoystick = false
+    @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
+    /// The open leading panel's frame on screen (the inspector keeps clear of it).
+    @State private var leadingPanelFrame: CGRect?
 
     var body: some View {
         ZStack {
@@ -21,13 +23,14 @@ struct StageChrome: View {
                 }
                 HStack(alignment: .top, spacing: HmmSpacing.s) {
                     if let panel = editor.openPanel, panel.isLeading {
-                        ClusterPanelView(editor: editor, panel: panel).hmmPanelTransition(from: .topLeading)
+                        ClusterPanelView(editor: editor, panel: panel)
+                            .hmmPanelTransition(from: .topLeading)
+                            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { leadingPanelFrame = $0 }
+                            .onDisappear { leadingPanelFrame = nil }
                     }
                     Spacer(minLength: 0)
                     if let panel = editor.openPanel, !panel.isLeading {
                         ClusterPanelView(editor: editor, panel: panel).hmmPanelTransition(from: .topTrailing)
-                    } else if !editor.selection.isEmpty {
-                        InspectorPanel(editor: editor).hmmPanelTransition(from: .trailing)
                     }
                 }
                 Spacer(minLength: 0)
@@ -42,15 +45,26 @@ struct StageChrome: View {
             .frame(maxHeight: .infinity, alignment: .center)
             bottomRow
         }
+        .overlay {
+            if showsInspector {
+                FloatingInspector(editor: editor, avoiding: leadingPanelFrame, sidebarOnRight: sidebarOnRight)
+                    .transition(.opacity)
+            }
+        }
         .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.openPanel)
-        .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.selection.isEmpty)
+        .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: showsInspector)
+    }
+
+    /// The inspector floats while something is selected and no making tool's panel is open.
+    private var showsInspector: Bool {
+        !editor.selection.isEmpty && editor.openPanel?.isLeading != false
     }
 
     // MARK: Clusters
 
     private var leadingCluster: some View {
         HmmCornerCluster([
-            HmmClusterItem(id: "theater", systemName: "square.grid.2x2", label: "Theater") { app.closeEditor() },
+            HmmClusterItem(id: "home", systemName: "square.grid.2x2", label: "Home") { app.closeEditor() },
             item(.actions, "ellipsis.circle", "Actions"),
             item(.look, "paintpalette", "Look"),
             item(.select, editor.tool == .lasso ? "lasso" : "hand.point.up.left", "Select", on: editor.tool == .lasso)
@@ -65,19 +79,21 @@ struct StageChrome: View {
         }
     }
 
+    /// The making tools: Model, Draw, Paint, Animate (calls the timeline) and Cast.
     private var trailingCluster: some View {
         HmmCornerCluster([
-            item(.build, "plus", "Build"),
-            item(.draw, drawIcon, "Draw", on: editor.tool.paints),
-            item(.transform, gizmoIcon, "Transform"),
-            item(.cast, "person.2", "Cast"),
-            item(.library, "books.vertical", "Library")
+            item(.model, "cube", "Model"),
+            item(.draw, drawIcon, "Draw", on: editor.tool.draws),
+            item(.paint, editor.tool == .scatter ? "circle.hexagongrid" : "paintbrush.pointed", "Paint", on: editor.tool.paintsSurfaces),
+            HmmClusterItem(id: "animate", systemName: "figure.walk.motion", label: "Animate", isOn: editor.timelinePresence == .full) {
+                editor.toggleAnimate()
+            },
+            item(.cast, "person.2", "Cast")
         ])
     }
 
     private var drawIcon: String {
         switch editor.tool {
-        case .shadowBrush: "circle.lefthalf.striped.horizontal"
         case .draw: "scribble.variable"
         case .flipbook: "book.pages"
         default: "pencil.tip"
@@ -87,15 +103,7 @@ struct StageChrome: View {
     private func item(_ panel: ClusterPanel, _ systemName: String, _ label: String, on: Bool = false) -> HmmClusterItem {
         HmmClusterItem(id: panel.rawValue, systemName: systemName, label: label, isOn: editor.openPanel == panel || on) {
             editor.openPanel = editor.openPanel == panel ? nil : panel
-            if panel == .library, editor.openPanel == nil { editor.libraryPurpose = .place }
-        }
-    }
-
-    private var gizmoIcon: String {
-        switch editor.gizmoMode {
-        case .move: "arrow.up.and.down.and.arrow.left.and.right"
-        case .rotate: "arrow.triangle.2.circlepath"
-        case .scale: "arrow.up.left.and.arrow.down.right"
+            if panel == .model, editor.openPanel == nil { editor.libraryPurpose = .place }
         }
     }
 
@@ -106,7 +114,9 @@ struct StageChrome: View {
             if editor.flying {
                 FlyPad(editor: editor).transition(.scale.combined(with: .opacity))
             } else if showsJoystick, !editor.selection.isEmpty, editor.tool == .select, editor.performPhase == .idle, !editor.directorView {
-                JoystickPad(editor: editor).transition(.scale.combined(with: .opacity))
+                JoystickPad(editor: editor)
+                    .overlay(alignment: .topTrailing) { JoystickHideButton { showsJoystick = false } }
+                    .transition(.scale.combined(with: .opacity))
             }
             Spacer()
             ToolOptionsBar(editor: editor)
@@ -130,21 +140,37 @@ private struct ClusterPanelView: View {
         case .actions: ActionsPanel(editor: editor)
         case .look: LookPanel(editor: editor)
         case .select: SelectPanel(editor: editor)
-        case .build: BuildPanel(editor: editor)
+        case .model: ModelPanel(editor: editor)
         case .draw: DrawToolsPanel(editor: editor)
-        case .transform: TransformPanel(editor: editor)
+        case .paint: PaintPanel(editor: editor)
         case .cast: CastPanel(editor: editor)
-        case .library: LibraryPanel(editor: editor)
         }
     }
 }
 
-/// Bottom-right of the stage: the Director view toggle, frame, quick views.
+/// The joystick's own way out (Settings ▸ Stage brings it back).
+private struct JoystickHideButton: View {
+    let hide: () -> Void
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        HmmButton("xmark", label: "Hide the joystick", size: 28) {
+            hide()
+            app.show("The joystick is in Settings ▸ Stage when you want it back")
+        }
+        .offset(x: 10, y: -10)
+        .accessibilityIdentifier("hide-joystick")
+    }
+}
+
+/// Bottom-right of the stage: the timeline on call, the views, framing the selection, the Director view.
 private struct ViewControls: View {
     let editor: EditorModel
 
     var body: some View {
         HStack(spacing: HmmSpacing.xxs) {
+            HmmButton("timeline.selection", label: "Timeline", isOn: editor.timelinePresence != .hidden) { editor.toggleTimeline() }
+                .accessibilityIdentifier("timeline-toggle")
             Menu {
                 ForEach(ViewAxis.allCases, id: \.self) { axis in
                     Button(LocalizedStringKey(axis.displayName)) { editor.stage?.quickView(axis) }
@@ -155,6 +181,7 @@ private struct ViewControls: View {
                 Image(systemName: "cube.transparent").font(.system(size: 17, weight: .medium)).frame(width: 44, height: 44)
             }
             .accessibilityLabel("Views")
+            .accessibilityIdentifier("views-menu")
             HmmButton("viewfinder", label: "Frame the selection") { editor.frameSelection() }
             HmmButton("video", label: "Director view", isOn: editor.directorView) { editor.setDirectorView(!editor.directorView) }
                 .accessibilityIdentifier("director-view")
@@ -162,5 +189,7 @@ private struct ViewControls: View {
         .padding(HmmSpacing.xxs)
         .environment(\.hmmInsideGlass, true)
         .hmmGlass(in: Capsule(), interactive: false)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("view-controls")
     }
 }

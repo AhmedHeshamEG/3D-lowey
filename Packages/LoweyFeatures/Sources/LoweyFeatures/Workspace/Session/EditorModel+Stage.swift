@@ -127,6 +127,7 @@ extension EditorModel {
             && !selection.contains(where: { scene.isEffectivelyLocked($0) }) && selectedOverlay == nil
         let pivot = gizmoMode == .rotate ? rotationPivot : selectionPivot
         stage.showSelection(pivot: pivot, gizmoVisible: showGizmo)
+        refreshSelectionScreenRect()
     }
 
     func refreshGuide() {
@@ -150,6 +151,7 @@ extension EditorModel {
         if projection != viewpoint.projection { projection = viewpoint.projection }
         if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
         if tool.usesGuide { refreshGuide() }
+        if !selection.isEmpty { refreshSelectionScreenRect(after: 0.15) }
         viewpointSaveTask?.cancel()
         viewpointSaveTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(0.6))

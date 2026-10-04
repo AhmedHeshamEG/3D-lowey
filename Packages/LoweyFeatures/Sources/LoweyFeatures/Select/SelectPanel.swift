@@ -11,7 +11,7 @@ struct SelectPanel: View {
     @State private var renameText = ""
 
     var body: some View {
-        HmmPanel("Select", width: 340, close: { editor.openPanel = nil }) {
+        HmmPanel("Select", width: 340, sizing: HmmPanelSizing(id: "select"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.s) {
                 HStack(spacing: HmmSpacing.xs) {
                     ChoiceChip(title: "Tap", systemName: "hand.point.up.left", isOn: editor.tool == .select) { editor.tool = .select }

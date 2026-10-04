@@ -9,7 +9,7 @@ public enum AppSettings {
     /// How fast the joystick moves, turns and sizes things (1 = normal).
     public static let joystickSpeed = "joystickSpeed"
     public static let joystickSpeedRange = 0.25 ... 3.0
-    /// The on-screen joystick under a selection (off by default since 2.0; the gizmo and two fingers do the same).
+    /// The on-screen joystick under a selection (on by default; its own × or Settings ▸ Stage hides it).
     public static let showsJoystick = "showsJoystick"
     /// How fast fingers move around the scene: orbit, pan, pinch zoom (1 = normal).
     public static let navigationSpeed = "navigationSpeed"
