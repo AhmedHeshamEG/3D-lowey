@@ -28,7 +28,7 @@ CORE_TITLES = ROOT / "Packages" / "LoweyCore" / "Sources"
 CALLS = ["Text", "Button", "Label", "Toggle", "Picker", "Menu", "Section", "TextField", "SecureField", "HmmPillButton", "HmmSectionHeader",
          "HmmPanel", "HmmSheet", "HmmSidebarSlider", "HmmEmptyState", "Hint", "LabeledSlider", "ControlGroup", "Link", "Stepper",
          "navigationTitle", "accessibilityLabel", "accessibilityHint", "accessibilityValue", "help", "confirmationDialog", "alert", "show",
-         "ShareLink", "ContentUnavailableView", "LabeledContent", "GroupBox", "DisclosureGroup", "Tab"]
+         "ShareLink", "PanelSection", "ContentUnavailableView", "LabeledContent", "GroupBox", "DisclosureGroup", "Tab"]
 # A literal right after one of the calls (first argument), or after a display keyword argument.
 CALL_LITERAL = re.compile(r"\b(?:" + "|".join(CALLS) + r")\(\s*\"((?:[^\"\\]|\\.)*)\"")
 KEYWORD_LITERAL = re.compile(r"\b(?:title|label|message|subtitle|text|hint|prompt|actionTitle|placeholder|caption|summary|reason):\s*\"((?:[^\"\\]|\\.)*)\"")
