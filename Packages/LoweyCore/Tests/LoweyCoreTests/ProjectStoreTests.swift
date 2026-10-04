@@ -6,7 +6,7 @@ final class ProjectStoreTests: XCTestCase {
     func testCreateSaveCloseReopenIsIdentical() throws {
         let store = try ProjectStore(root: temporaryDirectory())
         let (url, created) = try store.createProject(name: "My Video")
-        XCTAssertEqual(url.pathExtension, "lowey")
+        XCTAssertEqual(url.pathExtension, "maquette")
         for folder in ["scenes", "assets", "audio", "renders"] {
             XCTAssertTrue(FileManager.default.fileExists(atPath: url.appendingPathComponent(folder).path))
         }

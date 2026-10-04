@@ -75,7 +75,7 @@ struct TheaterView: View {
             }
             Spacer()
             Menu {
-                Button("Import a project (.loweypack)", systemImage: "square.and.arrow.down") { importing = true }
+                Button("Import a project (.maquettepack)", systemImage: "square.and.arrow.down") { importing = true }
                 Button("Archive (\(app.archived.count))", systemImage: "archivebox") { showArchive = true }
                 Button("Take the tour", systemImage: "hand.wave") { app.startTour() }
             } label: {
@@ -105,7 +105,7 @@ struct TheaterView: View {
             renaming = project
         }
         Button("Duplicate", systemImage: "plus.square.on.square") { app.duplicate(project) }
-        Button("Share as one file (.loweypack)", systemImage: "square.and.arrow.up") { sharing = app.package(project) }
+        Button("Share as one file (.maquettepack)", systemImage: "square.and.arrow.up") { sharing = app.package(project) }
         Button("Export folder (with library items)", systemImage: "folder") { sharing = app.exportFolder(project) }
         Button("Archive", systemImage: "archivebox") { app.archive(project) }
         Button("Delete", systemImage: "trash", role: .destructive) { deleting = project }

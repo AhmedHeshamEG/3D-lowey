@@ -77,7 +77,7 @@ struct AcknowledgementsView: View {
     }
 }
 
-/// Every gesture, the same in every hmm. app, plus 3D-lowey's own.
+/// Every gesture, the same in every hmm. app, plus Maquette's own.
 struct GestureGuide: View {
     struct Item: Identifiable {
         let symbol: String

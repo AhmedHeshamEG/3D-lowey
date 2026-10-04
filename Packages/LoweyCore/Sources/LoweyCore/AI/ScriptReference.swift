@@ -4,7 +4,7 @@ import Foundation
 /// lowey skill. Kept compact on purpose (it goes into AI context windows).
 public enum ScriptReference {
     public static let text = """
-    # 3D-lowey Scene Script v3 — actions
+    # Maquette Scene Script v3 — actions
 
     {"version": 3, "title": "...", "actions": [ {"do": ...}, ... ]}   (schemas/scene-script.v3.schema.json)
     The whole script is ONE undo step: a Proposal Hesham applies on the iPad (unless auto-apply is on). v2 scripts still

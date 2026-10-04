@@ -337,50 +337,50 @@
         }
       }
     },
-    "3D-lowey": {
+    "Maquette": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "3D-lowey"
+            "value": "Maquette"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "3D-lowey"
+            "value": "Maquette"
           }
         }
       }
     },
-    "3D-lowey edits in one window at a time. Use this one instead, or make it a monitor of the shot.": {
+    "Maquette edits in one window at a time. Use this one instead, or make it a monitor of the shot.": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "3D-lowey modifica in una finestra alla volta. Usa questa al suo posto, o trasformala in un monitor dell'inquadratura."
+            "value": "Maquette modifica in una finestra alla volta. Usa questa al suo posto, o trasformala in un monitor dell'inquadratura."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يحرّر 3D-lowey في نافذة واحدة في كل مرة. استخدم هذه بدلًا منها، أو اجعلها شاشة لعرض اللقطة."
+            "value": "يحرّر Maquette في نافذة واحدة في كل مرة. استخدم هذه بدلًا منها، أو اجعلها شاشة لعرض اللقطة."
           }
         }
       }
     },
-    "3D-lowey quit unexpectedly last time. Your work was autosaved.": {
+    "Maquette quit unexpectedly last time. Your work was autosaved.": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'ultima volta 3D-lowey si è chiuso inaspettatamente. Il tuo lavoro è stato salvato automaticamente."
+            "value": "L'ultima volta Maquette si è chiuso inaspettatamente. Il tuo lavoro è stato salvato automaticamente."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أُغلق 3D-lowey بشكل غير متوقع في المرة الماضية. تم حفظ عملك تلقائيًا."
+            "value": "أُغلق Maquette بشكل غير متوقع في المرة الماضية. تم حفظ عملك تلقائيًا."
           }
         }
       }
@@ -5793,18 +5793,18 @@
         }
       }
     },
-    "Import a project (.loweypack)": {
+    "Import a project (.maquettepack)": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importa un progetto (.loweypack)"
+            "value": "Importa un progetto (.maquettepack)"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "استيراد مشروع (.loweypack)"
+            "value": "استيراد مشروع (.maquettepack)"
           }
         }
       }
@@ -10865,18 +10865,18 @@
         }
       }
     },
-    "Share as one file (.loweypack)": {
+    "Share as one file (.maquettepack)": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Condividi come un unico file (.loweypack)"
+            "value": "Condividi come un unico file (.maquettepack)"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مشاركة كملف واحد (.loweypack)"
+            "value": "مشاركة كملف واحد (.maquettepack)"
           }
         }
       }

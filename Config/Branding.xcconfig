@@ -1,7 +1,7 @@
 // The product's name lives here and ONLY here. Rename the app by changing this line.
-APP_DISPLAY_NAME = 3D-lowey
+APP_DISPLAY_NAME = Maquette
 
 // Marketing version for local builds; CI overrides it from the git tag (v1.0.0 → 1.0.0)
 // and sets the build number to the CI run number.
-MARKETING_VERSION = 2.0.0
+MARKETING_VERSION = 0.1
 CURRENT_PROJECT_VERSION = 1

@@ -2,7 +2,7 @@
 # everything (Hesham has no Mac).
 name: Lowey
 options:
-  bundleIdPrefix: studio.hmm
+  bundleIdPrefix: studio.h
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -75,20 +75,20 @@ targets:
         NSSupportsLiveActivities: true
         # Exports keep running when the app leaves the screen (iPadOS 26 continued processing).
         BGTaskSchedulerPermittedIdentifiers:
-          - studio.hmm.lowey.export.*
+          - studio.h.maquette.export.*
         # Build switches (FeatureFlags): the App Store build turns the bridge off until 2.1.
         LoweyAIBridge: true
         LoweyBackgroundBridge: true
-        NSPhotoLibraryAddUsageDescription: "3D-lowey saves the videos and stills you export to your photo library."
-        NSCameraUsageDescription: "3D-lowey uses the camera to follow the iPad when it acts as a film camera, and the front camera to read your face for character performances."
-        NSMicrophoneUsageDescription: "3D-lowey records your voiceover so your animation can be timed to your words."
-        NSLocalNetworkUsageDescription: "3D-lowey talks to your paired laptop (AI bridge, files) and your iPhone (face capture) on your local network only."
+        NSPhotoLibraryAddUsageDescription: "Maquette saves the videos and stills you export to your photo library."
+        NSCameraUsageDescription: "Maquette uses the camera to follow the iPad when it acts as a film camera, and the front camera to read your face for character performances."
+        NSMicrophoneUsageDescription: "Maquette records your voiceover so your animation can be timed to your words."
+        NSLocalNetworkUsageDescription: "Maquette talks to your paired laptop (AI bridge, files) and your iPhone (face capture) on your local network only."
         NSBonjourServices:
           - _hmm._tcp
           - _loweyface._tcp
         # The laptop bridge keeps answering with the screen locked (sideloaded builds; BackgroundKeeper).
         UIBackgroundModes: [audio]
-        NSSpeechRecognitionUsageDescription: "3D-lowey finds when each word is spoken, on this iPad, so shots can be synced to your voiceover."
+        NSSpeechRecognitionUsageDescription: "Maquette finds when each word is spoken, on this iPad, so shots can be synced to your voiceover."
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: org.khronos.gltf
             UTTypeDescription: glTF model
@@ -102,7 +102,7 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension: [glb]
               public.mime-type: [model/gltf-binary]
-        UTExportedTypeDeclarations:
+          # 3D-lowey's projects and pack files still open (they import into Maquette).
           - UTTypeIdentifier: studio.hmm.lowey.project
             UTTypeDescription: 3D-lowey project
             UTTypeConformsTo: [com.apple.package, public.composite-content]
@@ -113,6 +113,17 @@ targets:
             UTTypeConformsTo: [public.data, public.archive]
             UTTypeTagSpecification:
               public.filename-extension: [loweypack]
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: studio.h.maquette.project
+            UTTypeDescription: Maquette project
+            UTTypeConformsTo: [com.apple.package, public.composite-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [maquette]
+          - UTTypeIdentifier: studio.h.maquette.pack
+            UTTypeDescription: Maquette project file
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [maquettepack]
         CFBundleDocumentTypes:
           - CFBundleTypeName: 3D model
             CFBundleTypeRole: Viewer
@@ -122,21 +133,25 @@ targets:
               - org.khronos.gltf
               - org.khronos.glb
               - public.geometry-definition-format
-          - CFBundleTypeName: 3D-lowey project
+          - CFBundleTypeName: Maquette project
             CFBundleTypeRole: Editor
             LSHandlerRank: Owner
             LSTypeIsPackage: true
             LSItemContentTypes:
+              - studio.h.maquette.project
               - studio.hmm.lowey.project
-          - CFBundleTypeName: 3D-lowey project file
+          - CFBundleTypeName: Maquette project file
             CFBundleTypeRole: Editor
             LSHandlerRank: Owner
             LSItemContentTypes:
+              - studio.h.maquette.pack
               - studio.hmm.lowey.pack
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: studio.hmm.lowey
+        PRODUCT_BUNDLE_IDENTIFIER: studio.h.maquette
         PRODUCT_NAME: Lowey
+        # The studio's app group (shared with the widget; Cutaway joins it later).
+        CODE_SIGN_ENTITLEMENTS: App/Maquette.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         MTL_ENABLE_DEBUG_INFO: NO
@@ -158,7 +173,8 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: studio.hmm.lowey.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: studio.h.maquette.widgets
+        CODE_SIGN_ENTITLEMENTS: App/Widgets/MaquetteWidgets.entitlements
         PRODUCT_NAME: LoweyWidgets
         SKIP_INSTALL: YES
 
@@ -171,7 +187,7 @@ targets:
       - target: Lowey
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: studio.hmm.lowey.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: studio.h.maquette.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Lowey
 

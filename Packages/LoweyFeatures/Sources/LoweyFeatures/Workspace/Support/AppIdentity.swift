@@ -4,7 +4,7 @@ import Foundation
 /// display name is set once in Config/Branding.xcconfig).
 public enum AppIdentity {
     public static var displayName: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "3D-lowey"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Maquette"
     }
 
     public static var shortVersion: String {
@@ -16,9 +16,11 @@ public enum AppIdentity {
         return "\(shortVersion) (\(build))"
     }
 
-    public static let subsystem = "studio.hmm.lowey"
+    public static let subsystem = "studio.h.maquette"
     /// The iCloud Drive container (only the App Store build is entitled to it).
-    public static let iCloudContainer = "iCloud.studio.hmm.lowey"
+    public static let iCloudContainer = "iCloud.studio.h.maquette"
+    /// Shared with the widget extension (and Cutaway later).
+    public static let appGroup = "group.studio.h"
 
     /// Unit / render tests hosted in the app and UI tests: no bridge, no notifications, a clean sandbox.
     public static let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")

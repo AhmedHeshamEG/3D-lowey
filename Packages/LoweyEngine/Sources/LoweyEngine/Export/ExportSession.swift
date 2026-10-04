@@ -14,7 +14,7 @@ public enum ExportError: Error, Equatable, CustomStringConvertible {
         switch self {
         case .cancelled: "Export cancelled."
         case .nothingToExport: "There's nothing to export."
-        case .gpuStopped: "The renderer stopped responding. Keep 3D-lowey in front while it exports."
+        case .gpuStopped: "The renderer stopped responding. Keep Maquette in front while it exports."
         case let .verification(problems): "The exported file isn't right: " + problems.joined(separator: " ")
         }
     }
@@ -28,7 +28,7 @@ public final class ExportSession {
     public let builder: ShotBuilder
     let frames: FrameRenderer
     private let videoFrames = VideoFrames(exact: true)
-    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "export")
+    private let logger = Logger(subsystem: "studio.h.maquette", category: "export")
     /// Where a project media file lives (videos on cards and overlays, Manim renders).
     public var mediaURL: (String) -> URL? = { _ in nil }
     /// Stills in the project's assets.

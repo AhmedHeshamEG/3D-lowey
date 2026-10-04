@@ -2,12 +2,12 @@ import BackgroundTasks
 import Foundation
 import os
 
-/// Keeps an export running when 3D-lowey leaves the screen: an iPadOS 26 continued-processing task with the system's
+/// Keeps an export running when Maquette leaves the screen: an iPadOS 26 continued-processing task with the system's
 /// progress UI, and the GPU when the device lets background work use it. Without GPU access the export waits (it
 /// resumes by itself when the app is back), exactly as before.
 @MainActor
 final class BackgroundExport {
-    static let identifierPrefix = "studio.hmm.lowey.export"
+    static let identifierPrefix = "studio.h.maquette.export"
     private var task: BGContinuedProcessingTask?
     private let logger = Logger(subsystem: AppIdentity.subsystem, category: "export")
     /// Called when the system stops the task (the user cancelled it from the system UI, or time ran out).

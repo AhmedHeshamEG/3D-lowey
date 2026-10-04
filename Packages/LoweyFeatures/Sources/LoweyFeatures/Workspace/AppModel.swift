@@ -57,7 +57,7 @@ public final class AppModel {
         started = true
         diagnostics.start()
         if diagnostics.previousSessionCrashed, !AppIdentity.isUITesting {
-            show("3D-lowey quit unexpectedly last time. Your work was autosaved.", kind: .error)
+            show("Maquette quit unexpectedly last time. Your work was autosaved.", kind: .error)
         }
         library.load()
         refreshProjects()

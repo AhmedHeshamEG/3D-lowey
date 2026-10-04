@@ -56,7 +56,7 @@ extension AppModel {
         }
     }
 
-    /// One `.loweypack` file to share or back up (library assets included).
+    /// One `.maquettepack` file to share or back up (library assets included).
     func package(_ project: ProjectSummary) -> URL? {
         guard exportFolder(project) != nil else { return nil }
         do {
@@ -140,10 +140,11 @@ extension AppModel {
     // MARK: Incoming files (share sheet, Open in…, drag and drop)
 
     public func handleOpenedFile(_ url: URL) {
-        switch url.pathExtension.lowercased() {
-        case ProjectLayout.fileExtension:
+        let ext = url.pathExtension.lowercased()
+        switch ext {
+        case _ where ProjectLayout.isProject(url):
             importProjectFolder(url)
-        case ProjectPackage.fileExtension:
+        case _ where ext == ProjectPackage.fileExtension || ProjectPackage.legacyExtensions.contains(ext):
             importPackage(url)
         case "json" where editor != nil:
             if let data = try? Data(contentsOf: url) { editor?.importScript(data, source: url.lastPathComponent) }

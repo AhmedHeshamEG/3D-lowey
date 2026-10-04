@@ -92,7 +92,7 @@ public final class MarketBenchmark {
             facts["triangles"] = Double(lastReport.triangles)
             facts["drawCalls"] = Double(lastReport.drawCalls)
         }
-        return recorder.report(app: "3D-lowey", appVersion: appVersion, scene: NightMarket.projectName, device: device, system: system,
+        return recorder.report(app: "Maquette", appVersion: appVersion, scene: NightMarket.projectName, device: device, system: system,
                                sceneFacts: facts)
     }
 

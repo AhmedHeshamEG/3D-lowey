@@ -11,7 +11,7 @@ public extension SceneExport {
             defaultPrim = "Root"
             metersPerUnit = 1
             upAxis = "Y"
-            doc = "Exported from 3D-lowey"
+            doc = "Exported from Maquette"
         )
 
         def Xform "Root"

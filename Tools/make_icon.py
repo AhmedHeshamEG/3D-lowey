@@ -1,8 +1,8 @@
 """Generates the app icon: python Tools/make_icon.py
 
-Studio rule (STUDIO §10): a simple glyph on the app's accent, full bleed (the system draws the corners, so the three
-apps share the same corner geometry). 3D-lowey's glyph is a faceted, ink-outlined cube — the low-poly world, drawn in
-the Ink Look. Light: the glyph in ink on the accent. Dark: the glyph in the accent on near-black.
+Maquette's temporary icon (until the identity phase, S1): 3D-lowey 2.0's faceted, ink-outlined cube re-tinted to the
+studio h. neutrals, so the two apps are told apart on one iPad. Both appearances put the amber cube on the studio's
+near-black (`bg #0E0F11`); dark goes one step deeper. Full bleed: the system draws the corners.
 """
 import json
 import os
@@ -12,8 +12,9 @@ from PIL import Image, ImageDraw
 SIZE = 1024
 SUPER = 4  # drawn large, scaled down: clean edges
 ACCENT = (0xFF, 0xB8, 0x47)
-INK = (0x15, 0x13, 0x1C)
-NIGHT = (0x12, 0x11, 0x17)
+INK = (0x0E, 0x0F, 0x11)
+NIGHT = (0x16, 0x17, 0x1A)
+DEEP = (0x0E, 0x0F, 0x11)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "App", "Resources", "Assets.xcassets", "AppIcon.appiconset")
 
 
@@ -46,8 +47,8 @@ def glyph(background, ink, faces):
 
 
 def main():
-    light = glyph(ACCENT, INK, (mix(ACCENT, (255, 255, 255), 0.55), mix(ACCENT, INK, 0.18), mix(ACCENT, INK, 0.42)))
-    dark = glyph(NIGHT, (0, 0, 0), (mix(ACCENT, (255, 255, 255), 0.35), ACCENT, mix(ACCENT, INK, 0.35)))
+    light = glyph(NIGHT, (0, 0, 0), (mix(ACCENT, (255, 255, 255), 0.45), ACCENT, mix(ACCENT, INK, 0.30)))
+    dark = glyph(DEEP, (0, 0, 0), (mix(ACCENT, (255, 255, 255), 0.35), mix(ACCENT, INK, 0.08), mix(ACCENT, INK, 0.38)))
     light.save(os.path.join(OUT, "AppIcon-1024.png"))
     dark.save(os.path.join(OUT, "AppIcon-1024-dark.png"))
     contents = {

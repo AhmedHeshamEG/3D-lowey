@@ -37,7 +37,7 @@ public final class ModelLibrary: Sendable {
     }
 
     private let state = Mutex(State())
-    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "assets")
+    private let logger = Logger(subsystem: "studio.h.maquette", category: "assets")
     private let loadedHandler: Mutex<(@MainActor @Sendable (AssetID, AssetInfo?) -> Void)?> = Mutex(nil)
 
     public init() {}

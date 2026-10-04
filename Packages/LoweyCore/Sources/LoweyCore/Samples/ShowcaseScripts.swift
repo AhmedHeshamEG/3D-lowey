@@ -29,7 +29,7 @@ enum ShowcaseScripts {
     {"do": "lighting", "recipe": "golden-rim", "subject": "Hesham"},
     {"do": "cameraMove", "camera": "Fly camera", "move": "crane", "subject": "Hesham", "at": 0, "duration": 4},
     {"do": "cameraMove", "camera": "Fly camera", "move": "orbit", "subject": [0, 0.6, 0], "at": 4, "duration": 6},
-    {"do": "overlay", "shape": "title", "name": "Title", "text": "Welcome to 3D-lowey", "at": [0, 0.62], "size": 0.8},
+    {"do": "overlay", "shape": "title", "name": "Title", "text": "Welcome to Maquette", "at": [0, 0.62], "size": 0.8},
     {"do": "preset", "target": "Title", "preset": "typewriter", "at": 0.6, "duration": 1.6},
     {"do": "preset", "target": "Title", "preset": "fadeOut", "at": 4.5, "duration": 0.6},
     {"do": "flipbook", "fx": "sparkle", "anchor": "Hesham", "at": 2.4, "until": 4.2},
