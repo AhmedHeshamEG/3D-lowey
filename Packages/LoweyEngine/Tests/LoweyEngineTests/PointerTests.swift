@@ -39,13 +39,13 @@ final class PointerTests: XCTestCase {
 
     func testThePointKeepsItsSizeAndTheOutlineIsOnlyForResizing() async throws {
         let tip = CGPoint(x: 0.5, y: 0.5)
-        let near = GoldenImage().compare(try await render(pointer: nil, distance: 3), try await render(pointer: .init(location: tip, dotRadius: 3 / 360),
-                                                                                                    distance: 3)).differentFraction
-        let far = GoldenImage().compare(try await render(pointer: nil, distance: 20), try await render(pointer: .init(location: tip, dotRadius: 3 / 360),
-                                                                                                   distance: 20)).differentFraction
+        let near = try await GoldenImage().compare(render(pointer: nil, distance: 3), render(pointer: .init(location: tip, dotRadius: 3 / 360),
+                                                                                             distance: 3)).differentFraction
+        let far = try await GoldenImage().compare(render(pointer: nil, distance: 20), render(pointer: .init(location: tip, dotRadius: 3 / 360),
+                                                                                             distance: 20)).differentFraction
         XCTAssertEqual(near, far, accuracy: 0.0004, "the same size on screen however far the scene is")
-        let outlined = GoldenImage().compare(try await render(pointer: nil), try await render(pointer: .init(location: tip, dotRadius: 3 / 360,
-                                                                                                          outlineRadius: 60 / 360))).differentFraction
+        let outlined = try await GoldenImage().compare(render(pointer: nil), render(pointer: .init(location: tip, dotRadius: 3 / 360,
+                                                                                                   outlineRadius: 60 / 360))).differentFraction
         XCTAssertGreaterThan(outlined, near * 3, "the outline shows while resizing")
     }
 }

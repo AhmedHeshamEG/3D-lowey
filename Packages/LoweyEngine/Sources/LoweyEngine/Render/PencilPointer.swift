@@ -44,7 +44,7 @@ extension LoweyRenderer {
             let facing = Quat.rotation(from: .unitY, to: (Vec3(camera.position) - center).normalized)
             let model = LoweyCore.Transform(position: center, rotation: facing, scale: Vec3(radius, radius, radius)).matrix
             draws.append(EditorDraw(mesh: editorMeshes.ring, item: EditorItemUniforms(model: model, color: SIMD4<Float>(0.97, 0.97, 0.98, 0.9),
-                                                                                    params: .zero), depthTested: false))
+                                                                                      params: .zero), depthTested: false))
         }
         return draws
     }

@@ -32,7 +32,7 @@ struct HistoryScrubberBar: View {
             }
             Slider(value: position, in: 0 ... Double(max(state.count, 1)), step: 1)
                 .tint(theme.accent)
-                .disabled(state.count == 0)
+                .disabled(state.count < 1)
                 .accessibilityLabel("Moment in the history")
                 .accessibilityValue(moment)
                 .accessibilityIdentifier("history-slider")

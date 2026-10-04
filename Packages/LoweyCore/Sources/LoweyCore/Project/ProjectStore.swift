@@ -28,6 +28,7 @@ public enum ProjectLayout {
         let ext = url.pathExtension.lowercased()
         return ext == fileExtension || legacyExtensions.contains(ext)
     }
+
     public static let projectFile = "project.json"
     public static let scenesFolder = "scenes"
     public static let assetsFolder = "assets"

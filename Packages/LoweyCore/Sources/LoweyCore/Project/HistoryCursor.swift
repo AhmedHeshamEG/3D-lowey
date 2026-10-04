@@ -30,11 +30,11 @@ public struct HistoryCursor: Sendable {
         let target = min(max(target, 0), steps.count)
         var changes = ChangeSet()
         while position > target {
-            changes.formUnion(try steps[position - 1].inverse.apply(to: &document).changes)
+            try changes.formUnion(steps[position - 1].inverse.apply(to: &document).changes)
             position -= 1
         }
         while position < target {
-            changes.formUnion(try steps[position].command.apply(to: &document).changes)
+            try changes.formUnion(steps[position].command.apply(to: &document).changes)
             position += 1
         }
         return changes

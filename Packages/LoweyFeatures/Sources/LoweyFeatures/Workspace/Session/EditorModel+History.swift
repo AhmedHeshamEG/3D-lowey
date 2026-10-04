@@ -79,7 +79,7 @@ extension EditorModel {
     func loadOlderUndoIfNeeded() {
         guard session.undoStack.count < Self.loadedUndoFloor, journal.olderUndoCount > 0 else { return }
         do {
-            session.prependUndo(try journal.loadOlderUndo(64))
+            try session.prependUndo(journal.loadOlderUndo(64))
         } catch {
             logger.error("Older undo steps unreadable: \(String(describing: error))")
             journal.discardOlderUndo()

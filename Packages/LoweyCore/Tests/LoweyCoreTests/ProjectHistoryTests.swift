@@ -118,7 +118,7 @@ final class ProjectHistoryTests: XCTestCase {
             try reopened.session.undo()
             undone += 1
             if reopened.session.undoStack.count < 8, reopened.journal.olderUndoCount > 0 {
-                reopened.session.prependUndo(try reopened.journal.loadOlderUndo(64))
+                try reopened.session.prependUndo(reopened.journal.loadOlderUndo(64))
             }
         }
         XCTAssertEqual(undone, 150)
