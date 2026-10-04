@@ -22,7 +22,7 @@ struct DiagnosticsSheet: View {
             Hint("Frame times against this screen's budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.")
             HmmSectionHeader("Benchmark")
             Hint(
-                "The Night Market (400 objects, walkers, Blobs, lanterns, a slow dolly) for 20 s. Pass: no dropped frame in 19 of 20, near full preview for this tier, no hitch over 33 ms."
+                "Night Market, 20 s: 400 objects, walkers, Blobs, a dolly. Pass: no dropped frame in 19 of 20, near full preview, no hitch over 33 ms."
             )
             HStack(spacing: HmmSpacing.xs) {
                 HmmPillButton("Run the benchmark", systemName: "speedometer", prominent: true) {
