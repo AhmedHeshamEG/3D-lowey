@@ -1,3 +1,5 @@
+import Foundation
+
 /// Errors of the command stack itself (a command's own errors pass through unchanged).
 public enum CommandStackError: Error, Equatable, CustomStringConvertible {
     case groupNotOpen
@@ -18,6 +20,10 @@ public enum CommandStackError: Error, Equatable, CustomStringConvertible {
 /// - **Limits:** the oldest steps are dropped beyond `limit`.
 /// - **Labels:** `undoTitle` / `redoTitle` are ready for the Undo menu ("Undo Move Camera").
 ///
+/// - **Journaling:** with `recordsOps`, every change is also appended to `pendingOps` as a `HistoryOp`; the owner
+///   drains them into a history journal. Replaying the same ops with `replay(_:on:)` rebuilds the same document and
+///   the same stack, so nothing is lost when the app is killed and undo survives a relaunch.
+///
 /// A value type: the owner keeps it next to the document and passes the document in, so a stack can never mutate
 /// a document it doesn't own.
 public struct CommandStack<Command: EditCommand>: Sendable {
@@ -27,6 +33,10 @@ public struct CommandStack<Command: EditCommand>: Sendable {
     public private(set) var revision = 0
     /// Most steps kept.
     public var limit: Int
+    /// Whether changes are recorded into `pendingOps` (for a history journal).
+    public var recordsOps = false
+    /// Changes made since the owner last called `takePendingOps()`.
+    public private(set) var pendingOps: [HistoryOp<Command>] = []
 
     private var openCoalesceKey: String?
     private var groups: [OpenGroup] = []
@@ -50,6 +60,8 @@ public struct CommandStack<Command: EditCommand>: Sendable {
     public var redoTitle: String { redoLabel.map { "Redo \($0)" } ?? "Redo" }
     /// Whether a group is open (commands are being collected into one step).
     public var isGrouping: Bool { !groups.isEmpty }
+    /// No group is open and no gesture is coalescing: every step is final (a safe moment for a checkpoint).
+    public var isQuiet: Bool { groups.isEmpty && openCoalesceKey == nil }
 
     /// Applies a command to `target` and records it for undo.
     @discardableResult
@@ -57,6 +69,7 @@ public struct CommandStack<Command: EditCommand>: Sendable {
         let result = try command.apply(to: &target)
         revision += 1
         redoStack.removeAll()
+        log(.perform(command, coalesceKey: coalesceKey))
         if !groups.isEmpty {
             groups[groups.count - 1].commands.append(command)
             groups[groups.count - 1].inverses.append(result.inverse)
@@ -65,6 +78,7 @@ public struct CommandStack<Command: EditCommand>: Sendable {
         if let coalesceKey, coalesceKey == openCoalesceKey, var last = undoStack.popLast(), last.coalesceKey == coalesceKey {
             last.command = Command.coalesced(last.command, command)
             last.inverse = Command.coalescedInverse(earlier: last.inverse, later: result.inverse)
+            last.id = UUID()
             undoStack.append(last)
         } else {
             push(HistoryEntry(command: command, inverse: result.inverse, coalesceKey: coalesceKey))
@@ -75,18 +89,22 @@ public struct CommandStack<Command: EditCommand>: Sendable {
 
     /// Ends the current continuous gesture: the next command starts a new step.
     public mutating func endCoalescing() {
+        guard openCoalesceKey != nil else { return }
         openCoalesceKey = nil
+        log(.endCoalescing)
     }
 
     /// Starts collecting commands into one step called `label`.
     public mutating func beginGroup(_ label: String) {
         openCoalesceKey = nil
         groups.append(OpenGroup(label: label))
+        log(.beginGroup(label))
     }
 
     /// Closes the innermost group. The outermost group becomes one history entry (nothing if it was empty).
     public mutating func endGroup() throws {
         guard let group = groups.popLast() else { throw CommandStackError.groupNotOpen }
+        log(.endGroup)
         guard !group.commands.isEmpty else { return }
         let command = Command.group(group.label, group.commands)
         let inverse = Command.group(group.label, group.inverses.reversed())
@@ -101,6 +119,7 @@ public struct CommandStack<Command: EditCommand>: Sendable {
     /// Closes the innermost group and reverts everything it did (a compound action that failed halfway).
     public mutating func cancelGroup(on target: inout Command.Target) throws {
         guard let group = groups.popLast() else { throw CommandStackError.groupNotOpen }
+        log(.cancelGroup)
         for inverse in group.inverses.reversed() {
             _ = try inverse.apply(to: &target)
             revision += 1
@@ -114,6 +133,7 @@ public struct CommandStack<Command: EditCommand>: Sendable {
         do {
             let result = try entry.inverse.apply(to: &target)
             revision += 1
+            log(.undo)
             redoStack.append(HistoryEntry(command: entry.command, inverse: result.inverse, customLabel: entry.customLabel))
             return result.changes
         } catch {
@@ -129,6 +149,7 @@ public struct CommandStack<Command: EditCommand>: Sendable {
         do {
             let result = try entry.command.apply(to: &target)
             revision += 1
+            log(.redo)
             undoStack.append(HistoryEntry(command: entry.command, inverse: result.inverse, customLabel: entry.customLabel))
             return result.changes
         } catch {
@@ -147,6 +168,50 @@ public struct CommandStack<Command: EditCommand>: Sendable {
         redoStack.removeAll()
         openCoalesceKey = nil
         groups.removeAll()
+    }
+
+    // MARK: Journal
+
+    /// Returns the ops recorded since the last call and forgets them.
+    public mutating func takePendingOps() -> [HistoryOp<Command>] {
+        defer { pendingOps.removeAll(keepingCapacity: true) }
+        return pendingOps
+    }
+
+    /// Applies a recorded op exactly as it was first done (opening a document replays its journal's tail).
+    @discardableResult
+    public mutating func replay(_ op: HistoryOp<Command>, on target: inout Command.Target) throws -> Command.Changes? {
+        switch op {
+        case let .perform(command, coalesceKey): return try perform(command, on: &target, coalesceKey: coalesceKey)
+        case .endCoalescing: endCoalescing()
+        case let .beginGroup(label): beginGroup(label)
+        case .endGroup: try endGroup()
+        case .cancelGroup: try cancelGroup(on: &target)
+        case .undo: return try undo(on: &target)
+        case .redo: return try redo(on: &target)
+        }
+        return nil
+    }
+
+    /// Puts back a stack read from disk (oldest first). Nothing is recorded.
+    public mutating func restore(undo: [HistoryEntry<Command>], redo: [HistoryEntry<Command>]) {
+        clear()
+        undoStack = Array(undo.suffix(limit))
+        redoStack = redo
+    }
+
+    /// Adds older steps under the bottom of the undo stack (loaded lazily as undo reaches them), up to `limit`.
+    /// Returns how many were kept.
+    @discardableResult
+    public mutating func prependUndo(_ entries: [HistoryEntry<Command>]) -> Int {
+        let room = max(limit - undoStack.count, 0)
+        let kept = Array(entries.suffix(room))
+        undoStack.insert(contentsOf: kept, at: 0)
+        return kept.count
+    }
+
+    private mutating func log(_ op: HistoryOp<Command>) {
+        if recordsOps { pendingOps.append(op) }
     }
 
     private mutating func push(_ entry: HistoryEntry<Command>) {

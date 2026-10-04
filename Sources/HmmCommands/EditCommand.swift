@@ -1,3 +1,5 @@
+import Foundation
+
 /// A reversible edit of a document.
 ///
 /// Every mutation of a document in an hmm. app is one of these, executed through a `CommandStack`: the UI, gestures,
@@ -39,6 +41,9 @@ public extension EditCommand {
 
 /// One step of the undo history.
 public struct HistoryEntry<Command: EditCommand>: Sendable {
+    /// New for every distinct step (a merged gesture or an undone step gets a new one), so a journal stores each
+    /// step once.
+    public var id: UUID
     public var command: Command
     public var inverse: Command
     /// Continuous gestures (drags, sliders, joysticks) share a key so the whole gesture is one undo step.
@@ -46,7 +51,8 @@ public struct HistoryEntry<Command: EditCommand>: Sendable {
     /// Overrides the command's own label (named groups).
     public var customLabel: String?
 
-    public init(command: Command, inverse: Command, coalesceKey: String? = nil, customLabel: String? = nil) {
+    public init(command: Command, inverse: Command, coalesceKey: String? = nil, customLabel: String? = nil, id: UUID = UUID()) {
+        self.id = id
         self.command = command
         self.inverse = inverse
         self.coalesceKey = coalesceKey
@@ -55,3 +61,5 @@ public struct HistoryEntry<Command: EditCommand>: Sendable {
 
     public var label: String { customLabel ?? command.label }
 }
+
+extension HistoryEntry: Codable where Command: Codable {}
