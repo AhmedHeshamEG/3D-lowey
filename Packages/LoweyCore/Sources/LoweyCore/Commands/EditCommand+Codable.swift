@@ -5,12 +5,12 @@ import Foundation
 extension EditCommand: Codable {
     private enum Key: String, CodingKey {
         case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands, tracks
-        case dabs, looks, flipbooks
+        case dabs, looks, flipbooks, scene
     }
 
     private enum Op: String, Codable {
         case insert, delete, restore, setProperties, rename, setKind, reparent, setLook, renameScene
-        case setActiveCamera, setTimeline, setTracks, batch, setShadowPaint, setCustomLooks, setFlipbooks
+        case setActiveCamera, setTimeline, setTracks, batch, setShadowPaint, setCustomLooks, setFlipbooks, replaceScene
     }
 
     public init(from decoder: Decoder) throws {
@@ -53,6 +53,8 @@ extension EditCommand: Codable {
             self = try .setCustomLooks(c.decodeIfPresent([LookPreset].self, forKey: .looks) ?? [])
         case .setFlipbooks:
             self = try .setFlipbooks(c.decode([FlipbookEdit].self, forKey: .flipbooks))
+        case .replaceScene:
+            self = try .replaceScene(c.decode(Scene.self, forKey: .scene))
         }
     }
 
@@ -114,6 +116,9 @@ extension EditCommand: Codable {
         case let .setFlipbooks(edits):
             try c.encode(Op.setFlipbooks, forKey: .op)
             try c.encode(edits, forKey: .flipbooks)
+        case let .replaceScene(scene):
+            try c.encode(Op.replaceScene, forKey: .op)
+            try c.encode(scene, forKey: .scene)
         }
     }
 }

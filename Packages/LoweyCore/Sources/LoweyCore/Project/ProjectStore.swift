@@ -265,6 +265,7 @@ public struct ProjectStore: Sendable {
         let file = ProjectLayout.sceneURL(id, in: url)
         try? FileManager.default.removeItem(at: file)
         try? FileManager.default.removeItem(at: SafeFileWriter.backupURL(for: file))
+        ProjectHistory.remove(scene: id, in: url)
     }
 
     public func writeThumbnail(_ png: Data, for url: URL) throws {
@@ -290,28 +291,5 @@ public struct ProjectStore: Sendable {
         let cleaned = name.unicodeScalars.map { forbidden.contains($0) ? "-" : Character($0) }
         let result = String(cleaned).trimmingCharacters(in: .whitespacesAndNewlines)
         return result.isEmpty ? "Untitled" : String(result.prefix(80))
-    }
-}
-
-/// Serializes saves off the main thread, one at a time, always writing the newest document.
-public actor DocumentSaver {
-    private let store: ProjectStore
-    private var lastSavedRevision: [URL: Int] = [:]
-
-    public init(store: ProjectStore) {
-        self.store = store
-    }
-
-    /// Saves if `revision` is newer than what was last saved for `url`. Returns true if written.
-    @discardableResult
-    public func save(_ document: Document, revision: Int, to url: URL) throws -> Bool {
-        if let saved = lastSavedRevision[url], saved >= revision { return false }
-        try store.save(document, to: url)
-        lastSavedRevision[url] = revision
-        return true
-    }
-
-    public func markSaved(_ revision: Int, for url: URL) {
-        lastSavedRevision[url] = revision
     }
 }
