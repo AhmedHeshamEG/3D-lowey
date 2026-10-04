@@ -11,6 +11,9 @@ public struct ObservePixels: Sendable {
     public var redIndex: Int
     public var greenIndex: Int
     public var blueIndex: Int
+    /// What the renderer drew at each pixel, when it can say: the object (its id) per pixel, same size, top row first.
+    /// Pixel measures then use it instead of the analysis raster (exact, and posed for skinned characters).
+    public var objects: [String?]?
 
     public init(width: Int, height: Int, bytes: [UInt8], bgra: Bool = false) {
         self.width = width
@@ -19,6 +22,15 @@ public struct ObservePixels: Sendable {
         redIndex = bgra ? 2 : 0
         greenIndex = 1
         blueIndex = bgra ? 0 : 2
+    }
+
+    /// The object drawn around a normalised point (nil: none, or no object buffer).
+    func object(x: Double, y: Double) -> String? {
+        guard let objects else { return nil }
+        let column = min(max(Int(x * Double(width)), 0), width - 1)
+        let row = min(max(Int(y * Double(height)), 0), height - 1)
+        let index = row * width + column
+        return index < objects.count ? objects[index] : nil
     }
 
     /// The colour (0…1) around a normalised point.
@@ -71,7 +83,8 @@ public struct ShotObserver {
         }
         var frame = frameRead(measured, subject: subjectID, declared: subject != nil, camera: camera, scene: animated.scene)
         if let pixels {
-            readPixels(pixels, raster: raster, units: measured, subject: subjectID, objects: &objects, frame: &frame)
+            readPixels(pixels, raster: pixelRaster(pixels, like: raster, units: measured, scene: animated.scene), units: measured, subject: subjectID,
+                       objects: &objects, frame: &frame)
         }
         let checks = ShotRubric.evaluate(objects: objects, frame: frame, scaleIssues: scaleIssues(measured, scene: animated.scene))
         let cameraName = animated.camera.flatMap { animated.scene.objects[$0]?.name } ?? "the editor view"
@@ -83,6 +96,26 @@ public struct ShotObserver {
     /// of the set's top. Real meshes aren't flat underneath; that isn't an intersection.
     static func rests(_ prop: Measured, on set: Measured) -> Bool {
         set.object.isSet && !prop.object.isSet && abs(prop.world.min.y - set.world.max.y) < 0.06
+    }
+
+    /// The analysis raster's labels taken from the renderer's object buffer (each drawn node mapped to its labelled
+    /// unit), when the pixels come with one; otherwise the raster itself.
+    func pixelRaster(_ pixels: ObservePixels, like raster: CoverageRaster, units: [Measured], scene: Scene) -> CoverageRaster {
+        guard pixels.objects != nil else { return raster }
+        var unitOf: [String: Int32] = [:]
+        for unit in units {
+            for node in scene.subtree(of: unit.id) {
+                unitOf[node.raw] = unit.label
+            }
+        }
+        var labels = [Int32](repeating: -1, count: raster.width * raster.height)
+        for row in 0 ..< raster.height {
+            for column in 0 ..< raster.width {
+                let id = pixels.object(x: (Double(column) + 0.5) / Double(raster.width), y: (Double(row) + 0.5) / Double(raster.height))
+                labels[row * raster.width + column] = id.flatMap { unitOf[$0] } ?? -1
+            }
+        }
+        return CoverageRaster(width: raster.width, height: raster.height, labels: labels)
     }
 
     /// The labelled things of a scene: each root, a plain group's children instead of the group, a character whole.

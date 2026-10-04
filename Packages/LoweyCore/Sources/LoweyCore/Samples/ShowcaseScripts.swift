@@ -10,7 +10,7 @@ enum ShowcaseScripts {
     static let island = """
     {"do": "add", "shape": "cylinder", "name": "Sea", "at": [0, -0.3, 0], "size": [140, 0.3, 140], "color": "#3F7FA6", "onGround": false},
     {"do": "add", "shape": "cylinder", "name": "Beach", "at": [0, -0.05, 0], "size": [16, 0.3, 14], "color": "#E8D39B", "onGround": false},
-    {"do": "add", "shape": "cylinder", "name": "Grass", "at": [0, 0, 0], "size": [13, 0.35, 11], "color": "#2F5530", "onGround": false},
+    {"do": "add", "shape": "cylinder", "name": "Grass", "at": [0, 0, 0], "size": [13, 0.35, 11], "color": "#28492A", "onGround": false},
     {"do": "add", "asset": "kit.nature-tent-detailedclosed", "name": "Tent", "at": [2.4, 0.35, -1.6]},
     {"do": "add", "asset": "kit.nature-campfire-stones", "name": "Campfire", "relation": "in_front_of", "reference": "Tent", "offset": [0, 0, 0.6]},
     {"do": "add", "asset": "kit.nature-log", "name": "Log seat", "relation": "beside_left", "reference": "Campfire"},

@@ -30,7 +30,8 @@ public extension ExportSession {
         let bytes = try await frames.bytes(request, width: size.width, height: size.height)
         let renderer = frames.renderer
         let observer = ShotObserver(document: builder.document, library: library, rigs: builder.rigs()) { renderer.worldMesh(of: $0, staticOnly: true) }
-        let pixels = ObservePixels(width: size.width, height: size.height, bytes: bytes, bgra: true)
+        var pixels = ObservePixels(width: size.width, height: size.height, bytes: bytes, bgra: true)
+        pixels.objects = objectBuffer(width: size.width, height: size.height)
         let report = observer.observe(at: time, aspect: framing.aspect, subject: subject, pixels: pixels)
         let image = try FrameRenderer.image(bgra: bytes, width: size.width, height: size.height, transparent: false)
         var images: [ObserveView: CGImage] = [:]
@@ -65,6 +66,28 @@ public extension ExportSession {
 }
 
 extension ExportSession {
+    /// Which object the last frame drew at each pixel (the ID buffer, resampled to `width` × `height`).
+    func objectBuffer(width: Int, height: Int) -> [String?]? {
+        let renderer = frames.renderer
+        guard let (ids, idWidth, idHeight) = renderer.idBuffer(), let scene = renderer.lastScene, idWidth > 0, idHeight > 0 else { return nil }
+        var names: [UInt32: String?] = [:]
+        var result = [String?](repeating: nil, count: width * height)
+        for row in 0 ..< height {
+            let sourceRow = min(row * idHeight / height, idHeight - 1)
+            for column in 0 ..< width {
+                let packed = PackedID.object(ids[sourceRow * idWidth + min(column * idWidth / width, idWidth - 1)])
+                if let known = names[packed] {
+                    result[row * width + column] = known
+                } else {
+                    let name = scene.objectID(forPacked: packed)?.raw
+                    names[packed] = name
+                    result[row * width + column] = name
+                }
+            }
+        }
+        return result
+    }
+
     /// The subject black on white, from the ID buffer of the frame just drawn (exactly what was drawn).
     func silhouette(of subject: ObjectID) -> CGImage? {
         let renderer = frames.renderer

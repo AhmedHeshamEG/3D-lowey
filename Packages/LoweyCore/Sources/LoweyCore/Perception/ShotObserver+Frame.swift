@@ -105,7 +105,7 @@ extension ShotObserver {
         let squint = ValueImage(width: width, height: height, lightness: lightness).blurred(radius: 1)
         for index in objects.indices where objects[index].coverage > 0 {
             guard let unit = units.first(where: { $0.object.id == objects[index].id }) else { continue }
-            let read = Self.valueRead(squint, raster: raster, label: unit.label, box: unit.object.box)
+            let read = Self.valueRead(squint, raster: raster, label: unit.label, box: visibleBox(raster, label: unit.label) ?? unit.object.box)
             objects[index].lightness = read.lightness.map { ($0 * 10).rounded() / 10 }
             objects[index].contrast = read.contrast.map { ($0 * 10).rounded() / 10 }
         }

@@ -151,6 +151,16 @@ final class PerceptionTests: XCTestCase {
         XCTAssertEqual(palette.colors.first, RGBA(20.0 / 255, 20.0 / 255, 60.0 / 255).hex, "the background dominates")
         XCTAssertEqual(palette.colors.count, 2)
         XCTAssertGreaterThan(try XCTUnwrap(report.frame.light.subjectLightness), try XCTUnwrap(report.frame.light.worldLightness))
+        // With the renderer's object buffer the subject's pixels come from it: a mask shifted off the cube's box
+        // measures the background as the subject, so nothing stands out.
+        var buffered = ObservePixels(width: width, height: height, bytes: bytes)
+        buffered.objects = (0 ..< width * height).map { index in
+            let x = (Double(index % width) + 0.5) / Double(width)
+            let y = (Double(index / width) + 0.5) / Double(height)
+            return x < 0.2 && y < 0.2 ? "box" : nil
+        }
+        let shifted = observer.observe(at: 0, pixels: buffered)
+        XCTAssertLessThan(try XCTUnwrap(shifted.frame.contrast), 10, "measured where the buffer says the box is")
         // Flat grey: nothing reads.
         let grey = ObservePixels(width: 4, height: 4, bytes: [UInt8](repeating: 128, count: 64))
         let flat = observer.observe(at: 0, pixels: grey)

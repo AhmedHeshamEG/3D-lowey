@@ -20,6 +20,12 @@ public struct CoverageRaster: Sendable {
         nearness = [Double](repeating: -.infinity, count: self.width * self.height)
     }
 
+    /// A frame whose labels are already known (from the renderer's object buffer).
+    init(width: Int, height: Int, labels: [Int32]) {
+        self.init(width: width, height: height)
+        self.labels = labels
+    }
+
     /// An analysis frame of about `pixels` pixels at `aspect`.
     public init(aspect: Double, pixels: Int = 320 * 180) {
         let height = Int((Double(pixels) / max(aspect, 0.05)).squareRoot().rounded())
