@@ -3,6 +3,21 @@
 All notable changes to hmm-kit. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-10-04
+
+Built with Maquette 0.1.
+
+### Added
+- **HmmDocuments**: `HistoryJournal`, the history journal of CONTEXT §5. Every committed change is one JSON line in
+  a segment, group-committed within 50 ms on a serial queue; checkpoints (snapshot + undo history stored once per
+  step) keep opening to the checkpoint plus a short tail; the undo stack is restored on open, older steps load
+  lazily; a half-written last line is skipped, a damaged checkpoint falls back to the previous one; recorded ops
+  migrate across command schemas. `HistoryVersions` keeps named and automatic versions.
+- **HmmCommands**: `HistoryOp` and journaling on `CommandStack` (`recordsOps`, `takePendingOps`, `replay`,
+  `restore`, `prependUndo`, `isQuiet`); `HistoryEntry` has a stable `id` and is `Codable` when its command is.
+- **HmmDiagnostics**: `DeviceTier` (A/B/C from the GPU family and memory, `-device-tier` override) and `LoadMeter`
+  (the hidden load meter: frame-time and scene-cost pressure with hysteresis).
+
 ## [0.1.0] - 2026-10-01
 
 First release, created with 3D-lowey 2.0.

@@ -27,7 +27,7 @@ let package = Package(
     targets: [
         .target(name: "HmmDesign"),
         .target(name: "HmmCommands"),
-        .target(name: "HmmDocuments", dependencies: ["HmmDesign"]),
+        .target(name: "HmmDocuments", dependencies: ["HmmDesign", "HmmCommands"]),
         .target(name: "HmmTranscript"),
         // Async API runs on the caller's actor (an export loop on the main actor can await the encoder it owns).
         .target(name: "HmmMedia", swiftSettings: [.enableUpcomingFeature("NonisolatedNonsendingByDefault")]),
@@ -36,7 +36,7 @@ let package = Package(
         .target(name: "HmmDiagnostics", dependencies: ["HmmDesign"]),
         .target(name: "HmmStore"),
         .testTarget(name: "HmmCommandsTests", dependencies: ["HmmCommands"]),
-        .testTarget(name: "HmmDocumentsTests", dependencies: ["HmmDocuments"]),
+        .testTarget(name: "HmmDocumentsTests", dependencies: ["HmmDocuments", "HmmCommands"]),
         .testTarget(name: "HmmTranscriptTests", dependencies: ["HmmTranscript"]),
         .testTarget(name: "HmmBridgeTests", dependencies: ["HmmBridge"]),
         .testTarget(name: "HmmDiagnosticsTests", dependencies: ["HmmDiagnostics"]),
