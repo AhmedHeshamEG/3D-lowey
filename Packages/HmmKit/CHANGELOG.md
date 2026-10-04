@@ -10,7 +10,8 @@ Built with Maquette 0.2.
 ### Added
 - **HmmDesign**: resizable panels. `HmmPanel(sizing:)` shows a grip in the bottom corner away from the edge the panel
   hangs from; dragging it resizes the panel, double-tapping it restores the original size, and the size is
-  remembered per panel on the device (`HmmPanelSizing`, `HmmPanelSize`).
+  remembered per panel on the device (`HmmPanelSizing`, `HmmPanelSize`). Any view gets the same grip with
+  `hmmResizable(_:size:defaultWidth:…)` (an inspector placed by `HmmFloatingPlacement` sizes itself from it).
 - **HmmDesign**: `HmmFloatingPlacement`, where a floating panel goes beside what it's about (an inspector beside the
   selection): keeps its side while it fits, flips at the screen's edge, covers as little as it can when neither side
   fits, stays inside the bounds.

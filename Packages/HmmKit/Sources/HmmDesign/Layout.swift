@@ -105,8 +105,7 @@
     }
 
     /// A floating panel with a title row: opens from the button that called it, scrolls when Dynamic Type grows.
-    /// With `sizing`, a grip in its bottom corner resizes it (double-tap the grip for the original size) and the size
-    /// is remembered on this device. The grip sits on the side away from the screen edge the panel hangs from.
+    /// With `sizing`, a grip in its bottom corner resizes it and the size is remembered (`hmmResizable`).
     public struct HmmPanel<Content: View>: View {
         private let title: String
         private let width: Double
@@ -115,10 +114,7 @@
         private let gripOnTrailing: Bool
         private let content: Content
         @State private var size: HmmPanelSize?
-        @State private var dragStart: HmmPanelSize?
-        @State private var shownHeight: Double = 0
         @Environment(\.hmmTheme) private var theme
-        @Environment(\.layoutDirection) private var layoutDirection
 
         public init(_ title: String, width: Double = 340, sizing: HmmPanelSizing? = nil, gripOnTrailing: Bool = true,
                     close: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
@@ -131,6 +127,16 @@
         }
 
         public var body: some View {
+            if let sizing {
+                panel
+                    .hmmResizable(sizing, size: $size, defaultWidth: width, gripOnTrailing: gripOnTrailing, title: title)
+                    .hmmPanelBackground()
+            } else {
+                panel.frame(width: width).hmmPanelBackground()
+            }
+        }
+
+        private var panel: some View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text(LocalizedStringKey(title))
@@ -153,14 +159,47 @@
                 }
                 .scrollBounceBehavior(.basedOnSize)
             }
-            .frame(width: size?.width ?? width)
-            .frame(maxHeight: size?.height.map { CGFloat($0) })
-            .onGeometryChange(for: Double.self) { Double($0.size.height) } action: { shownHeight = $0 }
-            .overlay(alignment: gripOnTrailing ? .bottomTrailing : .bottomLeading) {
-                if sizing != nil { grip }
+        }
+    }
+
+    public extension View {
+        /// A resize grip in the bottom corner: drag it to resize, double-tap it for the original size. The size is
+        /// remembered per panel (`sizing`) and shared through `size` (nil = the original size). With `appliesFrame`
+        /// off, the caller sizes the view from `size` itself (a panel placed by `HmmFloatingPlacement`).
+        func hmmResizable(_ sizing: HmmPanelSizing, size: Binding<HmmPanelSize?>, defaultWidth: Double, gripOnTrailing: Bool = true,
+                          title: String, appliesFrame: Bool = true) -> some View {
+            modifier(HmmResizable(sizing: sizing, size: size, defaultWidth: defaultWidth, gripOnTrailing: gripOnTrailing, title: title,
+                                  appliesFrame: appliesFrame))
+        }
+    }
+
+    struct HmmResizable: ViewModifier {
+        let sizing: HmmPanelSizing
+        @Binding var size: HmmPanelSize?
+        let defaultWidth: Double
+        let gripOnTrailing: Bool
+        let title: String
+        let appliesFrame: Bool
+        @State private var dragStart: HmmPanelSize?
+        @State private var shownHeight: Double = 0
+        @Environment(\.layoutDirection) private var layoutDirection
+
+        func body(content: Content) -> some View {
+            framed(content)
+                .onGeometryChange(for: Double.self) { Double($0.size.height) } action: { shownHeight = $0 }
+                .overlay(alignment: gripOnTrailing ? .bottomTrailing : .bottomLeading) { grip }
+                .onAppear { if size == nil { size = sizing.load() } }
+        }
+
+        @ViewBuilder
+        private func framed(_ content: Content) -> some View {
+            if appliesFrame {
+                content
+                    .frame(width: size?.width ?? defaultWidth)
+                    .frame(maxHeight: size?.height.map { CGFloat($0) })
+            } else {
+                content
             }
-            .hmmPanelBackground()
-            .onAppear { size = sizing?.load() }
         }
 
         /// Whether the grip is on the right as the glass shows it (global drags are measured that way; the trailing
@@ -168,11 +207,10 @@
         private var gripOnRight: Bool { gripOnTrailing != (layoutDirection == .rightToLeft) }
 
         private func resetSize() {
-            sizing?.reset()
+            sizing.reset()
             withHmmAnimation(.standard) { size = nil }
         }
 
-        /// Drag to resize; double-tap for the original size.
         private var grip: some View {
             HmmResizeGrip(mirrored: !gripOnRight)
                 .frame(width: 44, height: 44)
@@ -180,15 +218,14 @@
                 .gesture(
                     DragGesture(minimumDistance: 1, coordinateSpace: .global)
                         .onChanged { value in
-                            guard let sizing else { return }
-                            let start = dragStart ?? size ?? HmmPanelSize(width: width)
+                            let start = dragStart ?? size ?? HmmPanelSize(width: defaultWidth)
                             if dragStart == nil { dragStart = start }
                             size = sizing.resized(start, shownHeight: shownHeight, dx: Double(value.translation.width),
                                                   dy: Double(value.translation.height), gripOnRight: gripOnRight)
                         }
                         .onEnded { _ in
                             dragStart = nil
-                            if let size { sizing?.save(size) }
+                            if let size { sizing.save(size) }
                         }
                 )
                 .onTapGesture(count: 2, perform: resetSize)
@@ -197,6 +234,7 @@
                 .accessibilityHint(Text("Double-tap for the original size"))
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction { resetSize() }
+                .accessibilityIdentifier("resize-\(sizing.id)")
         }
     }
 
