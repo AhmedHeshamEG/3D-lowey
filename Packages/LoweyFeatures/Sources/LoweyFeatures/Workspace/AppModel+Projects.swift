@@ -78,7 +78,7 @@ extension AppModel {
             let destination = try ProjectPackage.unpack(Data(contentsOf: url), into: projectStore)
             adoptAssets(of: destination)
         } catch {
-            show("Couldn't import: \(error)", kind: .error)
+            show("Couldn't import: \(String(describing: error))", kind: .error)
         }
     }
 

@@ -55,7 +55,7 @@ final class ObserveTests: XCTestCase {
         let (islandInfo, island) = try Showcase.island(kit: catalog.manifest.kit)
         let (enigmaInfo, enigma) = try Showcase.enigma(kit: catalog.manifest.kit)
         let shots = island.map { (islandInfo, $0) } + enigma.map { (enigmaInfo, $0) }
-        let subjects = ["Hesham", "Enigma", "Screen 5", "Robot", "Screen 5"]
+        let subjects = ["Hesham", "Army message", "Screen 5", "Robot", "Screen 5"]
         let times = [2.4, 4.4, 3, 3, 6.4]
         for (index, (info, scene)) in shots.enumerated() {
             let session = try TestDocuments.session(Document(project: info, scene: scene), catalog: catalog)

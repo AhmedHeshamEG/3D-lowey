@@ -82,7 +82,7 @@ final class ShowcaseTests: XCTestCase {
         let (islandInfo, island) = try Showcase.island(kit: kit)
         let (enigmaInfo, enigma) = try Showcase.enigma(kit: kit)
         // Each shot's subject, and a moment it's on screen.
-        let subjects = ["Hesham", "Enigma", "Screen 5", "Robot", "Screen 5"]
+        let subjects = ["Hesham", "Army message", "Screen 5", "Robot", "Screen 5"]
         let times = [2.4, 4.4, 3, 3, 6.4]
         let shots = island.map { (islandInfo, $0) } + enigma.map { (enigmaInfo, $0) }
         for (index, (info, scene)) in shots.enumerated() {

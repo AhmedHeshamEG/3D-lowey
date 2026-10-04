@@ -10,7 +10,7 @@ enum ShowcaseScripts {
     static let island = """
     {"do": "add", "shape": "cylinder", "name": "Sea", "at": [0, -0.3, 0], "size": [140, 0.3, 140], "color": "#3F7FA6", "onGround": false},
     {"do": "add", "shape": "cylinder", "name": "Beach", "at": [0, -0.05, 0], "size": [16, 0.3, 14], "color": "#E8D39B", "onGround": false},
-    {"do": "add", "shape": "cylinder", "name": "Grass", "at": [0, 0, 0], "size": [13, 0.35, 11], "color": "#4E7D3F", "onGround": false},
+    {"do": "add", "shape": "cylinder", "name": "Grass", "at": [0, 0, 0], "size": [13, 0.35, 11], "color": "#2F5530", "onGround": false},
     {"do": "add", "asset": "kit.nature-tent-detailedclosed", "name": "Tent", "at": [2.4, 0.35, -1.6]},
     {"do": "add", "asset": "kit.nature-campfire-stones", "name": "Campfire", "relation": "in_front_of", "reference": "Tent", "offset": [0, 0, 0.6]},
     {"do": "add", "asset": "kit.nature-log", "name": "Log seat", "relation": "beside_left", "reference": "Campfire"},
@@ -43,7 +43,7 @@ enum ShowcaseScripts {
         var actions = """
         {"do": "add", "shape": "cube", "name": "Study floor", "at": [\(ox), -0.02, 0], "size": [7, 0.02, 6], "color": "palette:3", "onGround": false},
         {"do": "add", "shape": "cube", "name": "Study wall", "at": [\(ox), 0, -1.4], "size": [7, 3.2, 0.1], "color": "palette:1"},
-        {"do": "add", "asset": "kit.office-desk", "name": "Desk", "at": [\(ox), 0, -0.55]},
+        {"do": "add", "asset": "kit.office-desk", "name": "Desk", "at": [\(ox), 0, -0.55], "color": "#4A3428"},
         {"do": "add", "asset": "kit.room-lamproundtable", "name": "Lamp", "relation": "on", "reference": "Desk", "offset": [-0.5, 0, -0.15]},
         {"do": "add", "asset": "kit.room-radio", "name": "Enigma", "relation": "on", "reference": "Desk", "offset": [0.25, 0, -0.1]},
         {"do": "scaleTo", "target": "Enigma", "meters": 0.26},
@@ -111,7 +111,7 @@ enum ShowcaseScripts {
         let ox = number(x)
         var actions = """
         {"do": "add", "shape": "cube", "name": "Cave floor", "at": [\(ox), -0.02, 0], "size": [14, 0.02, 14], "color": "palette:6", "onGround": false},
-        {"do": "add", "asset": "kit.lab-enemy-eyedrone", "name": "Robot", "at": [\(ox), 0, 0]},
+        {"do": "add", "asset": "kit.lab-enemy-eyedrone", "name": "Robot", "at": [\(ox), 0, 0], "color": "palette:2"},
         {"do": "transform", "target": "Robot", "position": [\(ox), 0.8, 0]},
         {"do": "set", "target": "Robot", "property": "accent", "value": true},
         {"do": "set", "target": "Robot", "property": "airborne", "value": true},
@@ -130,6 +130,7 @@ enum ShowcaseScripts {
         if animated {
             actions += """
             ,
+            {"do": "lighting", "recipe": "key-warm-world-cool", "subject": "Robot"},
             {"do": "preset", "target": "Robot", "preset": "float", "at": 0, "duration": 6, "strength": 0.6},
             {"do": "preset", "target": "Question", "preset": "popIn", "at": 1.2, "duration": 0.5},
             {"do": "flipbook", "fx": "sparkle", "anchor": "Question", "at": 1.4, "until": 5, "color": "#FFE7A8"},
