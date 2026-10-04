@@ -2,6 +2,51 @@
 
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first.
 
+## [2.0.0] — 2026-10-04 — Tools, the Kit, and a director that can see
+
+The remaster's second half. Everything in 2.0.0-beta.1, plus:
+
+- **Ink strokes.** Draw pressure ribbons with the Pencil on the guides, next to the solid shapes. Select strokes
+  (tap or loop), move, erase, smooth and change their width; strokes are objects, so they animate like anything else
+  and can write themselves on.
+- **Flipbooks.** Draw frame-by-frame over the shot, anchored to the camera or to an object, with onion skin, holds,
+  multiply / screen / add blending and several tracks. Five drawn effects ready to drop on a word: speed lines,
+  impact burst, sweat drop, sparkle, smear.
+- **Animation tools.** Per-object frame rate (ones to fours, keyable) — a character on twos, the camera on ones;
+  motion paths with dots you drag; 3D onion skin; a graph editor; smears on fast moves; a pose library with mirror; IK
+  handles; pick several clips with the Pencil lasso.
+- **One Cast.** Blobs, Puppets and Rigged characters in one panel under the same verbs. Blobs get a steady thick
+  outline, face decals that stay flat, Shadow Brush presets for designed shadow shapes, and ten built-in clips.
+- **Fly the camera** with on-screen sticks or a game controller, eased like a real operator, and record the flight in
+  Perform. Frame shot knows every shot type and composition, from either side of the subject.
+- **The Kit.** About 350 CC0 models from Kenney and Quaternius in nine Sets — Room & Desk, Office & Computers, Nature,
+  City & Street, Kitchen & Food, Lab & Science, Space, Props & Signs, Characters — at real size, knowing their surfaces
+  and which way they face. The Library opens on them; thumbnails are drawn in the Ink Look.
+- **Sound effects.** A track for them and a small synthesised foley set (whoosh, pop, impact, click, swell) whose hit
+  lands on the word you pick.
+- **New samples.** The Welcome island and the Enigma story rebuilt from the Kit: a desk at night in Ink, a room of
+  computers in Comic on twos, a cave robot in Sketch with one accent, and the narrated three-shot story. A new tour.
+- **Claude can see what it builds.** `observe` shows Claude the shot with numbered marks, top / front / side diagrams
+  with the camera drawn in, a squint (value) view and the subject's silhouette, and measures it: what's visible and how
+  much, what floats or intersects, where the subject sits, contrast, palette, light — graded against a critique rubric
+  with a fix for each failure. `contact_sheet` adds how things move. Running it on our own samples found a glTF bug
+  that drew whole Kit packs at a third of their size, a chair blocking a shot and a lamp that made a desk glow; all
+  fixed.
+- **MCP v2 and Scene Script v3.** The laptop tool is now `hmm-bridge`, and its `lowey` MCP server has sixteen intent
+  tools. Scripts speak relations instead of coordinates ("the lamp on the desk, the books beside it"), frame shots,
+  light them with six recipes and animate by intent (enter, react, walk to, look at, talk…); the solver grounds
+  everything and keeps things apart. Proposals on the iPad show a preview picture. v2 scripts still work.
+- **A new Claude skill** built around a director's loop — plan, build, look, critique, fix — with modules on sets,
+  camera, light, animation, characters and style, a tool reference generated from the server, and twelve eval briefs
+  with a harness that scores Claude's work from the app's own measurements.
+- **Italian and Arabic.** The whole interface in English, Italian and Arabic, right to left in Arabic.
+- **Accessibility.** VoiceOver reaches every control, the chrome follows Dynamic Type, and Reduce Motion, Reduce
+  Transparency and Increase Contrast are respected.
+- **Windows.** A Monitor window shows the shot live, as it will export — beside the editor in Stage Manager or on an
+  external display (Actions ▸ Monitor, ⌥⌘N). The app reopens where you left off.
+- **App Store ready.** A new icon, privacy manifests, App Store screenshots made by the UI tests, and a TestFlight
+  upload in the release workflow. The App Store build ships without the laptop bridge until 2.1.
+
 ## [2.0.0-beta.1] — 2026-10-03 — A new engine, Looks, and a layout without modes
 
 The remaster's first half: everything 1.4.3 did, on a new renderer, in a new layout. Projects from 1.x open as they

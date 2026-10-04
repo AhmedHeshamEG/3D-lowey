@@ -1,30 +1,18 @@
 # Backlog
 
-What's known and not done yet, so nothing lives only in someone's head. The phase 2 scope is in
-[SPEC.md](SPEC.md#planned-for-20); this list is everything else, plus the phase 2 work in the order it's planned.
+What's known and not done yet, so nothing lives only in someone's head. What 2.0 is: [SPEC.md](SPEC.md).
 
-## Left from phase 1
+## Left from the remaster
 
 - [ ] The device-only checklist in the "Remaster 2.0 — Phase 1" PR (#11).
+- [ ] The device-only checklist in the "Remaster 2.0 — Phase 2" PR.
+- [ ] Run the skill's evals against the iPad (`python skills/lowey/evals/run_evals.py`) and record the results and
+      Hesham's verdicts in `skills/lowey/evals/runs/`. CI can't: it has no paired iPad and no API key. (R50)
 
-## Phase 2 (toward 2.0)
+## Planned for 2.1
 
-1. Draw: ink strokes (pressure ribbons on guides) next to the solid shapes; stroke editing (select, move, erase,
-   smooth, width); strokes animatable like any object.
-2. Animation: flipbook tracks on the stage, per-object frame rate up to fours, motion paths with editable keys, 3D
-   onion skin, the graph editor, smears, a pose library with mirror, IK handles, multi-select everywhere.
-3. One Cast panel for Blob, Puppet and Rigged; blob silhouettes (inverted hull), face decals with inner lines, Shadow
-   Brush presets; blob measurements generated from `assets/avatar/trace.json`; built-in clips on all three types.
-4. Fly: the on-screen stick or a game controller flies the camera while Perform records; the full shot-type and
-   composition vocabulary in Frame shot.
-5. The Kit: `Tools/fetch-kit.py`, about 300 curated CC0 assets with metadata, Sets in the library, `LICENSES.md`.
-6. SFX track with a small CC0 foley set; attach-to-word for sounds.
-7. Samples rebuilt in the Ink, Comic and Sketch Looks with kit assets; the tour rewritten for the new layout.
-8. Perception (`observe`, `contact_sheet`) through HmmPerception, MCP v2 with 16 intent tools, Scene Script v3
-   (relations), the rewritten `lowey` skill with evals.
-9. English, Italian and Arabic (right-to-left), an accessibility pass, state restoration, Stage Manager windows.
-10. App Store readiness: icon, screenshots from UI tests, privacy manifest, StoreKit configuration, a TestFlight step
-    in the release workflow that runs only when the App Store Connect secrets exist.
+- The laptop bridge in the App Store build, after App Review of its local network use. (R52)
+- A studio bundle with the other hmm. apps; the StoreKit configuration is ready for testing it. (R52)
 
 ## Known limitations
 
@@ -42,6 +30,14 @@ What's known and not done yet, so nothing lives only in someone's head. The phas
 - **Live Activities depend on the system.** The export's Live Activity shows where the system displays them; the
   finished-export notification always arrives. (R19)
 - **Only the sun casts shadows.** Point and spot lights light but don't shadow. (R6)
+- **Perception's raster is about 320 × 180.** Coverage and visibility are exact at that size; subjects under about 3%
+  of the frame aren't judged on their silhouette, and skinned characters are measured by their box. (R48)
+- **Anticipation isn't measured.** The Motion line checks arcs, holds, easing and words; anticipation before big moves
+  is in the critique module's checklist for the model to look for. (R48)
+- **Some messages stay English.** Plurals built inside a sentence ("model\(n == 1 ? "" : "s")") aren't in the String
+  Catalog; everything else is translated. (R51)
+- **Placement is by boxes and Kit surfaces.** The relation solver knows a model's box, its top surfaces and its front;
+  it doesn't fit concave shapes (a chair can't be slid under a desk by relation; use `offset`). (R46)
 
 ## Device checks for every release
 

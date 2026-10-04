@@ -115,18 +115,32 @@ the Live Activity through `ExportProgressReporting`, and a notification says whe
 
 ```mermaid
 sequenceDiagram
-    participant L as Laptop (lowey-link / lowey-mcp)
+    participant L as Laptop (hmm-bridge)
     participant B as HmmBridge on the iPad
     participant U as The person at the iPad
     U->>B: Bridge on, "Pair a laptop" (shows a one-time code)
     L->>B: Bonjour _hmm._tcp, GET /v1/hello
     L->>B: POST /v1/pair {code, client}
     B-->>L: token (kept in the iPad's Keychain, listed, revocable)
-    L->>B: POST /v1/script (Authorization: Bearer token)
-    B-->>U: proposal banner with a preview
+    L->>B: POST /v2/build {actions} (Authorization: Bearer token)
+    B-->>U: proposal banner with a preview picture
     U->>B: Apply (one undo step)
-    B-->>L: what changed
+    B-->>L: what changed + an observe of the result
 ```
+
+MCP v2 is sixteen tools on the laptop over a handful of `/v2` routes: `status`, `project`, `transcript`, `actions`,
+`assets` (+ `thumbnail`), `build`, `observe`, `contact_sheet`, `commit`, `media`. Every scene change is a Scene Script
+v3 batch compiled by LoweyCore's `ScriptCompiler` (the relation solver, the camera solver, lighting recipes, intents)
+into one `EditCommand`. The v1 routes stay for 1.x laptops.
+
+## Perception
+
+`ShotObserver` (LoweyCore, pure Swift) measures a shot: it evaluates the scene at a time, projects every labelled
+object through the shot camera into a small depth-tested CPU raster (coverage, visibility, frame cuts), checks
+grounding and intersections against the Kit's metadata, reads the frame (thirds, headroom, tangents, clutter) and,
+given the rendered pixels, contrast, silhouette, palette and light; `ShotRubric` grades it. `ExportSession.observe`
+(Engine) renders the frame like the export, hands the drawn meshes and pixels to the observer and draws the views
+(set-of-marks, orthographic diagrams with the camera's wedge, value, silhouette from the ID buffer).
 
 Unpaired requests get 401, requests from outside the local network 403, a pairing attempt while no code is showing
 409. The bridge is off by default and switched off entirely in the App Store configuration.
@@ -137,14 +151,16 @@ Unpaired requests get 401, requests from outside the local network 403, a pairin
 flowchart LR
     Push[push / PR] --> Lint[SwiftLint --strict<br/>SwiftFormat]
     Push --> CoreT[LoweyCore tests<br/>Linux + coverage]
-    Push --> Tools[Laptop tools<br/>pytest]
+    Push --> Tools[Laptop tools<br/>pytest + generated files]
     Push --> EngineT[LoweyEngine<br/>simulator render tests]
     Push --> FeatT[LoweyFeatures<br/>boundaries + tests]
     Lint & CoreT & Tools & EngineT & FeatT --> AppT[App build + UI smoke tests]
+    AppT --> Shots[App Store screenshots<br/>iPad 13" + iPhone 6.9"]
     AppT --> Green{CI green}
     Green -->|main| IPA[Release: Lowey.ipa artifact]
     Tag[tag v*] --> Gate{commit passed CI?}
     Gate -->|yes| Rel[GitHub Release + .ipa]
+    Gate -->|yes, ASC secrets set| TF[TestFlight: App Store build]
 ```
 
 Golden images are recorded on the CI simulator (`TEST_RUNNER_GOLDEN_OUTPUT`), reviewed and committed under

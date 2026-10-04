@@ -4,10 +4,10 @@
 hand-drawn-feeling 3D animation (sets, characters, cameras, voice) and exports it as video. The measure of success
 is the time from an idea to an animated shot on screen.
 
-2.0 ships in two steps. **2.0 beta** (this branch) rebuilds the engine, the Look system and the layout and carries
-every 1.x feature over. **2.0** adds the drawing and animation tools, the bundled kit, one Cast system and the
-AI tools listed under *Planned*. What happened to each 1.x feature is in [MIGRATION.md](MIGRATION.md); why things
-are the way they are is in [DECISIONS.md](DECISIONS.md).
+2.0 shipped in two steps: **2.0 beta** rebuilt the engine, the Look system and the layout and carried every 1.x
+feature over; **2.0** added the drawing and animation tools, the Kit, one Cast system, perception and MCP v2, three
+languages and App Store readiness. What happened to each 1.x feature is in [MIGRATION.md](MIGRATION.md); why things
+are the way they are is in [DECISIONS.md](DECISIONS.md); what's next is in [BACKLOG.md](BACKLOG.md).
 
 ## 1. What changes from 1.x
 
@@ -68,8 +68,12 @@ Comic, Collage, Old film, plus sliders) and **Finish ▸ Outline** work over eve
 
 - **Primitives** (cube, sphere, cylinder, cone, plane, torus, ramp) with a small **bevel** by default, pivoted at the
   centre of their base.
-- **Draw in 3D**: solid shapes (tube, ribbon, extrude, lathe) on guides (facing me, ground, front, side, box,
-  cylinder, sphere, on an object), mirror, Pencil-only, QuickShape.
+- **Ink strokes**: pressure ribbons drawn with the Pencil on the guides; select (tap or loop), move, erase, smooth and
+  change width; strokes are objects, animatable and able to write themselves on.
+- **Solid shapes**: tube, ribbon, extrude, lathe on guides (facing me, ground, front, side, box, cylinder, sphere, on
+  an object), mirror, Pencil-only, QuickShape.
+- **The Kit**: about 350 CC0 models (Kenney, Quaternius) in nine Sets, at real size, with the surfaces things stand on
+  and the way they face; the Library opens on them (`Tools/fetch-kit.py` builds it, licences checked per pack).
 - **Shadow Brush**: paint where shadows fall on any surface with the Pencil (push the shadow in, pull it out).
 - Array, scatter, group / ungroup, align / distribute, swap a blockout for a model, save to the library, linked
   prefabs.
@@ -77,11 +81,15 @@ Comic, Collage, Old film, plus sliders) and **Finish ▸ Outline** work over eve
 
 ## 5. Characters
 
-- **Blob** (the house character, from a traced drawing): hats, hair, accessories, props, marks, a likeness table for
-  famous people, 12 expressions, springs, squash and stretch.
+One **Cast** panel and one set of verbs for every kind of character:
+
+- **Blob** (the house character, from a traced drawing; its measurements are generated from it): hats, hair,
+  accessories, props, marks, a likeness table for famous people, 12 expressions, springs, squash and stretch, a stable
+  inverted-hull outline, flat face decals, Shadow Brush presets.
 - **Puppet**: a humanoid of rigid parts with a builder.
 - **Rigged**: imported glTF skins with rig classification, retargeting, IK and a clip mixer.
-- Built-in clips: Idle, Walk, Run, Talk, Wave, Point, Type, Nod, Shrug, Celebrate.
+- Built-in clips on all three: Idle, Walk, Run, Talk, Wave, Point, Type, Nod, Shrug, Celebrate. A pose library with
+  mirror; IK handles (two-bone limbs, blob hands).
 - Lip sync from word timings (English dictionary plus rules, Arabic, Italian), face capture with the front camera or
   an iPhone companion, rest pose, hands through body tracking.
 
@@ -91,7 +99,13 @@ Three timeline modes, named as in Procreate Dreams: **Compose** (move animation 
 **Perform** (record direct manipulation as keys, with filtering and Pencil roll), **Keyframe** (explicit keys, easing,
 the curve editor, auto-key). Also: 15 presets with order, delay and randomness; behaviours (follow a path, look at,
 orbit, wobble, wind sway, float, spin; bake to keys); fall, explode, flock; JavaScript scripts; markers; loops;
-copy / paste / mirror / reverse / faster / slower; track groups; per-object stepping (ones, twos, threes).
+copy / paste / mirror / reverse / faster / slower; track groups; per-object frame rate (ones to fours, keyable);
+motion paths with draggable key dots; 3D onion skin; a graph editor; smears on fast moves; multi-select of clips with
+the Pencil lasso.
+
+**Flipbooks**: frame-by-frame drawing over the shot, anchored to the camera or an object, with onion skin, holds,
+blend modes (normal, multiply, screen, add) and several tracks; drawn FX (speed lines, impact burst, sweat drop,
+sparkle, smear) placed on a word.
 
 ## 7. Camera
 
@@ -100,13 +114,16 @@ match cut, 9:16 framing, the iPad as a camera (ARKit), camera Perform.
 
 - **Director view**: look through the shot camera with framing guides (thirds, safe areas, the delivery shape); drag
   to aim, two fingers to move, pinch to dolly, twist to roll — all keyed.
-- **Frame shot**: pick a subject, a shot size and a composition; the camera is placed and aimed.
+- **Frame shot**: pick a subject, a shot type (extreme wide … extreme close-up, insert, over-the-shoulder, two-shot),
+  a composition (thirds, centre, low or high angle) and a side; the camera is placed and aimed.
+- **Fly**: fly the camera with on-screen sticks or a game controller, eased, and record the flight in Perform.
 
 ## 8. Voice and sound
 
 Record a voiceover over the animation, import audio, transcription on the device (Apple's SpeechAnalyzer through
 hmm-kit), the Words lane with snapping, the Transcript sheet (jump, pick a phrase → animate, camera move, cut,
-marker; fix words), a placeholder voice, lip sync. Attaching things to a spoken word is a first-class action.
+marker; fix words), a placeholder voice, lip sync. Attaching things to a spoken word is a first-class action. A
+sound-effects track with a synthesised CC0 foley set (whoosh, pop, impact, click, swell) whose hits land on words.
 
 ## 9. Layout
 
@@ -115,7 +132,7 @@ marker; fix words), a placeholder voice, lip sync. Attaching things to a spoken 
 - **Stage** over **Timeline**, with a resizable divider; the timeline collapses to a transport bar.
 - **Top-left cluster**: Theater · Actions (photos and video, sound, voiceover, export, the project file, scripts, the AI & laptop bridge, gestures, the tour, diagnostics, settings) · Look ·
   Select (tap, lasso, select similar).
-- **Top-right cluster**: Build · Draw (solid shapes, Shadow Brush) · Transform · Cast · Library.
+- **Top-right cluster**: Build · Draw (ink, solid shapes, flipbooks, Shadow Brush) · Transform · Cast · Library.
 - **Sidebar**: two sliders that follow the context (drawing, Shadow Brush, Perform, otherwise snapping and navigation
   speed), Pick, undo, redo; it can sit on either side.
 - **Inspector**: slides in from the right while something is selected.
@@ -124,6 +141,11 @@ marker; fix words), a placeholder voice, lip sync. Attaching things to a spoken 
   Pencil hover previews, Pencil Pro squeeze plays and pauses, barrel roll during Perform.
 - **Keyboard**: ⌘1–5 open Select, Build, Draw, Transform and Look; a full menu bar.
 - Amber accent `#FFB847`; dark by default, light supported.
+- **Languages**: English, Italian, Arabic (right to left; the timeline keeps time left to right).
+- **Accessibility**: VoiceOver on every control, Dynamic Type in the chrome (panels scroll), Reduce Motion, Reduce
+  Transparency and Increase Contrast.
+- **Windows**: one window edits; a **Monitor** window shows the shot live as it exports (Stage Manager, external
+  displays). The app reopens the project, scene, playhead and panel it was left in.
 
 ## 10. Documents and export
 
@@ -146,27 +168,20 @@ marker; fix words), a placeholder voice, lip sync. Attaching things to a spoken 
 
 ## 12. AI and the laptop
 
-In 2.0 beta: Scene Scripts (pasted or sent from the laptop) compile into one undo step and arrive as a proposal to
-apply or decline; the laptop tools (`lowey-mcp` for MCP clients, `lowey-link` for files, renders, media and Manim)
-talk to the iPad over the paired bridge.
-
-## Planned for 2.0
-
-- **Drawing and animation**: ink strokes (pressure ribbons on guides), flipbook tracks on the stage (anchored to the
-  camera or an object, onion skin, holds, blend modes), per-object frame rate up to fours, motion paths with editable
-  keys, 3D onion skin, a graph editor, smears, a pose library, IK handles, multi-select everywhere.
-- **One Cast panel** for Blob, Puppet and Rigged characters; inverted-hull silhouettes and face decals on blobs; blob
-  measurements generated from the traced drawing.
-- **Fly**: fly the camera with the on-screen stick or a game controller while Perform records it.
-- **The Kit**: about 300 curated CC0 assets (Kenney, Quaternius) with real sizes, top surfaces and front directions,
-  in Sets; the library opens on them.
-- **SFX** track with a small foley set.
-- **Perception and MCP v2**: the app looks at its own shots (set-of-marks images and a shot report: coverage,
-  grounding, intersections, framing, value contrast, clutter) and contact sheets with motion stats; 16 intent-level
-  MCP tools; Scene Script v3 that places things by relation (on, beside, in front of, around…) using kit metadata; a
-  rewritten `lowey` skill with a director loop, a critique rubric and evals.
-- **Polish**: English, Italian and Arabic (right-to-left), an accessibility pass, state restoration, Stage Manager
-  windows, App Store readiness.
+- **hmm-bridge** on the laptop: the `lowey` MCP server with sixteen intent tools (status, read_project, find_assets,
+  build, frame_shot, light, set_look, animate, camera_move, add_overlay, flipbook, add_media, render_manim, observe,
+  contact_sheet, commit) and a CLI for pairing, files, renders, media and Manim. The bridge is off until it's turned
+  on, local-network only, paired with one-time codes; App Store builds ship without it until 2.1.
+- **Scene Script v3**: relations instead of coordinates (on, beside, in front of, behind, above, under, inside,
+  facing, around, row, grid, scatter, stack), real sizes, palette slots, the camera solver, six lighting recipes,
+  animation by intent. The solver grounds what it places and keeps things apart. One script = one Proposal (with a
+  preview picture) = one undo step. Schema: `schemas/scene-script.v3.schema.json`.
+- **Perception**: `observe` returns the shot with set-of-marks, top / front / side diagrams, a value view and the
+  subject's silhouette, plus a ShotReport (per object: coverage, visibility, grounding, intersections, frame cuts,
+  facing; per frame: subject on the thirds, headroom, contrast, clutter, tangents, palette, light) graded against the
+  critique rubric. `contact_sheet` returns frames with notes and motion stats (arcs, holds, speed, words).
+- **The `lowey` skill**: a director loop (plan → build → observe → critique → fix), modules, style notes, a generated
+  tool reference, lessons, and twelve eval briefs scored from the app's measurements.
 
 ## Device-only checks
 
