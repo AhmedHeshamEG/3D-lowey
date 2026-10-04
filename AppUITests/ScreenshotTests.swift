@@ -29,9 +29,10 @@ final class ScreenshotTests: XCTestCase {
         target.tap()
     }
 
-    /// Lets the renderer settle (models load, the playhead lands) before a picture.
+    /// Lets the renderer settle (models load, the playhead lands) before a picture. A plain wait: querying the UI
+    /// tree while thumbnails render can itself time out.
     private func settle(_ seconds: TimeInterval = 2) {
-        _ = element("never-there").waitForExistence(timeout: seconds)
+        _ = XCTWaiter.wait(for: [XCTestExpectation(description: "settle")], timeout: seconds)
     }
 
     func testIPadScreenshots() throws {
