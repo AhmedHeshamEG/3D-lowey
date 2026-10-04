@@ -215,3 +215,31 @@ private final class LockedBox<Value>: @unchecked Sendable {
         set { lock.withLock { stored = newValue } }
     }
 }
+
+final class HistoryCursorTests: XCTestCase {
+    func testTheCursorWalksTheHistoryBothWays() throws {
+        let store = try ProjectStore(root: temporaryDirectory())
+        let (_, document) = try store.createProject(name: "Cursor")
+        var session = EditSession(document: document)
+        var factory = ObjectFactory(ids: .sequential("c"))
+        var ops = Operations(ids: .sequential("o"))
+        var states = [session.document]
+        for _ in 0 ..< 4 {
+            try session.perform(ops.add(factory.primitive(.cube)))
+            states.append(session.document)
+        }
+        var cursor = HistoryCursor(document: session.document, steps: session.undoStack)
+        XCTAssertTrue(cursor.isNow)
+        XCTAssertEqual(cursor.label(at: 4), session.undoStack[3].label)
+        XCTAssertNil(cursor.label(at: 0))
+        let changes = try cursor.move(to: 1)
+        XCTAssertEqual(cursor.document, states[1])
+        XCTAssertEqual(changes.objects.count, 3)
+        try cursor.move(to: 3)
+        XCTAssertEqual(cursor.document, states[3])
+        try cursor.move(to: -5)
+        XCTAssertEqual(cursor.document, states[0])
+        try cursor.move(to: 99)
+        XCTAssertEqual(cursor.document, states[4])
+    }
+}

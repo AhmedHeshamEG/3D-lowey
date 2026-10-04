@@ -38,6 +38,9 @@ struct EditorScreen: View {
         .overlay(alignment: .bottom) {
             if let proposal = editor.proposal { ProposalBanner(editor: editor, proposal: proposal) }
         }
+        .overlay(alignment: .bottom) {
+            if let state = editor.historyScrub { HistoryScrubberBar(editor: editor, state: state) }
+        }
         .modifier(EditorSheets(editor: editor))
         .background(EditorKeyboardShortcuts(editor: editor))
         .onPencilSqueeze { phase in

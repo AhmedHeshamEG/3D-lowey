@@ -209,6 +209,22 @@
         }
       }
     },
+    "%lld of %lld · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld di %lld · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld من %lld · %@"
+          }
+        }
+      }
+    },
     "%lld pt hmm.": {
       "localizations": {
         "it": {
@@ -333,54 +349,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "نص ثلاثي الأبعاد"
-          }
-        }
-      }
-    },
-    "Maquette": {
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maquette"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maquette"
-          }
-        }
-      }
-    },
-    "Maquette edits in one window at a time. Use this one instead, or make it a monitor of the shot.": {
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maquette modifica in una finestra alla volta. Usa questa al suo posto, o trasformala in un monitor dell'inquadratura."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يحرّر Maquette في نافذة واحدة في كل مرة. استخدم هذه بدلًا منها، أو اجعلها شاشة لعرض اللقطة."
-          }
-        }
-      }
-    },
-    "Maquette quit unexpectedly last time. Your work was autosaved.": {
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'ultima volta Maquette si è chiuso inaspettatamente. Il tuo lavoro è stato salvato automaticamente."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أُغلق Maquette بشكل غير متوقع في المرة الماضية. تم حفظ عملك تلقائيًا."
           }
         }
       }
@@ -913,6 +881,22 @@
         }
       }
     },
+    "An hour of work, %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un'ora di lavoro, %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ساعة من العمل، %@"
+          }
+        }
+      }
+    },
     "and %lld more": {
       "localizations": {
         "it": {
@@ -1297,6 +1281,22 @@
         }
       }
     },
+    "Back %lld steps. Redo goes forward again until you change something.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indietro di %lld passi. Ripeti va di nuovo avanti finché non cambi qualcosa."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجعت %lld خطوات. «إعادة» تتقدّم من جديد ما لم تغيّر شيئًا."
+          }
+        }
+      }
+    },
     "Back 10 seconds": {
       "localizations": {
         "it": {
@@ -1341,6 +1341,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "الطبقات"
+          }
+        }
+      }
+    },
+    "Before going back %lld steps": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima di tornare indietro di %lld passi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل الرجوع %lld خطوات"
+          }
+        }
+      }
+    },
+    "Before restoring “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima di ripristinare “%@”"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل استعادة “%@”"
           }
         }
       }
@@ -2657,6 +2689,22 @@
         }
       }
     },
+    "Couldn't open that version: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile aprire quella versione: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر فتح تلك النسخة: %@"
+          }
+        }
+      }
+    },
     "Couldn't open the project: %@": {
       "localizations": {
         "it": {
@@ -2705,6 +2753,22 @@
         }
       }
     },
+    "Couldn't record your last change: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile registrare la tua ultima modifica: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تسجيل آخر تعديل لك: %@"
+          }
+        }
+      }
+    },
     "Couldn't record: %@": {
       "localizations": {
         "it": {
@@ -2721,6 +2785,22 @@
         }
       }
     },
+    "Couldn't save the version: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare la versione: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ النسخة: %@"
+          }
+        }
+      }
+    },
     "Couldn't save to Photos: %@": {
       "localizations": {
         "it": {
@@ -2733,6 +2813,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر الحفظ في الصور: %@"
+          }
+        }
+      }
+    },
+    "Couldn't save: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الحفظ: %@"
           }
         }
       }
@@ -5377,6 +5473,22 @@
         }
       }
     },
+    "Go back here": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Torna qui"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارجع إلى هنا"
+          }
+        }
+      }
+    },
     "Goes off at %@": {
       "localizations": {
         "it": {
@@ -5693,6 +5805,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إبراز"
+          }
+        }
+      }
+    },
+    "History": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cronologia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السجلّ"
           }
         }
       }
@@ -6945,6 +7073,54 @@
         }
       }
     },
+    "Maquette": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maquette"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maquette"
+          }
+        }
+      }
+    },
+    "Maquette edits in one window at a time. Use this one instead, or make it a monitor of the shot.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maquette modifica in una finestra alla volta. Usa questa al suo posto, o trasformala in un monitor dell'inquadratura."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحرّر Maquette في نافذة واحدة في كل مرة. استخدم هذه بدلًا منها، أو اجعلها شاشة لعرض اللقطة."
+          }
+        }
+      }
+    },
+    "Maquette quit unexpectedly last time. Your work was autosaved.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ultima volta Maquette si è chiuso inaspettatamente. Il tuo lavoro è stato salvato automaticamente."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُغلق Maquette بشكل غير متوقع في المرة الماضية. تم حفظ عملك تلقائيًا."
+          }
+        }
+      }
+    },
     "Marker": {
       "localizations": {
         "it": {
@@ -7101,6 +7277,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "النماذج"
+          }
+        }
+      }
+    },
+    "Moment in the history": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Momento della cronologia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لحظة في السجلّ"
           }
         }
       }
@@ -7457,6 +7649,22 @@
         }
       }
     },
+    "Name this version": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dai un nome a questa versione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سمِّ هذه النسخة"
+          }
+        }
+      }
+    },
     "New": {
       "localizations": {
         "it": {
@@ -7681,6 +7889,22 @@
         }
       }
     },
+    "No versions yet": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuna versione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد نسخ بعد"
+          }
+        }
+      }
+    },
     "None": {
       "localizations": {
         "it": {
@@ -7821,6 +8045,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُؤدَّ شيء. المس وحرّك أثناء التشغيل"
+          }
+        }
+      }
+    },
+    "Now · %lld steps back are kept": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora · si conservano %lld passi indietro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الآن · يُحتفَظ بـ %lld خطوة للخلف"
           }
         }
       }
@@ -8285,6 +8525,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح النص المكتوب"
+          }
+        }
+      }
+    },
+    "Opened %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperto il %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فُتح في %@"
           }
         }
       }
@@ -9709,6 +9965,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "استعادة"
+          }
+        }
+      }
+    },
+    "Restore version": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristina versione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استعادة نسخة"
+          }
+        }
+      }
+    },
+    "Restored “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristinata “%@”"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت استعادة “%@”"
           }
         }
       }
@@ -12705,6 +12993,22 @@
         }
       }
     },
+    "The start of the kept history": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'inizio della cronologia conservata"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بداية السجلّ المحفوظ"
+          }
+        }
+      }
+    },
     "The subject isn't in the previous shot": {
       "localizations": {
         "it": {
@@ -12733,6 +13037,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الموضوع دافئ ومضاء والعالم بارد وأعتم: تذهب العين إلى الدافئ."
+          }
+        }
+      }
+    },
+    "The very last change couldn't be read back. Everything before it is here.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ultimissima modifica non si è potuta rileggere. Tutto ciò che la precede è qui."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت قراءة آخر تعديل فقط. كل ما قبله موجود هنا."
           }
         }
       }
@@ -13677,6 +13997,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإصدار"
+          }
+        }
+      }
+    },
+    "Version of %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione del %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخة %@"
+          }
+        }
+      }
+    },
+    "Versions": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versioni"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخ"
           }
         }
       }

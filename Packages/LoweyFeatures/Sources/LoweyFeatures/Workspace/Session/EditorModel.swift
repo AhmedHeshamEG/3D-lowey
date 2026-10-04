@@ -26,7 +26,7 @@ final class EditorModel {
     }
 
     /// The document with the scene as shown.
-    var displayDocument: Document { Document(project: session.document.project, scene: displayed.scene) }
+    var displayDocument: Document { Document(project: (historyPreview ?? session.document).project, scene: displayed.scene) }
 
     var selection: [ObjectID] = [] {
         didSet {
@@ -154,6 +154,8 @@ final class EditorModel {
     let faceMonitor = FaceMonitor()
     let performance = PerformanceMonitor()
     private(set) var displayRevision = 0
+    /// The history scrubber, while it's open (`EditorModel+HistoryScrubber`).
+    var historyScrub: HistoryScrubState?
     var lastSaved: Date?
     var isSaving = false
 
@@ -204,6 +206,9 @@ final class EditorModel {
     @ObservationIgnored var idleCheckpointTask: Task<Void, Never>?
     /// When the current stretch of work began (an automatic version every hour of it).
     @ObservationIgnored var workStarted = Date()
+    @ObservationIgnored var historyCursor: HistoryCursor?
+    /// The earlier moment the stage shows while the scrubber is dragged back (nil = now).
+    @ObservationIgnored var historyPreview: Document?
     @ObservationIgnored var viewpointSaveTask: Task<Void, Never>?
     @ObservationIgnored let logger = Logger(subsystem: AppIdentity.subsystem, category: "editor")
 
@@ -247,6 +252,7 @@ final class EditorModel {
     @discardableResult
     func perform(_ command: EditCommand?, coalesceKey: String? = nil) -> Bool {
         guard let command else { return false }
+        settleHistoryBeforeEditing()
         do {
             let changes = try session.perform(keyed(command), coalesceKey: coalesceKey)
             if AppIdentity.isUITesting { trail("cmd=\(command.label)") }
@@ -273,6 +279,7 @@ final class EditorModel {
     var redoTitle: String { session.redoTitle }
 
     func undo() {
+        if historyScrub != nil { closeHistory() }
         do {
             guard let changes = try session.undo() else { return }
             loadOlderUndoIfNeeded()
@@ -284,6 +291,7 @@ final class EditorModel {
     }
 
     func redo() {
+        if historyScrub != nil { closeHistory() }
         do {
             guard let changes = try session.redo() else { return }
             refreshDisplay(changes)

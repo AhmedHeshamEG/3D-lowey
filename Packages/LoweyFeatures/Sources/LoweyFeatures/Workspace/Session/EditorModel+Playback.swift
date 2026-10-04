@@ -35,7 +35,7 @@ extension EditorModel {
 
     /// Evaluates the timeline at the playhead and redraws the stage.
     func refreshDisplay(_ changes: ChangeSet? = nil) {
-        var animated = Animator.evaluate(session.document, at: time, rigs: rigs(), overrides: propertyOverride)
+        var animated = Animator.evaluate(historyPreview ?? session.document, at: time, rigs: rigs(), overrides: propertyOverride)
         applyPerformOverrides(&animated)
         displayed = animated
         previousAnimated = animated.animated
