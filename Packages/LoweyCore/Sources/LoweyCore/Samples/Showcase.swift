@@ -20,7 +20,7 @@ public enum Showcase {
         var look = MoodPresets.look(for: .goldenHour)
         look.presetID = LookPreset.ink.id
         look.ground.visible = false
-        look.fog = Fog(enabled: true, color: RGBA.hex("#F6C48E"), distance: 90)
+        look.fog = Fog(enabled: true, color: RGBA.hex("#C98A52"), distance: 90)
         let info = ProjectInfo(id: ids.isSequential ? "island-project" : .make(), name: islandName, look: look)
         var scene = Scene(id: ids.isSequential ? "island-scene" : .make(), name: "Hello")
         // The scene keeps its own copy of the Look, so the script's lighting recipe lands on it.

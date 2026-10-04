@@ -168,6 +168,26 @@ final class PerceptionTests: XCTestCase {
         XCTAssertEqual(flat.checks.first { $0.name == "Read" }?.result, .fail)
     }
 
+    /// A glow (or ink line) hugging the outline is stepped over: the subject is compared with what lies past it.
+    func testSeparationLooksPastAGlowOnTheEdge() {
+        var raster = CoverageRaster(width: 64, height: 36)
+        let camera = ObserveCamera(position: Vec3(0, 0, 10), rotation: .identity, fieldOfView: 2, orthographicHeight: 2, aspect: 64.0 / 36)
+        raster.draw(ShotObserver.boxTriangles(Bounds(min: Vec3(-0.5, -0.5, 0), max: Vec3(0.5, 0.5, 1))), label: 0, camera: camera)
+        let observer = ShotObserver(document: document([]))
+        func frame(glow: Int, background: Double) -> [Double] {
+            (0 ..< raster.width * raster.height).map { index in
+                let x = index % raster.width
+                let y = index / raster.width
+                if raster.shows(0, x: x, y: y) { return 90 }
+                let near = (-glow ... glow).contains { dy in (-glow ... glow).contains { dx in raster.shows(0, x: x + dx, y: y + dy) } }
+                return near ? 90 : background
+            }
+        }
+        XCTAssertEqual(try XCTUnwrap(observer.separation(frame(glow: 1, background: 30), raster: raster, label: 0)), 100, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(observer.separation(frame(glow: 0, background: 85), raster: raster, label: 0)), 0, accuracy: 1e-9,
+                       "a light subject on light ground still merges")
+    }
+
     func testRasterCountsHiddenPixels() {
         var raster = CoverageRaster(width: 20, height: 20)
         let camera = ObserveCamera(position: Vec3(0, 0, 10), rotation: .identity, fieldOfView: 2, orthographicHeight: 2, aspect: 1)

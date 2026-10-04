@@ -139,22 +139,40 @@ extension ShotObserver {
         return (mean, around.map { abs(mean - $0) })
     }
 
-    /// % of the subject's outline pixels whose outside neighbour differs by ΔL* ≥ 12.
+    /// % of the subject's outline pixels that stand apart from what's just outside them by ΔL* ≥ 12. "Just outside"
+    /// is a short step out (about 1.5% of the frame), past the ink line and glow the Looks draw on the edge itself,
+    /// which would otherwise be compared with themselves.
     func separation(_ lightness: [Double], raster: CoverageRaster, label: Int32) -> Double? {
+        let reach = max(2, raster.width / 64)
         var edges = 0
         var separated = 0
         for row in 0 ..< raster.height {
             for column in 0 ..< raster.width where raster.shows(label, x: column, y: row) {
-                let outside = [(column - 1, row), (column + 1, row), (column, row - 1), (column, row + 1)].filter { x, y in
-                    x >= 0 && y >= 0 && x < raster.width && y < raster.height && !raster.shows(label, x: x, y: y)
+                var samples: [Double] = []
+                for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                    guard let outside = Self.outside(raster, label: label, x: column, y: row, dx: dx, dy: dy, reach: reach) else { continue }
+                    samples.append(lightness[outside])
                 }
-                guard !outside.isEmpty else { continue }
+                guard !samples.isEmpty else { continue }
                 edges += 1
                 let own = lightness[row * raster.width + column]
-                if outside.contains(where: { abs(lightness[$0.1 * raster.width + $0.0] - own) >= 12 }) { separated += 1 }
+                if samples.contains(where: { abs($0 - own) >= 12 }) { separated += 1 }
             }
         }
         return edges > 0 ? Double(separated) / Double(edges) * 100 : nil
+    }
+
+    /// The pixel `reach` steps out from an edge pixel in one direction (nearer if the frame or the subject comes
+    /// first), or nil when the neighbour that way is the subject itself (not an edge that way).
+    static func outside(_ raster: CoverageRaster, label: Int32, x: Int, y: Int, dx: Int, dy: Int, reach: Int) -> Int? {
+        var found: Int?
+        for step in 1 ... reach {
+            let px = x + dx * step
+            let py = y + dy * step
+            guard px >= 0, py >= 0, px < raster.width, py < raster.height, !raster.shows(label, x: px, y: py) else { break }
+            found = py * raster.width + px
+        }
+        return found
     }
 
     /// Up to five dominant colours (distinct from each other) and the saturation spread.

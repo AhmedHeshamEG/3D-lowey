@@ -612,7 +612,8 @@ rewriting those around Kit models would test less, not more.
 where the answer is known (a floating cube reports `grounded: false` and a 100 cm gap). Coverage and visible % come
 from a small depth-tested CPU rasteriser (about 320 × 180) of the meshes the renderer drew (Core's own meshes, else
 boxes, in tests): exact enough to say "the lamp is 26% visible", deterministic everywhere. Contrast (ΔL* in the
-squinted value view), silhouette separation, palette and the light read come from the rendered pixels; without them
+squinted value view), silhouette separation (each outline pixel against the pixel a short step out, past the ink
+line and glow the Looks draw on the edge), palette and the light read come from the rendered pixels; without them
 those rubric lines are `skipped`, never guessed. Intersections compare surfaces, not boxes (a chair tucked under a
 desk isn't intersecting), and set pieces (floors, walls, terrain over 6 m or 40% of the frame) may overlap each other.
 Things in the air on purpose carry `airborne` (`above` sets it; 3D words count as signs). Clutter counts copies of one
