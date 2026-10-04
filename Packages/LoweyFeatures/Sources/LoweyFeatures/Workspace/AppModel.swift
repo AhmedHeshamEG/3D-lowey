@@ -138,17 +138,25 @@ public final class AppModel {
 
     // MARK: Opening and closing
 
-    func open(url: URL, document: Document? = nil) {
-        if document == nil, ConflictResolver.hasConflicts(at: url) {
+    func open(url: URL) {
+        if ConflictResolver.hasConflicts(at: url) {
             pendingConflict = ProjectConflict(url: url, versions: ConflictResolver.conflicts(at: url))
             return
         }
         do {
-            let opened = try document ?? projectStore.openDocument(at: url)
-            editor = EditorModel(app: self, projectURL: url, document: opened)
-            diagnostics.log("Opened \(opened.project.name)")
+            let opened = try ProjectHistory.open(url, store: projectStore, onError: journalErrorHandler)
+            editor = EditorModel(app: self, projectURL: url, opened: opened)
+            diagnostics.log("Opened \(opened.session.document.project.name) (\(opened.replayed) changes replayed, \(opened.skipped) skipped)")
+            if opened.skipped > 0 { show("The very last change couldn't be read back. Everything before it is here.", kind: .error) }
         } catch {
             show("Couldn't open the project: \(error.localizedDescription)", kind: .error)
+        }
+    }
+
+    /// A journal write that failed (shown once it reaches the main actor; the next checkpoint tries again).
+    var journalErrorHandler: @Sendable (Error) -> Void {
+        { [weak self] error in
+            Task { @MainActor in self?.show("Couldn't record your last change: \(error.localizedDescription)", kind: .error) }
         }
     }
 

@@ -10,9 +10,9 @@ extension AppModel {
         do {
             var look = Look.default.applying(mood)
             look.presetID = presetID
-            let (url, document) = try projectStore.createProject(name: name.isEmpty ? "Untitled" : name, look: look)
+            let (url, _) = try projectStore.createProject(name: name.isEmpty ? "Untitled" : name, look: look)
             refreshProjects()
-            open(url: url, document: document)
+            open(url: url)
         } catch {
             show("Couldn't create the project: \(error.localizedDescription)", kind: .error)
         }

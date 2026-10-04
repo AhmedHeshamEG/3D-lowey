@@ -142,7 +142,7 @@ extension EditorModel {
             try? await Task.sleep(for: .seconds(0.6))
             guard let self, !Task.isCancelled else { return }
             session.setViewpoint(viewpoint)
-            scheduleAutosave()
+            scheduleIdleCheckpoint()
         }
     }
 

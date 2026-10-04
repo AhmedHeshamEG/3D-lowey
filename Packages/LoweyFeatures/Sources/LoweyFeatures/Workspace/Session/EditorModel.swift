@@ -1,5 +1,6 @@
 import Foundation
 import HmmDesign
+import HmmDocuments
 import LoweyCore
 import LoweyEngine
 import Observation
@@ -153,8 +154,8 @@ final class EditorModel {
     let faceMonitor = FaceMonitor()
     let performance = PerformanceMonitor()
     private(set) var displayRevision = 0
-    private(set) var lastSaved: Date?
-    private(set) var isSaving = false
+    var lastSaved: Date?
+    var isSaving = false
 
     // MARK: Not observed
 
@@ -196,25 +197,29 @@ final class EditorModel {
     @ObservationIgnored var motionCache = MotionViewCache()
     @ObservationIgnored let flyer = FlyPerformer()
     @ObservationIgnored let store: ProjectStore
-    @ObservationIgnored private let saver: DocumentSaver
-    @ObservationIgnored private var autosaveTask: Task<Void, Never>?
+    /// The open scene's history journal (`EditorModel+History`).
+    @ObservationIgnored var journal: HistoryJournal<EditCommand>
+    @ObservationIgnored var checkpointPolicy = CheckpointPolicy()
+    @ObservationIgnored var checkpointedRevision = 0
+    @ObservationIgnored var idleCheckpointTask: Task<Void, Never>?
+    /// When the current stretch of work began (an automatic version every hour of it).
+    @ObservationIgnored var workStarted = Date()
     @ObservationIgnored var viewpointSaveTask: Task<Void, Never>?
     @ObservationIgnored let logger = Logger(subsystem: AppIdentity.subsystem, category: "editor")
 
     var library: LibraryModel { app.library }
 
-    init(app: AppModel, projectURL: URL, document: Document) {
+    init(app: AppModel, projectURL: URL, opened: ProjectHistory.Opened) {
         self.app = app
         self.projectURL = projectURL
-        session = EditSession(document: document)
-        displayed = Animator.evaluate(document, at: 0)
+        session = opened.session
+        journal = opened.journal
+        displayed = Animator.evaluate(opened.session.document, at: 0)
         store = app.projectStore
-        saver = DocumentSaver(store: app.projectStore)
         operations = Operations(library: app.library.manifest)
+        checkpointedRevision = session.revision
         refreshDisplay()
-        let url = projectURL
-        let saver = saver
-        Task { await saver.markSaved(0, for: url) }
+        saveAutomaticVersion(named: String(localized: "Opened \(Date().formatted(date: .abbreviated, time: .shortened))"))
     }
 
     /// The project closes: stop everything that runs on its own.
@@ -224,6 +229,7 @@ final class EditorModel {
         stopVirtualCamera()
         clock.stop()
         chromeFadeTask?.cancel()
+        idleCheckpointTask?.cancel()
         stage?.frameSource = nil
     }
 
@@ -257,6 +263,7 @@ final class EditorModel {
 
     func endGesture() {
         session.endCoalescing()
+        journalChanged()
         if performPhase == .recording, performedCamera != nil { performTouching = false }
     }
 
@@ -268,6 +275,7 @@ final class EditorModel {
     func undo() {
         do {
             guard let changes = try session.undo() else { return }
+            loadOlderUndoIfNeeded()
             refreshDisplay(changes)
             afterChange()
         } catch {
@@ -291,38 +299,12 @@ final class EditorModel {
         selectedKeys = selectedKeys.filter { key in timeline.track(key.track)?.key(at: key.time) != nil }
         operations.bounds = SceneBounds(library: library.manifest)
         refreshSelectionOverlay()
-        scheduleAutosave()
+        journalChanged()
         app.bridge.notify("scene", ["revision": String(session.revision)])
     }
 
-    // MARK: Autosave (debounced, off the main thread, atomic)
-
-    func scheduleAutosave() {
-        autosaveTask?.cancel()
-        autosaveTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(1.2))
-            guard !Task.isCancelled else { return }
-            await self?.saveNow(thumbnail: false)
-        }
-    }
-
-    func saveNow(thumbnail: Bool) async {
-        let document = session.document
-        let revision = session.revision
-        isSaving = true
-        do {
-            _ = try await saver.save(document, revision: revision, to: projectURL)
-            lastSaved = Date()
-            SessionRestoration(self).save()
-        } catch {
-            app.show("Autosave failed: \(error.localizedDescription)", kind: .error)
-        }
-        isSaving = false
-        if thumbnail { await writeProjectThumbnail() }
-    }
-
     /// The Theater card: a still of the work view and a short loop through the shot camera.
-    private func writeProjectThumbnail() async {
+    func writeProjectThumbnail() async {
         let thumbnailer = app.thumbnailer
         let viewpoint = stage?.viewpoint ?? baseScene.viewpoint
         guard let still = try? await thumbnailer.still(document, viewpoint: viewpoint, width: 640, height: 360, catalog: library.catalog,

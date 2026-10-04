@@ -17,11 +17,9 @@ extension EditorModel {
         guard id != baseScene.id else { return }
         await saveNow(thumbnail: false)
         do {
-            let (loaded, _) = try store.loadScene(id, in: projectURL)
-            var opened = session.document
-            opened.scene = loaded
-            opened.project = (try? store.loadProjectInfo(at: projectURL).info) ?? opened.project
-            session = EditSession(document: opened)
+            let opened = try ProjectHistory.open(projectURL, scene: id, store: store, onError: app.journalErrorHandler)
+            let loaded = opened.session.document.scene
+            adopt(opened)
             selection = []
             selectedKeys = []
             pause()
@@ -51,6 +49,7 @@ extension EditorModel {
                 info.sceneOrder.append(new.id)
                 info.sceneNames[new.id] = new.name
             }
+            await checkpointNow()
             await openScene(new.id)
             return new.id
         } catch {
@@ -66,6 +65,7 @@ extension EditorModel {
                 let copy = try store.duplicateScene(baseScene.id, in: projectURL)
                 let info = try store.loadProjectInfo(at: projectURL).info
                 session.updateProjectInfo { $0 = info }
+                await checkpointNow()
                 switchScene(copy.id)
             } catch {
                 app.show("Couldn't duplicate the scene: \(error.localizedDescription)", kind: .error)
