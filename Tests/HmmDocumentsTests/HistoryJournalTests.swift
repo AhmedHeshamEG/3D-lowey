@@ -165,6 +165,23 @@ final class HistoryJournalTests: XCTestCase {
         XCTAssertEqual(sheet.numbers, [])
     }
 
+    func testReplayedStepsCountAgainstTheLimit() throws {
+        var (journal, opened) = try HistoryJournal.open(at: folder, format: format(), historyLimit: 30) { Sheet() }
+        var sheet = opened.document
+        var history = opened.history
+        for value in 1 ... 40 {
+            try perform(.push(value), &history, &sheet, journal)
+        }
+        journal.checkpoint(sheet, history: history)
+        for value in 41 ... 50 {
+            try perform(.push(value), &history, &sheet, journal)
+        }
+        journal.flush()
+        (journal, opened) = try HistoryJournal.open(at: folder, format: format(), historyLimit: 30) { Sheet() }
+        XCTAssertEqual(opened.history.undoStack.count, 8 + 10)
+        XCTAssertEqual(journal.olderUndoCount, 12)
+    }
+
     func testGesturesAndGroupsReplayIntoTheSameSteps() throws {
         var (journal, opened) = try open()
         var sheet = opened.document

@@ -32,6 +32,8 @@ public extension HistoryJournal {
         history.restore(undo: undo, redo: redo)
         var target = document
         let tail = try replayTail(files, format: format, after: checkpoint, history: &history, document: &target, state: &state)
+        // Steps replayed on top count against the limit: the oldest ones still on disk fall off first.
+        state.olderUndo = Array(state.olderUndo.suffix(max(historyLimit - history.undoStack.count, 0)))
         let journal = HistoryJournal(url: url, format: format, limit: historyLimit, state: state, onError: onError)
         try journal.resume(at: tail.lastSegment, damaged: tail.skipped > 0 || usedBackup)
         history.recordsOps = true
