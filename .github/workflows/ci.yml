@@ -1,13 +1,21 @@
-# Every push / PR: lint → LoweyCore tests (Linux) + laptop tools + LoweyEngine render tests (iPad simulator)
-# → app build for the iPad simulator, app tests and the UI smoke test (with screenshots).
+# CI (CONTEXT §7: fast and cheap). One run per change: pull requests, and main after a merge (the commit a phase is
+# tagged on). A `changes` job decides what a change can affect:
+#
+#   docs only (*.md, docs/, LICENSE) → nothing builds; `CI result` passes
+#   LoweyCore only                   → lint + Linux tests (no simulator)
+#   LoweyEngine                      → + Metal renderer render tests (goldens) and everything above it
+#   LoweyFeatures / App / UI tests   → + feature tests, app build and UI smoke tests
+#   main (every merge)               → everything, so a tagged commit always passed the UI tests
+#
+# The app job runs beside the Engine and Feature jobs (it builds the same sources itself), so the slowest path is
+# one simulator job, not three in a row. `CI result` is the single required check: branch protection and auto-merge
+# wait on it, and it is green when everything that had to run passed (skipped jobs are fine).
 name: CI
 
 on:
   push:
-    branches: ["**"]
-    paths-ignore: ["**.md", "docs/**", "LICENSE"]
+    branches: [main]
   pull_request:
-    paths-ignore: ["**.md", "docs/**", "LICENSE"]
   workflow_dispatch:
 
 concurrency:
@@ -19,8 +27,76 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
 
 jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.route.outputs.code }}
+      core: ${{ steps.route.outputs.core }}
+      engine: ${{ steps.route.outputs.engine }}
+      features: ${{ steps.route.outputs.features }}
+      tools: ${{ steps.route.outputs.tools }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!LICENSE'
+            core:
+              - 'Packages/LoweyCore/**'
+              - 'Packages/HmmKit/**'
+              - '.swiftlint.yml'
+              - '.swiftformat'
+              - '.github/workflows/ci.yml'
+            engine:
+              - 'Packages/LoweyEngine/**'
+              - 'Packages/LoweyCore/Sources/**'
+              - 'Packages/HmmKit/Sources/**'
+              - '.github/workflows/ci.yml'
+            features:
+              - 'Packages/LoweyFeatures/**'
+              - 'Packages/LoweyEngine/Sources/**'
+              - 'Packages/LoweyCore/Sources/**'
+              - 'Packages/HmmKit/Sources/**'
+              - 'App/**'
+              - 'AppUITests/**'
+              - 'project.yml'
+              - 'Config/**'
+              - 'Tools/check-feature-boundaries.py'
+              - 'Tools/pick-simulator.py'
+              - '.github/workflows/ci.yml'
+            tools:
+              - 'Tools/**'
+              - 'schemas/**'
+              - 'skills/**'
+              - 'App/Resources/**'
+              - 'Packages/LoweyFeatures/Sources/**'
+              - 'Packages/LoweyCore/Sources/**'
+              - '.github/workflows/ci.yml'
+      - name: Route
+        id: route
+        run: |
+          # Every merge to main (and a manual run) checks everything.
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            for key in code core engine features tools; do echo "$key=true" >> "$GITHUB_OUTPUT"; done
+          else
+            echo "code=${{ steps.filter.outputs.code }}" >> "$GITHUB_OUTPUT"
+            echo "core=${{ steps.filter.outputs.core }}" >> "$GITHUB_OUTPUT"
+            echo "engine=${{ steps.filter.outputs.engine }}" >> "$GITHUB_OUTPUT"
+            echo "features=${{ steps.filter.outputs.features }}" >> "$GITHUB_OUTPUT"
+            echo "tools=${{ steps.filter.outputs.tools }}" >> "$GITHUB_OUTPUT"
+          fi
+          cat "$GITHUB_OUTPUT"
+
   lint:
     name: Lint (SwiftLint + SwiftFormat)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +113,8 @@ jobs:
 
   core-tests:
     name: LoweyCore tests + coverage (Linux)
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
     runs-on: ubuntu-latest
     container: swift:6.1
     steps:
@@ -44,8 +122,9 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: Packages/LoweyCore/.build
-          key: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}
-      - name: Test (save → load round trips, v1 → v2 package upgrade, Look system, geometry)
+          key: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}-${{ github.sha }}
+          restore-keys: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}-
+      - name: Test (journal, save → load round trips, package upgrades, Look system, geometry)
         working-directory: Packages/LoweyCore
         # Serial: parallel runs corrupt the coverage profile.
         run: swift test --enable-code-coverage
@@ -62,12 +141,16 @@ jobs:
 
   tools:
     name: Laptop tools (hmm-bridge, MCP v2)
+    needs: changes
+    if: needs.changes.outputs.tools == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: Tools/lowey/pyproject.toml
       - name: Blob measurements match the drawing (trace.json codegen)
         run: python Tools/gen-blob-measurements.py --check
       - name: The Kit matches its curation, is CC0 and fits the budget
@@ -86,16 +169,23 @@ jobs:
 
   engine:
     name: LoweyEngine (Metal renderer) build + render tests
+    needs: changes
+    if: needs.changes.outputs.engine == 'true'
     runs-on: xcode-27
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/DerivedData
+          key: engine-dd-${{ hashFiles('Packages/LoweyEngine/Package.swift', 'Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}-${{ github.sha }}
+          restore-keys: engine-dd-${{ hashFiles('Packages/LoweyEngine/Package.swift', 'Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}-
       - name: Install the Metal toolchain
         run: xcodebuild -downloadComponent MetalToolchain
       - name: Pick an iPad simulator
         id: sim
         run: echo "udid=$(python3 Tools/pick-simulator.py)" >> "$GITHUB_OUTPUT"
-      - name: Build and test (golden images, picking, skinning, preview = export, 4K spike, benchmark)
+      - name: Build and test (golden images at every tier, picking, skinning, preview = export, hover point, benchmark)
         working-directory: Packages/LoweyEngine
         run: |
           set -o pipefail
@@ -103,7 +193,13 @@ jobs:
           # A second attempt when the test runner itself hangs (R33); per-test retries can't recover that.
           for attempt in 1 2; do
             rm -rf "$RUNNER_TEMP/Engine.xcresult"
-            TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test             -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult"             -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3             -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
+            TEST_RUNNER_GOLDEN_OUTPUT="$RUNNER_TEMP/goldens" xcodebuild test \
+              -scheme LoweyEngine -destination "id=${{ steps.sim.outputs.udid }}" \
+              -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/Engine.xcresult" \
+              -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3 \
+              -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES \
+              SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+              | tee "$RUNNER_TEMP/engine.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
             grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/engine.log" && exit 0
             echo "::warning::Engine tests failed on attempt $attempt"
           done
@@ -130,10 +226,17 @@ jobs:
 
   features:
     name: LoweyFeatures build + tests (iPad simulator)
+    needs: changes
+    if: needs.changes.outputs.features == 'true'
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/DerivedData
+          key: features-dd-${{ hashFiles('Packages/*/Package.swift') }}-${{ github.sha }}
+          restore-keys: features-dd-${{ hashFiles('Packages/*/Package.swift') }}-
       - name: Install the Metal toolchain
         run: xcodebuild -downloadComponent MetalToolchain
       - name: Feature boundaries (no feature reaches into another)
@@ -145,7 +248,10 @@ jobs:
         working-directory: Packages/LoweyFeatures
         run: |
           set -o pipefail
-          xcodebuild test -scheme LoweyFeatures -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath "$RUNNER_TEMP/DerivedData" -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES             | tee "$RUNNER_TEMP/features.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
+          xcodebuild test -scheme LoweyFeatures -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" -skipPackagePluginValidation -IDEBuildingContinueBuildingAfterErrors=YES \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            | tee "$RUNNER_TEMP/features.log" | grep -E "error:|warning:|Test Case .* failed|Executed|\*\* " || true
           grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/features.log"
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -156,11 +262,17 @@ jobs:
 
   app:
     name: iPad app build + UI smoke tests
-    needs: [lint, core-tests, tools, engine, features]
+    needs: [changes, lint]
+    if: needs.changes.outputs.features == 'true'
     runs-on: xcode-27
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: DerivedData
+          key: app-dd-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}-${{ github.sha }}
+          restore-keys: app-dd-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}-
       - name: Install XcodeGen and the Metal toolchain
         run: |
           brew install xcodegen
@@ -177,17 +289,22 @@ jobs:
           # terminate the app or stops answering a UI query (R33).
           for attempt in 1 2; do
             rm -rf TestResults.xcresult
-            xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}"             -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult -skipPackagePluginValidation             -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3             CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: |Test Case|Executed|\*\* " || true
+            xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=${{ steps.sim.outputs.udid }}" \
+              -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult -skipPackagePluginValidation \
+              -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 300 -retry-tests-on-failure -test-iterations 3 \
+              CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|warning: |Test Case|Executed|\*\* " || true
             grep -q "\*\* TEST SUCCEEDED \*\*" xcodebuild.log && exit 0
             echo "::warning::UI smoke tests failed on attempt $attempt"
           done
           exit 1
       - name: iPhone 6.9" App Store screenshot (the face companion)
-        if: success()
+        if: success() && github.event_name != 'pull_request'
         run: |
           set -o pipefail
           PHONE=$(python3 Tools/pick-simulator.py --iphone)
-          xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=$PHONE" -derivedDataPath DerivedData             -resultBundlePath PhoneScreenshots.xcresult -skipPackagePluginValidation -only-testing:LoweyUITests/ScreenshotTests/testIPhoneCompanion             CODE_SIGNING_ALLOWED=NO | grep -E "error:|Test Case|\*\* " || true
+          xcodebuild test -project Lowey.xcodeproj -scheme Lowey -destination "id=$PHONE" -derivedDataPath DerivedData \
+            -resultBundlePath PhoneScreenshots.xcresult -skipPackagePluginValidation -only-testing:LoweyUITests/ScreenshotTests/testIPhoneCompanion \
+            CODE_SIGNING_ALLOWED=NO | grep -E "error:|Test Case|\*\* " || true
       - name: Export screenshots
         if: always()
         run: |
@@ -224,3 +341,19 @@ jobs:
           name: xcodebuild-log
           path: xcodebuild.log
           retention-days: 7
+
+  result:
+    name: CI result
+    needs: [changes, lint, core-tests, tools, engine, features, app]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Everything that had to run passed
+        run: |
+          echo '${{ toJSON(needs) }}' | python3 -c '
+          import json, sys
+          needs = json.load(sys.stdin)
+          bad = {name: job["result"] for name, job in needs.items() if job["result"] not in ("success", "skipped")}
+          for name, job in needs.items():
+              print(name + ": " + job["result"])
+          sys.exit(1 if bad else 0)'

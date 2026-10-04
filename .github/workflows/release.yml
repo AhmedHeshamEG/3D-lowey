@@ -1,4 +1,5 @@
-# Release builds, only from commits CI passed.
+# Release builds, only from commits CI passed (never one marked [build-only]). Build number = this workflow's run
+# number; the version comes from the tag (v0.1 → 0.1) or Config/Branding.xcconfig.
 #
 # - CI finished green on main → an installable Maquette.ipa artifact for that exact commit.
 # - Tag v* → the same, plus a GitHub Release with the .ipa. A tag is released only when its commit passed CI, or
@@ -30,7 +31,11 @@ env:
 jobs:
   gate:
     name: Only commits CI passed
-    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    # Never for a commit marked [build-only] (CONTEXT §7).
+    if: >-
+      (github.event_name == 'push' ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')) &&
+      !contains(github.event.workflow_run.head_commit.message, '[build-only]')
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.check.outputs.sha }}
