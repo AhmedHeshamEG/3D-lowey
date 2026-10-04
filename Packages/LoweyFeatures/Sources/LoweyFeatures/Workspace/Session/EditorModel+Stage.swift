@@ -18,8 +18,10 @@ extension EditorModel {
         stage.gizmoMode = gizmoMode
         stage.dynamicScale.enabled = !UserDefaults.standard.bool(forKey: AppSettings.fullResolutionStage)
         stage.onCameraChanged = { [weak self] viewpoint in self?.cameraMoved(viewpoint) }
-        stage.onFrameTime = { [weak self] gpu, total, scale in
-            self?.performance.record(gpu: gpu, total: total, scale: scale)
+        stage.onFrameTime = { [weak self, weak stage] gpu, total, scale in
+            guard let self, let stage else { return }
+            performance.record(gpu: gpu, total: total, scale: scale, work: max(gpu, stage.lastEncodeTime), budget: stage.dynamicScale.budget)
+            performance.recordScene(stage.lastReport, tier: stage.renderer.quality.tier)
         }
         stage.frameSource = { [weak self] stage in self?.stageFrame(for: stage) }
         refreshGuide()

@@ -78,6 +78,11 @@ struct EditorScreen: View {
             }
             if editor.faceActive { FacePreviewPanel(editor: editor, monitor: editor.faceMonitor) }
             if showsHUD { PerformanceHUDOverlay(monitor: editor.performance) }
+            if !editor.chromeHidden {
+                LoadChip(editor: editor)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, HmmSpacing.m)
+            }
             if AppIdentity.isUITesting, !AppIdentity.isTakingScreenshots { DebugTrail(editor: editor) }
         }
         .clipped()

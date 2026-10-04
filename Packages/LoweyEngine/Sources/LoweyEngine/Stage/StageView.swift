@@ -31,7 +31,7 @@ public final class StageView: MTKView {
     public var onCameraChanged: ((Viewpoint) -> Void)?
     /// Frame statistics for the Performance HUD (every frame, on the main actor).
     public var onFrameTime: ((_ gpu: Double, _ total: Double, _ scale: Float) -> Void)?
-    public var dynamicScale = DynamicScale()
+    public var dynamicScale: DynamicScale
     public var gizmoMode: GizmoMode = .move
     private var gizmoPivot: Vec3?
     public var showsGrid = true
@@ -41,10 +41,13 @@ public final class StageView: MTKView {
     public private(set) var pointer: PencilPointer?
     private var lastFrameStart: CFTimeInterval = 0
     public private(set) var lastReport: FrameReport?
+    /// The CPU time the last frame took to build and encode (seconds); with the GPU time, the frame's real work.
+    public private(set) var lastEncodeTime: Double = 0
 
-    public init(device: RenderDevice) throws {
+    public init(device: RenderDevice, quality: PreviewQuality = .current) throws {
         renderDevice = device
-        renderer = try LoweyRenderer(device: device)
+        renderer = try LoweyRenderer(device: device, quality: quality)
+        dynamicScale = DynamicScale(range: quality.renderScale)
         super.init(frame: .zero, device: device.device)
         colorPixelFormat = RenderDevice.outputFormat
         depthStencilPixelFormat = .invalid
@@ -199,6 +202,16 @@ public final class StageView: MTKView {
         renderer.worldMesh(of: id)
     }
 
+    /// The frame budget is the screen's own refresh: 8.3 ms on ProMotion, 16.7 ms on a 60 Hz iPad (holding a 60 Hz
+    /// screen to 120 fps lowered its render scale for nothing).
+    override public func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard let screen = window?.windowScene?.screen else { return }
+        let fps = max(screen.maximumFramesPerSecond, 30)
+        if preferredFramesPerSecond > 30 { preferredFramesPerSecond = fps }
+        dynamicScale.budget = 1 / Double(fps)
+    }
+
     // MARK: Editor layer
 
     public func showSelection(pivot: Vec3?, gizmoVisible: Bool) {
@@ -269,6 +282,7 @@ extension StageView: MTKViewDelegate {
             return
         }
         commandBuffer.present(drawable)
+        lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in
             let gpu = buffer.gpuEndTime - buffer.gpuStartTime
             Task { @MainActor in

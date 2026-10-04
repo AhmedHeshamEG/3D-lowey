@@ -9,6 +9,8 @@ import UIKit
 /// recorded, then the report is written and shown.
 struct BenchmarkRunView: View {
     let diagnostics: DiagnosticsCenter
+    /// The preview tier to run with (Tier B on any iPad shows how a recent A-chip iPad will feel).
+    var tier: DeviceTier = PreviewQuality.current.tier
     @State private var report: BenchmarkReport?
     @State private var file: URL?
     @State private var failed: String?
@@ -20,7 +22,7 @@ struct BenchmarkRunView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             if report == nil, failed == nil {
-                BenchmarkStage { result in
+                BenchmarkStage(tier: tier) { result in
                     switch result {
                     case let .success(made):
                         report = made
@@ -75,14 +77,16 @@ struct BenchmarkRunView: View {
 
 /// The benchmark's own stage view.
 private struct BenchmarkStage: UIViewRepresentable {
+    let tier: DeviceTier
     let finished: (Result<BenchmarkReport, Error>) -> Void
 
     func makeCoordinator() -> Holder { Holder() }
 
     func makeUIView(context: Context) -> UIView {
         do {
-            let stage = try StageView(device: RenderDevice.sharedDevice())
-            let benchmark = MarketBenchmark()
+            let stage = try StageView(device: RenderDevice.sharedDevice(), quality: PreviewQuality(tier: tier))
+            let fps = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.maximumFramesPerSecond ?? 60
+            let benchmark = MarketBenchmark(tier: tier, budget: 1 / Double(max(fps, 30)))
             context.coordinator.benchmark = benchmark
             stage.showsGrid = false
             stage.frameSource = { stage in

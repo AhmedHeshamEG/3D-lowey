@@ -529,6 +529,22 @@
         }
       }
     },
+    "Adaptive resolution": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risoluzione adattiva"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دقة متكيّفة"
+          }
+        }
+      }
+    },
     "Add": {
       "localizations": {
         "it": {
@@ -2189,6 +2205,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إغلاق %@"
+          }
+        }
+      }
+    },
+    "Close to what this iPad keeps smooth": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vicino a ciò che questo iPad mantiene fluido"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قريب مما يحافظ هذا الآيباد على سلاسته"
           }
         }
       }
@@ -5249,6 +5281,22 @@
         }
       }
     },
+    "Frame times against this screen's budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempi dei fotogrammi rispetto al budget di questo schermo, p50 / p95 / p99 negli ultimi cinque secondi, fotogrammi persi, calore e memoria."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزمنة الإطارات مقابل ميزانية هذه الشاشة، p50 / p95 / p99 خلال آخر خمس ثوانٍ، الإطارات المفقودة، الحرارة والذاكرة."
+          }
+        }
+      }
+    },
     "Framing": {
       "localizations": {
         "it": {
@@ -6669,6 +6717,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "إبراز الكلمة المنطوقة"
+          }
+        }
+      }
+    },
+    "Lighter preview": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteprima più leggera"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة أخفّ"
+          }
+        }
+      }
+    },
+    "Lighter preview for this session. Exports stay at full quality.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteprima più leggera per questa sessione. Le esportazioni restano alla massima qualità."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة أخفّ لهذه الجلسة. تبقى التصديرات بأعلى جودة."
           }
         }
       }
@@ -9281,6 +9361,22 @@
         }
       }
     },
+    "Preview tier %@: exports always render at full quality.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livello di anteprima %@: le esportazioni sono sempre alla massima qualità."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستوى المعاينة %@: تُصدَّر الأعمال دائمًا بأعلى جودة."
+          }
+        }
+      }
+    },
     "Previous frame": {
       "localizations": {
         "it": {
@@ -10237,6 +10333,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تشغيل"
+          }
+        }
+      }
+    },
+    "Run as Tier B": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esegui come livello B"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّل كالمستوى B"
           }
         }
       }
@@ -12881,6 +12993,22 @@
         }
       }
     },
+    "The Night Market (400 objects, walkers, Blobs, lanterns, a slow dolly) for 20 s. Pass: no dropped frame in 19 of 20, near full preview for this tier, no hitch over 33 ms.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il Mercato notturno (400 oggetti, figure che camminano, Blob, lanterne, un carrello lento) per 20 s. Superato: nessun fotogramma perso in 19 su 20, anteprima quasi piena per questo livello, nessuno scatto oltre 33 ms."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السوق الليلي (400 عنصر، شخصيات تمشي، Blob، فوانيس، حركة كاميرا بطيئة) لمدة 20 ثانية. النجاح: لا إطار مفقود في 19 من 20، ومعاينة شبه كاملة لهذا المستوى، ولا تقطّع يتجاوز 33 ms."
+          }
+        }
+      }
+    },
     "The Night Market: about 400 objects, six walking figures, four Blobs, lanterns and a slow dolly, for 20 seconds at full speed. ": {
       "localizations": {
         "it": {
@@ -12989,6 +13117,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تتغيّر منزلقات الشريط الجانبي حسب ما تفعل. النقر بإصبعين يتراجع، وبثلاثة يعيد."
+          }
+        }
+      }
+    },
+    "The stage now adapts its resolution to stay smooth.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora il palco adatta la sua risoluzione per restare fluido."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يكيّف المسرح الآن دقته ليبقى سلسًا."
           }
         }
       }
@@ -13229,6 +13373,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا منحنى لهذه الخاصية (الألوان والمفاتيح تنتقل من مفتاح لآخر مباشرة)."
+          }
+        }
+      }
+    },
+    "This scene is more than this iPad keeps smooth": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa scena è più di quanto questo iPad mantenga fluido"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المشهد أكثر مما يحافظ هذا الآيباد على سلاسته"
           }
         }
       }

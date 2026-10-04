@@ -9,8 +9,21 @@ import QuartzCore
 /// from disk and every run draws the same frames.
 @MainActor
 public final class MarketBenchmark {
-    /// PROMPT §11: p95 ≤ 8.3 ms at render scale ≥ 0.85 over 20 s, no hitch over 33 ms.
-    public static let target = BenchmarkTarget(p95Milliseconds: 8.3, minimumRenderScale: 0.85)
+    /// On ProMotion at Tier A: p95 ≤ 10 ms between presented frames at render scale ≥ 0.85, no hitch over 33 ms.
+    public static let target = target(tier: .a, budget: 1.0 / 120.0)
+
+    /// The pass rule for a tier on a screen. Frames are timed present to present, so a perfect run sits at the
+    /// screen's own interval (8.3 ms at 120 Hz, 16.7 ms at 60 Hz) with vsync jitter around it, and a dropped frame
+    /// doubles it: p95 within 1.2 intervals means no frame was dropped. The render scale must stay near the top of
+    /// the tier's preview range (0.85 at Tier A), and no hitch over 33 ms.
+    public static func target(tier: DeviceTier, budget: Double) -> BenchmarkTarget {
+        let range = PreviewQuality(tier: tier).renderScale
+        let minimumScale = range.lowerBound + (range.upperBound - range.lowerBound) * 0.55
+        return BenchmarkTarget(p95Milliseconds: (budget * 1.2 * 1000 * 10).rounded() / 10, minimumRenderScale: Double((minimumScale * 100).rounded() / 100))
+    }
+
+    /// The tier whose preview this run uses (Tier B on an M iPad shows how a recent A-chip iPad will feel).
+    public let tier: DeviceTier
     public let document: Document
     public let catalog: AssetCatalog
     public let builder: ShotBuilder
@@ -18,13 +31,14 @@ public final class MarketBenchmark {
     private var started: CFTimeInterval?
     private var lastReport: FrameReport?
 
-    public init(models: ModelLibrary = .shared, duration: Double = NightMarket.duration) {
+    public init(models: ModelLibrary = .shared, duration: Double = NightMarket.duration, tier: DeviceTier = .a, budget: Double = 1.0 / 120.0) {
+        self.tier = tier
         let (info, scene) = NightMarket.build()
         document = Document(project: info, scene: scene)
         catalog = Self.catalog
         Self.seed(models)
         builder = ShotBuilder(document: document, catalog: catalog, models: models)
-        recorder = BenchmarkRecorder(duration: duration, target: Self.target)
+        recorder = BenchmarkRecorder(duration: duration, budget: budget, target: Self.target(tier: tier, budget: budget))
     }
 
     /// The benchmark's catalog: just the generated walker.
@@ -92,8 +106,9 @@ public final class MarketBenchmark {
             facts["triangles"] = Double(lastReport.triangles)
             facts["drawCalls"] = Double(lastReport.drawCalls)
         }
-        return recorder.report(app: "Maquette", appVersion: appVersion, scene: NightMarket.projectName, device: device, system: system,
-                               sceneFacts: facts)
+        facts["tier"] = Double(DeviceTier.allCases.firstIndex(of: tier) ?? 0) + 1
+        let scene = tier == .a ? NightMarket.projectName : "\(NightMarket.projectName) (Tier \(tier.rawValue) preview)"
+        return recorder.report(app: "Maquette", appVersion: appVersion, scene: scene, device: device, system: system, sceneFacts: facts)
     }
 
     /// Writes the report as `benchmark-<device>-<version>.json` into `folder`.

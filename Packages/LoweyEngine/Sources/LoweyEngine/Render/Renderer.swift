@@ -81,6 +81,9 @@ public final class LoweyRenderer: SceneRendering {
     let upscaler: Upscaler
     private(set) var targets: FrameTargets?
     let shadowMap: MTLTexture
+    /// The preview quality this renderer was made for (`.full` everywhere but the stage).
+    public let quality: PreviewQuality
+    var shadowMapSize: Int { quality.shadowMapSize }
     let groundMesh: GPUMesh
     let editorMeshes: EditorMeshes
     let buffers: BufferRing
@@ -88,12 +91,13 @@ public final class LoweyRenderer: SceneRendering {
     private(set) var lastScene: RenderScene?
     private(set) var lastCamera: RenderCamera?
 
-    public init(device: RenderDevice, models: ModelLibrary = .shared) throws {
+    public init(device: RenderDevice, models: ModelLibrary = .shared, quality: PreviewQuality = .full) throws {
         self.device = device
+        self.quality = quality
         textures = TextureStore(device: device.device)
         compiler = SceneCompiler(device: device.device, meshes: meshes, textures: textures, models: models)
         upscaler = Upscaler(device: device)
-        shadowMap = try device.makeTexture(RenderDevice.depthFormat, width: RenderDevice.shadowMapSize, height: RenderDevice.shadowMapSize,
+        shadowMap = try device.makeTexture(RenderDevice.depthFormat, width: quality.shadowMapSize, height: quality.shadowMapSize,
                                            usage: [.renderTarget, .shaderRead], label: "sun shadows", arrayLength: 2)
         guard let ground = GPUMesh(device: device.device, mesh: EditorMeshes.disc(segments: 128), label: "ground") else {
             throw RenderError.texture
