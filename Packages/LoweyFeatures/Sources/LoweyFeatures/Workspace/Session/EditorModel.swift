@@ -53,7 +53,10 @@ final class EditorModel {
         }
     }
 
-    var snap = SnapSettings()
+    var snap = SnapSettings() {
+        didSet { if snap != oldValue { workspaceChanged() } }
+    }
+
     var draw = DrawSettings() {
         didSet { if draw != oldValue { refreshGuide() } }
     }
@@ -68,6 +71,7 @@ final class EditorModel {
     /// The current colour: new blockout, strokes and "paint" use it.
     var currentColor: ColorValue = .palette(0)
     var openPanel: ClusterPanel?
+    var modelPage: ModelPage = .add
     var sheet: EditorSheet?
     var libraryPurpose: LibraryPurpose = .place
     /// Four-finger tap: everything but the stage hides.
@@ -75,7 +79,10 @@ final class EditorModel {
     /// Playback fades the chrome after two seconds (a touch brings it back).
     var chromeFaded = false
     var showsGrid = true {
-        didSet { stage?.showsGrid = showsGrid }
+        didSet {
+            stage?.showsGrid = showsGrid
+            if showsGrid != oldValue { workspaceChanged() }
+        }
     }
 
     /// Mirrors the stage camera's projection (for the orthographic toggle).
@@ -110,7 +117,12 @@ final class EditorModel {
     /// Points per second.
     var timelineZoom: Double = 90
     var timelineStart: Double = 0
-    var timelineCollapsed = false
+    /// The timeline is on call: hidden until asked for (`EditorModel+Workspace`).
+    var timelinePresence: TimelinePresence = .hidden {
+        didSet { if timelinePresence != oldValue { workspaceChanged() } }
+    }
+
+    var timelineHeight = ProjectWorkspace.defaultTimelineHeight
     var selectedKeys: Set<KeyRef> = []
     /// Picked clip segments (ids), moved and changed together.
     var selectedClips: Set<String> = []
@@ -159,6 +171,8 @@ final class EditorModel {
     var historyScrub: HistoryScrubState?
     var lastSaved: Date?
     var isSaving = false
+    /// Where the selection sits on the stage (view points), for the floating inspector; settles after the camera does.
+    var selectionScreenRect: CGRect?
 
     // MARK: Not observed
 
@@ -211,6 +225,10 @@ final class EditorModel {
     /// The earlier moment the stage shows while the scrubber is dragged back (nil = now).
     @ObservationIgnored var historyPreview: Document?
     @ObservationIgnored var viewpointSaveTask: Task<Void, Never>?
+    @ObservationIgnored var workspaceSaveTask: Task<Void, Never>?
+    @ObservationIgnored var selectionRectTask: Task<Void, Never>?
+    /// The template the project began from and how it shows (`workspace.json`).
+    @ObservationIgnored var workspace = ProjectWorkspace()
     @ObservationIgnored let logger = Logger(subsystem: AppIdentity.subsystem, category: "editor")
 
     var library: LibraryModel { app.library }
@@ -225,6 +243,7 @@ final class EditorModel {
         operations = Operations(library: app.library.manifest)
         checkpointedRevision = session.revision
         refreshDisplay()
+        loadWorkspace()
         saveAutomaticVersion(named: String(localized: "Opened \(Date().formatted(date: .abbreviated, time: .shortened))"))
     }
 
@@ -236,6 +255,8 @@ final class EditorModel {
         clock.stop()
         chromeFadeTask?.cancel()
         idleCheckpointTask?.cancel()
+        selectionRectTask?.cancel()
+        saveWorkspace()
         stage?.frameSource = nil
     }
 
@@ -310,18 +331,6 @@ final class EditorModel {
         refreshSelectionOverlay()
         journalChanged()
         app.bridge.notify("scene", ["revision": String(session.revision)])
-    }
-
-    /// The Theater card: a still of the work view and a short loop through the shot camera.
-    func writeProjectThumbnail() async {
-        let thumbnailer = app.thumbnailer
-        let viewpoint = stage?.viewpoint ?? baseScene.viewpoint
-        guard let still = try? await thumbnailer.still(document, viewpoint: viewpoint, width: 640, height: 360, catalog: library.catalog,
-                                                       models: library.models) else { return }
-        if let png = UIImage(cgImage: still).pngData() { try? store.writeThumbnail(png, for: projectURL) }
-        let loop = await (try? thumbnailer.loop(document, catalog: library.catalog, models: library.models)) ?? []
-        if loop.count > 1 { try? Thumbnailer.writeLoop(loop, to: projectURL.appendingPathComponent(Thumbnailer.loopFile)) }
-        app.setThumbnail(UIImage(cgImage: still), loop: loop, for: document.project.id)
     }
 
     /// Back from the background: the video frames and stage pick up where they were.

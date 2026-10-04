@@ -111,7 +111,6 @@ final class EditorFlowTests: XCTestCase {
         editor.frameShot(.medium, composition: .center)
         editor.setTime(1.5)
         editor.openPanel = .look
-        editor.timelineCollapsed = true
         let saved = SessionRestoration(editor)
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "restoration-\(UUID().uuidString)"))
         saved.save(to: defaults)
@@ -120,12 +119,10 @@ final class EditorFlowTests: XCTestCase {
         XCTAssertTrue(saved.directorView, "framing a shot turns the Director view on")
         editor.setTime(0)
         editor.openPanel = nil
-        editor.timelineCollapsed = false
         editor.setDirectorView(false)
         await saved.apply(to: editor)
         XCTAssertEqual(editor.time, 1.5, accuracy: 1e-9)
         XCTAssertEqual(editor.openPanel, .look)
-        XCTAssertTrue(editor.timelineCollapsed)
         XCTAssertTrue(editor.directorView)
         SessionRestoration.clear(in: defaults)
         XCTAssertNil(SessionRestoration.load(from: defaults))

@@ -130,7 +130,7 @@ struct TimelineClock: View {
     }
 }
 
-/// The collapsed timeline: transport and timecode only.
+/// The slim transport: play, the time, the way to the whole timeline (or away).
 struct TransportBar: View {
     let editor: EditorModel
     @Environment(\.hmmTheme) private var theme
@@ -140,7 +140,9 @@ struct TransportBar: View {
             Transport(editor: editor)
             TimelineClock(editor: editor)
             Spacer()
-            HmmButton("chevron.up", label: "Show the timeline", size: 36) { editor.timelineCollapsed = false }
+            HmmButton("chevron.up", label: "Show the timeline", size: 36) { editor.timelinePresence = .full }
+            HmmButton("xmark", label: "Hide the timeline", size: 36) { editor.timelinePresence = .hidden }
+                .accessibilityIdentifier("hide-timeline")
         }
         .padding(.horizontal, HmmSpacing.m)
         .frame(height: 56)
