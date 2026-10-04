@@ -88,9 +88,13 @@ public extension LoweyRenderer {
         return result
     }
 
-    /// An object's geometry in world space as last drawn (drawing on its surface).
-    func worldMesh(of id: ObjectID) -> MeshData? {
+    /// An object's geometry in world space as last drawn (drawing on its surface). Skinned parts are posed on the GPU,
+    /// so with `staticOnly` an object that has any comes back nil (the caller uses its catalogued box instead).
+    func worldMesh(of id: ObjectID, staticOnly: Bool = false) -> MeshData? {
         guard let scene = lastScene else { return nil }
+        if staticOnly, scene.items.contains(where: {
+            scene.objectID(forPacked: $0.uniforms.ids.x) == id && ($0.uniforms.ids.z & ObjectFlags.skinned.rawValue) != 0
+        }) { return nil }
         var result = MeshData()
         for item in scene.items where scene.objectID(forPacked: item.uniforms.ids.x) == id {
             var mesh = item.mesh.data

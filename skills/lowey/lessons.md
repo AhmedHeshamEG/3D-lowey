@@ -18,3 +18,6 @@ Proposal for a reason that's a pattern (date, what happened, the rule).
 9. **The samples' own bugs (2.0, found by `observe`).** A chair blocked the desk push-in; Hesham stood in front of the
    one lit screen; the cave camera sat inside a rock; a chest was scaled to a third of its size. Always `observe` with
    `top` after building — the camera wedge shows what's in the way.
+10. **Perception found bugs in the app, too.** A glTF quirk drew whole Kit packs at a third of their size (the top
+    diagram showed a tiny tent next to Hesham), and the desk sample glowed orange from an over-strong lamp with a chair
+    filling half the frame. Trust the measurements over your mental picture, and look at `top` and `value`.

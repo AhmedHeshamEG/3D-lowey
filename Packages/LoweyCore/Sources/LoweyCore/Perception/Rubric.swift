@@ -38,7 +38,7 @@ public enum ShotRubric {
                 RubricCheck.check("Scale", scaleIssues.isEmpty,
                                   scaleIssues.isEmpty ? "Sizes match the Kit's real sizes" : scaleIssues.joined(separator: "; "),
                                   fix: "scaleTo the real size (the Kit knows it), or swap for a model made at that size"),
-                light(frame),
+                light(frame, subjectCoverage: subject?.coverage),
                 RubricCheck.check("Clutter", frame.clutter <= maximumClutter, "\(frame.clutter) significant things in frame",
                                   fix: "Remove or push back what doesn't serve the beat; let empty space frame the subject")]
     }
@@ -105,7 +105,7 @@ public enum ShotRubric {
                       fix: "place it `on` what it stands on (the solver grounds it), or move it apart")
     }
 
-    static func light(_ frame: FrameRead) -> RubricCheck {
+    static func light(_ frame: FrameRead, subjectCoverage: Double? = nil) -> RubricCheck {
         guard let subject = frame.light.subjectLightness, let world = frame.light.worldLightness else {
             return RubricCheck("Light", .skipped, "Key from \(frame.light.keyFrom); no pixels to read")
         }
@@ -113,7 +113,8 @@ public enum ShotRubric {
         var problems: [String] = []
         if subject + 3 < world { problems.append("the world (L* \(Int(world))) is brighter than the subject (L* \(Int(subject)))") }
         if inShadow > 75 { problems.append("\(Int(inShadow))% of the subject is in shadow") }
-        if let separation = frame.silhouetteSeparation, separation < 50 {
+        // Below a few % of the frame the analysis raster can't resolve an outline well enough to judge it.
+        if let separation = frame.silhouetteSeparation, separation < 50, (subjectCoverage ?? 100) >= 3 {
             problems.append("the silhouette merges (\(Int(separation))% separated)")
         }
         return .check(

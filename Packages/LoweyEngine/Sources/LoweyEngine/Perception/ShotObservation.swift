@@ -29,7 +29,7 @@ public extension ExportSession {
         let request = builder.request(at: time, framing: framing, size: cgSize, frameIndex: builder.timeline.frame(for: time))
         let bytes = try await frames.bytes(request, width: size.width, height: size.height)
         let renderer = frames.renderer
-        let observer = ShotObserver(document: builder.document, library: library, rigs: builder.rigs()) { renderer.worldMesh(of: $0) }
+        let observer = ShotObserver(document: builder.document, library: library, rigs: builder.rigs()) { renderer.worldMesh(of: $0, staticOnly: true) }
         let pixels = ObservePixels(width: size.width, height: size.height, bytes: bytes, bgra: true)
         let report = observer.observe(at: time, aspect: framing.aspect, subject: subject, pixels: pixels)
         let image = try FrameRenderer.image(bgra: bytes, width: size.width, height: size.height, transparent: false)

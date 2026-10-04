@@ -64,8 +64,10 @@ public struct ShotObserver {
         let contacts = ContactCheck(scene: animated.scene, library: library, units: measured.map(\.id), triangles: measured.map(\.triangles))
         for index in objects.indices {
             // Set pieces (floor, walls, terrain) are built overlapping; only props meeting them, or each other, count.
-            objects[index].intersects = contacts.intersecting(index).filter { !(measured[$0].object.isSet && objects[index].isSet) }
-                .map { measured[$0].object.name }
+            objects[index].intersects = contacts.intersecting(index).filter { other in
+                !(measured[other].object.isSet && objects[index].isSet) && !Self.rests(measured[index], on: measured[other])
+                    && !Self.rests(measured[other], on: measured[index])
+            }.map { measured[$0].object.name }
         }
         var frame = frameRead(measured, subject: subjectID, declared: subject != nil, camera: camera, scene: animated.scene)
         if let pixels {
@@ -75,6 +77,12 @@ public struct ShotObserver {
         let cameraName = animated.camera.flatMap { animated.scene.objects[$0]?.name } ?? "the editor view"
         return ShotReport(scene: document.scene.name, time: time, camera: cameraName, aspect: aspect, objects: objects, frame: frame,
                           checks: checks, summary: Self.summary(objects: objects, frame: frame, checks: checks, camera: cameraName))
+    }
+
+    /// A prop standing on a set piece (a log on the grass, a rock on the cave floor): its bottom within a few centimetres
+    /// of the set's top. Real meshes aren't flat underneath; that isn't an intersection.
+    static func rests(_ prop: Measured, on set: Measured) -> Bool {
+        set.object.isSet && !prop.object.isSet && abs(prop.world.min.y - set.world.max.y) < 0.06
     }
 
     /// The labelled things of a scene: each root, a plain group's children instead of the group, a character whole.

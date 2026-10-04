@@ -10,7 +10,7 @@ enum ShowcaseScripts {
     static let island = """
     {"do": "add", "shape": "cylinder", "name": "Sea", "at": [0, -0.3, 0], "size": [140, 0.3, 140], "color": "#3F7FA6", "onGround": false},
     {"do": "add", "shape": "cylinder", "name": "Beach", "at": [0, -0.05, 0], "size": [16, 0.3, 14], "color": "#E8D39B", "onGround": false},
-    {"do": "add", "shape": "cylinder", "name": "Grass", "at": [0, 0, 0], "size": [13, 0.35, 11], "color": "#7FA65A", "onGround": false},
+    {"do": "add", "shape": "cylinder", "name": "Grass", "at": [0, 0, 0], "size": [13, 0.35, 11], "color": "#4E7D3F", "onGround": false},
     {"do": "add", "asset": "kit.nature-tent-detailedclosed", "name": "Tent", "at": [2.4, 0.35, -1.6]},
     {"do": "add", "asset": "kit.nature-campfire-stones", "name": "Campfire", "relation": "in_front_of", "reference": "Tent", "offset": [0, 0, 0.6]},
     {"do": "add", "asset": "kit.nature-log", "name": "Log seat", "relation": "beside_left", "reference": "Campfire"},
@@ -26,6 +26,7 @@ enum ShowcaseScripts {
     {"do": "blob", "likeness": "hesham", "name": "Hesham", "at": [0.6, 0.35, 1.4], "facing": 15},
     {"do": "clip", "character": "Hesham", "clip": "Wave", "at": 2.4},
     {"do": "camera", "name": "Fly camera", "from": [-1.8, 1.5, 6.6], "lookAt": "Hesham", "focalLength": 50},
+    {"do": "lighting", "recipe": "golden-rim", "subject": "Hesham"},
     {"do": "cameraMove", "camera": "Fly camera", "move": "crane", "subject": "Hesham", "at": 0, "duration": 4},
     {"do": "cameraMove", "camera": "Fly camera", "move": "orbit", "subject": [0, 0.6, 0], "at": 4, "duration": 6},
     {"do": "overlay", "shape": "title", "name": "Title", "text": "Welcome to 3D-lowey", "at": [0, 0.62], "size": 0.8},
@@ -50,13 +51,13 @@ enum ShowcaseScripts {
         {"do": "add", "shape": "cube", "name": "Army message", "size": [0.3, 0.006, 0.21], "color": "palette:0", "at": [\(ox), 0, 1.5]},
         {"do": "place", "target": "Army message", "relation": "on", "reference": "Desk", "offset": [-0.08, 0, 0.18]},
         {"do": "add", "asset": "kit.room-bookcaseopen", "name": "Bookcase", "relation": "beside_left", "reference": "Desk"},
-        {"do": "add", "asset": "kit.office-chairdesk", "name": "Chair", "relation": "in_front_of", "reference": "Desk", "offset": [-0.75, 0, 0]},
-        {"do": "light", "type": "point", "name": "Lamp light", "at": "Lamp", "color": "#FFB45C", "intensity": 2.6, "range": 4},
+        {"do": "light", "type": "point", "name": "Lamp light", "at": "Lamp", "color": "#FFB45C", "intensity": 1.1, "range": 2.5},
         {"do": "camera", "name": "Desk camera", "from": [\(number(x + 1.1)), 1.45, 2.3], "lookAt": "Army message", "focalLength": 42}
         """
         if animated {
             actions += """
             ,
+            {"do": "lighting", "recipe": "key-warm-world-cool", "subject": "Enigma", "intensity": 0.8},
             {"do": "cameraMove", "camera": "Desk camera", "move": "pushIn", "subject": "Army message", "at": 0.4, "duration": 4},
             {"do": "flipbook", "fx": "sparkle", "anchor": "Enigma", "at": 2, "until": 4, "color": "#FFE7A8"},
             {"do": "cut", "camera": "Desk camera", "at": 0}

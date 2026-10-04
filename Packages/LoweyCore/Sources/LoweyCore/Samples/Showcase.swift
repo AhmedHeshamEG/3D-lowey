@@ -23,6 +23,8 @@ public enum Showcase {
         look.fog = Fog(enabled: true, color: RGBA.hex("#F6C48E"), distance: 90)
         let info = ProjectInfo(id: ids.isSequential ? "island-project" : .make(), name: islandName, look: look)
         var scene = Scene(id: ids.isSequential ? "island-scene" : .make(), name: "Hello")
+        // The scene keeps its own copy of the Look, so the script's lighting recipe lands on it.
+        scene.look = look
         scene.timeline = Timeline(fps: 30, duration: 10)
         scene = try compile(ShowcaseScripts.island, title: "Welcome island", info: info, scene: scene, kit: kit, ids: ids)
         scene.viewpoint = Viewpoint(target: Vec3(0, 0.6, 0), yaw: 28, pitch: 30, distance: 22)

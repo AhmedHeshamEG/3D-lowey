@@ -95,4 +95,24 @@ final class ShowcaseTests: XCTestCase {
             }
         }
     }
+
+    /// Every Kit model loads at the real size its metadata says (the size the solver and perception use). Found by
+    /// observe: Kenney's stray "tmpParent" node made the reader skip the Kit's scaling root, so whole packs drew at a
+    /// third of their size.
+    func testEveryKitModelLoadsAtItsRealSize() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("App/Resources/Kit")
+        var wrong: [String] = []
+        for asset in try kit() where asset.kit?.clipsOnly != true {
+            guard let real = asset.kit?.realSize else { continue }
+            let model = try GLTFMeshReader.model(contentsOf: root.appendingPathComponent(asset.file))
+            // Skinned parts are sized by their skeleton when drawn; the rest must match as they are.
+            let points = model.parts.filter { !$0.isSkinned }.flatMap(\.mesh.positions).map { Vec3(Double($0.x), Double($0.y), Double($0.z)) }
+            guard let box = Bounds(points: points) else { continue }
+            if abs(box.size.y - real.y) > max(real.y * 0.03, 0.01) {
+                wrong.append("\(asset.id.raw): \(String(format: "%.2f", box.size.y)) m drawn, \(real.y) m real")
+            }
+        }
+        XCTAssertTrue(wrong.isEmpty, wrong.prefix(10).joined(separator: "\n"))
+    }
 }

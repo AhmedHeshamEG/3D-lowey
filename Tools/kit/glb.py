@@ -189,6 +189,13 @@ def wrap_scene(model, matrix):
     document = model.json
     scene_index = document.get("scene", 0)
     scene = document["scenes"][scene_index]
+    # Some exporters also list a scene root under a stray parent outside the scene (Kenney's "tmpParent"): detach it,
+    # so the new root is its only parent and every reader places it the same way.
+    for node in document["nodes"]:
+        if "children" in node:
+            node["children"] = [child for child in node["children"] if child not in scene["nodes"]]
+            if not node["children"]:
+                del node["children"]
     root = {"name": "Kit", "children": list(scene["nodes"]), "matrix": [float(v) for v in np.asarray(matrix).T.reshape(-1)]}
     document["nodes"].append(root)
     scene["nodes"] = [len(document["nodes"]) - 1]
