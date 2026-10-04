@@ -39,9 +39,9 @@ final class ScreenshotTests: XCTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "the iPad set")
         XCUIDevice.shared.orientation = .landscapeLeft
         app.launch()
-        XCTAssertTrue(element("project-Welcome island").waitForExistence(timeout: 60), "the samples are in the Theater")
+        XCTAssertTrue(element("project-Welcome island").waitForExistence(timeout: 60), "the samples are on Home")
         settle()
-        capture("AppStore-iPad-01-Theater")
+        capture("AppStore-iPad-01-Home")
         tap("project-Enigma — the story")
         XCTAssertTrue(app.otherElements["stage"].waitForExistence(timeout: 30))
         settle(4)
