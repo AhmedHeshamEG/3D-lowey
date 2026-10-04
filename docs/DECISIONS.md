@@ -763,4 +763,9 @@ and as a PR). A `changes` job sends docs-only changes nowhere, Core-only changes
 the render tests, and Features/App changes to feature tests, the app build and the UI tests; every merge to main runs
 everything, so a tagged commit passed the UI tests. The app job no longer waits for the Engine job (it builds the same
 sources itself). DerivedData is cached per job. `CI result` is the one required check (skipped jobs count as passed),
-so auto-merge waits for it. The release workflow skips commits marked `[build-only]`.
+so auto-merge waits for it. The release workflow skips commits marked `[build-only]`. Timings: D-100.
+
+**D-100 — CI wall time, measured.** Before (2.0's workflow): 46.0 min for a push to main, 45.8 min for a PR, and every
+PR ran twice (push + PR). After, on this phase's PR with every job routed in (Core, kit, Engine, Features and App all
+changed): **21.5 min**, once. The slowest job is now the Engine render tests (21 min); the app build and UI tests
+finish in 12 min beside it instead of 28 min after it. A docs-only change runs only the routing job and `CI result`.
