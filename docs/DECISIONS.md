@@ -1,7 +1,7 @@
 # Decisions
 
 Every non-obvious choice, with the reason. D1–D86 are the 1.x decisions, kept as history; where 2.0 replaced one,
-the 2.0 entry (R…) says so. What the product is lives in [SPEC.md](SPEC.md); how it's built in
+the 2.0 entry (R…) says so. Maquette's decisions continue from D-87, one section per phase. What the product is lives in [SPEC.md](SPEC.md); how it's built in
 [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Engineering
@@ -674,3 +674,91 @@ simulators, with a launch flag that hides the UI-test overlays. The App Store va
 from the same project by switching three Info.plist values (bridge off, no background audio) rather than keeping a
 second target. The TestFlight upload signs with an App Store Connect API key and is skipped, not failed, when the
 secrets aren't set. 2.0 is paid upfront: the StoreKit configuration exists for testing later purchases and is empty.
+
+## Maquette 0.1 — M1, foundation & feel
+
+**D-87 — 3D-lowey becomes Maquette; code names stay.** Display name, bundle ids `studio.h.maquette` (+ `.widgets`,
+`.uitests`), app group `group.studio.h` (entitlement on the app and the widget), projects `.maquette` and packs
+`.maquettepack`, licence "All rights reserved", the GitHub repo renamed to `maquette`. The modules, the Xcode target
+and the bridge's wire name stay `Lowey`/`lowey` (CONTEXT §10: code names may stay), and the manifest's `app` stays
+`"lowey"` so 2.0 and Maquette read each other's packages. A new bundle id is a new app with its own sandbox, so
+3D-lowey's `.lowey` and `.loweypack` files are still declared, listed and imported. *Rejected:* keeping `.lowey`
+(the Files app shows the extension); renaming every module (churn with no user-visible gain).
+
+**D-88 — The journal records history ops, not just commands.** A line is `perform` (command + coalescing key),
+`endCoalescing`, `begin/end/cancelGroup`, `undo` or `redo`; replaying them through `CommandStack.replay` rebuilds the
+document *and* the undo stack exactly, including merged gestures and named groups. One journal per scene
+(`history/<scene-id>/`), because an edit session is one scene. *Rejected:* journaling forward commands only (undo and
+redo after a relaunch couldn't be rebuilt); one journal per project (scenes are opened and edited one at a time).
+
+**D-89 — Checkpoints store each undo step once, by reference.** A checkpoint writes the snapshot and a list of
+`{file, offset, length}` refs into append-only `entries/<n>.jsonl`; steps already stored are reused, files nothing
+points at are removed. Opening reads the newest 64 steps; older ones load when undo reaches them (16 left). Opening
+50 000 commands with a 150-change tail takes 23 ms in CI's Linux container (the test allows 1.5 s; the device budget
+is 500 ms). *Rejected:* writing the whole 500-step stack into every checkpoint (megabytes rewritten every 5 s);
+rebuilding the stack by replaying every segment (50 000 lines decoded on open).
+
+**D-90 — Group commit within 50 ms, on a serial queue.** `record` buffers ops and schedules one write; a checkpoint
+takes the ops recorded before it at call time (a test caught the queue flushing later ops into the old segment, behind
+the checkpoint's sequence number, which lost them on replay). Leaving the screen and closing flush and `fsync`.
+*Rejected:* writing on the main thread per change (a drag is 120 changes a second); the 100 ms the CONTEXT allows
+(a shorter window costs nothing).
+
+**D-91 — `project.json` and the scene file are written at every checkpoint, from the checkpoint's own state.** They
+stay the readable surface (`docs/PROJECT_FORMAT.md`). Opening merges: the journal owns this scene's changes;
+`project.json` owns the scene list and the project name, and its project Look wins when this scene replayed nothing
+and the file is newer (another scene changed it since). *Rejected:* the journal as the only truth (scripts, MCP
+clients and 2.0 read the files); writing the files on every change (the old debounce, the bug this phase removes).
+
+**D-92 — Journal ops migrate by document schema.** A segment's header carries the `LoweySchema` version its commands
+were written in; `ProjectHistory.opMigrations` upgrades older lines, and a Core test fails when a schema bump has no op
+migration. The first journals are schema 4.
+
+**D-93 — Going back in the history scrubber is undo, with the future kept as a version.** "Go back here" saves the
+current state as an automatic version, then undoes to the moment; redo still goes forward until the next change,
+which starts the new branch. Restoring a version is one undo step (`replaceScene`, a new command). Automatic versions:
+each time a scene opens and each hour of work, the newest 40 kept; named ones stay. *Rejected:* a branch tree to
+navigate (a decision wall; the versions list already holds every abandoned future).
+
+**D-94 — The hover point is drawn in the stage's editor pass.** Two spheres (a dark rim, a light centre) just past the
+near plane on the ray through the tip, sized from the view's height so they're 2.5 pt at any distance; the brush ring
+faces the camera and shows only while a size slider moves (under the tip, or mid-stage when the Pencil is away). The
+setting rules every tool. Hover position is no longer observed state, so hovering doesn't re-run SwiftUI. *Rejected:*
+the SwiftUI overlay (a frame late); a CPU-drawn overlay image (a texture upload per hover event).
+
+**D-95 — Device tiers set three preview knobs.** `DeviceTier` (hmm-kit) is A for GPU family ≥ 7 with ≥ 7.5 GB (M iPads
+and the 8 GB A17 Pro mini), B for family ≥ 7 or ≥ 4.5 GB, C below; `-device-tier B` forces one. `PreviewQuality`
+gives the render-scale range (A 0.66–1, B 0.6–0.85, C 0.5–0.7) and the sun's shadow map (2048/1536/1024); the frame
+budget comes from the screen (most iPads are 60 Hz, and holding them to 120 fps lowered their scale for nothing).
+Exports, stills and thumbnails always use `.full`. Lines stay native on every tier (crisp edges are the Looks). MSAA
+isn't a knob: pipeline states are built for the device's sample count. There's no simulation-rate knob yet: 2.0's
+simulations bake to keys at the timeline's rate, so nothing simulates live (it arrives with dangle physics and
+mechanisms). The "Tier B/C configuration" is the Engine suite rendering every Look with each tier's quality: simulators
+all use the Mac's GPU, so a Tier B simulator would test nothing more. *Rejected:* a model-identifier table (breaks on
+every new iPad).
+
+**D-96 — The benchmark's pass rule follows the screen.** Frames are timed present to present, so a perfect run sits at
+the screen's interval with vsync jitter around it: p95 ≤ 1.2 intervals (10 ms at 120 Hz, 20 ms at 60 Hz) means no
+frame dropped. The minimum render scale is 55% up the tier's range (0.85 at A). A Tier B run is offered on A iPads.
+*Rejected:* the 2.0 rule (p95 ≤ 8.3 ms): Hesham's iPad Air M3 is 60 Hz and could never pass it.
+
+**D-97 — The load meter measures work, not intervals.** The stage redraws on demand, so the interval between frames
+says nothing when idle; the meter takes max(GPU time, CPU encode time) against the budget, plus a scene cost
+(triangles and draw calls against what the tier draws comfortably: first estimates, refined by the device
+benchmarks). The chip shows after a second at 85% and leaves after a second under 70%. Its fixes are the ones that
+exist: a lighter preview for the session, or Adaptive resolution when Full-resolution stage is on. *Rejected:*
+"instance repeats" (the renderer already instances every run of one mesh) and "simplify" (no simplify operation until
+modelling).
+
+**D-98 — The M1 performance pass was a code read of the per-frame paths.** Fixed: smears scanned and copied every
+object on every frame (now cached per edit and playhead; hovering redraws at 120 Hz with neither changing); the
+stroke preview was uploaded to the GPU every frame (now once per shape); each frame allocated a `Task` to report its
+time (now a main-queue hop). Signposts mark "Build frame" and "Encode frame" for Instruments. GPU time can only be
+measured on the device: the benchmark JSON in the device checklist is the gate (CONTEXT §6).
+
+**D-99 — CI runs once per change, routed by what it touches.** PRs and main only (a PR used to run twice: as a push
+and as a PR). A `changes` job sends docs-only changes nowhere, Core-only changes to lint and Linux, Engine changes to
+the render tests, and Features/App changes to feature tests, the app build and the UI tests; every merge to main runs
+everything, so a tagged commit passed the UI tests. The app job no longer waits for the Engine job (it builds the same
+sources itself). DerivedData is cached per job. `CI result` is the one required check (skipped jobs count as passed),
+so auto-merge waits for it. The release workflow skips commits marked `[build-only]`.

@@ -1,4 +1,57 @@
-# 3D-lowey 2.0 — product spec
+# Maquette — product spec
+
+**Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 3D, for people without an
+engineering or art degree.** The measure of success is the time from an idea to seeing it 100% ready. Maquette is the
+continuation of 3D-lowey 2.0, made by **studio h.**; this file is studio-h's CONTEXT §10 kept true to the code: what
+is built says so, what isn't says which phase brings it. Everything 2.0 does (sections 1–12 below) is the behavioural
+reference and stays.
+
+| Area (CONTEXT §10) | Status |
+|---|---|
+| Name, icon, bundle ids, `.maquette` projects | **0.1.** Temporary icon (2.0's cube in the studio neutrals) until the identity phase (S1). |
+| Nothing is ever lost: the history journal, undo after relaunch, versions, the History scrubber | **0.1.** [PROJECT_FORMAT.md](PROJECT_FORMAT.md) |
+| Apple Pencil: hover point at the tip in the stage's own pass, outline only while resizing | **0.1** |
+| Device tiers (A/B/C) and the hidden load meter | **0.1** |
+| The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | M2. Today: 2.0's layout (section 9). |
+| Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | M3 |
+| Modelling II (bevel, shell, mirror, array, units, snapping, measure, section, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, Blender package) | M4. Today: glTF/GLB, USDZ and OBJ import, video and stills export. |
+| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | M5. Today: 2.0's ink strokes and flipbooks. |
+| Painting on models | M6 |
+| One skeleton system, draw a bone, one-tap human rig, 2D puppets | M7. Today: 2.0's Cast (Blob, Puppet, Rigged). |
+| Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, 1.0 polish | M8 |
+| Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | Free updates after 1.0 |
+
+### Nothing is ever lost (0.1)
+
+Every change is a command; every command (and every undo and redo) is written to the scene's history journal within
+50 ms, off the main thread. Every 200 changes, after 5 seconds of quiet, when the app leaves the screen and when a
+scene closes, a checkpoint writes the scene, its undo history and the project files. Opening a scene reads the last
+checkpoint and replays what came after it, so force-quitting mid-edit and reopening shows the last edit, and it can be
+undone. Undo keeps 500 steps across relaunches.
+
+**Actions ▸ History** opens the scrubber over the stage: drag back through every step and the stage shows that
+moment. *Go back here* makes it the present (the state you left is kept as a version, and redo still goes forward
+until you change something); *Name* keeps the moment as a named version; *Versions* lists named and automatic
+versions (one each time a scene opens and after each hour of work) and restores any of them as one undo step.
+
+### The Pencil (0.1)
+
+With *Settings ▸ Pencil hover preview* on, a small point sits exactly under the hovering tip, for every tool, the same
+size at every height, drawn by the stage in the frame it renders. Off, there is no mark at all. The brush's outline
+shows only while its size slider moves.
+
+### Every iPad (0.1)
+
+All iPadOS 26 iPads. At launch Maquette reads the GPU family and memory: **Tier A** (M-chips) previews at full
+quality; **Tier B** (recent A-chips) with a lighter render scale and shadows; **Tier C** (the oldest) lighter still.
+Tiers never remove features, and exports always render at full quality. The stage's frame budget is the screen's own
+refresh. Diagnostics shows the tier and runs the Night Market benchmark (and, on an M iPad, the same run with the
+Tier B preview). A calm chip appears at the bottom of the stage only when a scene nears what the iPad keeps smooth,
+offering a lighter preview (or adaptive resolution, when Full-resolution stage is on).
+
+---
+
+# 3D-lowey 2.0 — what Maquette starts from
 
 **Procreate Dreams, in 3D, cel-shaded.** An iPad app where someone who isn't a 3D artist directs good-looking,
 hand-drawn-feeling 3D animation (sets, characters, cameras, voice) and exports it as video. The measure of success
@@ -149,8 +202,11 @@ sound-effects track with a synthesised CC0 foley set (whoosh, pop, impact, click
 
 ## 10. Documents and export
 
-- A `.lowey` project is a folder package (JSON scenes, assets, audio, renders, thumbnail) with atomic saves, a backup
-  of the last good version and autosave. 1.x projects open and migrate. `.loweypack` shares a project with its assets.
+- A project is a folder package (`.maquette`; 2.0's `.lowey` opens too) of JSON scenes, assets, audio, renders and a
+  thumbnail, with atomic saves and a backup of the last good version. Since Maquette 0.1 every change is in the
+  scene's history journal the moment it happens (above, and [PROJECT_FORMAT.md](PROJECT_FORMAT.md)); the 2.0 autosave
+  delay is gone. 1.x projects open and migrate. `.maquettepack` (and 2.0's `.loweypack`) shares a project with its
+  assets.
   iCloud Drive in the App Store build; on the device otherwise.
 - Export presets: YouTube 16:9 4K, 1080p, Shorts / Reels 9:16, Square, Transparent (HEVC alpha), PNG still (HD / 4K),
   GIF loop, 3D (GLB / USDZ), Captions (.srt); custom size, frame rate (24 / 25 / 30 / 60), codec and quality.
@@ -161,8 +217,9 @@ sound-effects track with a synthesised CC0 foley set (whoosh, pop, impact, click
 
 - **Night Market** benchmark (Diagnostics): about 400 objects, six skinned walkers and four blob characters
   animating, sun shadows and three point lights, the Ink Look with lines and contact shading, a camera move. Pass on a
-  device: p95 frame time ≤ 8.3 ms at render scale ≥ 0.85 over 20 seconds, no hitch over 33 ms. It writes a JSON
-  report.
+  device (since 0.1): no dropped frames for 95% of 20 seconds (p95 within 1.2 refreshes of the screen: 10 ms at
+  120 Hz, 20 ms at 60 Hz) at a render scale near the top of the device tier's range (0.85 at Tier A), no hitch over
+  33 ms. On an M iPad it also runs with the Tier B preview. It writes a JSON report.
 - Launch to the Theater in under a second; a project's first frame in under 500 ms.
 - A 60-second 1080p Ink export in 90 seconds or less on the reference device.
 

@@ -1,6 +1,31 @@
 # Changelog
 
-All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first.
+All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
+continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
+
+## [0.1] — Maquette — foundation & feel (phase M1)
+
+- **3D-lowey is now Maquette**, by studio h.: its own name, icon (temporary, until the identity phase), bundle id and
+  `.maquette` projects. It installs next to 3D-lowey; 3D-lowey's projects and `.loweypack` files open in it.
+- **Nothing is ever lost.** Every change is written to the scene's history the moment it happens (the 1.2-second
+  autosave delay that could drop your last edit is gone). Force-quit mid-edit, reopen: the edit is there and undo
+  takes it back. Undo keeps 500 steps across relaunches.
+- **History** (Actions ▸ History): drag back through every step and see the stage as it was; *Go back here* (the
+  state you leave is kept as a version), name a version, restore any version as one undo step. Versions are kept
+  automatically each time a scene opens and after each hour of work.
+- **The Pencil feels right.** With hover preview on, a small point sits exactly under the tip, for every tool, drawn
+  in the stage's own frame; with it off, nothing shows. The brush outline appears only while you resize the brush.
+- **Every iPad, tuned.** Maquette reads the iPad's GPU and memory and picks a preview tier: full on M-chip iPads,
+  lighter render scale and shadows on A-chip ones. Exports are always full quality. The stage holds the screen's
+  own refresh (60 Hz iPads are no longer pushed to 120).
+- **A load meter that speaks up before lag.** Invisible until a scene nears what the iPad keeps smooth; then a calm
+  chip offers a lighter preview.
+- **Diagnostics**: shows the tier; the benchmark's pass rule follows the screen, and M iPads can run it as Tier B.
+- **Faster frames**: smears no longer rescan the scene every frame, the stroke preview uploads once, frame timing
+  allocates nothing.
+- **CI**: one run per change, routed by what it touches, the app build beside the render tests; one required check.
+- [docs/PROJECT_FORMAT.md](docs/PROJECT_FORMAT.md) documents the package, `project.json` and the journal.
+- hmm-kit 0.2.0: `HistoryJournal`, `HistoryVersions`, journaling on `CommandStack`, `DeviceTier`, `LoadMeter`.
 
 ## [2.0.0] — 2026-10-04 — Tools, the Kit, and a director that can see
 
