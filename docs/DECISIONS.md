@@ -682,8 +682,10 @@ secrets aren't set. 2.0 is paid upfront: the StoreKit configuration exists for t
 `.maquettepack`, licence "All rights reserved", the GitHub repo renamed to `maquette`. The modules, the Xcode target
 and the bridge's wire name stay `Lowey`/`lowey` (CONTEXT §10: code names may stay), and the manifest's `app` stays
 `"lowey"` so 2.0 and Maquette read each other's packages. A new bundle id is a new app with its own sandbox, so
-3D-lowey's `.lowey` and `.loweypack` files are still declared, listed and imported. *Rejected:* keeping `.lowey`
-(the Files app shows the extension); renaming every module (churn with no user-visible gain).
+3D-lowey's `.lowey` and `.loweypack` files are still declared, listed and imported. Maquette's phase tags are two-part
+(`v0.1` … `v0.8`, then `v1.0.0`) beside 3D-lowey's three-part history tags, and its releases are marked Latest
+explicitly (by version alone, 3D-lowey v2.0.0 would stay Latest). *Rejected:* keeping `.lowey` (the Files app shows
+the extension); renaming every module (churn with no user-visible gain).
 
 **D-88 — The journal records history ops, not just commands.** A line is `perform` (command + coalescing key),
 `endCoalescing`, `begin/end/cancelGroup`, `undo` or `redo`; replaying them through `CommandStack.replay` rebuilds the
