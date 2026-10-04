@@ -13,8 +13,8 @@ public extension Migration {
 }
 
 public extension SchemaCoder {
-    /// 3D-lowey's coder: current schema, every migration since v0.
-    static let shared = SchemaCoder(appName: "3D-lowey", currentVersion: LoweySchema.currentVersion, migrations: LoweySchema.migrations)
+    /// Maquette's coder: current schema, every migration since v0.
+    static let shared = SchemaCoder(appName: "Maquette", currentVersion: LoweySchema.currentVersion, migrations: LoweySchema.migrations)
 
     func encode(_ payload: some Codable & Sendable, kind: FileKind) throws -> Data {
         try encode(payload, kind: kind.rawValue)
@@ -29,7 +29,7 @@ public extension SchemaCoder {
     }
 }
 
-/// Schema versions of 3D-lowey's JSON files.
+/// Schema versions of Maquette's JSON files.
 ///
 /// - v1: objects keyed by id, transforms as properties.
 /// - v2 (1.0 phase 2): timelines gain markers, loop, cuts, behaviours, clip tracks. Additive.

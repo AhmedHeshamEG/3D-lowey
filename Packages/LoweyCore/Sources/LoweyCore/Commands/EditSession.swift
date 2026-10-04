@@ -78,6 +78,26 @@ public struct EditSession: Sendable {
         history = CommandStack(limit: historyLimit)
     }
 
+    /// A document opened from its history journal, with the undo history it had.
+    public init(document: Document, history: CommandStack<EditCommand>) {
+        self.document = document
+        self.history = history
+    }
+
+    /// No group open and no gesture coalescing: a safe moment for a checkpoint.
+    public var isQuiet: Bool { history.isQuiet }
+
+    /// The changes since the last call, for the history journal.
+    public mutating func takePendingOps() -> [HistoryOp<EditCommand>] {
+        history.takePendingOps()
+    }
+
+    /// Older undo steps read back from the journal as undo reaches them.
+    @discardableResult
+    public mutating func prependUndo(_ entries: [HistoryEntry<EditCommand>]) -> Int {
+        history.prependUndo(entries)
+    }
+
     public var undoStack: [HistoryEntry<EditCommand>] { history.undoStack }
     public var redoStack: [HistoryEntry<EditCommand>] { history.redoStack }
     /// Bumped on every change; autosave compares it with the last saved revision.

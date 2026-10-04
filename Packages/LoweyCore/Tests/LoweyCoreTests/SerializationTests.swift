@@ -74,19 +74,19 @@ final class SerializationTests: XCTestCase {
         {"schemaVersion": 99, "kind": "scene", "payload": {}}
         """
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data(future.utf8))) { error in
-            XCTAssertEqual(error as? SchemaError, .newerThanApp(app: "3D-lowey", found: 99, supported: LoweySchema.currentVersion))
+            XCTAssertEqual(error as? SchemaError, .newerThanApp(app: "Maquette", found: 99, supported: LoweySchema.currentVersion))
         }
     }
 
     func testMissingMigrationAndMalformed() throws {
-        let coder = SchemaCoder(appName: "3D-lowey", currentVersion: LoweySchema.currentVersion + 1, migrations: [])
+        let coder = SchemaCoder(appName: "Maquette", currentVersion: LoweySchema.currentVersion + 1, migrations: [])
         let current = try SchemaCoder.shared.encode(makeDocument().scene, kind: .scene)
         XCTAssertThrowsError(try coder.decode(Scene.self, kind: .scene, from: current)) { error in
             XCTAssertEqual(error as? SchemaError, .missingMigration(kind: "scene", from: LoweySchema.currentVersion))
         }
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data("not json".utf8)))
         XCTAssertThrowsError(try SchemaCoder.shared.decode(Scene.self, kind: .scene, from: Data("{\"schemaVersion\":1,\"payload\":{}}".utf8)))
-        for error in [SchemaError.newerThanApp(app: "3D-lowey", found: 2, supported: 1), .missingMigration(kind: "scene", from: 0), .malformed("x")] {
+        for error in [SchemaError.newerThanApp(app: "Maquette", found: 2, supported: 1), .missingMigration(kind: "scene", from: 0), .malformed("x")] {
             XCTAssertFalse(error.description.isEmpty)
         }
     }
@@ -94,7 +94,7 @@ final class SerializationTests: XCTestCase {
     func testCustomMigrationChain() throws {
         // A future version that rewrites the name, proving the chain runs in order.
         let next = LoweySchema.currentVersion
-        let coder = SchemaCoder(appName: "3D-lowey", currentVersion: next + 1, migrations: LoweySchema.migrations + [
+        let coder = SchemaCoder(appName: "Maquette", currentVersion: next + 1, migrations: LoweySchema.migrations + [
             Migration(kind: .scene, from: next) { payload in
                 var p = payload
                 p["name"] = .string((payload["name"]?.stringValue ?? "") + " (migrated)")

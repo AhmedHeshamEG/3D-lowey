@@ -10,7 +10,7 @@ public enum ZipReader {
         public var description: String {
             switch self {
             case .notAZip: "That isn't a zip archive"
-            case let .compressed(name): "\(name) is compressed — export the project from 3D-lowey (packages are stored, not compressed)"
+            case let .compressed(name): "\(name) is compressed — export the project from Maquette (packages are stored, not compressed)"
             case let .damaged(name): "\(name) is damaged (checksum)"
             }
         }
@@ -57,9 +57,11 @@ public enum ZipReader {
     }
 }
 
-/// `.lowey` packages: a whole project (scenes, audio, renders, embedded assets) in one file to share or back up.
+/// `.maquettepack` files: a whole project (scenes, audio, renders, embedded assets) in one file to share or back up.
 public enum ProjectPackage {
-    public static let fileExtension = "loweypack"
+    public static let fileExtension = "maquettepack"
+    /// 3D-lowey's `.loweypack` files still import.
+    public static let legacyExtensions: Set<String> = ["loweypack"]
 
     /// Every file of the project folder, paths relative to it. Renders are left out unless asked (they're big).
     public static func archive(_ project: URL, includeRenders: Bool = false) throws -> Data {

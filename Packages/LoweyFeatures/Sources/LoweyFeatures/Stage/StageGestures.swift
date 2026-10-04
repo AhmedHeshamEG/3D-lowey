@@ -158,23 +158,16 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
 
     // MARK: Pencil hover
 
+    /// The setting rules every tool: off, there is no mark at all; on, a point under the tip (Pencil only: a trackpad
+    /// pointer has no height and gets the system's own pointer).
     @objc private func handleHover(_ recognizer: UIHoverGestureRecognizer) {
         guard let editor else { return }
-        guard UserDefaults.standard.bool(forKey: AppSettings.pencilHoverPreview) || editor.tool.paints else {
-            if editor.hoverPoint != nil { editor.hoverPoint = nil }
+        guard UserDefaults.standard.bool(forKey: AppSettings.pencilHoverPreview) else {
+            if editor.hoverPoint != nil { editor.setHover(nil) }
             return
         }
-        switch recognizer.state {
-        case .began, .changed:
-            guard recognizer.zOffset > 0 || editor.tool.paints else {
-                editor.hoverPoint = nil
-                return
-            }
-            editor.hoverPoint = recognizer.location(in: stage)
-            editor.hoverHeight = Double(recognizer.zOffset)
-        default:
-            editor.hoverPoint = nil
-        }
+        let hovering = (recognizer.state == .began || recognizer.state == .changed) && recognizer.zOffset > 0
+        editor.setHover(hovering ? recognizer.location(in: stage) : nil)
     }
 
     // MARK: Taps

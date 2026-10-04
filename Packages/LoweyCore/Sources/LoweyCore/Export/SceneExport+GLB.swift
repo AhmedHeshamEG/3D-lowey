@@ -3,7 +3,7 @@ import Foundation
 // MARK: - glTF binary
 
 public extension SceneExport {
-    static func glb(_ meshes: [ExportMesh], generator: String = "3D-lowey") -> Data {
+    static func glb(_ meshes: [ExportMesh], generator: String = "Maquette") -> Data {
         var writer = GLBWriter()
         for (index, item) in meshes.enumerated() where !item.mesh.isEmpty {
             writer.add(item, index: index)

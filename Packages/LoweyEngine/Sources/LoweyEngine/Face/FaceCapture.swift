@@ -21,8 +21,8 @@ public struct FaceSample: @unchecked Sendable {
 /// and mirrored (like a mirror, and like the preview), so what Vision sees is what you see.
 public final class FaceCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     private let session = AVCaptureSession()
-    private let queue = DispatchQueue(label: "studio.hmm.lowey.face")
-    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "face")
+    private let queue = DispatchQueue(label: "studio.h.maquette.face")
+    private let logger = Logger(subsystem: "studio.h.maquette", category: "face")
     private let context = CIContext(options: [.cacheIntermediates: false])
     private var lastFrame: CFTimeInterval = 0
     private var lastPreview: CFTimeInterval = 0

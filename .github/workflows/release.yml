@@ -1,6 +1,7 @@
-# Release builds, only from commits CI passed.
+# Release builds, only from commits CI passed (never one marked [build-only]). Build number = this workflow's run
+# number; the version comes from the tag (v0.1 → 0.1) or Config/Branding.xcconfig.
 #
-# - CI finished green on main → an installable Lowey.ipa artifact for that exact commit.
+# - CI finished green on main → an installable Maquette.ipa artifact for that exact commit.
 # - Tag v* → the same, plus a GitHub Release with the .ipa. A tag is released only when its commit passed CI, or
 #   when the commits since the last green one change nothing but docs (CI skips docs-only pushes).
 #
@@ -30,7 +31,11 @@ env:
 jobs:
   gate:
     name: Only commits CI passed
-    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    # Never for a commit marked [build-only] (CONTEXT §7).
+    if: >-
+      (github.event_name == 'push' ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')) &&
+      !contains(github.event.workflow_run.head_commit.message, '[build-only]')
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.check.outputs.sha }}
@@ -82,7 +87,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   ipa:
-    name: Build Lowey.ipa
+    name: Build Maquette.ipa
     needs: gate
     runs-on: xcode-27
     timeout-minutes: 45
@@ -122,7 +127,7 @@ jobs:
           set -euo pipefail
           APP=build/Build/Products/Release-iphoneos/Lowey.app
           test -d "$APP"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "studio.hmm.lowey"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "studio.h.maquette"
           # Inside out: frameworks, then the widget extension, then the app (Sideloadly needs signatures to replace).
           find "$APP/Frameworks" -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
           find "$APP/PlugIns" -maxdepth 1 -name "*.appex" -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
@@ -130,14 +135,14 @@ jobs:
           codesign --verify --deep --verbose=2 "$APP"
           mkdir -p Payload
           cp -R "$APP" Payload/
-          zip -qry Lowey.ipa Payload
-          ls -lh Lowey.ipa
+          zip -qry Maquette.ipa Payload
+          ls -lh Maquette.ipa
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist"
       - uses: actions/upload-artifact@v4
         with:
-          name: Lowey-${{ needs.gate.outputs.version }}-${{ github.run_number }}
-          path: Lowey.ipa
+          name: Maquette-${{ needs.gate.outputs.version }}-${{ github.run_number }}
+          path: Maquette.ipa
           retention-days: 30
       - name: GitHub Release (tags only)
         if: needs.gate.outputs.tag != ''
@@ -147,7 +152,10 @@ jobs:
         run: |
           PRERELEASE=""
           if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; fi
-          gh release create "$TAG" Lowey.ipa --title "3D-lowey $TAG" --generate-notes $PRERELEASE
+          # --latest: by version alone, 3D-lowey v2.0.0 would stay "Latest" over Maquette v0.x.
+          LATEST="--latest"
+          if [[ -n "$PRERELEASE" ]]; then LATEST=""; fi
+          gh release create "$TAG" Maquette.ipa --title "Maquette $TAG" --generate-notes $PRERELEASE $LATEST
 
   testflight:
     # The App Store build: the AI bridge off and no background audio (App Review), signed with the App Store Connect

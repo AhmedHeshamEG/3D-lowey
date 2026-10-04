@@ -10,7 +10,7 @@ public struct ProjectSummary: Hashable, Sendable, Identifiable {
 
 /// The `.lowey` project package (an hmm-kit `DocumentPackage`, visible in the Files app):
 ///
-///     MyVideo.lowey/
+///     MyVideo.maquette/
 ///       manifest.json   {schemaVersion: 2, app: "lowey", kind: "project", created, modified}
 ///       project.json
 ///       scenes/<scene-id>.json
@@ -19,7 +19,16 @@ public struct ProjectSummary: Hashable, Sendable, Identifiable {
 ///       renders/
 ///       thumbnail.png
 public enum ProjectLayout {
-    public static let fileExtension = "lowey"
+    public static let fileExtension = "maquette"
+    /// 3D-lowey projects (`.lowey`) still open, list and import.
+    public static let legacyExtensions: Set<String> = ["lowey"]
+
+    /// Whether a folder is a project package (current or 3D-lowey).
+    public static func isProject(_ url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        return ext == fileExtension || legacyExtensions.contains(ext)
+    }
+
     public static let projectFile = "project.json"
     public static let scenesFolder = "scenes"
     public static let assetsFolder = "assets"
@@ -31,7 +40,7 @@ public enum ProjectLayout {
         project.appendingPathComponent(scenesFolder).appendingPathComponent("\(id.raw).json")
     }
 
-    /// Package format: 1 = 3D-lowey 1.x (no manifest), 2 = 2.0.
+    /// Package format: 1 = Maquette 1.x (no manifest), 2 = 2.0.
     public static let packageVersion = 2
     public static let app = "lowey"
     public static let kind = "project"
@@ -58,7 +67,7 @@ public enum ProjectStoreError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case let .notAProject(path): "\(path) is not a 3D-lowey project"
+        case let .notAProject(path): "\(path) is not a Maquette project"
         case let .sceneMissing(id): "Scene \(id) is missing from the project"
         case .lastScene: "A project needs at least one scene"
         }
@@ -83,7 +92,7 @@ public struct ProjectStore: Sendable {
             at: root, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]
         ) else { return [] }
         return entries
-            .filter { $0.pathExtension == ProjectLayout.fileExtension }
+            .filter(ProjectLayout.isProject)
             .compactMap { url in (try? loadProjectInfo(at: url)).map { ProjectSummary(url: url, info: $0.info) } }
             .sorted { $0.info.modified > $1.info.modified }
     }
@@ -257,6 +266,7 @@ public struct ProjectStore: Sendable {
         let file = ProjectLayout.sceneURL(id, in: url)
         try? FileManager.default.removeItem(at: file)
         try? FileManager.default.removeItem(at: SafeFileWriter.backupURL(for: file))
+        ProjectHistory.remove(scene: id, in: url)
     }
 
     public func writeThumbnail(_ png: Data, for url: URL) throws {
@@ -282,28 +292,5 @@ public struct ProjectStore: Sendable {
         let cleaned = name.unicodeScalars.map { forbidden.contains($0) ? "-" : Character($0) }
         let result = String(cleaned).trimmingCharacters(in: .whitespacesAndNewlines)
         return result.isEmpty ? "Untitled" : String(result.prefix(80))
-    }
-}
-
-/// Serializes saves off the main thread, one at a time, always writing the newest document.
-public actor DocumentSaver {
-    private let store: ProjectStore
-    private var lastSavedRevision: [URL: Int] = [:]
-
-    public init(store: ProjectStore) {
-        self.store = store
-    }
-
-    /// Saves if `revision` is newer than what was last saved for `url`. Returns true if written.
-    @discardableResult
-    public func save(_ document: Document, revision: Int, to url: URL) throws -> Bool {
-        if let saved = lastSavedRevision[url], saved >= revision { return false }
-        try store.save(document, to: url)
-        lastSavedRevision[url] = revision
-        return true
-    }
-
-    public func markSaved(_ revision: Int, for url: URL) {
-        lastSavedRevision[url] = revision
     }
 }

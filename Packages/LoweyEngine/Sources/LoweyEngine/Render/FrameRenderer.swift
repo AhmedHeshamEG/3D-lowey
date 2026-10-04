@@ -13,9 +13,10 @@ public final class FrameRenderer {
     private var textureCache: CVMetalTextureCache?
     private var output: MTLTexture?
 
-    public init(device: RenderDevice, models: ModelLibrary = .shared) throws {
+    /// `quality` is `.full` for everything that leaves the app; the tier tests render a lighter preview with it.
+    public init(device: RenderDevice, models: ModelLibrary = .shared, quality: PreviewQuality = .full) throws {
         self.device = device
-        renderer = try LoweyRenderer(device: device, models: models)
+        renderer = try LoweyRenderer(device: device, models: models, quality: quality)
         CVMetalTextureCacheCreate(nil, nil, device.device, nil, &textureCache)
     }
 

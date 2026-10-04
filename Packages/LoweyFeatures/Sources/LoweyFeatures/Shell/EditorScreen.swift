@@ -38,6 +38,9 @@ struct EditorScreen: View {
         .overlay(alignment: .bottom) {
             if let proposal = editor.proposal { ProposalBanner(editor: editor, proposal: proposal) }
         }
+        .overlay(alignment: .bottom) {
+            if let state = editor.historyScrub { HistoryScrubberBar(editor: editor, state: state) }
+        }
         .modifier(EditorSheets(editor: editor))
         .background(EditorKeyboardShortcuts(editor: editor))
         .onPencilSqueeze { phase in
@@ -75,6 +78,11 @@ struct EditorScreen: View {
             }
             if editor.faceActive { FacePreviewPanel(editor: editor, monitor: editor.faceMonitor) }
             if showsHUD { PerformanceHUDOverlay(monitor: editor.performance) }
+            if !editor.chromeHidden {
+                LoadChip(editor: editor)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, HmmSpacing.m)
+            }
             if AppIdentity.isUITesting, !AppIdentity.isTakingScreenshots { DebugTrail(editor: editor) }
         }
         .clipped()

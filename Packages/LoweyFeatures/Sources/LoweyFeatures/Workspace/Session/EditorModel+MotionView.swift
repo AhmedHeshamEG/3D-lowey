@@ -80,6 +80,14 @@ extension EditorModel {
 
 /// The selection's motion path and onion-skin ghosts, kept while nothing they depend on changes.
 struct MotionViewCache {
+    struct SmearKey: Equatable {
+        var revision: Int
+        var time: Double
+        var previewing: Bool
+    }
+
+    var smearKey: SmearKey?
+    var smears: [ObjectID: Smear] = [:]
     struct PathKey: Equatable {
         var revision: Int
         var object: ObjectID

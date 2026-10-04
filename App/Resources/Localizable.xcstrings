@@ -209,6 +209,22 @@
         }
       }
     },
+    "%lld of %lld · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld di %lld · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld من %lld · %@"
+          }
+        }
+      }
+    },
     "%lld pt hmm.": {
       "localizations": {
         "it": {
@@ -333,54 +349,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "نص ثلاثي الأبعاد"
-          }
-        }
-      }
-    },
-    "3D-lowey": {
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3D-lowey"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3D-lowey"
-          }
-        }
-      }
-    },
-    "3D-lowey edits in one window at a time. Use this one instead, or make it a monitor of the shot.": {
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3D-lowey modifica in una finestra alla volta. Usa questa al suo posto, o trasformala in un monitor dell'inquadratura."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يحرّر 3D-lowey في نافذة واحدة في كل مرة. استخدم هذه بدلًا منها، أو اجعلها شاشة لعرض اللقطة."
-          }
-        }
-      }
-    },
-    "3D-lowey quit unexpectedly last time. Your work was autosaved.": {
-      "localizations": {
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'ultima volta 3D-lowey si è chiuso inaspettatamente. Il tuo lavoro è stato salvato automaticamente."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أُغلق 3D-lowey بشكل غير متوقع في المرة الماضية. تم حفظ عملك تلقائيًا."
           }
         }
       }
@@ -557,6 +525,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إجراءات ▸ تصدير: يوتيوب، Shorts، GIF، صور ثابتة. يتم العرض في الخلفية. كل الإيماءات في الإعدادات ▸ الإيماءات."
+          }
+        }
+      }
+    },
+    "Adaptive resolution": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risoluzione adattiva"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دقة متكيّفة"
           }
         }
       }
@@ -909,6 +893,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الكمية"
+          }
+        }
+      }
+    },
+    "An hour of work, %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un'ora di lavoro, %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ساعة من العمل، %@"
           }
         }
       }
@@ -1297,6 +1297,22 @@
         }
       }
     },
+    "Back %lld steps. Redo goes forward again until you change something.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indietro di %lld passi. Ripeti va di nuovo avanti finché non cambi qualcosa."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجعت %lld خطوات. «إعادة» تتقدّم من جديد ما لم تغيّر شيئًا."
+          }
+        }
+      }
+    },
     "Back 10 seconds": {
       "localizations": {
         "it": {
@@ -1341,6 +1357,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "الطبقات"
+          }
+        }
+      }
+    },
+    "Before going back %lld steps": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima di tornare indietro di %lld passi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل الرجوع %lld خطوات"
+          }
+        }
+      }
+    },
+    "Before restoring “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima di ripristinare “%@”"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل استعادة “%@”"
           }
         }
       }
@@ -2161,6 +2209,22 @@
         }
       }
     },
+    "Close to what this iPad keeps smooth": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vicino a ciò che questo iPad mantiene fluido"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قريب مما يحافظ هذا الآيباد على سلاسته"
+          }
+        }
+      }
+    },
     "Close-up": {
       "localizations": {
         "it": {
@@ -2657,6 +2721,22 @@
         }
       }
     },
+    "Couldn't open that version: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile aprire quella versione: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر فتح تلك النسخة: %@"
+          }
+        }
+      }
+    },
     "Couldn't open the project: %@": {
       "localizations": {
         "it": {
@@ -2705,6 +2785,22 @@
         }
       }
     },
+    "Couldn't record your last change: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile registrare la tua ultima modifica: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تسجيل آخر تعديل لك: %@"
+          }
+        }
+      }
+    },
     "Couldn't record: %@": {
       "localizations": {
         "it": {
@@ -2721,6 +2817,22 @@
         }
       }
     },
+    "Couldn't save the version: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare la versione: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ النسخة: %@"
+          }
+        }
+      }
+    },
     "Couldn't save to Photos: %@": {
       "localizations": {
         "it": {
@@ -2733,6 +2845,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر الحفظ في الصور: %@"
+          }
+        }
+      }
+    },
+    "Couldn't save: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الحفظ: %@"
           }
         }
       }
@@ -5153,6 +5281,22 @@
         }
       }
     },
+    "Frame times against this screen's budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempi dei fotogrammi rispetto al budget di questo schermo, p50 / p95 / p99 negli ultimi cinque secondi, fotogrammi persi, calore e memoria."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزمنة الإطارات مقابل ميزانية هذه الشاشة، p50 / p95 / p99 خلال آخر خمس ثوانٍ، الإطارات المفقودة، الحرارة والذاكرة."
+          }
+        }
+      }
+    },
     "Framing": {
       "localizations": {
         "it": {
@@ -5373,6 +5517,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "توهّج"
+          }
+        }
+      }
+    },
+    "Go back here": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Torna qui"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارجع إلى هنا"
           }
         }
       }
@@ -5697,6 +5857,22 @@
         }
       }
     },
+    "History": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cronologia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السجلّ"
+          }
+        }
+      }
+    },
     "Hover glow": {
       "localizations": {
         "it": {
@@ -5793,18 +5969,18 @@
         }
       }
     },
-    "Import a project (.loweypack)": {
+    "Import a project (.maquettepack)": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importa un progetto (.loweypack)"
+            "value": "Importa un progetto (.maquettepack)"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "استيراد مشروع (.loweypack)"
+            "value": "استيراد مشروع (.maquettepack)"
           }
         }
       }
@@ -6545,6 +6721,38 @@
         }
       }
     },
+    "Lighter preview": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteprima più leggera"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة أخفّ"
+          }
+        }
+      }
+    },
+    "Lighter preview for this session. Exports stay at full quality.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteprima più leggera per questa sessione. Le esportazioni restano alla massima qualità."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة أخفّ لهذه الجلسة. تبقى التصديرات بأعلى جودة."
+          }
+        }
+      }
+    },
     "Line": {
       "localizations": {
         "it": {
@@ -6945,6 +7153,54 @@
         }
       }
     },
+    "Maquette": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maquette"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maquette"
+          }
+        }
+      }
+    },
+    "Maquette edits in one window at a time. Use this one instead, or make it a monitor of the shot.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maquette modifica in una finestra alla volta. Usa questa al suo posto, o trasformala in un monitor dell'inquadratura."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحرّر Maquette في نافذة واحدة في كل مرة. استخدم هذه بدلًا منها، أو اجعلها شاشة لعرض اللقطة."
+          }
+        }
+      }
+    },
+    "Maquette quit unexpectedly last time. Your work was autosaved.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ultima volta Maquette si è chiuso inaspettatamente. Il tuo lavoro è stato salvato automaticamente."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُغلق Maquette بشكل غير متوقع في المرة الماضية. تم حفظ عملك تلقائيًا."
+          }
+        }
+      }
+    },
     "Marker": {
       "localizations": {
         "it": {
@@ -7101,6 +7357,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "النماذج"
+          }
+        }
+      }
+    },
+    "Moment in the history": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Momento della cronologia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لحظة في السجلّ"
           }
         }
       }
@@ -7457,6 +7729,22 @@
         }
       }
     },
+    "Name this version": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dai un nome a questa versione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سمِّ هذه النسخة"
+          }
+        }
+      }
+    },
     "New": {
       "localizations": {
         "it": {
@@ -7601,6 +7889,22 @@
         }
       }
     },
+    "Night Market, 20 s: 400 objects, walkers, Blobs, a dolly. Pass: no dropped frame in 19 of 20, near full preview, no hitch over 33 ms.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mercato notturno, 20 s: 400 oggetti, figure che camminano, Blob, un carrello. Superato: nessun fotogramma perso in 19 su 20, anteprima quasi piena, nessuno scatto oltre 33 ms."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السوق الليلي، 20 ثانية: 400 عنصر، شخصيات تمشي، Blob، حركة كاميرا. النجاح: لا إطار مفقود في 19 من 20، معاينة شبه كاملة، ولا تقطّع يتجاوز 33 ms."
+          }
+        }
+      }
+    },
     "No account, no tracking: nothing leaves this iPad unless you share it.": {
       "localizations": {
         "it": {
@@ -7677,6 +7981,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا مشاريع بعد"
+          }
+        }
+      }
+    },
+    "No versions yet": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuna versione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد نسخ بعد"
           }
         }
       }
@@ -7821,6 +8141,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُؤدَّ شيء. المس وحرّك أثناء التشغيل"
+          }
+        }
+      }
+    },
+    "Now · %lld steps back are kept": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora · si conservano %lld passi indietro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الآن · يُحتفَظ بـ %lld خطوة للخلف"
           }
         }
       }
@@ -8285,6 +8621,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح النص المكتوب"
+          }
+        }
+      }
+    },
+    "Opened %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperto il %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فُتح في %@"
           }
         }
       }
@@ -9025,6 +9377,22 @@
         }
       }
     },
+    "Preview tier %@: exports always render at full quality.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livello di anteprima %@: le esportazioni sono sempre alla massima qualità."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستوى المعاينة %@: تُصدَّر الأعمال دائمًا بأعلى جودة."
+          }
+        }
+      }
+    },
     "Previous frame": {
       "localizations": {
         "it": {
@@ -9713,6 +10081,38 @@
         }
       }
     },
+    "Restore version": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristina versione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استعادة نسخة"
+          }
+        }
+      }
+    },
+    "Restored “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristinata “%@”"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت استعادة “%@”"
+          }
+        }
+      }
+    },
     "Retro (PS1)": {
       "localizations": {
         "it": {
@@ -9949,6 +10349,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تشغيل"
+          }
+        }
+      }
+    },
+    "Run as Tier B": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esegui come livello B"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّل كالمستوى B"
           }
         }
       }
@@ -10865,18 +11281,18 @@
         }
       }
     },
-    "Share as one file (.loweypack)": {
+    "Share as one file (.maquettepack)": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Condividi come un unico file (.loweypack)"
+            "value": "Condividi come un unico file (.maquettepack)"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مشاركة كملف واحد (.loweypack)"
+            "value": "مشاركة كملف واحد (.maquettepack)"
           }
         }
       }
@@ -12705,6 +13121,38 @@
         }
       }
     },
+    "The stage now adapts its resolution to stay smooth.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora il palco adatta la sua risoluzione per restare fluido."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يكيّف المسرح الآن دقته ليبقى سلسًا."
+          }
+        }
+      }
+    },
+    "The start of the kept history": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'inizio della cronologia conservata"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بداية السجلّ المحفوظ"
+          }
+        }
+      }
+    },
     "The subject isn't in the previous shot": {
       "localizations": {
         "it": {
@@ -12733,6 +13181,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الموضوع دافئ ومضاء والعالم بارد وأعتم: تذهب العين إلى الدافئ."
+          }
+        }
+      }
+    },
+    "The very last change couldn't be read back. Everything before it is here.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ultimissima modifica non si è potuta rileggere. Tutto ciò che la precede è qui."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت قراءة آخر تعديل فقط. كل ما قبله موجود هنا."
           }
         }
       }
@@ -12909,6 +13373,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا منحنى لهذه الخاصية (الألوان والمفاتيح تنتقل من مفتاح لآخر مباشرة)."
+          }
+        }
+      }
+    },
+    "This scene is more than this iPad keeps smooth": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa scena è più di quanto questo iPad mantenga fluido"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المشهد أكثر مما يحافظ هذا الآيباد على سلاسته"
           }
         }
       }
@@ -13677,6 +14157,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإصدار"
+          }
+        }
+      }
+    },
+    "Version of %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione del %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخة %@"
+          }
+        }
+      }
+    },
+    "Versions": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versioni"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخ"
           }
         }
       }

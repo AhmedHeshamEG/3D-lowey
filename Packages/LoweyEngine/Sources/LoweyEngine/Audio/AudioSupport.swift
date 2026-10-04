@@ -80,7 +80,7 @@ public final class AudioPlayback {
     private let engine = AVAudioEngine()
     private var nodes: [String: (player: AVAudioPlayerNode, eq: AVAudioUnitEQ)] = [:]
     private var files: [String: AVAudioFile] = [:]
-    private let logger = Logger(subsystem: "studio.hmm.lowey", category: "audio")
+    private let logger = Logger(subsystem: "studio.h.maquette", category: "audio")
     /// Host time (CACurrentMediaTime) at which timeline time `time` is heard.
     private(set) var anchor: (host: CFTimeInterval, time: Double)?
     public var folder: URL

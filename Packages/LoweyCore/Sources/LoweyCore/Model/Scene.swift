@@ -246,7 +246,7 @@ public struct ProjectInfo: Codable, Hashable, Sendable, Identifiable {
 
 /// What an editing session mutates: the project's info (look, palette) and one scene.
 /// Every change goes through an `EditCommand` applied to a `Document`.
-public struct Document: Hashable, Sendable {
+public struct Document: Codable, Hashable, Sendable {
     public var project: ProjectInfo
     public var scene: Scene
 

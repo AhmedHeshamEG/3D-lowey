@@ -6,7 +6,7 @@ final class ProjectStoreTests: XCTestCase {
     func testCreateSaveCloseReopenIsIdentical() throws {
         let store = try ProjectStore(root: temporaryDirectory())
         let (url, created) = try store.createProject(name: "My Video")
-        XCTAssertEqual(url.pathExtension, "lowey")
+        XCTAssertEqual(url.pathExtension, "maquette")
         for folder in ["scenes", "assets", "audio", "renders"] {
             XCTAssertTrue(FileManager.default.fileExists(atPath: url.appendingPathComponent(folder).path))
         }
@@ -114,16 +114,5 @@ final class ProjectStoreTests: XCTestCase {
         XCTAssertEqual(ProjectStore.sanitize("a/b:c"), "a-b-c")
         XCTAssertEqual(ProjectStore.sanitize("   "), "Untitled")
         XCTAssertEqual(ProjectStore.sanitize(String(repeating: "x", count: 200)).count, 80)
-    }
-
-    func testDocumentSaverSkipsStaleRevisions() async throws {
-        let store = try ProjectStore(root: temporaryDirectory())
-        let (url, document) = try store.createProject(name: "Saver")
-        let saver = DocumentSaver(store: store)
-        await saver.markSaved(0, for: url)
-        let wrote = try await saver.save(document, revision: 3, to: url)
-        XCTAssertTrue(wrote)
-        let skipped = try await saver.save(document, revision: 2, to: url)
-        XCTAssertFalse(skipped)
     }
 }

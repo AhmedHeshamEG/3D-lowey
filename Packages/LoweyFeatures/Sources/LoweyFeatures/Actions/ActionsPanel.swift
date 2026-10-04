@@ -38,6 +38,7 @@ struct ActionsPanel: View {
                 scenes
                 PanelSection("Project") {
                     TileGrid {
+                        TileButton(title: "History", systemName: "clock.arrow.circlepath", identifier: "open-history") { editor.openHistory() }
                         TileButton(title: "Timeline", systemName: "timeline.selection") { open(.timelineSettings) }
                         TileButton(title: "Scripts", systemName: "curlybraces") { editor.openScript(nil) }
                         if FeatureFlags.aiBridge {

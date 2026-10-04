@@ -72,7 +72,7 @@ struct SecondaryWindowView: View {
         } else {
             VStack(spacing: HmmSpacing.m) {
                 HmmEmptyState("macwindow.on.rectangle", title: "Open in another window",
-                              message: "3D-lowey edits in one window at a time. Use this one instead, or make it a monitor of the shot.")
+                              message: "Maquette edits in one window at a time. Use this one instead, or make it a monitor of the shot.")
                 HStack {
                     HmmPillButton("Monitor", systemName: "rectangle.on.rectangle") { showsMonitor = true }
                     HmmPillButton("Edit here", systemName: "pencil", prominent: true, action: claim)

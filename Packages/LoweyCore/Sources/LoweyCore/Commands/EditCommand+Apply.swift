@@ -12,6 +12,16 @@ public extension EditCommand {
 
     typealias Applied = (inverse: EditCommand, changes: ChangeSet)
 
+    /// A version restored: the scene keeps its id, everything else is the version's.
+    private static func applyReplaceScene(_ scene: Scene, in document: inout Document) -> Applied {
+        let old = document.scene
+        document.scene = scene
+        document.scene.id = old.id
+        document.project.sceneNames[old.id] = scene.name
+        let objects = Set(old.objects.keys).union(scene.objects.keys)
+        return (.replaceScene(old), ChangeSet(objects: objects, hierarchy: true, look: true, scene: true))
+    }
+
     private func applyUnchecked(to document: inout Document) throws -> Applied {
         switch self {
         case let .insert(fragment, parent, index):
@@ -72,6 +82,9 @@ public extension EditCommand {
 
         case let .setFlipbooks(edits):
             return Self.applySetFlipbooks(edits, in: &document)
+
+        case let .replaceScene(scene):
+            return Self.applyReplaceScene(scene, in: &document)
 
         case let .batch(label, commands):
             var inverses: [EditCommand] = []

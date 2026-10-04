@@ -1,15 +1,22 @@
-# 3D-lowey
+# Maquette
 
-An iPad app for making short animated videos that look drawn: build a set like Lego, drop in characters, direct
-them with a camera, sync them to your voice, and export the video. Think Procreate Dreams, in 3D, cel-shaded.
+Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 3D, for people without an engineering
+or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
+export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
-**2.0.** A Metal renderer and five Looks (Ink, Comic, Sketch, Clay, Low-poly), a layout without modes, ink strokes
+**0.1** (phase M1): the app is Maquette; **nothing is ever lost** (every change is recorded the moment it happens,
+undo survives closing the app, Actions ▸ History scrubs back through every step and keeps versions); the Pencil's
+hover point sits exactly under the tip; every iPad gets a preview tuned to it; a hidden load meter speaks up before
+frames drop.
+
+**From 2.0.** A Metal renderer and five Looks (Ink, Comic, Sketch, Clay, Low-poly), a layout without modes, ink strokes
 and flipbooks, a Kit of about 350 real-size models, one Cast for every kind of character, and Claude as a director's
 assistant that can see what it builds. In English, Italian and Arabic.
 
 - What it is and where it's going: [docs/SPEC.md](docs/SPEC.md)
 - What happened to each 1.x feature: [docs/MIGRATION.md](docs/MIGRATION.md)
 - How it's built: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · why: [docs/DECISIONS.md](docs/DECISIONS.md)
+- The project file format: [docs/PROJECT_FORMAT.md](docs/PROJECT_FORMAT.md)
 - Known limits and what's next: [docs/BACKLOG.md](docs/BACKLOG.md) · changes: [CHANGELOG.md](CHANGELOG.md)
 - The App Store listing, privacy and TestFlight: [docs/APPSTORE.md](docs/APPSTORE.md)
 
@@ -17,20 +24,22 @@ assistant that can see what it builds. In English, Italian and Arabic.
 
 ## Install on an iPad (no Mac needed)
 
-Every green build of `main` produces an installable `Lowey.ipa`; tagged versions are attached to a GitHub Release.
+Every green build of `main` produces an installable `Maquette.ipa`; tagged versions are attached to a GitHub Release.
 
-1. **Get the .ipa**: *Releases* → the newest version → `Lowey.ipa`, or *Actions* → **Release** → the newest green
-   run → *Artifacts* → `Lowey-<version>-<build>` (a zip with `Lowey.ipa` inside).
+1. **Get the .ipa**: *Releases* → the newest version → `Maquette.ipa`, or *Actions* → **Release** → the newest green
+   run → *Artifacts* → `Maquette-<version>-<build>` (a zip with `Maquette.ipa` inside).
 2. **Install [Sideloadly](https://sideloadly.io)** on a computer (Windows is fine) and connect the iPad with a cable.
-3. Drag `Lowey.ipa` into Sideloadly, pick the iPad, sign in with a **free Apple ID**, press **Start**.
+3. Drag `Maquette.ipa` into Sideloadly, pick the iPad, sign in with a **free Apple ID**, press **Start**.
 4. On the iPad: **Settings → General → VPN & Device Management** → your Apple ID → **Trust**. If asked, turn on
    **Settings → Privacy & Security → Developer Mode** and restart.
-5. Open **3D-lowey**. The first launch adds the samples: the **Welcome island** (with a 60-second tour) and **Enigma**
+5. Open **Maquette**. The first launch adds the samples: the **Welcome island** (with a 60-second tour) and **Enigma**
    (a desk in Ink, a room of computers in Comic, a cave robot in Sketch, and the narrated story).
 
 A free Apple ID signature lasts **7 days**; after that, connect the iPad and press **Start** in Sideloadly again.
-Projects are kept: they live under *Files → On My iPad → 3D-lowey*. 2.0 installs next to 1.x (it has its own bundle
-id), and 1.x projects open in it: share them from 1.x or pick them in Files.
+Projects are kept: they live under *Files → On My iPad → Maquette*. Maquette installs next to 3D-lowey (it has its
+own bundle id, so it starts with its own empty folder): bring 3D-lowey projects over by sharing them from 3D-lowey
+(*Share as one file*, `.loweypack`) or picking their `.lowey` folders in Files; they open in Maquette and stay
+readable by 3D-lowey 2.0.
 
 **iPhone face companion**: install the same `.ipa` on an iPhone with Face ID. On a phone the app is only the companion:
 it tracks your face and streams it to the iPad on the same Wi-Fi.

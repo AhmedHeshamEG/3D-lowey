@@ -38,10 +38,10 @@ extension LoweyRenderer {
         frame.viewProjection = projection * view
         frame.inverseViewProjection = frame.viewProjection.inverse
         let (splits, first, second) = ShadowCascades.matrices(camera: camera, aspect: aspect, sunToward: frame.sunDirection.xyz4,
-                                                              sceneBounds: scene.bounds, mapSize: RenderDevice.shadowMapSize)
+                                                              sceneBounds: scene.bounds, mapSize: shadowMapSize)
         frame.shadowMatrix0 = first
         frame.shadowMatrix1 = second
-        frame.cascades = SIMD4<Float>(splits.x, splits.y, 1 / Float(RenderDevice.shadowMapSize), Float(request.frameIndex))
+        frame.cascades = SIMD4<Float>(splits.x, splits.y, 1 / Float(shadowMapSize), Float(request.frameIndex))
         frame.cameraPosition = SIMD4<Float>(camera.position, Float(request.input.time))
         frame.viewport = SIMD4<Float>(Float(shadingWidth), Float(shadingHeight), 1 / Float(max(shadingWidth, 1)),
                                       1 / Float(max(shadingHeight, 1)))

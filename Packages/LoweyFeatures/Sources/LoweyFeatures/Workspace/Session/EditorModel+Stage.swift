@@ -18,8 +18,10 @@ extension EditorModel {
         stage.gizmoMode = gizmoMode
         stage.dynamicScale.enabled = !UserDefaults.standard.bool(forKey: AppSettings.fullResolutionStage)
         stage.onCameraChanged = { [weak self] viewpoint in self?.cameraMoved(viewpoint) }
-        stage.onFrameTime = { [weak self] gpu, total, scale in
-            self?.performance.record(gpu: gpu, total: total, scale: scale)
+        stage.onFrameTime = { [weak self, weak stage] gpu, total, scale in
+            guard let self, let stage else { return }
+            performance.record(gpu: gpu, total: total, scale: scale, work: max(gpu, stage.lastEncodeTime), budget: stage.dynamicScale.budget)
+            performance.recordScene(stage.lastReport, tier: stage.renderer.quality.tier)
         }
         stage.frameSource = { [weak self] stage in self?.stageFrame(for: stage) }
         refreshGuide()
@@ -34,7 +36,7 @@ extension EditorModel {
                                 hidden: director?.id, showsHelpers: director == nil, mediaImage: { [weak self] key in self?.mediaImage(key) },
                                 catalog: library.catalog, lightBudget: 16)
         if !isPlaying { input.ghosts = onionGhosts() }
-        input.smears = Smear.smears(in: document, at: time)
+        input.smears = smears()
         var request = FrameRequest(input: input, camera: stage.camera, frameIndex: timeline.frame(for: time))
         if let director {
             request.lens = displayed.scene.objects[director.id].map(CameraLens.init)
@@ -51,6 +53,17 @@ extension EditorModel {
             request.editor = editor
         }
         return StageFrame(request: request, shotCamera: director?.camera)
+    }
+
+    /// Smears at the playhead, kept until the document or the time changes (a hovering Pencil redraws the stage at
+    /// 120 Hz with neither changing; the scan copied every object on each of those frames).
+    func smears() -> [ObjectID: Smear] {
+        let key = MotionViewCache.SmearKey(revision: session.revision, time: time, previewing: historyPreview != nil)
+        if motionCache.smearKey == key { return motionCache.smears }
+        let result = Smear.smears(in: historyPreview ?? document, at: time)
+        motionCache.smearKey = key
+        motionCache.smears = result
+        return result
     }
 
     /// The camera the shot is seen through at the playhead (cuts, else the active camera).
@@ -142,7 +155,7 @@ extension EditorModel {
             try? await Task.sleep(for: .seconds(0.6))
             guard let self, !Task.isCancelled else { return }
             session.setViewpoint(viewpoint)
-            scheduleAutosave()
+            scheduleIdleCheckpoint()
         }
     }
 

@@ -12,18 +12,33 @@ struct DiagnosticsSheet: View {
     @AppStorage(AppSettings.showsPerformanceHUD) private var showsHUD = false
     @State private var sharing: [URL] = []
     @State private var runningBenchmark = false
+    @State private var benchmarkTier = PreviewQuality.current.tier
     @State private var reports: [URL] = []
     @Environment(\.hmmTheme) private var theme
 
     var body: some View {
         HmmSheet("Diagnostics") {
             Toggle("Performance HUD over the stage", isOn: $showsHUD).font(.hmm(.headline, weight: .semibold))
-            Hint("Frame times against the 120 fps budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.")
+            Hint("Frame times against this screen's budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.")
             HmmSectionHeader("Benchmark")
-            Hint("The Night Market: about 400 objects, six walking figures, four Blobs, lanterns and a slow dolly, for 20 seconds at full speed. "
-                + "Pass: 95% of frames under 8.3 ms at render scale 0.85 or more, no hitch over 33 ms.")
-            HmmPillButton("Run the benchmark", systemName: "speedometer", prominent: true) { runningBenchmark = true }
+            Hint(
+                "Night Market, 20 s: 400 objects, walkers, Blobs, a dolly. Pass: no dropped frame in 19 of 20, near full preview, no hitch over 33 ms."
+            )
+            HStack(spacing: HmmSpacing.xs) {
+                HmmPillButton("Run the benchmark", systemName: "speedometer", prominent: true) {
+                    benchmarkTier = PreviewQuality.current.tier
+                    runningBenchmark = true
+                }
                 .accessibilityIdentifier("run-benchmark")
+                if PreviewQuality.current.tier == .a {
+                    // How a recent A-chip iPad will feel: the Tier B preview on this iPad.
+                    HmmPillButton("Run as Tier B", systemName: "speedometer") {
+                        benchmarkTier = .b
+                        runningBenchmark = true
+                    }
+                    .accessibilityIdentifier("run-benchmark-tier-b")
+                }
+            }
             ForEach(reports, id: \.self) { url in
                 HStack {
                     Label(url.lastPathComponent, systemImage: "doc.text").font(.hmm(.footnote)).lineLimit(1)
@@ -33,6 +48,8 @@ struct DiagnosticsSheet: View {
             }
             HmmSectionHeader("This iPad")
             Text(DiagnosticsCenter.deviceSummary).font(.hmm(.footnote)).foregroundStyle(theme.text2).textSelection(.enabled)
+            Text("Preview tier \(PreviewQuality.current.tier.rawValue): exports always render at full quality.")
+                .font(.hmm(.footnote)).foregroundStyle(theme.text2)
             Text((try? RenderDevice.sharedDevice().capabilities.summary) ?? "No Metal GPU").font(.hmm(.footnote)).foregroundStyle(theme.text2)
             HmmPillButton("Export logs", systemName: "stethoscope") {
                 if let url = app.diagnostics.exportArchive(summary: summary) { sharing = [url] }
@@ -40,7 +57,9 @@ struct DiagnosticsSheet: View {
             .accessibilityIdentifier("export-logs")
         }
         .onAppear(perform: loadReports)
-        .fullScreenCover(isPresented: $runningBenchmark, onDismiss: loadReports) { BenchmarkRunView(diagnostics: app.diagnostics) }
+        .fullScreenCover(isPresented: $runningBenchmark, onDismiss: loadReports) {
+            BenchmarkRunView(diagnostics: app.diagnostics, tier: benchmarkTier)
+        }
         .sheet(isPresented: Binding(get: { !sharing.isEmpty }, set: { if !$0 { sharing = [] } })) { ShareSheet(items: sharing) }
     }
 

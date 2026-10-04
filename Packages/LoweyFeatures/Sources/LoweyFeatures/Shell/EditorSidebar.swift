@@ -32,17 +32,21 @@ struct EditorSidebar: View {
         }
         switch editor.tool {
         case .flipbook:
-            return (HmmSidebarSlider("Width", value: $editor.flipbook.width, in: 0.5 ... 24, format: { "\(Int(($0 * 2).rounded())) pt" }),
+            return (HmmSidebarSlider("Width", value: $editor.flipbook.width, in: 0.5 ... 24, format: { "\(Int(($0 * 2).rounded())) pt" },
+                                     onEditingChanged: editor.setBrushResizing),
                     HmmSidebarSlider("Opacity", value: $editor.flipbook.opacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" }))
         case .ink:
-            return (HmmSidebarSlider("Width", value: $editor.ink.width, in: 0.001 ... 0.05, format: { "\(Int(($0 * 2000).rounded())) mm" }),
+            return (HmmSidebarSlider("Width", value: $editor.ink.width, in: 0.001 ... 0.05, format: { "\(Int(($0 * 2000).rounded())) mm" },
+                                     onEditingChanged: editor.setBrushResizing),
                     HmmSidebarSlider("Opacity", value: inkOpacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" },
                                      onEditingChanged: { if !$0 { editor.endGesture() } }))
         case .draw:
-            return (HmmSidebarSlider("Width", value: $editor.draw.width, in: 0.005 ... 0.4, format: { "\(Int(($0 * 100).rounded())) cm" }),
+            return (HmmSidebarSlider("Width", value: $editor.draw.width, in: 0.005 ... 0.4, format: { "\(Int(($0 * 100).rounded())) cm" },
+                                     onEditingChanged: editor.setBrushResizing),
                     HmmSidebarSlider("Smoothing", value: $editor.draw.smoothing, in: 0 ... 1))
         case .shadowBrush:
-            return (HmmSidebarSlider("Brush size", value: $editor.shadowBrush.radius, in: 0.02 ... 1, format: { "\(Int(($0 * 100).rounded())) cm" }),
+            return (HmmSidebarSlider("Brush size", value: $editor.shadowBrush.radius, in: 0.02 ... 1, format: { "\(Int(($0 * 100).rounded())) cm" },
+                                     onEditingChanged: editor.setBrushResizing),
                     HmmSidebarSlider("Strength", value: $editor.shadowBrush.strength, in: 0.05 ... 1))
         default:
             return (HmmSidebarSlider("Snapping", value: $editor.snap.objectThreshold, in: 0 ... 0.5, format: { "\(Int(($0 * 100).rounded())) cm" }),

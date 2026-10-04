@@ -42,7 +42,7 @@ public final class RenderDevice: @unchecked Sendable {
     let library: MTLLibrary
     public let capabilities: RenderCapabilities
     let pipelines: Pipelines
-    let logger = Logger(subsystem: "studio.hmm.lowey", category: "render")
+    let logger = Logger(subsystem: "studio.h.maquette", category: "render")
 
     public static let colorFormat = MTLPixelFormat.rgba16Float
     public static let lightFormat = MTLPixelFormat.r8Unorm

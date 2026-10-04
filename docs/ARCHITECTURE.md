@@ -52,6 +52,7 @@ sequenceDiagram
     participant ES as EditSession (Core)
     participant SB as ShotBuilder (Engine)
     participant R as LoweyRender 2
+    participant J as History journal
     UI->>EM: duplicateSelection()
     EM->>Ops: duplicate(ids, in: scene)
     Ops-->>EM: EditCommand
@@ -60,11 +61,12 @@ sequenceDiagram
     EM->>SB: document changed
     SB->>R: FrameRequest (evaluated scene, camera, Look, editor layer)
     R-->>UI: next frame on the stage
-    EM-->>EM: autosave (debounced, atomic, .bak kept)
+    EM->>J: the step's ops (journalChanged)
+    J-->>J: one JSON line within 50 ms; a checkpoint every 200 changes / 5 s idle
 ```
 
 Continuous gestures (drags, sliders, the joystick, Perform) pass a coalesce key, so a whole gesture is one undo step.
-Scene Scripts and bridge proposals compile into one `batch` command.
+Scene Scripts and bridge proposals compile into one `batch` command. `J` is the scene's `HistoryJournal` (below).
 
 ## LoweyRender 2
 
@@ -98,11 +100,29 @@ flowchart LR
 
 ## Documents
 
-A project is a `.lowey` folder package: `project.json`, `scenes/*.json`, `assets/`, `audio/`, `renders/`, a
-thumbnail and a looping preview. Every file is a versioned envelope `{schemaVersion, kind, payload}`; older versions
-migrate on load (1.x projects included), newer ones are refused with a clear message. Writes are atomic and keep a
-`.bak` of the last good version. hmm-kit's `DocumentLocator` puts projects in iCloud Drive when the build has the
+A project is a `.maquette` folder package (3D-lowey's `.lowey` ones open too): `project.json`, `scenes/*.json`,
+`history/`, `assets/`, `audio/`, `renders/`, a thumbnail and a looping preview. Every file is a versioned envelope
+`{schemaVersion, kind, payload}`; older versions migrate on load (1.x projects included), newer ones are refused with a
+clear message. Writes are atomic and keep a `.bak` of the last good version. The format is documented for readers in
+[PROJECT_FORMAT.md](PROJECT_FORMAT.md).
+
+**The history journal** (hmm-kit's `HistoryJournal`, Maquette's `ProjectHistory`): every scene has one in
+`history/<scene-id>/`. `CommandStack` records each change as a `HistoryOp` (perform, undo, redo, gesture and group
+boundaries); `EditorModel+History` hands them to the journal, which appends them as JSON lines on a serial queue.
+Checkpoints (every 200 changes, 5 s idle, backgrounding, closing a scene) write a snapshot, store each undo step once
+by reference, then write `project.json` and the scene file from the same state. Opening a scene is
+`ProjectHistory.open`: the checkpoint, its newest 64 undo steps, and the tail replayed (older steps load as undo
+reaches them). The history scrubber (`HistoryCursor` in Core, Actions ▸ History) walks the undo steps both ways from
+wherever it is; versions live in `history/<scene-id>/versions/`. hmm-kit's `DocumentLocator` puts projects in iCloud Drive when the build has the
 entitlement, on the device otherwise; `HmmConflictSheet` resolves conflicting versions.
+
+## Device tiers and the load meter
+
+`DeviceTier` (hmm-kit, from the GPU family and memory) picks a `PreviewQuality` for the stage: the render-scale range
+`DynamicScale` moves in and the sun's shadow-map size; the frame budget comes from the screen's refresh. Exports,
+stills and thumbnails always render `.full`. `PerformanceMonitor` feeds hmm-kit's `LoadMeter` with each frame's work
+(GPU time, CPU encode time) and the scene's cost (`SceneCost`); the `LoadChip` appears only near the limit, with the
+fixes that help.
 
 ## Export
 
@@ -147,17 +167,21 @@ Unpaired requests get 401, requests from outside the local network 403, a pairin
 
 ## CI and release
 
+A `changes` job routes each PR by what it touches (docs → nothing, Core → Linux, Engine → render tests, Features/App
+→ feature tests, app build and UI tests); every merge to main runs everything. `CI result` is the one required check.
+
 ```mermaid
 flowchart LR
-    Push[push / PR] --> Lint[SwiftLint --strict<br/>SwiftFormat]
+    Push[PR / main] --> Lint[SwiftLint --strict<br/>SwiftFormat]
     Push --> CoreT[LoweyCore tests<br/>Linux + coverage]
     Push --> Tools[Laptop tools<br/>pytest + generated files]
     Push --> EngineT[LoweyEngine<br/>simulator render tests]
     Push --> FeatT[LoweyFeatures<br/>boundaries + tests]
-    Lint & CoreT & Tools & EngineT & FeatT --> AppT[App build + UI smoke tests]
+    Lint --> AppT[App build + UI smoke tests]
+    CoreT & Tools & EngineT & FeatT & AppT --> Green
     AppT --> Shots[App Store screenshots<br/>iPad 13" + iPhone 6.9"]
-    AppT --> Green{CI green}
-    Green -->|main| IPA[Release: Lowey.ipa artifact]
+    Green{CI result}
+    Green -->|main| IPA[Release: Maquette.ipa artifact]
     Tag[tag v*] --> Gate{commit passed CI?}
     Gate -->|yes| Rel[GitHub Release + .ipa]
     Gate -->|yes, ASC secrets set| TF[TestFlight: App Store build]

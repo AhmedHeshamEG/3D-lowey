@@ -1,5 +1,5 @@
 // swift-tools-version: 6.0
-// LoweyCore — the pure-Swift heart of 3D-lowey: model, commands, documents, geometry, motion, solvers.
+// LoweyCore — the pure-Swift heart of Maquette: model, commands, documents, geometry, motion, solvers.
 // No UIKit, no Metal: it builds and tests on Linux, macOS and iPadOS alike.
 
 import PackageDescription

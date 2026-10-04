@@ -31,18 +31,24 @@ public final class StageView: MTKView {
     public var onCameraChanged: ((Viewpoint) -> Void)?
     /// Frame statistics for the Performance HUD (every frame, on the main actor).
     public var onFrameTime: ((_ gpu: Double, _ total: Double, _ scale: Float) -> Void)?
-    public var dynamicScale = DynamicScale()
+    public var dynamicScale: DynamicScale
     public var gizmoMode: GizmoMode = .move
     private var gizmoPivot: Vec3?
     public var showsGrid = true
     public private(set) var guide: GuideSurface?
     private var strokePreview: (MeshData, RGBA)?
+    /// The hovering Pencil, drawn in this view's own render pass.
+    public private(set) var pointer: PencilPointer?
     private var lastFrameStart: CFTimeInterval = 0
+    private let signposts = HmmSignposts(subsystem: "studio.h.maquette", category: "stage")
     public private(set) var lastReport: FrameReport?
+    /// The CPU time the last frame took to build and encode (seconds); with the GPU time, the frame's real work.
+    public private(set) var lastEncodeTime: Double = 0
 
-    public init(device: RenderDevice) throws {
+    public init(device: RenderDevice, quality: PreviewQuality = .current) throws {
         renderDevice = device
-        renderer = try LoweyRenderer(device: device)
+        renderer = try LoweyRenderer(device: device, quality: quality)
+        dynamicScale = DynamicScale(range: quality.renderScale)
         super.init(frame: .zero, device: device.device)
         colorPixelFormat = RenderDevice.outputFormat
         depthStencilPixelFormat = .invalid
@@ -197,6 +203,16 @@ public final class StageView: MTKView {
         renderer.worldMesh(of: id)
     }
 
+    /// The frame budget is the screen's own refresh: 8.3 ms on ProMotion, 16.7 ms on a 60 Hz iPad (holding a 60 Hz
+    /// screen to 120 fps lowered its render scale for nothing).
+    override public func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard let screen = window?.windowScene?.screen else { return }
+        let fps = max(screen.maximumFramesPerSecond, 30)
+        if preferredFramesPerSecond > 30 { preferredFramesPerSecond = fps }
+        dynamicScale.budget = 1 / Double(fps)
+    }
+
     // MARK: Editor layer
 
     public func showSelection(pivot: Vec3?, gizmoVisible: Bool) {
@@ -207,6 +223,13 @@ public final class StageView: MTKView {
     public func showGuide(_ surface: GuideSurface?) {
         guard surface != guide else { return }
         guide = surface
+        redraw()
+    }
+
+    /// Shows (or hides) the point under the hovering Pencil. Drawn by the next frame, in the same pass as the scene.
+    public func showPointer(_ newValue: PencilPointer?) {
+        guard newValue != pointer else { return }
+        pointer = newValue
         redraw()
     }
 
@@ -232,6 +255,7 @@ public final class StageView: MTKView {
         if let pivot = gizmoPivot { scene.gizmo = (gizmoMode, pivot, gizmoScale) }
         scene.guide = guide
         scene.strokePreview = strokePreview
+        scene.pointer = pointer
         let pixels = Double(bounds.height * contentScaleFactor)
         if pixels > 1 { scene.pixelAngle = Float(2 * tan(Double(camera.fieldOfView) * .pi / 360) / pixels) }
         return scene
@@ -247,24 +271,28 @@ extension StageView: MTKViewDelegate {
         let start = CACurrentMediaTime()
         let total = lastFrameStart > 0 ? start - lastFrameStart : 0
         lastFrameStart = start
-        guard var frame = frameSource?(self), let drawable = currentDrawable,
+        guard var frame = signposts.interval("Build frame", { frameSource?(self) }), let drawable = currentDrawable,
               let commandBuffer = renderDevice.queue.makeCommandBuffer() else { return }
         commandBuffer.label = "Stage"
         frame.request.camera = frame.shotCamera ?? camera
         frame.request.renderScale = dynamicScale.scale
         if frame.request.editor == nil { frame.request.editor = editorScene(showsSelection: true) }
         do {
-            lastReport = try renderer.encode(frame.request, to: drawable.texture, commandBuffer: commandBuffer)
+            lastReport = try signposts.interval("Encode frame") { try renderer.encode(frame.request, to: drawable.texture, commandBuffer: commandBuffer) }
         } catch {
             return
         }
         commandBuffer.present(drawable)
+        lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in
             let gpu = buffer.gpuEndTime - buffer.gpuStartTime
-            Task { @MainActor in
-                guard let self else { return }
-                let scale = self.dynamicScale.update(gpuTime: gpu, thermal: .current)
-                self.onFrameTime?(gpu, total, scale)
+            // A plain hop to the main queue: a Task per frame was an allocation 120 times a second.
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    let scale = self.dynamicScale.update(gpuTime: gpu, thermal: .current)
+                    self.onFrameTime?(gpu, total, scale)
+                }
             }
         }
         commandBuffer.commit()

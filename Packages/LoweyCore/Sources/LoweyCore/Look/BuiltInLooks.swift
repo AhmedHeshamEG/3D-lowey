@@ -36,7 +36,7 @@ public extension LookPreset {
         lines: .off
     )
 
-    /// Low-poly: faceted (per-triangle) normals with Ink bands and optional lines (the original 3D-lowey identity).
+    /// Low-poly: faceted (per-triangle) normals with Ink bands and optional lines (the original Maquette identity).
     static let lowPoly = LookPreset(
         id: "lowPoly", name: "Low-poly",
         shading: ShadingParams(edgeSoftness: 0.02, rim: 0.25, smoothing: 0),
