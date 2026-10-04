@@ -5,12 +5,19 @@ import UIKit
 
 /// Making, copying and moving projects (Theater actions), the samples, and files coming in from elsewhere.
 extension AppModel {
-    /// A new project: a name, a Mood and a Look (the only two choices).
-    func createProject(named name: String, mood: LightingPreset, look presetID: String) {
+    /// A new project from a starter template, in a Mood and a Look (the template suggests both). Made inside a stack,
+    /// it joins the stack.
+    func createProject(named name: String, template: StarterTemplate = .blank, mood: LightingPreset, look presetID: String,
+                       inStack stack: String? = nil) {
         do {
             var look = Look.default.applying(mood)
             look.presetID = presetID
-            let (url, _) = try projectStore.createProject(name: name.isEmpty ? "Untitled" : name, look: look)
+            let title = name.isEmpty ? String(localized: "Untitled") : name
+            let (url, document) = try projectStore.createProject(name: title, template: template, look: look)
+            if let stack {
+                gallery.add([document.project.id.raw], to: stack)
+                saveGallery()
+            }
             refreshProjects()
             open(url: url)
         } catch {
@@ -30,13 +37,13 @@ extension AppModel {
     func delete(_ project: ProjectSummary) {
         perform("delete") {
             try projectStore.deleteProject(at: project.url)
-            thumbnails[project.id] = nil
+            cardImages.remove(project.id)
         }
     }
 
     func archive(_ project: ProjectSummary) {
         perform("archive") { _ = try projectStore.archiveProject(at: project.url) }
-        show("Archived. Find it in Theater ▸ Archive")
+        show("Archived. Find it in Home ▸ Archive")
     }
 
     func unarchive(_ project: ProjectSummary) {
