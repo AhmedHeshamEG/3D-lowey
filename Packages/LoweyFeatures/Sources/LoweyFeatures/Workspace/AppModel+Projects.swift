@@ -108,6 +108,7 @@ extension AppModel {
             fresh.id = .make()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
             refreshProjects()
+            drawSampleCard(url)
             if shouldOpen { open(url: url) }
         } catch {
             show("Couldn't add the island: \(error.localizedDescription)", kind: .error)
@@ -124,6 +125,7 @@ extension AppModel {
             fresh.modified = Date()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
             refreshProjects()
+            drawSampleCard(url)
             let voice = url.appendingPathComponent(ProjectLayout.audioFolder).appendingPathComponent(EnigmaSample.voiceoverFile)
             Task {
                 try? await PlaceholderVoice.render(EnigmaSample.narration.map { ($0.sentence, $0.start) }, duration: 12.6, to: voice)
@@ -132,6 +134,12 @@ extension AppModel {
         } catch {
             show("Couldn't add the sample: \(error.localizedDescription)", kind: .error)
         }
+    }
+
+    /// A new sample's card is drawn right away, so Home is alive from the first launch.
+    private func drawSampleCard(_ url: URL) {
+        guard !AppIdentity.isUITesting || AppIdentity.isTakingScreenshots, let document = try? projectStore.openDocument(at: url) else { return }
+        Task { await drawCard(EditorModel.CardJob(document: document, viewpoint: document.scene.viewpoint, projectURL: url)) }
     }
 
     /// The 60-second tour happens on the welcome island (added if it isn't there).

@@ -26,6 +26,7 @@ struct TheaterHeader: View {
                 }
             }
             .font(.hmm(.body, weight: .semibold))
+            .foregroundStyle(state.selecting ? theme.accent : theme.text)
             .frame(minHeight: 44)
             .accessibilityIdentifier("gallery-select")
             Menu {
@@ -33,7 +34,7 @@ struct TheaterHeader: View {
                 Button("Archive (\(app.archived.count))", systemImage: "archivebox") { state.showArchive = true }
                 Button("Take the tour", systemImage: "hand.wave") { app.startTour() }
             } label: {
-                Image(systemName: "ellipsis.circle").font(.system(size: 24)).frame(width: 44, height: 44)
+                Image(systemName: "ellipsis.circle").font(.system(size: 24)).foregroundStyle(theme.text).frame(width: 44, height: 44)
             }
             .accessibilityLabel("More")
             .accessibilityIdentifier("theater-menu")
@@ -98,7 +99,8 @@ struct TheaterHeader: View {
                 }
             }
         } label: {
-            Image(systemName: "arrow.up.arrow.down").font(.system(size: 18, weight: .medium)).frame(width: 44, height: 44)
+            Image(systemName: "arrow.up.arrow.down").font(.system(size: 18, weight: .medium)).foregroundStyle(theme.text)
+                .frame(width: 44, height: 44)
         }
         .accessibilityLabel("Sort")
         .accessibilityIdentifier("gallery-sort")
