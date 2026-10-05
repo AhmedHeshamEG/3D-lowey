@@ -9,6 +9,8 @@ final class LayoutTests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = true
+        // The walk taps a hundred controls, letting picture-heavy panels settle; CI's default is five minutes.
+        executionTimeAllowance = 600
         app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
@@ -51,13 +53,29 @@ final class LayoutTests: XCTestCase {
 
     // MARK: Every control has a home
 
-    func testEveryControlInTheLayoutIsReachable() {
+    func testHomeControlsAreReachable() {
         XCTAssertGreaterThan(LayoutWalk.rows.count, 60)
         for row in LayoutWalk.rows where row.precondition == "home" {
             walk(row)
         }
+    }
+
+    func testPanelAndChromeControlsAreReachable() {
+        walkInAProject(["", "blob"])
+    }
+
+    func testSelectionControlsAreReachable() {
+        walkInAProject(["cube"])
+    }
+
+    func testTimelineControlsAreReachable() {
+        walkInAProject(["timeline", "transport"])
+    }
+
+    /// Every row with these preconditions, from a new project.
+    private func walkInAProject(_ preconditions: [String]) {
         newProject("Walk")
-        for precondition in ["", "cube", "blob", "timeline", "transport"] {
+        for precondition in preconditions {
             prepare(precondition)
             for row in LayoutWalk.rows where row.precondition == precondition {
                 walk(row)
