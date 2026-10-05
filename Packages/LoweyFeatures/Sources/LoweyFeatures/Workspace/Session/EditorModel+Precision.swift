@@ -19,29 +19,63 @@ extension EditorModel {
     // MARK: Snapping a point
 
     /// The point under a screen point, snapped to corners, edge middles, edges and faces near it (12 points on screen),
-    /// else to the grid on `plane`. The mark it leaves shows what it snapped to.
+    /// else to the grid on `plane`. The mark it leaves shows what it snapped to. All on the CPU: the solids the ray's
+    /// path crosses are raycast, so a tap never waits for the GPU's ID buffer.
     func snapPoint(at point: CGPoint, plane: PlaneFrame?, only target: ObjectID? = nil) -> SnapResult? {
         guard let stage, let ray = stage.worldRay(at: point) else { return nil }
         var nearby = PointSnap.Nearby()
-        var surface: Vec3?
-        if let (id, _) = stage.pickObject(at: point), target == nil || target == id, let (mesh, world) = modelMesh(of: id) {
-            let solid = mesh.transformed(by: world)
-            nearby.meshes.append(solid)
+        var surface: (point: Vec3, distance: Double)?
+        for (mesh, world) in solidsAlong(ray, only: target) {
+            nearby.meshes.append(mesh.transformed(by: world))
             let local = Ray(origin: world.inverseApply(to: ray.origin), direction: world.inverseApplyDirection(ray.direction))
-            if let hit = MeshPicking.face(local, in: mesh) { surface = world.apply(to: hit.point) }
+            if let hit = MeshPicking.face(local, in: mesh) {
+                let worldPoint = world.apply(to: hit.point)
+                let distance = worldPoint.distance(to: ray.origin)
+                if distance < surface?.distance ?? .infinity { surface = (worldPoint, distance) }
+            }
         }
-        if let target, nearby.meshes.isEmpty, let (mesh, world) = modelMesh(of: target) { nearby.meshes.append(mesh.transformed(by: world)) }
         for (_, sketch) in sketches {
             nearby.lines += sketch.curves.map { $0.points.map { sketch.plane.lift($0) } }
         }
         var settings = snap
         if settings.grid { settings.gridSize = min(settings.gridSize, pullStep * 10) }
-        let result = PointSnap.snap(screen: Vec2(Double(point.x), Double(point.y)), ray: ray, surface: surface, in: nearby, plane: plane,
+        let result = PointSnap.snap(screen: Vec2(Double(point.x), Double(point.y)), ray: ray, surface: surface?.point, in: nearby, plane: plane,
                                     settings: settings, radius: 12) { [weak stage] world in
             stage?.screenPoint(of: world).map { Vec2(Double($0.x), Double($0.y)) }
         }
         modeling.snapMark = result.flatMap { [.corner, .midpoint, .edge].contains($0.kind) ? $0 : nil }
         return result
+    }
+
+    /// The modelled solids whose boxes the ray passes through (or near: 12 points), nearest first, at most eight.
+    private func solidsAlong(_ ray: Ray, only target: ObjectID?) -> [(EditableMesh, CoreTransform)] {
+        let ids = target.map { [$0] } ?? baseScene.objects.values.filter(ModelingOperations.canModel).map(\.id)
+        var found: [(mesh: EditableMesh, world: CoreTransform, distance: Double)] = []
+        for id in ids where baseScene.isEffectivelyVisible(id) {
+            guard let (mesh, world) = modelMesh(of: id), let local = mesh.bounds else { continue }
+            let box = local.transformed(by: world)
+            let margin = (stage?.worldPerPoint(at: box.center) ?? 0) * 12
+            let grown = Bounds(min: box.min - Vec3(margin, margin, margin), max: box.max + Vec3(margin, margin, margin))
+            if let distance = Self.entry(of: ray, into: grown) { found.append((mesh, world, distance)) }
+        }
+        return found.sorted { $0.distance < $1.distance }.prefix(8).map { ($0.mesh, $0.world) }
+    }
+
+    /// Where a ray enters a box (slab test), nil when it misses.
+    static func entry(of ray: Ray, into box: Bounds) -> Double? {
+        var near = -Double.infinity, far = Double.infinity
+        for axis in 0 ..< 3 {
+            let origin = [ray.origin.x, ray.origin.y, ray.origin.z][axis], direction = [ray.direction.x, ray.direction.y, ray.direction.z][axis]
+            let low = [box.min.x, box.min.y, box.min.z][axis], high = [box.max.x, box.max.y, box.max.z][axis]
+            if abs(direction) < 1e-12 {
+                if origin < low || origin > high { return nil }
+                continue
+            }
+            let a = (low - origin) / direction, b = (high - origin) / direction
+            near = max(near, min(a, b))
+            far = min(far, max(a, b))
+        }
+        return near <= far && far >= 0 ? max(near, 0) : nil
     }
 
     // MARK: Section view
