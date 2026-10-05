@@ -11,8 +11,6 @@ struct TheaterView: View {
     @Environment(AppModel.self) private var app
     @State private var state = GalleryState()
 
-    private let columns = [GridItem(.adaptive(minimum: 260, maximum: 380), spacing: HmmSpacing.l)]
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: HmmSpacing.xl) {
@@ -44,41 +42,18 @@ struct TheaterView: View {
             HmmEmptyState("questionmark.folder", title: "Nothing called “\(state.query)”",
                           message: "Search looks through every project and stack by name.", actionTitle: "Clear the search") { state.query = "" }
         } else {
-            LazyVGrid(columns: columns, spacing: HmmSpacing.l) {
-                if state.query.isEmpty, !state.selecting { NewProjectCard { state.showNewProject = true } }
-                ForEach(entries) { entry in
-                    card(entry)
-                        .dropDestination(for: String.self) { ids, _ in
-                            guard let id = ids.first else { return false }
-                            withHmmAnimation(.standard) { app.drop(id, onto: entry) }
-                            return true
-                        }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func card(_ entry: GalleryEntry) -> some View {
-        switch entry {
-        case let .item(item):
-            if let project = app.project(item.id) {
-                ProjectCard(project: project, zoom: zoom, playing: playing, selection: state.selecting ? state.selected.contains(item.id) : nil)
-                    .onTapGesture { tap(project) }
-                    .draggable(item.id)
-                    .contextMenu { ProjectMenu(project: project, state: state) }
-                    .accessibilityIdentifier("project-\(project.info.name)")
-            }
-        case let .stack(stack, members):
-            StackCard(stack: stack, members: members.compactMap { app.project($0.id) })
-                .onTapGesture {
-                    withHmmAnimation(.gentle) {
-                        state.query = ""
-                        state.openStack = stack.id
-                    }
-                }
-                .contextMenu { StackMenu(stack: stack, state: state) }
-                .accessibilityIdentifier("stack-\(stack.name)")
+            GalleryGrid(entries: entries, zoom: zoom, playing: playing, selected: state.selecting ? state.selected : nil,
+                        newProject: state.query.isEmpty && !state.selecting ? { state.showNewProject = true } : nil,
+                        open: tap,
+                        openStack: { stack in
+                            withHmmAnimation(.gentle) {
+                                state.query = ""
+                                state.openStack = stack.id
+                            }
+                        },
+                        drop: { id, entry in withHmmAnimation(.standard) { app.drop(id, onto: entry) } },
+                        projectMenu: { ProjectMenu(project: $0, state: state) },
+                        stackMenu: { StackMenu(stack: $0, state: state) })
         }
     }
 

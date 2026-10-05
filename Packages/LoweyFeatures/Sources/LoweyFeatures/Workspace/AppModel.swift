@@ -41,15 +41,18 @@ public final class AppModel {
     @ObservationIgnored private var started = false
     @ObservationIgnored let logger = Logger(subsystem: AppIdentity.subsystem, category: "app")
 
-    public init() {
+    public convenience init() {
         let documents = DocumentLocator.defaultLocalRoot
         let base = AppIdentity.isUITesting ? documents.appendingPathComponent("UITest-\(UUID().uuidString)") : documents
         let locator = DocumentLocator(containerIdentifier: nil, subfolder: "Projects", localRoot: base)
-        let local = locator.localFolder
-        try? FileManager.default.createDirectory(at: local, withIntermediateDirectories: true)
-        storage = .local(local)
-        projectStore = ProjectStore(root: local)
-        let libraryRoot = base.appendingPathComponent("Lowey Library")
+        self.init(projects: locator.localFolder, library: base.appendingPathComponent("Lowey Library"))
+    }
+
+    /// Projects and library in the given folders, on this device (the app's own, or the Home benchmark's scratch ones).
+    init(projects: URL, library libraryRoot: URL) {
+        try? FileManager.default.createDirectory(at: projects, withIntermediateDirectories: true)
+        storage = .local(projects)
+        projectStore = ProjectStore(root: projects)
         try? FileManager.default.createDirectory(at: libraryRoot, withIntermediateDirectories: true)
         library = LibraryModel(store: LibraryStore(root: libraryRoot))
     }
