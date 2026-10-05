@@ -39,10 +39,31 @@ extension EditorModel {
 
     // MARK: Drawing
 
+    /// The path the current flipbook brush makes of samples, `pointsPerUnit` stage points to one of their units (1 for
+    /// the live stroke in points, a drawing's scale when it's kept): the same function draws both.
+    func flipbookPath(_ samples: [BrushInput<Vec2>], pointsPerUnit scale: Double = 1) -> BrushPath<Vec2> {
+        BrushStroker.path(samples, brush: currentBrush(for: .flipbook), size: flipbook.width / scale, opacity: flipbook.opacity,
+                          minimumSpacing: 1.5 / scale)
+    }
+
+    /// A finished stroke from points and pressures alone (tests; the Pencil gives full samples).
+    func commitFlipbookStroke(points: [CGPoint], pressures: [Double]) {
+        let samples = points.enumerated().map { index, point in
+            BrushInput(point: Vec2(Double(point.x), Double(point.y)), pressure: pressures.indices.contains(index) ? pressures[index] : 1,
+                       time: Double(index) / 240)
+        }
+        commitFlipbookStroke(samples, seed: Self.strokeSeed())
+    }
+
     /// A finished Pencil stroke in stage points: joins the drawing at the playhead of the active track (a first
     /// stroke makes a track: on the selected object, else on the camera).
-    func commitFlipbookStroke(points: [CGPoint], pressures: [Double]) {
-        guard !points.isEmpty else { return }
+    func commitFlipbookStroke(_ samples: [BrushInput<Vec2>], seed: UInt64) {
+        commitFlipbookStrokes([samples], seed: seed)
+    }
+
+    /// A stroke and its symmetry copies (the frame's guide), as one undo step.
+    func commitFlipbookStrokes(_ copies: [[BrushInput<Vec2>]], seed: UInt64) {
+        guard copies.contains(where: { !$0.isEmpty }) else { return }
         var track = activeFlipbook ?? newFlipbookTrack(named: nil, anchor: defaultFlipbookAnchor)
         var anchor = stageAnchor(track)
         if case .none = anchor, track.frames.isEmpty, track.anchor != .camera {
@@ -54,14 +75,22 @@ extension EditorModel {
             app.show("Its object is out of view: draw where you can see it")
             return
         }
-        let units = points.map { frame.point(Vec2(Double($0.x - rect.minX), Double($0.y - rect.minY))) }
-        let widths = pressures.map { flipbook.width * (0.3 + 0.7 * min(max($0, 0), 1)) / frame.pixelsPerUnit }
-        let filtered = Self.thinned(units, widths: widths, spacing: 1.5 / frame.pixelsPerUnit)
+        let (key, brushCommand) = projectBrush(currentBrush(for: .flipbook))
         let color = currentColor.resolved(in: look.palette)
-        let stroke = FlipStroke(points: filtered.points, widths: filtered.widths,
-                                color: .rgba(RGBA(color.r, color.g, color.b, color.a * flipbook.opacity)))
-        let added = FlipbookEditing.adding(stroke, at: time, fps: timeline.fps, hold: flipbook.hold, to: track, newID: Self.newID())
-        if perform(.setFlipbooks([FlipbookEdit(added.track)])) { flipbook.track = track.id }
+        var drawn = track
+        for (index, samples) in copies.enumerated() where !samples.isEmpty {
+            let units = samples.map { sample in
+                var moved = sample
+                moved.point = frame.point(Vec2(sample.point.x - Double(rect.minX), sample.point.y - Double(rect.minY)))
+                return moved
+            }
+            let path = flipbookPath(units, pointsPerUnit: frame.pixelsPerUnit)
+            guard !path.points.isEmpty else { continue }
+            let stroke = FlipStroke(points: path.points, widths: path.widths, color: .rgba(color), alphas: path.alphas, brush: key,
+                                    seed: seed &+ UInt64(index))
+            drawn = FlipbookEditing.adding(stroke, at: time, fps: timeline.fps, hold: flipbook.hold, to: drawn, newID: Self.newID()).track
+        }
+        if performStroke(.setFlipbooks([FlipbookEdit(drawn)]), brush: brushCommand) { flipbook.track = track.id }
     }
 
     /// Erases the active track's drawing at the playhead under the eraser (one undo step per gesture).
@@ -74,23 +103,6 @@ extension EditorModel {
         }
         guard erased != track else { return }
         perform(.setFlipbooks([FlipbookEdit(erased)]), coalesceKey: gesture)
-    }
-
-    /// Strokes closer than `spacing` merged (the Pencil reports far more points than a line needs).
-    static func thinned(_ points: [Vec2], widths: [Double], spacing: Double) -> (points: [Vec2], widths: [Double]) {
-        guard var last = points.first else { return ([], []) }
-        var keptPoints = [last]
-        var keptWidths = [widths.first ?? 0]
-        for (point, width) in zip(points.dropFirst(), widths.dropFirst()) where (point - last).length >= spacing {
-            keptPoints.append(point)
-            keptWidths.append(width)
-            last = point
-        }
-        if let end = points.last, points.count > 1, keptPoints.count == 1 {
-            keptPoints.append(end)
-            keptWidths.append(widths.last ?? 0)
-        }
-        return (keptPoints, keptWidths)
     }
 
     static func newID() -> String { UUID().uuidString.lowercased() }

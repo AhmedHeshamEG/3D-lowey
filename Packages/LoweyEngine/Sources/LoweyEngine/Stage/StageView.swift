@@ -40,8 +40,6 @@ public final class StageView: MTKView {
     private var liveStroke: LiveBrushStroke?
     /// The timestamp of the newest real sample in `liveStroke` (latency is measured from it to the frame showing it).
     private var liveStrokeTouch: TimeInterval?
-    /// The drawable that showed a live stroke sample, and that sample's timestamp: read once it has been presented.
-    private var latencyProbe: (drawable: MTLDrawable, touch: TimeInterval)?
     /// Touch-to-photon latency of the strokes drawn here (median and 95th percentile in Diagnostics).
     public private(set) var strokeLatency = StrokeLatency()
     private var screenGuide: ScreenGuide?
@@ -341,7 +339,7 @@ extension StageView: MTKViewDelegate {
         } catch {
             return
         }
-        measureLatency(showing: drawable)
+        measureLatency(commandBuffer)
         commandBuffer.present(drawable)
         lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in
@@ -360,17 +358,19 @@ extension StageView: MTKViewDelegate {
 }
 
 extension StageView {
-    /// Touch to photon: the last probed drawable has been presented by now (its presented time and the touch's
-    /// timestamp share the boot clock); this frame becomes the next probe when it shows a new stroke sample.
-    func measureLatency(showing drawable: MTLDrawable) {
-        if let probe = latencyProbe, probe.drawable.presentedTime > 0 {
-            strokeLatency.add((probe.drawable.presentedTime - probe.touch) * 1000)
-            latencyProbe = nil
-        }
+    /// Touch to screen: from a live stroke sample's touch timestamp to its frame finishing on the GPU, plus one
+    /// refresh (the frame appears at the next one). An upper bound: this SDK gives no presented time for a drawable.
+    func measureLatency(_ commandBuffer: MTLCommandBuffer) {
         guard let touch = liveStrokeTouch, liveStroke != nil else { return }
         liveStrokeTouch = nil
-        signposts.event("Stroke sample on screen")
-        latencyProbe = (drawable, touch)
+        signposts.event("Stroke sample encoded")
+        let refresh = 1 / Double(max(window?.windowScene?.screen.maximumFramesPerSecond ?? 60, 30))
+        commandBuffer.addCompletedHandler { [weak self] _ in
+            let finished = CACurrentMediaTime()
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.strokeLatency.add((finished + refresh - touch) * 1000) }
+            }
+        }
     }
 }
 

@@ -26,8 +26,6 @@ public struct FlipbookSettings: Equatable, Sendable {
     public var onionAfter = 1
     /// Eraser radius in points.
     public var eraserRadius: Double = 14
-    /// The stroke being drawn (stage points), shown until it lands in the drawing.
-    public var livePoints: [CGPoint] = []
 
     public init() {}
 }

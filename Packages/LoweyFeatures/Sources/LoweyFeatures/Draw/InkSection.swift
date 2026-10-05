@@ -17,8 +17,13 @@ struct InkSection: View {
             }
             switch editor.ink.mode {
             case .draw:
+                BrushRow(editor: editor, tool: .ink)
                 GuideSection(editor: editor)
-                LabeledSlider(title: "Smoothing", value: editor.ink.smoothing, range: 0 ... 1) { editor.ink.smoothing = $0 }
+                if editor.draw.guide == .plane {
+                    DrawingGuideControls(guide: editor.planeGuide, kinds: [.grid, .isometric, .symmetry], spacing: 0.01 ... 1,
+                                         formatSpacing: { editor.units.format($0) }) { editor.setPlaneGuide($0) }
+                }
+                LabeledSlider(title: "Extra smoothing", value: editor.ink.smoothing, range: 0 ... 1) { editor.ink.smoothing = $0 }
                 Hint(drawHint)
             case .erase:
                 LabeledSlider(title: "Eraser size", value: editor.ink.eraserRadius, range: 4 ... 60,

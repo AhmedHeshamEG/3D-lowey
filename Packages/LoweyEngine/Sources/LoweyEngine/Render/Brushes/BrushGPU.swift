@@ -135,7 +135,7 @@ final class BrushTextureCache {
 extension GreyImage {
     /// A picture's coverage: its alpha when it has see-through parts (a shape on transparency), else its brightness
     /// (Procreate's and Photoshop's white-paints convention).
-    init?(cgImage: CGImage) {
+    public init?(cgImage: CGImage) {
         let width = cgImage.width, height = cgImage.height
         guard width > 0, height > 0, width <= 8192, height <= 8192 else { return nil }
         let rect = CGRect(x: 0, y: 0, width: width, height: height)

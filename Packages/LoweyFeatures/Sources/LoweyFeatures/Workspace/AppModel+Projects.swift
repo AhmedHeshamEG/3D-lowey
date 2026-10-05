@@ -161,6 +161,11 @@ extension AppModel {
             importProjectFolder(url)
         case _ where ext == ProjectPackage.fileExtension || ProjectPackage.legacyExtensions.contains(ext):
             importPackage(url)
+        case _ where BrushFileImport.fileExtensions.contains(ext):
+            Task {
+                let result = await brushes.importFile(url)
+                show(String.LocalizationValue(result.message), kind: result.failed ? .error : .info)
+            }
         case "json" where editor != nil:
             if let data = try? Data(contentsOf: url) { editor?.importScript(data, source: url.lastPathComponent) }
         default:

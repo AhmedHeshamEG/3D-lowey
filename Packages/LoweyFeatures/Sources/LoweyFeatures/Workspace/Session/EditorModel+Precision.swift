@@ -147,7 +147,22 @@ extension EditorModel {
                 overlays.append(EditorOverlay(mesh: dimensionMesh(kept.start, kept.end, stage: stage), color: RGBA(0.98, 0.98, 1), onTop: true))
             }
         }
+        if let lines = planeGuideMesh(stage: stage) { overlays.append(EditorOverlay(mesh: lines, color: RGBA(0.45, 0.75, 1), opacity: 0.55)) }
         stage.showPrecisionOverlay(overlays)
+    }
+
+    /// The guide plane's drawing guide (grid, isometric, symmetry) on the plane while drawing on it.
+    private func planeGuideMesh(stage: StageView) -> MeshData? {
+        guard tool == .ink, ink.mode == .draw, let guide = planeGuide, let basis = planeBasis(currentGuide) else { return nil }
+        let reach = draw.guideSize * 2
+        let width = stage.worldPerPoint(at: basis.origin) * 0.8
+        var mesh = MeshData()
+        for line in GuideLines.lines(guide, in: (Vec2(-reach, -reach), Vec2(reach, reach))) {
+            let a = basis.origin + basis.u * line.from.x + basis.v * line.from.y
+            let b = basis.origin + basis.u * line.to.x + basis.v * line.to.y
+            ModelOverlay.line(a, b, width: line.major ? width * 2 : width, into: &mesh)
+        }
+        return mesh.isEmpty ? nil : mesh
     }
 
     /// A dimension line: the line and a short tick across each end.

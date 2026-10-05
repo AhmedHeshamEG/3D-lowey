@@ -113,6 +113,22 @@ targets:
             UTTypeConformsTo: [public.data, public.archive]
             UTTypeTagSpecification:
               public.filename-extension: [loweypack]
+          # Brushes from Procreate and Photoshop (their makers don't publish identifiers; these are by extension).
+          - UTTypeIdentifier: studio.h.maquette.import.procreate-brushset
+            UTTypeDescription: Procreate brush set
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [brushset]
+          - UTTypeIdentifier: studio.h.maquette.import.procreate-brush
+            UTTypeDescription: Procreate brush
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [brush]
+          - UTTypeIdentifier: studio.h.maquette.import.photoshop-brushes
+            UTTypeDescription: Photoshop brushes
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [abr]
         UTExportedTypeDeclarations:
           - UTTypeIdentifier: studio.h.maquette.project
             UTTypeDescription: Maquette project
@@ -124,6 +140,11 @@ targets:
             UTTypeConformsTo: [public.data, public.archive]
             UTTypeTagSpecification:
               public.filename-extension: [maquettepack]
+          - UTTypeIdentifier: studio.h.maquette.brushes
+            UTTypeDescription: Maquette brush set
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [maquettebrushes]
         CFBundleDocumentTypes:
           - CFBundleTypeName: 3D model
             CFBundleTypeRole: Viewer
@@ -146,6 +167,18 @@ targets:
             LSItemContentTypes:
               - studio.h.maquette.pack
               - studio.hmm.lowey.pack
+          - CFBundleTypeName: Maquette brush set
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Owner
+            LSItemContentTypes:
+              - studio.h.maquette.brushes
+          - CFBundleTypeName: Brushes
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - studio.h.maquette.import.procreate-brushset
+              - studio.h.maquette.import.procreate-brush
+              - studio.h.maquette.import.photoshop-brushes
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: studio.h.maquette

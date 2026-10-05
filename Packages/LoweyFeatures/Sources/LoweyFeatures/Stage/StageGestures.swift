@@ -74,6 +74,12 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     var strokePoints: [Vec3] = []
     var strokePressures: [Double] = []
     var strokeNormals: [Vec3] = []
+    var strokeAltitudes: [Double?] = []
+    var strokeTimes: [Double] = []
+    /// The stroke's jitter seed, chosen when it starts: the live stroke and the kept one stamp the same.
+    var strokeSeed: UInt64 = 0
+    /// A flipbook stroke's samples in stage points.
+    var flipSamples: [BrushInput<Vec2>] = []
     var consumedSamples = 0
     /// The shape a held stroke snapped to, where the tip was then, and the stroke's pressure.
     var snapped: (shape: QuickShape.Result, anchor: CGPoint, pressure: Double)?

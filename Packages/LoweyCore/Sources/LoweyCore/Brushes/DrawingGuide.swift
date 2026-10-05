@@ -140,6 +140,12 @@ public enum GuideLines {
         public var to: Vec2
         /// Axes, horizons and symmetry lines are drawn stronger.
         public var major: Bool
+
+        public init(from: Vec2, to: Vec2, major: Bool) {
+            self.from = from
+            self.to = to
+            self.major = major
+        }
     }
 
     /// At most this many lines, so a tiny grid on a big plane stays cheap.

@@ -134,6 +134,21 @@ extension EditorModel {
 
     func refreshGuide() {
         stage?.showGuide(currentGuide)
+        stage?.showScreenGuide(screenGuide)
+        refreshPrecisionOverlay()
+    }
+
+    /// The frame's drawing guide over the stage while the flipbook tool draws.
+    var screenGuide: ScreenGuide? {
+        guard tool == .flipbook, flipbook.mode == .draw, let guide = frameGuide else { return nil }
+        let rect = frameRect
+        guard rect.height > 1 else { return nil }
+        let halfWidth = Double(rect.width / rect.height) / 2
+        let lines = GuideLines.lines(guide, in: (Vec2(-halfWidth, -0.5), Vec2(halfWidth, 0.5))).map { line in
+            let from = stagePoint(fromFrameGuide: line.from), to = stagePoint(fromFrameGuide: line.to)
+            return GuideLines.Line(from: Vec2(Double(from.x), Double(from.y)), to: Vec2(Double(to.x), Double(to.y)), major: line.major)
+        }
+        return ScreenGuide(lines: lines, color: RGBA(0.45, 0.75, 1))
     }
 
     func toolChanged() {

@@ -108,6 +108,8 @@ public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
 /// Sheets over the editor (one at a time).
 public enum EditorSheet: String, Identifiable, Sendable {
     case export, audio, transcript, scripts, bridge, blobBuilder, characterBuilder, settings, diagnostics, gestures, timelineSettings
+    /// The brush library (and Brush Studio) for the drawing tool in `EditorModel.brushTool`.
+    case brushes
 
     public var id: String { rawValue }
 }

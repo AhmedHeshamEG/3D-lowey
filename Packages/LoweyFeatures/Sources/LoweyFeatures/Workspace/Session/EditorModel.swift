@@ -64,6 +64,12 @@ final class EditorModel {
     var shadowBrush = ShadowBrushSettings()
     var ink = InkSettings()
     var flipbook = FlipbookSettings()
+    /// The drawing tool the brush library chooses a brush for.
+    var brushTool: BrushTool = .ink
+    /// The drawing guide over the frame (flipbooks) and on the guide plane (ink); kept in `workspace.json`.
+    var frameGuide: DrawingGuide?
+    var planeGuide: DrawingGuide?
+    @ObservationIgnored var strokesDrawn = 0
     var animationView = AnimationViewSettings()
     /// Strokes picked in the selected ink drawing (Ink ▸ Select strokes).
     var inkStrokes: Set<Int> = []
