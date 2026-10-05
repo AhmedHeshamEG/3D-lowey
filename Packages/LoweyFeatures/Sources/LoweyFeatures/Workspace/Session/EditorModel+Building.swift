@@ -186,8 +186,14 @@ extension EditorModel {
     /// Copies along a sketch's curve: the selected sketch, else the one nearest the object. As many as fit at the
     /// object's own spacing, turning with the curve when `align`.
     func arrayAlongSketch(align: Bool) {
-        guard let source = selection.first(where: { baseScene.objects[$0].map { if case .sketch = $0.kind { false } else { true } } ?? false }),
-              let path = arrayPath(for: source) else {
+        guard let source = selection.first(where: { baseScene.objects[$0].map {
+            if case .sketch = $0.kind {
+                false
+            } else {
+                true
+            }
+        } ?? false }),
+            let path = arrayPath(for: source) else {
             app.show("Draw a line or a curve with Model ▸ Shape ▸ Sketch first")
             return
         }
