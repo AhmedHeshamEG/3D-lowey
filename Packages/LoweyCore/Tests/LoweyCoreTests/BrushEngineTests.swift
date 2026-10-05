@@ -111,6 +111,17 @@ final class BrushEngineTests: XCTestCase {
         XCTAssertTrue(dabs.allSatisfy { abs($0.opacity - 0.08) < 1e-9 })
     }
 
+    func testOverlappingStampsAddUpToTheStrokesOpacity() {
+        var brush = BuiltInBrushes.technicalPen
+        brush.stroke.spacing = 0.1
+        let dabs = BrushStroker.dabs(BrushPath(points: [Vec2(0, 0), Vec2(10, 0)], widths: [1, 1], alphas: [0.5, 0.5]), brush: brush, seed: 0)
+        // About ten stamps cover any point: together they reach the half opacity the stroke asked for.
+        let stacked = 1 - pow(1 - dabs[20].opacity, 10)
+        XCTAssertEqual(stacked, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(BrushStroker.stamped(1, spacing: 0.1), 1)
+        XCTAssertEqual(BrushStroker.stamped(0.3, spacing: 1), 0.3, accuracy: 1e-12)
+    }
+
     func testADotIsOneStamp() {
         let dot = BrushStroker.dabs(BrushPath(points: [Vec3(1, 2, 3)], widths: [0.5], alphas: [1]), brush: BuiltInBrushes.inkPen, seed: 0)
         XCTAssertEqual(dot.count, 1)

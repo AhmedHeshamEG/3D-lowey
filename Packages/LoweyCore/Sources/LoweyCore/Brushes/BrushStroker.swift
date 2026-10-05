@@ -168,11 +168,21 @@ public enum BrushStroker {
             let fade = settings.falloff > 0 ? exp(-settings.falloff * walked / max(meanRadius * 20, 1e-9)) : 1
             let direction = span > 1e-12 ? (b - a) * (1 / span) : a - a
             let center = a + (b - a) * t
-            dabs += stamps(at: center, direction: direction, radius: radius * sizeTaper, opacity: alpha * alphaTaper * fade * brush.rendering.flow,
+            dabs += stamps(at: center, direction: direction, radius: radius * sizeTaper,
+                           opacity: stamped(alpha * alphaTaper * fade, spacing: settings.spacing) * brush.rendering.flow,
                            travel: walked / max(meanRadius * 2, 1e-9), brush: brush, random: &random)
             walked += max(settings.spacing * 2 * max(radius * sizeTaper, meanRadius * 0.15), minimumStep)
         }
         return dabs
+    }
+
+    /// A stamp's opacity so that the stamps overlapping at this spacing (about 1 / spacing of them over any point)
+    /// add up to the stroke's opacity instead of piling up past it: 1 − (1 − a)^spacing. Flow then builds on top, as
+    /// in a painting app (low flow builds up where you go over the same place again).
+    static func stamped(_ alpha: Double, spacing: Double) -> Double {
+        let a = alpha.clamped(0, 1)
+        guard a < 1 else { return 1 }
+        return 1 - pow(1 - a, min(max(spacing, 0.02), 1))
     }
 
     /// One step's stamps (the tip's count), with the brush's jitter.
