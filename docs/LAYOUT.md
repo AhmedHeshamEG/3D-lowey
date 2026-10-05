@@ -38,7 +38,7 @@ Where everything in Maquette lives. This is the map of CONTEXT §4.1 and §10.1:
 ## The walk
 
 Each row's **Walk** is tapped by `LayoutWalkTests` (UI tests) from a new project: every step but the last is tapped,
-and the last must be there. A step is an accessibility identifier (or the control's English label). A row may start
+and the last must be there. A step is an accessibility identifier (or the control's English label; a panel section is `section-<its title>`). A row may start
 with a precondition: `[cube]` a cube is added and selected, `[blob]` a Blob is added, `[timeline]` the whole timeline
 is open, `[transport]` the slim transport is showing, `[home]` the steps start on Home instead of in a project.
 `Tools/layout_walk.py` turns this file into `AppUITests/LayoutWalk.swift`; CI fails when they disagree.
@@ -143,7 +143,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Control | Walk |
 |---|---|
 | Shadow Brush: push shadow in, pull light out | `Paint › tool-shadow-brush › Push shadow in` |
-| Shadow presets | `Paint › tool-shadow-brush › Presets` |
+| Shadow presets | `Paint › tool-shadow-brush › section-Presets` |
 | Scatter copies of the selection on the ground | `Paint › tool-scatter` |
 
 ### Animate
@@ -160,7 +160,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Add me | `Cast › add-me` |
 | Add a Puppet | `Cast › add-character` |
 | Expressions at the playhead | `[blob] Cast › expression-happy` |
-| Clips | `[blob] Cast › Clips` |
+| Clips | `[blob] Cast › section-Clips` |
 | Lip sync | `[blob] Cast › lip-sync` |
 | Face capture (front camera, iPhone) | `[blob] Cast › face-camera` |
 
@@ -172,7 +172,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Move, turn, size (the gizmo and the joystick) | `[cube] gizmo-rotate` |
 | Position, rotation, size as numbers | `[cube] transform-toggle` |
 | Look override, lines, accents | `[cube] look-override` |
-| Motion, behaviours, physics | `[cube] Motion` |
+| Motion, behaviours, physics | `[cube] section-Motion` |
 | More: metadata | `[cube] inspector-more` |
 | Duplicate, hide | `[cube] Duplicate` |
 | More actions: array, to the ground, group, ungroup, swap, save to library, unpack, lock, copy | `[cube] more-actions` |
