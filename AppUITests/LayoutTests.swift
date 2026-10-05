@@ -2,15 +2,22 @@ import XCTest
 
 /// The layout of docs/LAYOUT.md on the iPad simulator: every 2.0 feature is reachable from its home, and the stage
 /// owns the screen at rest.
+@MainActor
 final class LayoutTests: XCTestCase {
     private var app: XCUIApplication!
     private let panels: Set<String> = ["Model", "Draw", "Paint", "Cast", "Actions", "Look", "Select"]
 
-    override func setUp() {
+    override func setUp() async throws {
         continueAfterFailure = true
         app = XCUIApplication()
         app.launchArguments = ["-ui-testing"]
         app.launch()
+    }
+
+    /// A plain wait: panels that render pictures (Look's swatches, the Kit's tiles) keep the app busy for a moment,
+    /// and querying the UI tree then can time out.
+    private func settle(_ seconds: TimeInterval) {
+        _ = XCTWaiter.wait(for: [XCTestExpectation(description: "settle")], timeout: seconds)
     }
 
     private func element(_ identifier: String) -> XCUIElement {
@@ -85,6 +92,7 @@ final class LayoutTests: XCTestCase {
     private func walk(_ row: LayoutWalk.Row) {
         for step in row.steps.dropLast() {
             XCTAssertTrue(tap(step), "\(row.home) › \(row.control): \(step) isn't there")
+            if panels.contains(step) || step.hasPrefix("model-") { settle(step == "Look" ? 3 : 1) }
         }
         if let last = row.steps.last {
             XCTAssertTrue(element(last).waitForExistence(timeout: 5), "\(row.home) › \(row.control): \(last) isn't reachable")
