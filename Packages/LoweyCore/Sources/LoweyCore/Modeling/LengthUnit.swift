@@ -211,7 +211,7 @@ public struct LengthExpression {
                 index = text.index(after: index)
             } else if character.isLetter || character == "\"" || character == "'" {
                 let end = wordEnd(text, from: index)
-                tokens.append(try word(String(text[index ..< end])))
+                try tokens.append(word(String(text[index ..< end])))
                 index = end
             } else {
                 throw .unexpected(String(character))

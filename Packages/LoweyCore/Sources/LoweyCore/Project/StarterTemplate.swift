@@ -22,8 +22,8 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
         public var subtitle: String {
             switch self {
             case .blank: "An empty stage, ready for anything."
-            case .print: "5 cm shapes on a 1 cm grid, close up."
-            case .room: "A 25 cm grid, the view from above."
+            case .print: "Millimetres, 5 cm shapes on a 1 cm grid, close up."
+            case .room: "Metres, a 25 cm grid, the view from above."
             case .character: "Cast open, the camera at eye level."
             case .animation: "The timeline open from the start."
             }
@@ -67,7 +67,7 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
         kind: .print, lookPresetID: LookPreset.clay.id, mood: .studio,
         viewpoint: Viewpoint(target: Vec3(0, 0.04, 0), yaw: 35, pitch: 30, distance: 0.6, fieldOfView: 40),
         workspace: ProjectWorkspace(template: .print, snap: SnapSettings(grid: true, gridSize: 0.01, rotationStep: 15, objectThreshold: 0.005),
-                                    showsGrid: true, shapeSize: 0.05, firstPanel: "model")
+                                    showsGrid: true, shapeSize: 0.05, firstPanel: "model", units: .millimetre)
     )
 
     /// Rooms and buildings: a quarter-metre grid, seen from above the floor.
@@ -75,7 +75,7 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
         kind: .room, lookPresetID: LookPreset.ink.id, mood: .day,
         viewpoint: Viewpoint(target: Vec3(0, 0, 0), yaw: 35, pitch: 42, distance: 16),
         workspace: ProjectWorkspace(template: .room, snap: SnapSettings(grid: true, gridSize: 0.25, rotationStep: 45), showsGrid: true,
-                                    firstPanel: "model")
+                                    firstPanel: "model", units: .metre)
     )
 
     /// A character at eye level with Cast open.

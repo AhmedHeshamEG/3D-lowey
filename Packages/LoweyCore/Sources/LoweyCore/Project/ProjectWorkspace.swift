@@ -29,12 +29,15 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
     public var shapeSize: Double
     /// The tool panel to open the first time the project opens (then cleared).
     public var firstPanel: String?
+    /// The unit lengths are shown and typed in (the scene is always in metres).
+    public var units: LengthUnit
 
     public static let defaultTimelineHeight = 260.0
     public static let timelineHeightRange = 150.0 ... 900.0
 
     public init(template: StarterTemplate.Kind? = nil, timeline: TimelinePresence = .hidden, timelineHeight: Double = Self.defaultTimelineHeight,
-                snap: SnapSettings = SnapSettings(), showsGrid: Bool = true, shapeSize: Double = 1, firstPanel: String? = nil) {
+                snap: SnapSettings = SnapSettings(), showsGrid: Bool = true, shapeSize: Double = 1, firstPanel: String? = nil,
+                units: LengthUnit = .centimetre) {
         schemaVersion = Self.schemaVersion
         self.template = template
         self.timeline = timeline
@@ -43,10 +46,11 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         self.showsGrid = showsGrid
         self.shapeSize = shapeSize
         self.firstPanel = firstPanel
+        self.units = units
     }
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, template, timeline, timelineHeight, snap, showsGrid, shapeSize, firstPanel
+        case schemaVersion, template, timeline, timelineHeight, snap, showsGrid, shapeSize, firstPanel, units
     }
 
     /// Unknown or missing values fall back to the defaults: a damaged or future workspace never stops a project opening.
@@ -63,6 +67,7 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         let size = (try? container.decodeIfPresent(Double.self, forKey: .shapeSize)) ?? defaults.shapeSize
         shapeSize = size.isFinite && size > 0 ? min(size, 100) : defaults.shapeSize
         firstPanel = try? container.decodeIfPresent(String.self, forKey: .firstPanel)
+        units = (try? container.decodeIfPresent(LengthUnit.self, forKey: .units)) ?? defaults.units
     }
 }
 
