@@ -6369,6 +6369,22 @@
         }
       }
     },
+    "Home, 20 s: a hundred projects turning in their cards while the gallery scrolls down and back. Same pass rule.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home, 20 s: cento progetti che girano nelle loro schede mentre la galleria scorre giù e su. Stessa regola per passare."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرئيسية، 20 ثانية: مئة مشروع تدور في بطاقاتها بينما يتمرر المعرض للأسفل ثم للأعلى. قاعدة النجاح نفسها."
+          }
+        }
+      }
+    },
     "Hover glow": {
       "localizations": {
         "it": {
@@ -11277,6 +11293,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تشغيل اختبار الأداء"
+          }
+        }
+      }
+    },
+    "Run the Home benchmark": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia il benchmark di Home"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل اختبار أداء الرئيسية"
           }
         }
       }

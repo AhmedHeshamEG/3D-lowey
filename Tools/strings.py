@@ -47,7 +47,7 @@ def key_for(literal: str) -> str | None:
     text = INTERPOLATION.sub(lambda match: "%lld" if NUMERIC.search(match.group(1)) else "%@", text)
     text = text.replace('\\"', '"').replace("\\n", "\n")
     # A literal cut short by quotes inside an interpolation isn't a whole string: skip it.
-    if "\(" in text or text.startswith(")") or text.count('"') % 2:
+    if "\\(" in text or text.startswith(")") or text.count('"') % 2:
         return None
     if not re.search(r"[A-Za-z]{2}", text) or NOT_TEXT.match(text) or re.match(r"^[A-Z]{2,}[a-z]\w*$", text):
         return None
