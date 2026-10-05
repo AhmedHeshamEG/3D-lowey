@@ -5,16 +5,20 @@ import LoweyCore
 import LoweyEngine
 import UIKit
 
-/// Where the selection sits on the stage, so the inspector can float beside it without covering it. Measured when the
-/// selection or the scene changes, and once the camera settles (not every frame of an orbit: the inspector glides
-/// over when the view comes to rest).
+/// Where the selection sits on the stage, so the inspector can float beside it without covering it. Measured at once
+/// when the selection changes, and once edits or the camera pause (not every frame of a drag or an orbit: the
+/// inspector glides over when things come to rest).
 extension EditorModel {
-    func refreshSelectionScreenRect(after delay: Double = 0) {
+    /// With no delay given: at once for a new selection, after a short pause for the same one being edited.
+    func refreshSelectionScreenRect(after delay: Double? = nil) {
         selectionRectTask?.cancel()
         guard !selection.isEmpty else {
             if selectionScreenRect != nil { selectionScreenRect = nil }
+            measuredSelection = []
             return
         }
+        let delay = delay ?? (selection == measuredSelection ? 0.12 : 0)
+        measuredSelection = selection
         selectionRectTask = Task { [weak self] in
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
             guard let self, !Task.isCancelled else { return }

@@ -32,8 +32,8 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 
 ## Known limitations
 
-- **The inspector moves after the camera stops.** While you orbit, it stays where it was and glides beside the
-  selection once the view rests (measuring every frame would cost the stage frames). (D-105)
+- **The inspector moves after things stop.** While you orbit or drag, it stays where it was and glides beside the
+  selection once the view or the object rests (measuring every frame would cost the stage frames). (D-105)
 - **A card shows its still until the project is opened and closed once in 0.2.** Turntables are drawn when a
   project closes; projects from earlier versions keep their old preview until then.
 

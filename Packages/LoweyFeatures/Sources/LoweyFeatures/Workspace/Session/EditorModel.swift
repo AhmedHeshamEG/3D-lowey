@@ -227,6 +227,7 @@ final class EditorModel {
     @ObservationIgnored var viewpointSaveTask: Task<Void, Never>?
     @ObservationIgnored var workspaceSaveTask: Task<Void, Never>?
     @ObservationIgnored var selectionRectTask: Task<Void, Never>?
+    @ObservationIgnored var measuredSelection: [ObjectID] = []
     /// The template the project began from and how it shows (`workspace.json`).
     @ObservationIgnored var workspace = ProjectWorkspace()
     @ObservationIgnored let logger = Logger(subsystem: AppIdentity.subsystem, category: "editor")

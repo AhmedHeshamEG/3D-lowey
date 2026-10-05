@@ -803,8 +803,9 @@ iCloud Drive). *Rejected:* a `project.json` field (every resize would be a comma
 
 **D-105 — The inspector floats beside the selection.** hmm-kit's `HmmFloatingPlacement` keeps it on its side while
 it fits, flips it at the screen's edge and, when neither side fits, covers as little as it can. The selection's
-box is projected onto the stage when the selection or the scene changes and 0.15 s after the camera stops moving, so
-an orbit doesn't re-run SwiftUI 120 times a second; the inspector glides over when the view comes to rest. It stays
+box is projected onto the stage at once when the selection changes, 0.12 s after edits to it pause and 0.15 s after
+the camera stops moving, so a drag or an orbit doesn't re-run SwiftUI 120 times a second; the inspector glides over
+when things come to rest. It stays
 in the room the chrome leaves (below the clusters, clear of the sidebar, an open panel and the bottom row), docks to
 the edge when the selection is off screen, and hides while a making tool's panel is open. *Rejected:* tracking every
 frame (layout per frame for a panel nobody reads mid-orbit); a popover (it closes on the first touch of the stage).
