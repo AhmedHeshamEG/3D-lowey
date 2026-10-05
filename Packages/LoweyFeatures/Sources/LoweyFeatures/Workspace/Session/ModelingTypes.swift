@@ -45,21 +45,44 @@ enum SketchKind: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// What to do next, in a few words (shown while drawing).
+    /// What to do next, in a few words (shown while drawing), after `points` taps.
     func hint(points: Int) -> String {
-        switch (self, points) {
-        case (.line, 0): "Tap where the line starts"
-        case (.line, _): "Tap the next corner. Tap the first one to close"
-        case (.rectangle, 0): "Tap one corner"
-        case (.rectangle, _): "Tap the opposite corner"
-        case (.circle, 0): "Tap the centre"
-        case (.circle, _): "Tap the edge"
-        case (.arc, 0): "Tap where the arc starts"
-        case (.arc, 1): "Tap where it ends"
-        case (.arc, _): "Tap how far it bends"
-        case (.spline, 0): "Tap where the curve starts"
-        case (.spline, _): "Tap through the curve. Tap the start to close"
-        case (.offset, _): "Tap a line of a sketch to offset it"
+        switch points {
+        case 0: hint
+        case 1: caption
+        default: explanation
+        }
+    }
+
+    /// Before the first tap.
+    var hint: String {
+        switch self {
+        case .line: "Tap where the line starts"
+        case .rectangle: "Tap one corner"
+        case .circle: "Tap the centre"
+        case .arc: "Tap where the arc starts"
+        case .spline: "Tap where the curve starts"
+        case .offset: "Tap a line of a sketch to offset it"
+        }
+    }
+
+    /// After the first tap.
+    var caption: String {
+        switch self {
+        case .line: "Tap the next corner. Tap the first one to close"
+        case .rectangle: "Tap the opposite corner"
+        case .circle: "Tap the edge"
+        case .arc: "Tap where it ends"
+        case .spline: "Tap through the curve. Tap the start to close"
+        case .offset: "Tap a line of a sketch to offset it"
+        }
+    }
+
+    /// After the second tap.
+    var explanation: String {
+        switch self {
+        case .arc: "Tap how far it bends"
+        default: caption
         }
     }
 }

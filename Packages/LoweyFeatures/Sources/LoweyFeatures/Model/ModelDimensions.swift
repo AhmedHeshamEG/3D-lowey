@@ -30,7 +30,8 @@ private struct DimensionChip: View {
     var body: some View {
         Group {
             if editing {
-                TextField("Length", text: $text)
+                // Empty, with the current size as its placeholder: what you type replaces it.
+                TextField(label.text, text: $text)
                     .keyboardType(.numbersAndPunctuation)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -39,7 +40,7 @@ private struct DimensionChip: View {
                     .frame(width: 110)
                     .accessibilityIdentifier("dimension-field")
                     .onAppear {
-                        text = editor.dimensionValue(label.field).map { editor.units.format($0, symbol: false) } ?? ""
+                        text = ""
                         focused = true
                     }
                     .onChange(of: focused) { _, isFocused in
