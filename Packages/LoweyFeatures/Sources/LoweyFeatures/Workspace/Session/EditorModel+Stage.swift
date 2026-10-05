@@ -141,6 +141,7 @@ extension EditorModel {
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
         if tool != .ink { inkStrokes = [] }
         if tool == .flipbook, flipbook.track == nil { flipbook.track = timeline.flipbooks.last?.id }
+        modelToolChanged()
         refreshSelectionOverlay()
         refreshGuide()
     }
@@ -151,6 +152,7 @@ extension EditorModel {
         if projection != viewpoint.projection { projection = viewpoint.projection }
         if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
         if tool.usesGuide { refreshGuide() }
+        if tool == .model { modelCameraMoved() }
         if !selection.isEmpty { refreshSelectionScreenRect(after: 0.15) }
         viewpointSaveTask?.cancel()
         viewpointSaveTask = Task { [weak self] in

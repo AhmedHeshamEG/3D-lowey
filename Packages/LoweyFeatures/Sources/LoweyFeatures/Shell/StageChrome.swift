@@ -15,6 +15,7 @@ struct StageChrome: View {
 
     var body: some View {
         ZStack {
+            if editor.tool == .model { ModelDimensions(editor: editor) }
             VStack(spacing: HmmSpacing.s) {
                 HStack(alignment: .top) {
                     leadingCluster

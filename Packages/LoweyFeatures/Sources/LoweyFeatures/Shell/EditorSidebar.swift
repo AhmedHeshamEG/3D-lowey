@@ -76,6 +76,7 @@ struct ToolOptionsBar: View {
         case .draw: DrawOptionsBar(editor: editor)
         case .shadowBrush: ShadowBrushOptionsBar(editor: editor)
         case .scatter: ScatterOptionsBar(editor: editor)
+        case .model: ModelOptionsBar(editor: editor)
         case .select, .lasso: EmptyView()
         }
     }

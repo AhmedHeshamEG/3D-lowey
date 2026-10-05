@@ -5,7 +5,7 @@ import Testing
 struct ManifoldBridgeTests {
     /// A closed axis-aligned box, 8 shared vertices, 12 counter-clockwise triangles.
     static func box(min lo: SIMD3<Float>, max hi: SIMD3<Float>) -> (positions: [Float], triangles: [UInt32]) {
-        let corners: [SIMD3<Float>] = (0..<8).map { i in
+        let corners: [SIMD3<Float>] = (0 ..< 8).map { i in
             SIMD3(i & 1 == 0 ? lo.x : hi.x, i & 2 == 0 ? lo.y : hi.y, i & 4 == 0 ? lo.z : hi.z)
         }
         let quads: [[UInt32]] = [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]]
