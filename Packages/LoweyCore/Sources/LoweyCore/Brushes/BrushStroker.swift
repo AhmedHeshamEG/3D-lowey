@@ -8,6 +8,12 @@ public protocol BrushPoint: Hashable, Sendable {
     func distance(to other: Self) -> Double
 }
 
+extension BrushPoint {
+    static func += (lhs: inout Self, rhs: Self) {
+        lhs = lhs + rhs
+    }
+}
+
 extension Vec3: BrushPoint {}
 
 extension Vec2: BrushPoint {
@@ -90,7 +96,7 @@ public enum BrushStroker {
         var previous = first
         for (index, sample) in samples.enumerated() {
             if index > 0 {
-                smoothed = smoothed + (sample.point - smoothed) * pull
+                smoothed += (sample.point - smoothed) * pull
                 let elapsed = sample.time - previous.time
                 if elapsed > 1e-4 {
                     let diameters = sample.point.distance(to: previous.point) / max(size * 2, 1e-9) / elapsed

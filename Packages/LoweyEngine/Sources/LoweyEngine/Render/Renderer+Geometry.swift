@@ -173,9 +173,8 @@ extension LoweyRenderer {
 
     // MARK: Shading
 
-    func encodeShading(frame: inout FrameUniforms, ordered: [DrawItem], gpu: FrameBuffers, targets: FrameTargets, ground: SIMD3<Float>?,
-                       brushes: (batches: [BrushBatch], image: (String) -> CGImage?), commandBuffer: MTLCommandBuffer,
-                       triangles: inout Int) -> Int {
+    /// The shading pass: colour and light (MSAA, resolved), its own depth.
+    func shadingPass(_ targets: FrameTargets) -> MTLRenderPassDescriptor {
         let pass = MTLRenderPassDescriptor()
         let multisampled = targets.msaaColor != nil
         pass.colorAttachments[0].texture = targets.msaaColor ?? targets.color
@@ -192,7 +191,24 @@ extension LoweyRenderer {
         pass.depthAttachment.loadAction = .clear
         pass.depthAttachment.clearDepth = 0
         pass.depthAttachment.storeAction = .dontCare
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return 0 }
+        return pass
+    }
+
+    /// Ink: the brush engine's stamps over everything shaded, hidden where something stands in front.
+    func encodeInkStamps(_ batches: [BrushBatch], frame: FrameUniforms, targets: FrameTargets, image: (String) -> CGImage?,
+                         encoder: MTLRenderCommandEncoder) -> Int {
+        guard !batches.isEmpty else { return 0 }
+        encoder.setRenderPipelineState(device.pipelines.brushScene)
+        encoder.setDepthStencilState(device.pipelines.depthRead)
+        let view = BrushStamper.WorldView(viewProjection: frame.viewProjection, view: frame.view, eye: frame.cameraPosition.xyz4)
+        stamper.encode(batches, encoder: encoder, view: view, width: targets.shadingWidth, height: targets.shadingHeight, image: image)
+        return batches.count
+    }
+
+    func encodeShading(frame: inout FrameUniforms, ordered: [DrawItem], gpu: FrameBuffers, targets: FrameTargets, ground: SIMD3<Float>?,
+                       brushes: (batches: [BrushBatch], image: (String) -> CGImage?), commandBuffer: MTLCommandBuffer,
+                       triangles: inout Int) -> Int {
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: shadingPass(targets)) else { return 0 }
         encoder.setFrontFacing(.counterClockwise)
         encoder.label = "Look shading"
         encoder.setCullMode(.none)
@@ -234,15 +250,7 @@ extension LoweyRenderer {
             draws += 1
             triangles += item.mesh.indexCount / 3 * run.count
         }
-        if !brushes.batches.isEmpty {
-            // Ink: stamps over everything shaded, hidden where something stands in front.
-            encoder.setRenderPipelineState(device.pipelines.brushScene)
-            encoder.setDepthStencilState(device.pipelines.depthRead)
-            let view = BrushStamper.WorldView(viewProjection: frame.viewProjection, view: frame.view, eye: frame.cameraPosition.xyz4)
-            stamper.encode(brushes.batches, encoder: encoder, view: view, width: targets.shadingWidth, height: targets.shadingHeight,
-                           image: brushes.image)
-            draws += brushes.batches.count
-        }
+        draws += encodeInkStamps(brushes.batches, frame: frame, targets: targets, image: brushes.image, encoder: encoder)
         draws += encodeHulls(ordered: ordered, gpu: gpu, encoder: encoder)
         encoder.endEncoding()
         return draws

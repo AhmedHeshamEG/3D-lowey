@@ -36,7 +36,9 @@ public struct GreyImage: Hashable, Sendable {
                 var sum = 0
                 for dy in 0 ..< factor {
                     let base = (row * factor + dy) * width + column * factor
-                    for dx in 0 ..< factor { sum += Int(pixels[base + dx]) }
+                    for dx in 0 ..< factor {
+                        sum += Int(pixels[base + dx])
+                    }
                 }
                 result[row * w + column] = UInt8(sum / (factor * factor))
             }

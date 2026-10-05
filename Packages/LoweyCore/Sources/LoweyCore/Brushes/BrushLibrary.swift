@@ -126,7 +126,9 @@ public struct BrushLibrary: Codable, Hashable, Sendable {
         guard !isBuiltIn(id) else { return }
         brushes.removeValue(forKey: id)
         originals.removeValue(forKey: id)
-        for index in sets.indices { sets[index].brushes.removeAll { $0 == id } }
+        for index in sets.indices {
+            sets[index].brushes.removeAll { $0 == id }
+        }
     }
 
     /// Moves a brush into a set at a position (the end when nil), out of wherever it was.
@@ -134,7 +136,9 @@ public struct BrushLibrary: Codable, Hashable, Sendable {
         guard brush(id) != nil, let target = sets.firstIndex(where: { $0.id == setID }) else { return }
         var index = position ?? sets[target].brushes.count
         if let from = sets[target].brushes.firstIndex(of: id), from < index { index -= 1 }
-        for set in sets.indices { sets[set].brushes.removeAll { $0 == id } }
+        for set in sets.indices {
+            sets[set].brushes.removeAll { $0 == id }
+        }
         sets[target].brushes.insert(id, at: min(max(index, 0), sets[target].brushes.count))
     }
 

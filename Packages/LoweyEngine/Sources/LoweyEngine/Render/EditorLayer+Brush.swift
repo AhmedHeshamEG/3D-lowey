@@ -106,7 +106,7 @@ extension BrushStamper {
             bytes.baseAddress.flatMap { device.makeBuffer(bytes: $0, length: bytes.count, options: .storageModeShared) }
         }) else { return }
         var uniforms = BrushFillUniforms(color: color, viewport: SIMD4<Float>(Float(width), Float(height), 1 / Float(max(width, 1)),
-                                                                                1 / Float(max(height, 1))))
+                                                                              1 / Float(max(height, 1))))
         encoder.setVertexBuffer(buffer, offset: 0, index: 0)
         encoder.setVertexBytes(&uniforms, length: MemoryLayout<BrushFillUniforms>.stride, index: 1)
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<BrushFillUniforms>.stride, index: 1)

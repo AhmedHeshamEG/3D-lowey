@@ -174,13 +174,13 @@ public enum BinaryPlist {
         }
 
         func signedInteger(at offset: Int, size: Int) throws(Failure) -> Int64 {
-            guard size <= 8 else { return Int64(try integer(at: offset + size - 8, size: 8)) }
-            let raw = UInt64(truncatingIfNeeded: try integer(at: offset, size: size))
+            guard size <= 8 else { return try Int64(integer(at: offset + size - 8, size: 8)) }
+            let raw = try UInt64(truncatingIfNeeded: integer(at: offset, size: size))
             return size == 8 ? Int64(bitPattern: raw) : Int64(raw)
         }
 
         func real(at offset: Int, size: Int) throws(Failure) -> Double {
-            let raw = UInt64(truncatingIfNeeded: try integer(at: offset, size: size))
+            let raw = try UInt64(truncatingIfNeeded: integer(at: offset, size: size))
             return size == 4 ? Double(Float(bitPattern: UInt32(truncatingIfNeeded: raw))) : Double(bitPattern: raw)
         }
     }

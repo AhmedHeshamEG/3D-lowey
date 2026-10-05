@@ -91,7 +91,7 @@ final class BrushStamper {
     /// Draws batches with the pipeline already set on `encoder`. World batches need `view`.
     func encode(_ batches: [BrushBatch], encoder: MTLRenderCommandEncoder, view: WorldView?, width: Int, height: Int,
                 image: (String) -> CGImage?) {
-        for batch in batches where batch.count > 0 {
+        for batch in batches where batch.count >= 1 {
             var uniforms = BrushUniforms(brush: batch.brush)
             uniforms.setViewport(width: width, height: height)
             uniforms.color = batch.color

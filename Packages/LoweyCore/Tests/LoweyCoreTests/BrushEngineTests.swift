@@ -36,7 +36,9 @@ final class BrushEngineTests: XCTestCase {
 
     func testStreamlineSmoothsButTheStrokeEndsAtTheLift() {
         var samples = line(40, length: 10)
-        for index in samples.indices where index % 2 == 1 { samples[index].point.y = 0.5 }
+        for index in samples.indices where index % 2 == 1 {
+            samples[index].point.y = 0.5
+        }
         var smooth = BuiltInBrushes.technicalPen
         smooth.stroke.streamline = 1
         var raw = smooth
@@ -159,7 +161,7 @@ final class BrushEngineTests: XCTestCase {
     }
 
     func testGreyPNGDecodesBack() throws {
-        let image = GreyImage(width: 70_000 / 700, height: 700) { x, y in x * y }
+        let image = GreyImage(width: 70000 / 700, height: 700) { x, y in x * y }
         let png = GreyPNG.encode(image)
         XCTAssertEqual(png.prefix(8), Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
         // IDAT starts after the signature (8) and IHDR (25); its zlib body skips the 2-byte header and 4-byte Adler.
@@ -224,20 +226,24 @@ final class BrushEngineTests: XCTestCase {
         XCTAssertEqual(applied.project.brushes[key]?.name, "Pencil")
         let encoded = try SchemaCoder.shared.encode(applied.project, kind: .project)
         XCTAssertEqual(try SchemaCoder.shared.decode(ProjectInfo.self, kind: .project, from: encoded).brushes, [key: frozen])
-        XCTAssertFalse(String(decoding: try SchemaCoder.shared.encode(document.project, kind: .project), as: UTF8.self).contains("brushes"))
+        XCTAssertFalse(try String(decoding: SchemaCoder.shared.encode(document.project, kind: .project), as: UTF8.self).contains("brushes"))
     }
 
     func testLatencyKeepsAMedianAndATail() {
         var latency = StrokeLatency()
         XCTAssertNil(latency.summary)
-        for value in 1 ... 100 { latency.add(Double(value)) }
+        for value in 1 ... 100 {
+            latency.add(Double(value))
+        }
         latency.add(-1)
         latency.add(.nan)
         XCTAssertEqual(latency.samples.count, 100)
         XCTAssertEqual(latency.median, 50)
         XCTAssertEqual(latency.p95, 95)
         XCTAssertEqual(latency.summary, "50.0 ms median · 95.0 ms p95 · 100 samples")
-        for _ in 0 ..< StrokeLatency.capacity { latency.add(10) }
+        for _ in 0 ..< StrokeLatency.capacity {
+            latency.add(10)
+        }
         XCTAssertEqual(latency.samples.count, StrokeLatency.capacity)
         XCTAssertEqual(latency.median, 10)
     }

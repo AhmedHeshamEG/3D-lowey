@@ -139,14 +139,17 @@ extension GreyImage {
         let width = cgImage.width, height = cgImage.height
         guard width > 0, height > 0, width <= 8192, height <= 8192 else { return nil }
         let rect = CGRect(x: 0, y: 0, width: width, height: height)
-        var alpha = [UInt8](repeating: 0, count: width * height)
         let hasAlpha = ![.none, .noneSkipFirst, .noneSkipLast].contains(cgImage.alphaInfo)
-        if hasAlpha, let context = CGContext(data: &alpha, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: nil,
-                                             bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue) {
-            context.draw(cgImage, in: rect)
-            if alpha.contains(where: { $0 < 250 }) {
-                self.init(width: width, height: height, pixels: alpha)
-                return
+        if hasAlpha {
+            var rgba = [UInt8](repeating: 0, count: width * height * 4)
+            if let context = CGContext(data: &rgba, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+                context.draw(cgImage, in: rect)
+                let alpha = stride(from: 3, to: rgba.count, by: 4).map { rgba[$0] }
+                if alpha.contains(where: { $0 < 250 }) {
+                    self.init(width: width, height: height, pixels: alpha)
+                    return
+                }
             }
         }
         var grey = [UInt8](repeating: 0, count: width * height)

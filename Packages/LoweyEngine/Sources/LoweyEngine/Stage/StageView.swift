@@ -40,6 +40,8 @@ public final class StageView: MTKView {
     private var liveStroke: LiveBrushStroke?
     /// The timestamp of the newest real sample in `liveStroke` (latency is measured from it to the frame showing it).
     private var liveStrokeTouch: TimeInterval?
+    /// The drawable that showed a live stroke sample, and that sample's timestamp: read once it has been presented.
+    private var latencyProbe: (drawable: MTLDrawable, touch: TimeInterval)?
     /// Touch-to-photon latency of the strokes drawn here (median and 95th percentile in Diagnostics).
     public private(set) var strokeLatency = StrokeLatency()
     private var screenGuide: ScreenGuide?
@@ -339,18 +341,7 @@ extension StageView: MTKViewDelegate {
         } catch {
             return
         }
-        if let touch = liveStrokeTouch, liveStroke != nil {
-            liveStrokeTouch = nil
-            signposts.event("Stroke sample on screen")
-            // The drawable's presented time and the touch's timestamp share the boot clock.
-            drawable.addPresentedHandler { [weak self] presented in
-                let shown = presented.presentedTime
-                guard shown > 0 else { return }
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated { self?.strokeLatency.add((shown - touch) * 1000) }
-                }
-            }
-        }
+        measureLatency(showing: drawable)
         commandBuffer.present(drawable)
         lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in
@@ -365,6 +356,21 @@ extension StageView: MTKViewDelegate {
             }
         }
         commandBuffer.commit()
+    }
+}
+
+extension StageView {
+    /// Touch to photon: the last probed drawable has been presented by now (its presented time and the touch's
+    /// timestamp share the boot clock); this frame becomes the next probe when it shows a new stroke sample.
+    func measureLatency(showing drawable: MTLDrawable) {
+        if let probe = latencyProbe, probe.drawable.presentedTime > 0 {
+            strokeLatency.add((probe.drawable.presentedTime - probe.touch) * 1000)
+            latencyProbe = nil
+        }
+        guard let touch = liveStrokeTouch, liveStroke != nil else { return }
+        liveStrokeTouch = nil
+        signposts.event("Stroke sample on screen")
+        latencyProbe = (drawable, touch)
     }
 }
 

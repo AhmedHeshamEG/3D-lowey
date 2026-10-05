@@ -13,6 +13,12 @@ public extension EditCommand {
     typealias Applied = (inverse: EditCommand, changes: ChangeSet)
 
     /// A version restored: the scene keeps its id, everything else is the version's.
+    private static func applySetBrushes(_ brushes: [String: Brush], in document: inout Document) -> Applied {
+        let old = document.project.brushes
+        document.project.brushes = brushes
+        return (.setBrushes(old), ChangeSet(scene: true))
+    }
+
     private static func applyReplaceScene(_ scene: Scene, in document: inout Document) -> Applied {
         let old = document.scene
         document.scene = scene
@@ -78,9 +84,7 @@ public extension EditCommand {
             return (.setCustomLooks(old), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
 
         case let .setBrushes(brushes):
-            let old = document.project.brushes
-            document.project.brushes = brushes
-            return (.setBrushes(old), ChangeSet(scene: true))
+            return Self.applySetBrushes(brushes, in: &document)
 
         case let .setTracks(edits):
             return try Self.applySetTracks(edits, in: &document)
