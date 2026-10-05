@@ -918,7 +918,9 @@ diameter, a line's length and an offset are chips on the stage; tapping one open
 value as its placeholder, so typing replaces it. Lengths are typed in the project's units with any unit on any number
 and arithmetic (`25`, `25mm`, `2*12`, `1ft 6in`, `(40-6)/2`). Units are `workspace.json`'s (Model to print: mm, Room:
 m, others cm), set in Model ▸ Snapping. Dragging snaps to other corners' heights along the axis within 10 points,
-else to one unit when grid snapping is on. *Rejected:* a numeric keypad sheet (a decision wall between the drag and
+else to one unit when grid snapping is on; sketch points snap to one unit too (or the grid when it's finer). The
+stage's camera comes in to 3 cm (its near plane follows it in), so double-tap frames a millimetre part; a shape tool
+shows its hint once, when chosen, not a toast per tap. *Rejected:* a numeric keypad sheet (a decision wall between the drag and
 the number).
 
 **D-123 — The marks are drawn in the editor pass; the element under a tap is found on the CPU.** The ID buffer finds

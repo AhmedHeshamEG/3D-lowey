@@ -18,6 +18,7 @@ continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the m
 - **Units**: millimetres, centimetres, metres, inches, feet (Model ▸ Snapping). Model to print starts in millimetres,
   Room or building in metres.
 - The inspector shows the selection's size, and what's picked.
+- The camera comes in to 3 cm, so double-tap frames a small printed part.
 - Projects are schema 5 (meshes and sketches); Maquette 0.2 and 3D-lowey ask for a newer version instead of opening
   them.
 - Booleans by Manifold (Apache-2.0), vendored.
