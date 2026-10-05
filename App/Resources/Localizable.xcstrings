@@ -1105,6 +1105,38 @@
         }
       }
     },
+    "Along a sketch": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lungo uno schizzo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على امتداد رسم"
+          }
+        }
+      }
+    },
+    "Along a sketch, turning with it": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lungo uno schizzo, girando con esso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على امتداد رسم، مع الدوران معه"
+          }
+        }
+      }
+    },
     "Always full resolution": {
       "localizations": {
         "it": {
@@ -4237,6 +4269,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ارسم حدًا مغلقًا: يصبح مجسمًا."
+          }
+        }
+      }
+    },
+    "Draw a line or a curve with Model ▸ Shape ▸ Sketch first": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima disegna una linea o una curva con Modello ▸ Forma ▸ Schizzo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم خطًا أو منحنى أولًا من نموذج ▸ شكل ▸ رسم"
           }
         }
       }

@@ -119,6 +119,10 @@ struct InspectorPanel: View {
                 Button("Grid 5 × 5") { editor.array(.grid(columns: 5, rows: 5, spacingX: step, spacingZ: step)) }
                 Button("Circle of 8") { editor.array(.circle(count: 8, radius: max(step * 1.5, 1), faceCenter: true)) }
                 Button("Circle of 12") { editor.array(.circle(count: 12, radius: max(step * 2, 1.5), faceCenter: true)) }
+                if !editor.sketches.isEmpty {
+                    Button("Along a sketch") { editor.arrayAlongSketch(align: false) }
+                    Button("Along a sketch, turning with it") { editor.arrayAlongSketch(align: true) }
+                }
             }
             Button("To the ground", systemImage: "arrow.down.to.line") { editor.dropSelectionToGround() }
         }

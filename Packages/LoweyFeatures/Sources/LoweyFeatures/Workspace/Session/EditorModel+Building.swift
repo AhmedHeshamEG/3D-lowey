@@ -183,6 +183,34 @@ extension EditorModel {
         if perform(command) { setSelection([group]) }
     }
 
+    /// Copies along a sketch's curve: the selected sketch, else the one nearest the object. As many as fit at the
+    /// object's own spacing, turning with the curve when `align`.
+    func arrayAlongSketch(align: Bool) {
+        guard let source = selection.first(where: { baseScene.objects[$0].map { if case .sketch = $0.kind { false } else { true } } ?? false }),
+              let path = arrayPath(for: source) else {
+            app.show("Draw a line or a curve with Model ▸ Shape ▸ Sketch first")
+            return
+        }
+        let length = zip(path.points, path.points.dropFirst()).reduce(0) { $0 + $1.0.distance(to: $1.1) }
+        let count = max(2, min(200, Int(length / max(arrayStep, 1e-3)) + (path.closed ? 0 : 1)))
+        refreshOperationsLibrary()
+        guard let (command, group) = operations.array(source, layout: .path(count: count, points: path.points, closed: path.closed, align: align),
+                                                      in: scene) else { return }
+        if perform(command) { setSelection([group]) }
+    }
+
+    private func arrayPath(for source: ObjectID) -> (points: [Vec3], closed: Bool)? {
+        let picked = selection.compactMap { id -> Sketch? in
+            guard case let .sketch(sketch)? = baseScene.objects[id]?.kind else { return nil }
+            return sketch
+        }.first
+        if let picked { return picked.path() }
+        let origin = scene.worldTransform(of: source).position
+        return sketches.compactMap { $0.sketch.path() }.min { lhs, rhs in
+            (lhs.points.map { $0.distance(to: origin) }.min() ?? .infinity) < (rhs.points.map { $0.distance(to: origin) }.min() ?? .infinity)
+        }
+    }
+
     /// The object's own width plus a small gap.
     var arrayStep: Double {
         guard let bounds = selectionBounds else { return 1 }
