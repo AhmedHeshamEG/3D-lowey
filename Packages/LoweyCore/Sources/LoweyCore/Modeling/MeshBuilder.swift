@@ -21,7 +21,8 @@ public enum MeshBuilder {
         for group in groups {
             faces += Self.faces(of: group.map { tris[$0] }, positions: welded)
         }
-        return compact(EditableMesh(vertices: welded, faces: removeStraightCorners(faces, positions: welded, tolerance: tolerance)))
+        let cleaned = removeStraightCorners(faces, positions: welded, tolerance: tolerance)
+        return compact(EditableMesh(vertices: welded, faces: closeTJunctions(cleaned, positions: welded, tolerance: tolerance)))
     }
 
     /// From the renderer's triangles (positions only; normals and uvs are recomputed per face).
@@ -252,6 +253,52 @@ public enum MeshBuilder {
         return faces.map { face in
             EditableMesh.Face(loops: face.loops.map { loop in loop.filter { !removable.contains($0) } })
         }
+    }
+
+    /// Where one face's edge runs past a corner that only its neighbour kept (two corners a hair apart on one straight
+    /// edge, each kept by a different face), the corner is put into that edge too, so every edge is walked both ways.
+    static func closeTJunctions(_ faces: [EditableMesh.Face], positions: [Vec3], tolerance: Double) -> [EditableMesh.Face] {
+        var faces = faces
+        for _ in 0 ..< 4 {
+            var walked = Set<SIMD2<Int>>()
+            for face in faces {
+                for loop in face.loops {
+                    for index in loop.indices {
+                        walked.insert(SIMD2(loop[index], loop[(index + 1) % loop.count]))
+                    }
+                }
+            }
+            let open = walked.filter { !walked.contains(SIMD2($0.y, $0.x)) }
+            guard !open.isEmpty else { return faces }
+            let loose = Set(open.flatMap { [$0.x, $0.y] })
+            var changed = false
+            for faceIndex in faces.indices {
+                faces[faceIndex].loops = faces[faceIndex].loops.map { loop in
+                    var result: [Int] = []
+                    for index in loop.indices {
+                        let from = loop[index], to = loop[(index + 1) % loop.count]
+                        result.append(from)
+                        guard open.contains(SIMD2(from, to)) else { continue }
+                        let start = positions[from], along = positions[to] - start
+                        let length = along.length
+                        guard length > 0 else { continue }
+                        let direction = along / length
+                        let between = loose.filter { vertex in
+                            guard vertex != from, vertex != to else { return false }
+                            let offset = positions[vertex] - start
+                            let t = offset.dot(direction)
+                            return t > tolerance && t < length - tolerance && (offset - direction * t).length <= tolerance
+                        }
+                        let ordered = between.sorted { (positions[$0] - start).dot(direction) < (positions[$1] - start).dot(direction) }
+                        if !ordered.isEmpty { changed = true }
+                        result += ordered
+                    }
+                    return result
+                }
+            }
+            if !changed { return faces }
+        }
+        return faces
     }
 
     /// Removes vertices no face uses and renumbers.

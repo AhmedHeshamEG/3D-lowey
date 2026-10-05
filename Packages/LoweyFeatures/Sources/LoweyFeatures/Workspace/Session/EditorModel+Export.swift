@@ -81,9 +81,10 @@ extension EditorModel {
             progress(1)
             return [url]
         case .model:
-            guard let url = exportModel(.glb, selectionOnly: !selection.isEmpty) else { throw ExportError.nothingToExport }
+            let urls = exportModel(precision.exportFormat, selectionOnly: !selection.isEmpty)
+            guard !urls.isEmpty else { throw ExportError.nothingToExport }
             progress(1)
-            return [url]
+            return urls
         case .captions:
             guard let url = exportSubtitles() else { throw ExportError.nothingToExport }
             progress(1)
@@ -161,22 +162,28 @@ extension EditorModel {
 
     // MARK: Files
 
-    func exportModel(_ format: ModelExportFormat, selectionOnly: Bool) -> URL? {
+    /// The scene (or the selection) as a 3D file: glTF, USDZ, OBJ (with its materials), STL, 3MF or a Blender package.
+    func exportModel(_ format: ModelExportFormat, selectionOnly: Bool) -> [URL] {
         let ids = selectionOnly && !selection.isEmpty ? selection : nil
-        let meshes = ModelExport.meshes(ids, scene: displayed.scene, look: look, catalog: library.catalog, models: library.models)
-        guard !meshes.isEmpty else {
-            app.show("Nothing to export")
-            return nil
-        }
         let name = ProjectStore.sanitize(ids.flatMap { $0.count == 1 ? displayed.scene.objects[$0[0]]?.name : nil } ?? baseScene.name)
-        let url = rendersFolder.appendingPathComponent(name).appendingPathExtension(format.rawValue)
+        // The scene as edited for the timeline's keys (glTF, Blender); as shown for the rest.
+        let source = format == .glb || format == .blender ? baseScene : displayed.scene
+        let files = ModelExport.files(format, ids: ids, scene: source, look: look, preset: lookPreset, catalog: library.catalog, models: library.models,
+                                      name: name)
+        guard !files.isEmpty else {
+            app.show("Nothing to export")
+            return []
+        }
         do {
             try FileManager.default.createDirectory(at: rendersFolder, withIntermediateDirectories: true)
-            try ModelExport.data(format, meshes: meshes).write(to: url, options: .atomic)
-            return url
+            return try files.map { file in
+                let url = rendersFolder.appendingPathComponent(file.name)
+                try file.data.write(to: url, options: .atomic)
+                return url
+            }
         } catch {
             app.show("3D export failed: \(error.localizedDescription)", kind: .error)
-            return nil
+            return []
         }
     }
 

@@ -61,14 +61,56 @@ public enum MeshBoolean {
         for vertex in a.vertices + b.vertices {
             exact[vertex.float3] = vertex
         }
-        let positions = (0 ..< result.vertexCount).map { index -> Vec3 in
+        // New corners (where the two shapes cross) are only as good as Float: put each back exactly on the planes of the
+        // input faces it lies on, so a 2 mm bevel is 2 mm in Double too.
+        let planes = PlaneSolve.planes(of: a) + PlaneSolve.planes(of: b)
+        let extent = (a.vertices + b.vertices).reduce(0.0) { max($0, abs($1.x), abs($1.y), abs($1.z)) }
+        let size = Bounds(points: a.vertices + b.vertices)?.size.maxComponent ?? 1
+        let tolerance = max(size * 2e-6, extent * 4e-7)
+        var positions = (0 ..< result.vertexCount).map { index -> Vec3 in
             let point = SIMD3<Float>(positionsPointer[index * 3], positionsPointer[index * 3 + 1], positionsPointer[index * 3 + 2])
             return exact[point] ?? Vec3(Double(point.x), Double(point.y), Double(point.z))
         }
+        snapNewCorners(&positions, isNew: { exact[$0.float3] == nil }, planes: planes, tolerance: tolerance)
         let triangles = (0 ..< result.triangleCount).map {
             (Int(trianglesPointer[$0 * 3]), Int(trianglesPointer[$0 * 3 + 1]), Int(trianglesPointer[$0 * 3 + 2]))
         }
         return MeshBuilder.mesh(positions: positions, triangles: triangles, weld: false)
+    }
+
+    /// Puts new corners exactly where their planes meet. Manifold keeps nearly coincident corners apart on purpose, so a
+    /// corner that would land within the tolerance of another one stays where it was.
+    static func snapNewCorners(_ positions: inout [Vec3], isNew: (Vec3) -> Bool, planes: [PlaneSolve.Plane], tolerance: Double) {
+        guard tolerance > 0 else { return }
+        func cell(_ point: Vec3) -> SIMD3<Int64> {
+            SIMD3<Int64>(Int64((point.x / tolerance).rounded(.down)), Int64((point.y / tolerance).rounded(.down)),
+                         Int64((point.z / tolerance).rounded(.down)))
+        }
+        var cells: [SIMD3<Int64>: [Int]] = [:]
+        for (index, position) in positions.enumerated() {
+            cells[cell(position), default: []].append(index)
+        }
+        func crowded(_ point: Vec3, except index: Int) -> Bool {
+            let home = cell(point)
+            for dx in -2 ... 2 {
+                for dy in -2 ... 2 {
+                    for dz in -2 ... 2 {
+                        for other in cells[home &+ SIMD3(Int64(dx), Int64(dy), Int64(dz))] ?? []
+                            where other != index && positions[other].distance(to: point) <= tolerance {
+                            return true
+                        }
+                    }
+                }
+            }
+            return false
+        }
+        for index in positions.indices where isNew(positions[index]) {
+            let snapped = PlaneSolve.snap(positions[index], to: planes, tolerance: tolerance)
+            guard snapped != positions[index], !crowded(positions[index], except: index), !crowded(snapped, except: index) else { continue }
+            cells[cell(positions[index])]?.removeAll { $0 == index }
+            positions[index] = snapped
+            cells[cell(snapped), default: []].append(index)
+        }
     }
 
     /// Whether Manifold accepts the mesh as a closed solid (what booleans and 3D printing need).

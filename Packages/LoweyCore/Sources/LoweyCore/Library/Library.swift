@@ -1,7 +1,8 @@
 import Foundation
 
 public enum AssetFormat: String, Codable, Sendable, CaseIterable {
-    case usdz, gltf, glb, obj
+    case usdz, gltf, glb, obj, stl
+    case threeMF = "3mf"
 
     public init?(fileExtension: String) {
         switch fileExtension.lowercased() {
@@ -9,6 +10,8 @@ public enum AssetFormat: String, Codable, Sendable, CaseIterable {
         case "gltf": self = .gltf
         case "glb": self = .glb
         case "obj": self = .obj
+        case "stl": self = .stl
+        case "3mf": self = .threeMF
         default: return nil
         }
     }

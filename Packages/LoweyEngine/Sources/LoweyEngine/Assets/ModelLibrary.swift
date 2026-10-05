@@ -148,7 +148,7 @@ public final class ModelLibrary: Sendable {
         }
     }
 
-    /// Reads a model file: glTF / GLB and OBJ in pure Swift (LoweyCore), USDZ through ModelIO.
+    /// Reads a model file: glTF / GLB, OBJ, STL and 3MF in pure Swift (LoweyCore), USDZ through ModelIO.
     static func read(url: URL, format: AssetFormat) throws -> (ImportedModel, RigAsset?) {
         let model: ImportedModel
         var rig: RigAsset?
@@ -159,6 +159,10 @@ public final class ModelLibrary: Sendable {
             rig = try GLTFReader.rig(data: data, baseURL: url.deletingLastPathComponent())
         case .obj:
             model = try ImportedModel(mesh: OBJParser.parse(String(contentsOf: url, encoding: .utf8)), name: url.deletingPathExtension().lastPathComponent)
+        case .stl:
+            model = try ImportedModel(mesh: STLFile.read(Data(contentsOf: url)), name: url.deletingPathExtension().lastPathComponent)
+        case .threeMF:
+            model = try ThreeMFFile.read(Data(contentsOf: url))
         case .usdz:
             model = try ModelIOImporter.model(url: url)
         }

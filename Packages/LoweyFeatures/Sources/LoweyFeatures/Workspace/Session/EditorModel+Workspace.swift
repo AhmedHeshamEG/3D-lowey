@@ -12,6 +12,9 @@ extension EditorModel {
         snap = workspace.snap
         showsGrid = workspace.showsGrid
         units = workspace.units
+        precision.section = workspace.section
+        precision.printBed = workspace.printBed
+        precision.showsDimensions = workspace.showsDimensions
         if let first = workspace.firstPanel.flatMap(ClusterPanel.init(rawValue:)) {
             openPanel = first
             workspace.firstPanel = nil
@@ -36,6 +39,9 @@ extension EditorModel {
         workspace.snap = snap
         workspace.showsGrid = showsGrid
         workspace.units = units
+        workspace.section = precision.section
+        workspace.printBed = precision.printBed
+        workspace.showsDimensions = precision.showsDimensions
         do {
             try store.saveWorkspace(workspace, at: projectURL)
         } catch {

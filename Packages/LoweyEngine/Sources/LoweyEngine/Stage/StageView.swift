@@ -38,6 +38,13 @@ public final class StageView: MTKView {
     public private(set) var guide: GuideSurface?
     private var strokePreview: (MeshData, RGBA)?
     private var modelOverlay: [EditorOverlay] = []
+    /// Marks that stay whatever the tool: kept dimensions, the printer's build volume.
+    private var precisionOverlay: [EditorOverlay] = []
+    /// The section view's cut (stage only).
+    public var section: SectionPlane? {
+        didSet { if section != oldValue { redraw() } }
+    }
+
     /// The hovering Pencil, drawn in this view's own render pass.
     public private(set) var pointer: PencilPointer?
     private var lastFrameStart: CFTimeInterval = 0
@@ -248,6 +255,13 @@ public final class StageView: MTKView {
         redraw()
     }
 
+    /// Kept dimensions and the printer's build volume, drawn whatever tool is on.
+    public func showPrecisionOverlay(_ overlays: [EditorOverlay]) {
+        guard overlays != precisionOverlay else { return }
+        precisionOverlay = overlays
+        redraw()
+    }
+
     /// World units per screen point at a point (for marks that should look the same size anywhere).
     public func worldPerPoint(at point: Vec3) -> Double {
         let pose = camera
@@ -273,7 +287,8 @@ public final class StageView: MTKView {
         if let pivot = gizmoPivot { scene.gizmo = (gizmoMode, pivot, gizmoScale) }
         scene.guide = guide
         scene.strokePreview = strokePreview
-        scene.modelOverlay = modelOverlay
+        scene.modelOverlay = precisionOverlay + modelOverlay
+        scene.section = section
         scene.pointer = pointer
         let pixels = Double(bounds.height * contentScaleFactor)
         if pixels > 1 { scene.pixelAngle = Float(2 * tan(Double(camera.fieldOfView) * .pi / 360) / pixels) }

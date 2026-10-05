@@ -99,6 +99,44 @@ flowchart LR
   without touching the document (D-120). `EditorModel+ModelOverlay` builds the marks as `EditorOverlay`s with Core's
   `ModelOverlay` and the floating numbers (`DimensionLabel`, drawn by `Model/ModelDimensions` over the stage).
 
+### Modelling II (0.4)
+
+- **Shape operations** (Core `Modeling/`): `Inset` (topology only: a ring of quads, the face keeps its index),
+  `EdgeBevel` (a chamfer or fillet profile swept along each edge, cut or filled with `MeshBoolean`), `Shell` (every
+  face offset inward by `PlaneSolve`, the cavity cut out; open faces are push/pulled through the wall first),
+  `MeshMirror` (reflection, symmetrize = keep a half-space side, mirror, union). `ModelingOperations+Shape` turns each
+  into one labelled batch and re-symmetrizes objects with the `symmetry` property after every edit (D-127).
+- **Exactness**: `MeshBoolean` snaps the corners Manifold creates onto the input planes they lie on (`PlaneSolve`), and
+  `MeshBuilder.closeTJunctions` puts corners a neighbour kept into the other face's edge (D-126).
+- **Precision**: `PointSnap` (corners, edge middles, edges, faces, grid, by screen distance) serves sketching,
+  measuring and building (`EditorModel+Precision.snapPoint`). Kept measurements are `dimension` objects
+  (`Dimension.swift`). The section plane (`SectionPlane`, `workspace.json`) reaches the renderer through
+  `StageView.section` → `EditorScene.section` → `FrameUniforms.section` (D-131); `StageView.showPrecisionOverlay`
+  draws the printer's volume and kept dimensions whatever the tool.
+- **Printing**: `PrintCheck` (topology, Manifold, wall rays, the bed) and `repair`; `PrintBed` presets.
+- **Building**: `Architecture` (walls from a centre line, opening blocks, slabs, stairs), driven by
+  `EditorModel+Architecture`'s tap tools.
+- **Features**: `EditorModel+ShapeOps` (bevel/round/inset/shell with the size that floats, mirror, symmetry, the print
+  check, Make editable for placed models), `EditorModel+Measure`, `EditorModel+Architecture`, `EditorModel+Precision`;
+  the views are `Model/ModelShapeControls` (the bar's pick actions, mirror and print controls) and `Model/PrecisionPage`.
+
+## Interop
+
+```mermaid
+flowchart LR
+    Scene[Scene] --> GW[GLTFScene<br/>nodes · materials · cameras · lights · keys]
+    GW --> GLB[.glb]
+    GW --> BP[BlenderPackage<br/>+ maquette.json + setup_maquette.py]
+    Scene --> EM[ExportMesh list<br/>world space] --> USDZ[USDZ] & OBJ[OBJ + MTL] & STL[STL<br/>mm, Z up] & TMF[3MF<br/>mm, Z up]
+    File[.glb / .gltf] --> GR[GLTFSceneReader] --> Frag[SceneFragment + Tracks<br/>editable objects]
+    Lib[Library import<br/>USDZ · glTF · OBJ · STL · 3MF] --> Model[ImportedModel] --> EP[editableParts]
+```
+
+Everything is Core (pure Swift, Linux-tested) except reading USDZ (ModelIO) and placed models' loaded parts, which
+Engine's `ModelExport` hands Core as `GLTFScene.LocalPart`s. 3MF reading uses Core's `Inflate` (D-137). CI checks the
+M3 block's STL and 3MF with trimesh and renders a frame of a Blender package in Blender 4.2 and 5.2 (the `interop`
+job, from files LoweyCore's tests write to `ACCEPTANCE_DIR`).
+
 ## LoweyRender 2
 
 ```mermaid
@@ -176,7 +214,7 @@ fixes that help.
 
 `ExportSession` (Engine, main actor) renders frame by frame at full scale with no time budget, straight into the
 encoder's pixel buffers, then verifies the file with HmmMedia's inspector (frames, size, duration, audio, alpha)
-before returning it. In the background the app keeps exporting under a `BGContinuedProcessingTask`; progress reaches
+before returning it. 3D files come from `ModelExport.files` (glTF, USDZ, OBJ + MTL, STL, 3MF, the Blender package). In the background the app keeps exporting under a `BGContinuedProcessingTask`; progress reaches
 the Live Activity through `ExportProgressReporting`, and a notification says when it's done.
 
 ## The bridge
@@ -236,7 +274,7 @@ flowchart LR
 ```
 
 The tools job also checks that `AppUITests/LayoutWalk.swift` is what `Tools/layout_walk.py` makes of docs/LAYOUT.md;
-the UI tests walk every row (four tests, by precondition), measure the idle stage's share of the screen and run the Home benchmark.
+the UI tests walk every row (five tests, by precondition, Model on its own), measure the idle stage's share of the screen and run the Home benchmark.
 
 Golden images are recorded on the CI simulator (`TEST_RUNNER_GOLDEN_OUTPUT`), reviewed and committed under
 `Packages/LoweyEngine/Tests/LoweyEngineTests/Golden`.

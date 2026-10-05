@@ -3,23 +3,33 @@
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
 phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
 
+## Left from M4 (Maquette 0.4)
+
+- [ ] The device checklist in the "Maquette 0.4 — M4" PR (bevel, round, inset and shell on real parts; symmetry while
+      modelling; snapping and the snap marks with the Pencil; measure and kept dimensions; the section view; the
+      print check on a real part and the STL in a slicer; walls, doors, windows and stairs; the Blender package on a
+      computer).
+- [ ] Moving picked corners and edges (dragging them): M3's picks can bevel now, but not move.
+- [ ] Rounded corners where three rounded edges meet are pointed (the cuts meet), not a rolling-ball patch. (D-125)
+- [ ] The section view's cut faces are back faces drawn flat, not real caps: a thin open surface shows through. (D-131)
+- [ ] FBX: not offered while the SDK's licence keeps it out (D-133); glTF covers the same apps.
+- [ ] Core failure messages (booleans, push/pull, bevel…) reach the screen in English; the String Catalog only holds
+      chrome strings (an M3 gap too).
+
 ## Left from M3 (Maquette 0.3)
 
 - [ ] The device checklist in the "Maquette 0.3 — M3" PR (sketching and push/pull with the Pencil and fingers, the
       floating numbers and the keyboard, picks and the Pencil loop, booleans on real models, the marks' look).
 - [ ] Curves that cross each other don't split into separate regions yet: only closed curves (and open ones joined
       end to end) fill. (D-121)
-- [ ] Edges and corners can be picked, grown and measured, but not moved yet: moving them (and bevelling edges)
-      comes with M4's shape operations.
-- [ ] Snapping to edges, midpoints and faces while sketching, the measure tool and dimensions that stay visible: M4.
+- [x] Bevelling picked edges, snapping to edges, midpoints and faces, the measure tool and kept dimensions (0.4).
 
 ## Left from M2 (Maquette 0.2)
 
 - [ ] The device checklist in the "Maquette 0.2 — M2" PR (the layout on the iPad, the inspector beside the
       selection, time on call, panel resizing, Home's turning cards and the zoom into the stage, stacks, the
       templates, the Home benchmark at Tier A).
-- [ ] The print-bed outline in *Model to print* and the walls tool near *Room or building* (M4). Millimetres and
-      metres arrived in 0.3. (D-111)
+- [x] The print-bed outline in *Model to print* and the walls tool (Model ▸ Add ▸ Building) arrived in 0.4. (D-111)
 - [ ] *Sketch* in New project when the Schizzo board exists (M9). (D-111)
 
 ## Left from M1 (Maquette 0.1)
@@ -43,7 +53,7 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 ## Known limitations
 
 - **Booleans keep everything in one object.** Subtracting a shape that splits a solid in two leaves both pieces in
-  the first object (separate them with M4's tools). Booleans need closed solids; a plane or an open drawing is
+  the first object; there's no Separate yet. Booleans need closed solids; a plane or an open drawing is
   refused with a message.
 - **The renderer's mesh cache keys editable meshes by a 64-bit fingerprint.** Two different meshes with the same
   fingerprint would share a GPU mesh; with FNV-1a over every coordinate that's vanishingly unlikely. (D-116)

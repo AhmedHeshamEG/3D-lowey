@@ -22,6 +22,8 @@ struct FrameUniforms {
     var fog = SIMD4<Float>.zero
     var cascades = SIMD4<Float>.zero
     var misc = SIMD4<Float>.zero
+    /// The section view (xyz normal, w offset); zero when off.
+    var section = SIMD4<Float>.zero
 }
 
 struct LookUniforms: Equatable {

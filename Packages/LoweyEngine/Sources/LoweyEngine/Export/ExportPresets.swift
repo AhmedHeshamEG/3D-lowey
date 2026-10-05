@@ -18,7 +18,7 @@ public enum ExportPreset: String, CaseIterable, Identifiable, Sendable, Codable 
         case .stillHD: "PNG still (HD)"
         case .still4K: "PNG still (4K)"
         case .gifLoop: "GIF loop"
-        case .model3D: "3D (GLB / USDZ)"
+        case .model3D: "3D model"
         case .captions: "Captions (.srt)"
         }
     }

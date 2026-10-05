@@ -23,7 +23,7 @@ extension EditorModel {
             stage.showModelOverlay([])
             return
         }
-        var overlays = sketchOverlays(stage)
+        var overlays = sketchOverlays(stage) + measureOverlays(stage) + buildOverlays(stage)
         if let id = modeling.target ?? singleSelection.flatMap({ ModelingOperations.canModel($0) ? $0.id : nil }), let (mesh, world) = modelMesh(of: id) {
             let width = stage.worldPerPoint(at: world.position) * 1.2
             overlays.append(EditorOverlay(mesh: ModelOverlay.wireframe(mesh, world: world, width: width), color: RGBA(0.08, 0.08, 0.1), opacity: 0.7))
@@ -89,8 +89,13 @@ extension EditorModel {
     var dimensionLabels: [DimensionLabel] {
         _ = viewRevision
         _ = displayRevision
-        guard tool == .model, let stage else { return [] }
-        var labels: [DimensionLabel] = []
+        guard let stage else { return [] }
+        var labels = keptDimensionLabels(stage)
+        guard tool == .model else { return labels }
+        labels += measureLabels(stage) + buildLabels(stage)
+        if let op = modeling.shapeOp, modeling.target == op.object, let point = stage.screenPoint(of: op.anchor) {
+            labels.append(DimensionLabel(field: .shapeAmount, point: CGPoint(x: point.x, y: point.y - 30), text: "\(op.kind.title) " + format(op.amount)))
+        }
         if let axis = pullAxis, let point = stage.screenPoint(of: axis.anchor + axis.normal * (modeling.pull ?? 0)) {
             labels.append(DimensionLabel(field: .pull, point: CGPoint(x: point.x, y: point.y - 34), text: format(modeling.pull ?? 0)))
         }

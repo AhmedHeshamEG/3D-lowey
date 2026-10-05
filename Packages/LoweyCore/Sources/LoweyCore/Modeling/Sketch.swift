@@ -46,6 +46,16 @@ public struct Sketch: Codable, Hashable, Sendable {
         return max(extent, 1e-3) * 1e-6
     }
 
+    /// A curve in the world, for an array to follow: the longest one when none is given.
+    public func path(of curve: Int? = nil) -> (points: [Vec3], closed: Bool)? {
+        let lengths = curves.map { curve -> Double in
+            let points = curve.points
+            return zip(points, points.dropFirst()).reduce(0) { $0 + ($1.1 - $1.0).length }
+        }
+        guard let index = curve ?? lengths.indices.max(by: { lengths[$0] < lengths[$1] }), curves.indices.contains(index) else { return nil }
+        return (curves[index].points.map { plane.lift($0) }, curves[index].isClosed)
+    }
+
     // MARK: Pulling
 
     /// The solid a region sweeps when pulled `distance` along the plane's normal (negative goes below it).

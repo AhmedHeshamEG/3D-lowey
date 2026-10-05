@@ -1,6 +1,7 @@
 import Foundation
 
-/// Reads "stored" (uncompressed) zip archives — the ones `ZipWriter` makes (.lowey packages, diagnostics).
+/// Reads zip archives: stored ones (`ZipWriter`'s: .maquettepack packages, diagnostics) and deflated ones (3MF files
+/// from other apps).
 public enum ZipReader {
     public enum Failure: Error, Equatable, CustomStringConvertible {
         case notAZip
@@ -10,7 +11,7 @@ public enum ZipReader {
         public var description: String {
             switch self {
             case .notAZip: "That isn't a zip archive"
-            case let .compressed(name): "\(name) is compressed — export the project from Maquette (packages are stored, not compressed)"
+            case let .compressed(name): "\(name) is compressed in a way Maquette can't read"
             case let .damaged(name): "\(name) is damaged (checksum)"
             }
         }
@@ -39,16 +40,27 @@ public enum ZipReader {
             let method = u16(cursor + 10)
             let crc = UInt32(truncatingIfNeeded: u32(cursor + 16))
             let size = u32(cursor + 20)
+            let unpacked = u32(cursor + 24)
             let nameLength = u16(cursor + 28)
             let extraLength = u16(cursor + 30)
             let commentLength = u16(cursor + 32)
             let local = u32(cursor + 42)
             let name = String(bytes: bytes[cursor + 46 ..< cursor + 46 + nameLength], encoding: .utf8) ?? ""
-            guard method == 0 else { throw Failure.compressed(name) }
+            guard method == 0 || method == 8 else { throw Failure.compressed(name) }
             guard local + 30 <= bytes.count, u32(local) == 0x0403_4B50 else { throw Failure.notAZip }
             let start = local + 30 + u16(local + 26) + u16(local + 28)
             guard start + size <= bytes.count else { throw Failure.damaged(name) }
-            let content = Data(bytes[start ..< start + size])
+            let packed = Data(bytes[start ..< start + size])
+            let content: Data
+            if method == 8 {
+                do {
+                    content = try Inflate.decompress(packed, expectedSize: unpacked)
+                } catch {
+                    throw Failure.damaged(name)
+                }
+            } else {
+                content = packed
+            }
             guard CRC32.checksum(content) == crc else { throw Failure.damaged(name) }
             result.append((name, content))
             cursor += 46 + nameLength + extraLength + commentLength

@@ -69,7 +69,12 @@ extension EditorModel {
             modeling.lastCurve = nil
         }
         guard let pending = modeling.pending, let ray = stage?.worldRay(at: point), let (local, _) = intersect(ray, pending.plane) else { return }
-        addPoint(snapped(local, on: pending), kind: kind)
+        // Corners, edge middles and edges of solids and sketches nearby win; otherwise the corners drawn and whole units.
+        if let found = snapPoint(at: point, plane: pending.plane), [.corner, .midpoint, .edge].contains(found.kind) {
+            addPoint(pending.plane.project(found.point), kind: kind)
+        } else {
+            addPoint(snapped(local, on: pending), kind: kind)
+        }
     }
 
     /// Where a new shape lies: the face under the tap (it can be pulled into or cut from that object), else the ground.
@@ -248,8 +253,15 @@ extension EditorModel {
 
     /// The current value of a size on the stage (metres).
     func dimensionValue(_ field: DimensionField) -> Double? {
-        if field == .pull { return modeling.pull ?? 0 }
-        if field == .offset { return 0 }
+        switch field {
+        case .pull: return modeling.pull ?? 0
+        case .offset: return 0
+        case .shapeAmount: return modeling.shapeOp?.amount
+        case .wallHeight: return precision.wallHeight
+        case .wallThickness: return precision.wallThickness
+        case .measured: return measurement?.length
+        case .kept, .rectangleSide, .diameter, .lineLength: break
+        }
         guard let ref = modeling.lastCurve, let curve = sketch(ref.sketch)?.curves[safe: ref.index] else { return nil }
         switch (field, curve) {
         case let (.rectangleSide(horizontal), .rectangle(a, b)): return horizontal ? abs(b.x - a.x) : abs(b.y - a.y)
@@ -281,6 +293,9 @@ extension EditorModel {
         switch field {
         case .pull: commitPull(metres)
         case .offset: applyOffset(metres)
+        case .shapeAmount: resizeShapeOp(to: metres)
+        case .wallHeight: if metres > 0.01 { precision.wallHeight = metres }
+        case .wallThickness: if metres > 0.001 { precision.wallThickness = metres }
         default: setDimension(field, to: metres)
         }
     }

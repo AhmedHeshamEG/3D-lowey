@@ -24,14 +24,31 @@ public enum PushPull {
 
     /// The mesh with `face` moved `distance` along its outward normal (negative pushes in).
     public static func apply(_ mesh: EditableMesh, face: Int, distance: Double) throws(Failure) -> EditableMesh {
-        guard mesh.faces.indices.contains(face) else { throw .noSuchFace }
+        try apply(mesh, faces: [face], distance: distance)
+    }
+
+    /// Several faces moved together, each along its own normal (a multi-pick, or a face and its mirror image).
+    /// They slide when every one of them can and the ones sharing a corner stand square to each other; otherwise
+    /// each face's prism is swept and they're added or cut in one go.
+    public static func apply(_ mesh: EditableMesh, faces: [Int], distance: Double) throws(Failure) -> EditableMesh {
+        let faces = Array(Set(faces)).sorted()
+        guard !faces.isEmpty, faces.allSatisfy(mesh.faces.indices.contains) else { throw .noSuchFace }
         guard abs(distance) > 1e-9 else { return mesh }
-        if slides(mesh, face: face) { return try slide(mesh, face: face, distance: distance) }
+        if slides(mesh, faces: faces) { return try slide(mesh, faces: faces, distance: distance) }
         // Pushing in, the prism starts a hair outside the face so the two never lie exactly on top of each other.
         let epsilon = max(mesh.bounds?.size.maxComponent ?? 1, 1e-3) * 1e-6
-        let prism = distance > 0 ? Prism.make(mesh, face: face, distance: distance) : Prism.make(mesh, face: face, from: epsilon, to: distance)
-        do {
-            return try MeshBoolean.combine(mesh, prism, distance > 0 ? .union : .subtract)
+        do throws(MeshBoolean.Failure) {
+            var tool: EditableMesh?
+            for face in faces {
+                let prism = distance > 0 ? Prism.make(mesh, face: face, distance: distance) : Prism.make(mesh, face: face, from: epsilon, to: distance)
+                if let sofar = tool {
+                    tool = try MeshBoolean.combine(sofar, prism, .union)
+                } else {
+                    tool = prism
+                }
+            }
+            guard let tool else { return mesh }
+            return try MeshBoolean.combine(mesh, tool, distance > 0 ? .union : .subtract)
         } catch {
             throw .boolean(error)
         }
@@ -39,39 +56,57 @@ public enum PushPull {
 
     /// True when every other face touching the face's corners stands square to it, so sliding keeps them flat.
     public static func slides(_ mesh: EditableMesh, face: Int) -> Bool {
+        slides(mesh, faces: [face])
+    }
+
+    /// Every face can slide on its own, and moving faces that share a corner stand square to each other, so their
+    /// moves add up without bending anything.
+    public static func slides(_ mesh: EditableMesh, faces: [Int]) -> Bool {
         let topology = MeshTopology(mesh)
-        let normal = mesh.normal(of: face)
-        var around = Set<Int>()
-        for vertex in mesh.faces[face].vertices {
-            around.formUnion(topology.faces(around: vertex))
+        for face in faces {
+            let normal = mesh.normal(of: face)
+            var around = Set<Int>()
+            for vertex in mesh.faces[face].vertices {
+                around.formUnion(topology.faces(around: vertex))
+            }
+            around.remove(face)
+            guard !around.isEmpty, around.allSatisfy({ abs(mesh.normal(of: $0).dot(normal)) < 1e-6 }) else { return false }
         }
-        around.remove(face)
-        return !around.isEmpty && around.allSatisfy { abs(mesh.normal(of: $0).dot(normal)) < 1e-6 }
+        return true
     }
 
     /// How far the face can be pushed in before a neighbour collapses (infinite when it can't slide).
     public static func slideLimit(_ mesh: EditableMesh, face: Int) -> Double {
-        let normal = mesh.normal(of: face)
-        let plane = normal.dot(mesh.vertices[mesh.faces[face].outline[0]])
+        slideLimit(mesh, faces: [face])
+    }
+
+    /// The tightest limit over the faces; corners that move with another picked face don't hold a face back.
+    public static func slideLimit(_ mesh: EditableMesh, faces: [Int]) -> Double {
         let topology = MeshTopology(mesh)
-        let moving = Set(mesh.faces[face].vertices)
+        let moving = Set(faces.flatMap { mesh.faces[$0].vertices })
         var limit = Double.infinity
-        for vertex in moving {
-            for other in topology.faces(around: vertex) where other != face {
-                for corner in mesh.faces[other].vertices where !moving.contains(corner) {
-                    limit = min(limit, plane - normal.dot(mesh.vertices[corner]))
+        for face in faces {
+            let normal = mesh.normal(of: face)
+            let plane = normal.dot(mesh.vertices[mesh.faces[face].outline[0]])
+            for vertex in Set(mesh.faces[face].vertices) {
+                for other in topology.faces(around: vertex) where other != face {
+                    for corner in mesh.faces[other].vertices where !moving.contains(corner) {
+                        limit = min(limit, plane - normal.dot(mesh.vertices[corner]))
+                    }
                 }
             }
         }
         return limit
     }
 
-    static func slide(_ mesh: EditableMesh, face: Int, distance: Double) throws(Failure) -> EditableMesh {
-        if distance < 0, -distance >= slideLimit(mesh, face: face) - 1e-9 { throw .tooFar }
-        let offset = mesh.normal(of: face) * distance
+    static func slide(_ mesh: EditableMesh, faces: [Int], distance: Double) throws(Failure) -> EditableMesh {
+        if distance < 0, -distance >= slideLimit(mesh, faces: faces) - 1e-9 { throw .tooFar }
         var moves: [Int: Vec3] = [:]
-        for vertex in mesh.faces[face].vertices {
-            moves[vertex] = mesh.vertices[vertex] + offset
+        for face in faces {
+            let offset = mesh.normal(of: face) * distance
+            for vertex in Set(mesh.faces[face].vertices) {
+                moves[vertex] = (moves[vertex] ?? mesh.vertices[vertex]) + offset
+            }
         }
         return mesh.moving(moves)
     }

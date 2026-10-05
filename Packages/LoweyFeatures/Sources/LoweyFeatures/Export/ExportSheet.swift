@@ -24,6 +24,13 @@ struct ExportSheet: View {
                         .overlay(RoundedRectangle(cornerRadius: HmmRadius.card).stroke(theme.accent, lineWidth: preset == item ? 2 : 0))
                 }
             }
+            if preset.kind == .model {
+                Picker("Format", selection: $editor.precision.exportFormat) {
+                    ForEach(ModelExportFormat.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("model-format")
+            }
             if preset.kind == .video || preset.kind == .gif {
                 Toggle("Custom size, frame rate and quality", isOn: $custom)
                 if custom { customControls }
@@ -82,7 +89,7 @@ struct ExportSheet: View {
             return "\(size.width) × \(size.height) · \(settings.fps) fps · \(NumberFormat.short(settings.range.duration)) s · \(settings.frameCount) frames"
                 + (settings.transparent ? " · HEVC with alpha (.mov)" : "")
         case .still: return "The frame at the playhead, through the shot camera, as a PNG."
-        case .model: return editor.selection.isEmpty ? "The whole scene as a glTF (.glb)." : "The selection as a glTF (.glb)."
+        case .model: return (editor.selection.isEmpty ? "The whole scene. " : "The selection. ") + editor.precision.exportFormat.purpose
         case .captions: return "Subtitles (.srt and .vtt) from the transcript."
         }
     }

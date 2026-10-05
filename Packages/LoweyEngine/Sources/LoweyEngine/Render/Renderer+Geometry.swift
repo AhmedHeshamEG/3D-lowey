@@ -46,6 +46,9 @@ extension LoweyRenderer {
         frame.viewport = SIMD4<Float>(Float(shadingWidth), Float(shadingHeight), 1 / Float(max(shadingWidth, 1)),
                                       1 / Float(max(shadingHeight, 1)))
         frame.misc = SIMD4<Float>(Float(scene.lights.count), camera.near, camera.far, 0)
+        if let section = request.editor?.section {
+            frame.section = SIMD4<Float>(Float(section.normal.x), Float(section.normal.y), Float(section.normal.z), Float(section.offset))
+        }
         if request.transparent || !look.ground.visible { frame.groundBounce.w = 0 }
         return frame
     }

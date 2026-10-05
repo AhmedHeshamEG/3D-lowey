@@ -5,7 +5,7 @@ surface of that package: power users, scripts and MCP clients may **read** any o
 (the laptop bridge), so undo and the history journal stay true; a file changed behind the app's back is overwritten at
 the next checkpoint.
 
-Format version: package **2**, document schema **4** (`LoweySchema.currentVersion`), journal **1**.
+Format version: package **2**, document schema **6** (`LoweySchema.currentVersion`), journal **1**.
 
 ```
 My film.maquette/                 (3D-lowey's .lowey packages open too, and are upgraded in place)
@@ -17,7 +17,7 @@ My film.maquette/                 (3D-lowey's .lowey packages open too, and are 
   audio/                          voiceovers and sounds
   renders/                        exports kept with the project
   thumbnail.png, thumbnail-loop.gif   the Home card (a still, and the model turning once in its Look)
-  workspace.json                  how the project shows: the timeline, snapping, the grid (not part of undo)
+  workspace.json                  how the project shows: the timeline, snapping, the grid, the section view (not part of undo)
 ```
 
 Beside the packages, the projects folder holds `gallery.json`: Home's stacks and sort order (below).
@@ -142,6 +142,18 @@ lines: renders and exports leave them out.
 Schema 5 only added these two kinds; files from schema 4 open unchanged. Apps that read schema 4 refuse schema 5
 files with a message saying the project needs a newer Maquette.
 
+### Dimensions and symmetry (schema 6)
+
+A kept dimension is `{"type": "dimension", "dimension": {"start": [x, y, z], "end": [x, y, z]}}`: its two ends in the
+object's own space (it sits under the object it measured, so it moves with it). Like sketches, it's drawn on the stage
+only: renders and exports leave it out.
+
+A modelled object with live symmetry has the property `symmetry`: `{"enum": "x"}` (or `y`, `z`), the plane through its
+pivot square to that axis. Model edits keep the side they touched and make the other side its mirror image; the mesh
+stored is always the whole, symmetric shape.
+
+Schema 6 only added the kind and the property; files from schema 5 open unchanged, and Maquette 0.3 refuses schema 6.
+
 ## workspace.json
 
 How the project shows when it opens. It isn't the project (it's never undone and isn't in the journal); it's
@@ -154,11 +166,14 @@ falls back to its default; unknown keys are ignored. Plain JSON, no envelope.
 | `template` | string? | The starter template it began from: `blank`, `print`, `room`, `character`, `animation`. |
 | `timeline` | string | `hidden` (the default), `transport` (the slim transport) or `full`. |
 | `timelineHeight` | number | The whole timeline's height in points, 150–900 (260 by default). |
-| `snap` | object | `grid`, `gridSize` (m), `rotation`, `rotationStep` (degrees), `ground`, `objects`, `objectThreshold` (m). |
+| `snap` | object | `grid`, `gridSize` (m), `rotation`, `rotationStep` (degrees), `ground`, `objects`, `objectThreshold` (m), and since 0.4 `corners`, `edges`, `faces` (points snap to corners and edge middles, edges, faces; on when missing). |
 | `showsGrid` | bool | The grid on the ground. |
 | `shapeSize` | number | New shapes' size in metres (1; `print` uses 0.05). |
 | `firstPanel` | string? | A tool panel to open the first time the project opens (then removed): `model`, `cast`. |
 | `units` | string | The unit lengths are shown and typed in: `mm`, `cm` (the default), `m`, `in`, `ft`. `print` uses `mm`, `room` `m`. |
+| `printBed` | string? | The 3D printer whose build volume the stage outlines (`PrintBed.presets`: `filament-220`, `filament-256`, `filament-180`, `prusa-mk4`, `bambu-x1`, `bambu-a1-mini`, `ender-3-v3`, `resin-218`, `form-4`); `print` starts with `filament-220`. An unknown id is dropped. |
+| `section` | object? | The section view: `{"normal": [x, y, z], "offset": d}`; what's beyond the plane (`normal · p > offset`) is cut away on the stage. Missing: off. |
+| `showsDimensions` | bool | Kept dimensions show on the stage (true). |
 
 ## gallery.json (in the projects folder)
 

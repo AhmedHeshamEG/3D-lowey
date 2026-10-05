@@ -14,7 +14,7 @@ reference and stays.
 | Device tiers (A/B/C) and the hidden load meter | **0.1** |
 | The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
-| Modelling II (bevel, shell, mirror, array, edge/midpoint snapping, measure, section, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, Blender package) | M4. Today: units and grid snapping (0.3), glTF/GLB, USDZ and OBJ import, video and stills export. |
+| Modelling II (bevel, round, inset, shell, mirror and live symmetry, array along a path, corner/edge/midpoint/face snapping, measure, section view, kept dimensions, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, the Blender package) | **0.4.** FBX isn't offered (D-133). |
 | One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | M5. Today: 2.0's ink strokes and flipbooks. |
 | Painting on models | M6 |
 | One skeleton system, draw a bone, one-tap human rig, 2D puppets | M7. Today: 2.0's Cast (Blob, Puppet, Rigged). |
@@ -58,7 +58,7 @@ At rest the stage holds at least 85% of the screen.
   scripts, the AI & laptop bridge, gestures, the tour, diagnostics, settings) · Look · Select.
 - **Top right: making**, in the order a thing gets made. **Model**: shapes, lights, cameras, words, photos and videos,
   marks on the frame, effects and screen effects (Add); the Kit and your models (Library); snapping and the grid
-  (Snapping). **Draw**: ink, solid shapes, flipbooks. **Paint**: the Shadow Brush and Scatter. **Animate**: opens the
+  (Precision). **Draw**: ink, solid shapes, flipbooks. **Paint**: the Shadow Brush and Scatter. **Animate**: opens the
   whole timeline. **Cast**: characters, expressions, clips, lip sync, your face.
 - **Time on call.** A new project shows no timeline. The control at the bottom right calls the slim transport (play,
   the time) and sends the timeline away; Animate opens the whole timeline. Its divider resizes it, and each project
@@ -101,12 +101,49 @@ tool's bar at the bottom of the stage (pick modes, sketch shapes, Done, grow / s
   while dragging; tap the number to type an exact one. A face whose neighbours stand square to it slides (the number
   is the new size exactly); any other face adds or cuts a prism.
 - **Exact lengths everywhere**: every number on the stage takes `25`, `25mm`, `2*12`, `1ft 6in`, `(40-6)/2`, in the
-  project's units (Model ▸ Snapping: mm, cm, m, in, ft).
+  project's units (Model ▸ Precision: mm, cm, m, in, ft).
 - **Booleans**: union, subtract and intersect two or more selected shapes into the first one; results are clean
   (coplanar faces merged, welded) closed solids. Any shape (a cube, a drawn solid) becomes an editable mesh on the way,
   or with Make editable.
 - **The inspector shows sizes**: the selection's width × height × depth in the project's units, and what's picked
   ("Face · 800 mm²", "2 edges · 80 mm").
+
+### Modelling II and interop (0.4)
+
+- **Shape operations on the pick**, from the Model tool's bar: **Bevel** and **Round** the picked edges (outside edges
+  are cut, inside edges filled; where several meet the cuts meet in a point), **Inset** the picked faces (a ring
+  around each, the middle stays picked to push or pull), **Shell** the solid (walls of an exact thickness; picked faces
+  are left open). Each runs at once at a size that suits the units (1 mm in a print project, 5 cm in a room); its size
+  then floats beside it, and typing a new one does it again from the same pick.
+- **Mirror** (Model ▸ Shape): a mirror image across the picked face (it joins into one solid when it touches) or across
+  the world's middle (a twin on the other side). **Symmetry**: left and right, front and back, or top and bottom, per
+  object; switching it on moves the pivot to the middle on that axis and makes the shape symmetric; every Model edit
+  afterwards keeps the side it touched and the other side follows (a push/pull shows both faces moving).
+- **Array along a path**: the inspector's array follows a sketch's curve (copies spread evenly, optionally turning
+  with it).
+- **Precision** (Model ▸ Precision, was Snapping): points snap to corners, the middles of edges, edges and faces near
+  the finger or Pencil (12 points on screen), then to the grid; the stage marks what a point snapped to. Sketching,
+  measuring, walls and floors all snap this way. Grid sizes follow the units.
+- **Measure**: two taps give the distance and how far apart along x, y and z; tap the number (or Keep) to leave it on
+  the stage as a **dimension** that moves with the object it measures. Kept dimensions show whatever the tool (Show
+  kept dimensions); tap one to select it. Like sketches, they're never rendered or exported.
+- **Section view**: cut the stage across x, y or z through the middle of the selection, or along the picked face;
+  slide where it cuts, keep the other side. Cut solids show their inside flat in their own colour. Exports are never
+  cut.
+- **3D printing** (Model ▸ Shape ▸ 3D print): pick the printer (its build volume is outlined on the stage; Model to
+  print starts with a 220 mm one), **Check for printing** (holes, tangled edges, inside-out faces, walls thinner than
+  the printer prints, fitting the bed, the thinnest wall) and **Repair** (joins, turns and closes what it can). STL and
+  3MF exports are millimetres with Z up, so parts stand on the bed in a slicer.
+- **Building** (Model ▸ Add): **Walls** along tapped corners (2.7 m high, 20 cm thick, both typed beside the walls
+  being drawn; tap the first corner to close a room), **Floor** under tapped corners, **Door** and **Window** cut where
+  a wall's side is tapped (90 × 210 cm; 120 × 120 cm at 90 cm), **Stairs** climbing away from you in 17.5 cm steps.
+  Each is an editable mesh like everything else.
+- **Interop.** Import (Model ▸ Library): USDZ, glTF, GLB, OBJ, STL, 3MF; **Make editable** takes a placed model apart
+  into editable objects, keeping a glTF's hierarchy, materials, cameras, lights and animation. Export (Actions ▸ Export
+  ▸ 3D model): **glTF** (the scene as built: hierarchy, materials, cameras, lights, the timeline's moves), **USDZ**,
+  **OBJ** with its MTL, **STL**, **3MF**, and **Blender**: a folder with the scene, the Look, the sun, the sky, the
+  ground, the camera cuts and render settings, and `setup_maquette.py`, which builds a ready-to-render .blend (Blender
+  4.2 or newer). Kept dimensions, sketches, marks on the frame and effects stay in Maquette.
 
 ---
 
@@ -268,7 +305,8 @@ sound-effects track with a synthesised CC0 foley set (whoosh, pop, impact, click
   assets.
   iCloud Drive in the App Store build; on the device otherwise.
 - Export presets: YouTube 16:9 4K, 1080p, Shorts / Reels 9:16, Square, Transparent (HEVC alpha), PNG still (HD / 4K),
-  GIF loop, 3D (GLB / USDZ), Captions (.srt); custom size, frame rate (24 / 25 / 30 / 60), codec and quality.
+  GIF loop, 3D model (glTF, USDZ, OBJ, STL, 3MF, Blender; Maquette 0.4), Captions (.srt); custom size, frame rate
+  (24 / 25 / 30 / 60), codec and quality.
 - Every export is verified (length, frame count, size, audio, alpha) before it's offered. Exports keep running in the
   background, with a Live Activity where the system shows one and a notification when they finish.
 
