@@ -149,6 +149,7 @@ struct InspectorPanel: View {
         case .overlay: "square.on.square.intersection.dashed"
         case .particles: "sparkles"
         case .card: "photo.on.rectangle"
+        case .mesh: "cube.transparent"
         }
     }
 }

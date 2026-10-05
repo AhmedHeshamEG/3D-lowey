@@ -30,6 +30,8 @@ public struct SceneBounds: Sendable {
             return ParticleSimulator.bounds(recipe)
         case let .card(recipe):
             return recipe.bounds
+        case let .mesh(mesh):
+            return mesh.bounds
         case .group, .overlay:
             return nil
         }

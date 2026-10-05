@@ -85,6 +85,8 @@ public enum ObjectKind: Hashable, Sendable {
     case particles(ParticleRecipe)
     /// A picture or video standing in the world as a thin card.
     case card(CardRecipe)
+    /// A polygon mesh made or edited with the Model tools (push/pull, sketches, booleans), in metres.
+    case mesh(EditableMesh)
 
     public var typeName: String {
         switch self {
@@ -99,6 +101,7 @@ public enum ObjectKind: Hashable, Sendable {
         case .overlay: "overlay"
         case .particles: "particles"
         case .card: "card"
+        case .mesh: "mesh"
         }
     }
 
@@ -121,7 +124,7 @@ public enum ObjectKind: Hashable, Sendable {
     /// Objects that render a surface (can take color, shading, glow).
     public var hasSurface: Bool {
         switch self {
-        case .primitive, .asset, .prefab, .drawing, .text, .card: true
+        case .primitive, .asset, .prefab, .drawing, .text, .card, .mesh: true
         case .group, .light, .camera, .overlay, .particles: false
         }
     }
@@ -129,7 +132,7 @@ public enum ObjectKind: Hashable, Sendable {
 
 extension ObjectKind: Codable {
     private enum Key: String, CodingKey {
-        case type, shape, asset, prefab, drawing, light, text, overlay, particles, card
+        case type, shape, asset, prefab, drawing, light, text, overlay, particles, card, mesh
     }
 
     public init(from decoder: Decoder) throws {
@@ -147,6 +150,7 @@ extension ObjectKind: Codable {
         case "overlay": self = try .overlay(container.decode(OverlayRecipe.self, forKey: .overlay))
         case "particles": self = try .particles(container.decode(ParticleRecipe.self, forKey: .particles))
         case "card": self = try .card(container.decode(CardRecipe.self, forKey: .card))
+        case "mesh": self = try .mesh(container.decode(EditableMesh.self, forKey: .mesh))
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown object type \(type)")
         }
@@ -166,6 +170,7 @@ extension ObjectKind: Codable {
         case let .overlay(recipe): try container.encode(recipe, forKey: .overlay)
         case let .particles(recipe): try container.encode(recipe, forKey: .particles)
         case let .card(recipe): try container.encode(recipe, forKey: .card)
+        case let .mesh(mesh): try container.encode(mesh, forKey: .mesh)
         }
     }
 }

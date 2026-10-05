@@ -73,6 +73,8 @@ indirect enum MeshKey: Hashable {
     case primitive(PrimitiveShape, faceted: Bool)
     case bevelled(PrimitiveShape, size: SIMD3<Int32>, radius: Int32, segments: Int)
     case drawing(DrawingRecipe)
+    /// An editable mesh (keyed by its content fingerprint).
+    case editable(EditableMesh)
     case blockText(TextRecipe)
     case systemText(TextRecipe)
     case card(width: Int32, height: Int32, depth: Int32)

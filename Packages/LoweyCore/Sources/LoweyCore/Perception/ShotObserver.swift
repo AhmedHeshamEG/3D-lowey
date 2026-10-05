@@ -166,6 +166,7 @@ public struct ShotObserver {
         switch object.kind {
         case let .primitive(shape): PrimitiveMesh.make(shape).transformed(world)
         case let .drawing(recipe): DrawingMesher.mesh(for: recipe).transformed(world)
+        case let .mesh(mesh): mesh.renderMesh().transformed(world)
         default: nil
         }
     }

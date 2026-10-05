@@ -22,6 +22,10 @@ extension SceneCompiler {
             }) {
                 add(mesh, world: world, uniforms: base, castsShadow: casts, scene: &scene)
             }
+        case let .mesh(editable):
+            if let mesh = mesh(.editable(editable), dabs: object.shadowDabs, label: object.name, make: { editable.renderMesh() }) {
+                add(mesh, world: world, uniforms: base, castsShadow: casts, scene: &scene)
+            }
         case let .text(recipe):
             compileText(recipe, object: object, world: world, base: base, casts: casts, scene: &scene)
         case let .asset(assetID):
