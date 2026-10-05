@@ -89,6 +89,8 @@ public enum ObjectKind: Hashable, Sendable {
     case mesh(EditableMesh)
     /// Construction lines on a plane (drawn on the stage only; pulled into solids).
     case sketch(Sketch)
+    /// A kept measurement (drawn on the stage only).
+    case dimension(DimensionRecipe)
 
     public var typeName: String {
         switch self {
@@ -105,6 +107,7 @@ public enum ObjectKind: Hashable, Sendable {
         case .card: "card"
         case .mesh: "mesh"
         case .sketch: "sketch"
+        case .dimension: "dimension"
         }
     }
 
@@ -128,14 +131,14 @@ public enum ObjectKind: Hashable, Sendable {
     public var hasSurface: Bool {
         switch self {
         case .primitive, .asset, .prefab, .drawing, .text, .card, .mesh: true
-        case .group, .light, .camera, .overlay, .particles, .sketch: false
+        case .group, .light, .camera, .overlay, .particles, .sketch, .dimension: false
         }
     }
 }
 
 extension ObjectKind: Codable {
     private enum Key: String, CodingKey {
-        case type, shape, asset, prefab, drawing, light, text, overlay, particles, card, mesh, sketch
+        case type, shape, asset, prefab, drawing, light, text, overlay, particles, card, mesh, sketch, dimension
     }
 
     public init(from decoder: Decoder) throws {
@@ -155,6 +158,7 @@ extension ObjectKind: Codable {
         case "card": self = try .card(container.decode(CardRecipe.self, forKey: .card))
         case "mesh": self = try .mesh(container.decode(EditableMesh.self, forKey: .mesh))
         case "sketch": self = try .sketch(container.decode(Sketch.self, forKey: .sketch))
+        case "dimension": self = try .dimension(container.decode(DimensionRecipe.self, forKey: .dimension))
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown object type \(type)")
         }
@@ -176,6 +180,7 @@ extension ObjectKind: Codable {
         case let .card(recipe): try container.encode(recipe, forKey: .card)
         case let .mesh(mesh): try container.encode(mesh, forKey: .mesh)
         case let .sketch(sketch): try container.encode(sketch, forKey: .sketch)
+        case let .dimension(recipe): try container.encode(recipe, forKey: .dimension)
         }
     }
 }

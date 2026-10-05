@@ -38,7 +38,8 @@ public extension SchemaCoder {
 ///   appearance: they open in Clay (the v1 look on the new renderer), or Low-poly when they were faceted.
 public enum LoweySchema {
     /// 5: Maquette 0.3's `mesh` and `sketch` objects (older apps refuse these files instead of misreading them).
-    public static let currentVersion = 5
+    /// 6: Maquette 0.4's `dimension` objects and the `symmetry` property.
+    public static let currentVersion = 6
 
     public static let migrations: [Migration] = [
         Migration(kind: .scene, from: 0, transform: liftSceneV0),
@@ -56,7 +57,11 @@ public enum LoweySchema {
         // 4 → 5 adds object kinds; nothing older changes shape.
         Migration(kind: .scene, from: 4) { $0 },
         Migration(kind: .project, from: 4) { $0 },
-        Migration(kind: .library, from: 4) { $0 }
+        Migration(kind: .library, from: 4) { $0 },
+        // 5 → 6 adds an object kind; nothing older changes shape.
+        Migration(kind: .scene, from: 5) { $0 },
+        Migration(kind: .project, from: 5) { $0 },
+        Migration(kind: .library, from: 5) { $0 }
     ]
 
     /// The render style a 1.x look maps to.

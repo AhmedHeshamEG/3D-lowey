@@ -49,9 +49,16 @@ public struct SnapSettings: Hashable, Sendable, Codable {
     public var objects: Bool
     /// How close (m) a face must be to snap to another object.
     public var objectThreshold: Double
+    /// Points snap to corners and the middles of edges (sketching, measuring, walls).
+    public var corners: Bool
+    /// Points snap onto edges.
+    public var edges: Bool
+    /// Points snap onto faces (and sketches start on them).
+    public var faces: Bool
 
     public init(grid: Bool = false, gridSize: Double = 0.25, rotation: Bool = true, rotationStep: Double = 15,
-                ground: Bool = true, objects: Bool = true, objectThreshold: Double = 0.12) {
+                ground: Bool = true, objects: Bool = true, objectThreshold: Double = 0.12, corners: Bool = true, edges: Bool = true,
+                faces: Bool = true) {
         self.grid = grid
         self.gridSize = gridSize
         self.rotation = rotation
@@ -59,6 +66,29 @@ public struct SnapSettings: Hashable, Sendable, Codable {
         self.ground = ground
         self.objects = objects
         self.objectThreshold = objectThreshold
+        self.corners = corners
+        self.edges = edges
+        self.faces = faces
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case grid, gridSize, rotation, rotationStep, ground, objects, objectThreshold, corners, edges, faces
+    }
+
+    /// Settings saved before a switch existed read it as on (the default), instead of losing the rest.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = SnapSettings()
+        grid = try container.decodeIfPresent(Bool.self, forKey: .grid) ?? defaults.grid
+        gridSize = try container.decodeIfPresent(Double.self, forKey: .gridSize) ?? defaults.gridSize
+        rotation = try container.decodeIfPresent(Bool.self, forKey: .rotation) ?? defaults.rotation
+        rotationStep = try container.decodeIfPresent(Double.self, forKey: .rotationStep) ?? defaults.rotationStep
+        ground = try container.decodeIfPresent(Bool.self, forKey: .ground) ?? defaults.ground
+        objects = try container.decodeIfPresent(Bool.self, forKey: .objects) ?? defaults.objects
+        objectThreshold = try container.decodeIfPresent(Double.self, forKey: .objectThreshold) ?? defaults.objectThreshold
+        corners = try container.decodeIfPresent(Bool.self, forKey: .corners) ?? defaults.corners
+        edges = try container.decodeIfPresent(Bool.self, forKey: .edges) ?? defaults.edges
+        faces = try container.decodeIfPresent(Bool.self, forKey: .faces) ?? defaults.faces
     }
 }
 
