@@ -857,3 +857,80 @@ translated now. In Arabic, Move is نقل: it read the same as Animate (تحري
 
 **D-114 — People see "Home", and the studio is studio h.** The Theater is called Home everywhere a person reads it
 (code names stay); Settings ▸ About says "Made by studio h.".
+
+## Maquette 0.3 — M3, modelling I
+
+**D-115 — Booleans are Manifold, vendored, behind a C face (spike passed).** The spike built Manifold v3.5.4 with
+SwiftPM and ran it from Swift in the Linux container, on the iPad simulator and as an `iphoneos` arm64 build, on CI
+(a throwaway `spike/manifold-ios` branch, since deleted). It lives in `Packages/Manifold` as a C++17 target (single
+thread, no TBB, no 2D cross sections so no Clipper2) with `ManifoldBridge.h`, a few C functions Swift imports as plain
+C. LoweyCore depends on it and still builds and tests on Linux. *Rejected:* Swift's C++ interop (it must be switched
+on in every module that imports the target, Core through App and the tests); a prebuilt XCFramework (the Linux tests
+couldn't link it); the BSP fallback (not needed).
+
+**D-116 — The editable mesh is polygons with holes; its topology is built when needed.** `EditableMesh` stores
+vertices and faces (an outline, counter-clockwise from outside, then holes); `MeshTopology` builds half-edges from it
+for each operation and is thrown away. Stored compactly (`{"v": […], "f": […]}`, coordinates to the nanometre).
+Equality and hashing go by a fingerprint computed once per mesh, so the renderer's cache keys on a mesh every frame
+without walking it. *Rejected:* storing half-edges (larger files, and states that can't be valid become storable);
+triangles only (nothing to push or pull: a face is what you touch).
+
+**D-117 — Clean results: faces rebuilt from triangles.** `MeshBuilder` merges neighbouring triangles on one plane into
+one face (holes kept, loops that touch at a corner split), then removes corners on a straight run where exactly two
+faces meet, from both or neither. A boolean's result isn't welded (Manifold keeps near-coincident corners apart on
+purpose; welding them broke edges in a 1 000-case soak); renderer meshes are, with a neighbour-cell search so seam
+copies on either side of a grid cell still join. Corners Manifold kept come back with their exact Double positions, so
+typed sizes survive any number of booleans. Cuts start a hair above the face and, when they end exactly on a face of
+the solid (cutting through), go a hair past it: exactly coplanar faces can leave a skin. *Rejected:* trusting
+Manifold's own face ids for merging (two coplanar faces from different inputs must still merge).
+
+**D-118 — Modelling is the commands that already exist.** Push/pull, pulls, cuts, booleans and drawing are
+`setKind` / `insert` / `delete` / `setProperties` in one labelled `batch`, so undo, the journal, versions and the
+bridge needed nothing new. The schema goes to 5 (no-op migrations for documents and journal ops) only so 0.2 and
+3D-lowey 2.0 refuse 0.3 files with a clear message instead of failing on an unknown object type. *Rejected:* new
+command cases (more surface for the same result); keeping schema 4 (older apps would misreport the files as damaged).
+
+**D-119 — Push/pull slides when it can, sweeps when it must.** When every face around the picked one stands square to
+it (a block's top, a pocket's floor), its corners move and its neighbours stretch: the faces stay and the typed number
+is the new size exactly; it refuses to pass the opposite side. Otherwise the face's outline is swept into a prism and
+added or cut with a boolean, which works on any face. A shape is made an editable mesh, with its scale baked into the
+vertices so lengths are real, before its first face moves (its own undo step); objects with children keep their scale
+and the distance is converted. *Rejected:* always sweeping (renumbers the faces and loses the pick on every drag
+step).
+
+**D-120 — While dragging, nothing is committed.** A sliding face shows its new shape through `kindOverride` (the stage
+draws the overridden kind; the document is untouched) and a sweep shows the prism it will add or cut; release commits
+one command. *Rejected:* coalesced commands per drag step (each journal line would hold the whole mesh: megabytes per
+drag).
+
+**D-121 — Sketches are objects, drawn by taps, and only on the stage.** A `sketch` object holds a world plane, its
+curves and the object it was drawn on. The first tap picks the plane (the face under it, else the ground) and joins a
+sketch already on that plane; then taps place points (a rectangle's corners, a circle's centre and edge, an arc's
+start, end and bend, a line's corners until the first is tapped again, a spline's points until closed or Done), so a
+finger, the Pencil and a UI test all draw the same. Closed curves, and open ones that meet end to end, fill into
+regions; a loop inside another makes a hole and is a region of its own. Pulling or cutting a region uses its curves
+up; the sketch goes when empty. Sketches are construction lines: the editor pass draws them, exports never do.
+Curves that cross aren't split into regions yet (BACKLOG). *Rejected:* drag-to-draw (a finger drag orbits:
+CONTEXT §4.1 "fingers navigate"); sketches as children of the object (moving the object would have to rewrite them).
+
+**D-122 — Exact numbers float beside what they measure.** The pull distance, a rectangle's two sides, a circle's
+diameter, a line's length and an offset are chips on the stage; tapping one opens an empty field with the current
+value as its placeholder, so typing replaces it. Lengths are typed in the project's units with any unit on any number
+and arithmetic (`25`, `25mm`, `2*12`, `1ft 6in`, `(40-6)/2`). Units are `workspace.json`'s (Model to print: mm, Room:
+m, others cm), set in Model ▸ Snapping. Dragging snaps to other corners' heights along the axis within 10 points,
+else to one unit when grid snapping is on. *Rejected:* a numeric keypad sheet (a decision wall between the drag and
+the number).
+
+**D-123 — The marks are drawn in the editor pass; the element under a tap is found on the CPU.** The ID buffer finds
+the object; `MeshPicking` then raycasts its faces (and picks the nearest edge or corner of the hit face on screen),
+because element ids don't fit in the ID buffer without a second, larger pass. Wireframe, picked faces / edges /
+corners, sketch lines and regions, pull previews are `EditorOverlay` meshes (bars sized from the camera so they stay
+about two points wide), depth-tested against the frame except corners and the shape being drawn. *Rejected:* a
+per-element ID pass (GPU memory and a readback for something the CPU answers in microseconds at these mesh sizes).
+
+**D-124 — Model ▸ Shape holds the modelling tools; the bar holds the rest.** The page has the sketch shapes, the pick
+modes and the booleans (and Make editable when a shape is selected); choosing a shape or a mode closes the panel so the
+stage is free, and the Model tool's bar at the bottom switches modes, finishes a line or spline, grows / shrinks /
+selects similar, and ✕ leaves it. A Pencil loop picks elements; a finger drag still orbits, except on the picked face
+or region, where it pushes or pulls. The inspector shows the selection's size and what's picked. *Rejected:* a sixth
+top-right button (CONTEXT allows five); a separate Select-elements tool in the top left (picking faces is modelling).

@@ -39,7 +39,7 @@ Dates in every file are seconds since 2001-01-01 UTC (`timeIntervalSinceReferenc
 `project.json`, `scenes/*.json` and the journal's snapshots are envelopes:
 
 ```json
-{"schemaVersion": 4, "kind": "project", "payload": { … }}
+{"schemaVersion": 5, "kind": "project", "payload": { … }}
 ```
 
 An older `schemaVersion` is migrated when read (every migration since 1.x is in `LoweySchema.migrations`); a newer one
@@ -64,7 +64,7 @@ renamed one gets a migration.
 | Key | Type | Meaning |
 |---|---|---|
 | `id`, `name` | string | |
-| `objects` | {id: object} | Every object by id: `id`, `name`, `kind` (what it is: primitive, model, light, camera, text, drawing, character…), `parent`, `children`, `properties` (typed values: `position`, `rotation`, `scale`, `color`, `visible`, …), and `shadowPaint` when painted. |
+| `objects` | {id: object} | Every object by id: `id`, `name`, `kind` (what it is: primitive, model, light, camera, text, drawing, mesh, sketch, character…; see below), `parent`, `children`, `properties` (typed values: `position`, `rotation`, `scale`, `color`, `visible`, …), and `shadowPaint` when painted. |
 | `roots` | [string] | Top-level objects in outliner order. |
 | `look` | object? | The scene's own Look (absent: the project's). |
 | `activeCamera` | string? | The shot camera. |
@@ -125,6 +125,23 @@ and opening reads only the newest 64; older ones are read when undo reaches them
 Maquette keeps one automatically each time a scene opens and after each hour of work (the newest 40), and whenever
 the history scrubber goes back (the state it left). Named versions stay until deleted.
 
+### Meshes and sketches (schema 5)
+
+A modelled object is `{"type": "mesh", "mesh": {"v": [x, y, z, …], "f": [[[0, 1, 2, 3]], …]}}`: `v` is every vertex as
+three numbers in a row, in the object's own space (metres, to the nanometre); `f` is every face as a list of loops of
+vertex indices, the outline first (counter-clockwise seen from outside) and then its holes (clockwise). A closed,
+outward-facing mesh is a solid.
+
+A sketch is `{"type": "sketch", "sketch": {"plane": {"origin", "normal", "u", "v"}, "curves": […], "target": "<id>"?}}`:
+the plane in world space (`u` and `v` are its in-plane axes; curve points are `[u, v]` metres along them), and the
+object it was drawn on, if any. Each curve is one of `{"line": {"_0": p, "_1": p}}`, `{"rectangle": {"_0": p, "_1": p}}`
+(opposite corners), `{"circle": {"center": p, "radius": r}}`, `{"arc": {"_0": start, "_1": through, "_2": end}}`,
+`{"spline": {"_0": [p, …], "closed": bool}}`, `{"polyline": {"_0": [p, …], "closed": bool}}`. Sketches are construction
+lines: renders and exports leave them out.
+
+Schema 5 only added these two kinds; files from schema 4 open unchanged. Apps that read schema 4 refuse schema 5
+files with a message saying the project needs a newer Maquette.
+
 ## workspace.json
 
 How the project shows when it opens. It isn't the project (it's never undone and isn't in the journal); it's
@@ -141,6 +158,7 @@ falls back to its default; unknown keys are ignored. Plain JSON, no envelope.
 | `showsGrid` | bool | The grid on the ground. |
 | `shapeSize` | number | New shapes' size in metres (1; `print` uses 0.05). |
 | `firstPanel` | string? | A tool panel to open the first time the project opens (then removed): `model`, `cast`. |
+| `units` | string | The unit lengths are shown and typed in: `mm`, `cm` (the default), `m`, `in`, `ft`. `print` uses `mm`, `room` `m`. |
 
 ## gallery.json (in the projects folder)
 

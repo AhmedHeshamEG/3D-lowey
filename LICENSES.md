@@ -5,6 +5,7 @@ Only permissively licensed dependencies are allowed.
 | Dependency | Version | License | Used for |
 |---|---|---|---|
 | [CMU Pronouncing Dictionary](https://github.com/cmusphinx/cmudict) | cmudict.dict (2026 master) | BSD 2-clause | Word → mouth shapes for lip sync (converted by `Tools/make_visemes.py` into `LoweyCore/Resources/visemes.txt`) |
+| [Manifold](https://github.com/elalish/manifold) | 3.5.4 (vendored in `Packages/Manifold`) | Apache 2.0 | Booleans (union, subtract, intersect) on solids |
 | [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (laptop tool only) | ≥ 2 | MIT | `hmm-bridge`, the MCP server and CLI on the laptop (not shipped in the app) |
 
 ## The Kit (shipped in the app, `App/Resources/Kit`)
