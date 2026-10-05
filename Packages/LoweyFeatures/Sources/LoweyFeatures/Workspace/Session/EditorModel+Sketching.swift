@@ -122,7 +122,7 @@ extension EditorModel {
     }
 
     private func addPoint(_ point: Vec2, kind: SketchKind) {
-        guard var pending = modeling.pending else { return }
+        guard let pending = modeling.pending else { return }
         let first = pending.points.first
         let closes = first.map { $0 == point } ?? false
         switch kind {
@@ -163,8 +163,6 @@ extension EditorModel {
         case .offset:
             break
         }
-        pending = modeling.pending ?? pending
-        if modeling.pending != nil { app.show(String.LocalizationValue(kind.hint(points: pending.points.count))) }
     }
 
     private func push(_ point: Vec2) {
