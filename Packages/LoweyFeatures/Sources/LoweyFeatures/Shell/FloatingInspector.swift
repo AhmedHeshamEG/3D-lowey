@@ -34,13 +34,13 @@ struct FloatingInspector: View {
         CGSize(width: size?.width ?? InspectorPanel.defaultSize.width, height: size?.height ?? InspectorPanel.defaultSize.height)
     }
 
-    private func placement(in geometry: GeometryProxy) -> HmmFloatingPlacement.Result {
+    private func placement(in geometry: GeometryProxy) -> (frame: CGRect, side: HmmFloatingSide) {
         let room = Self.room(in: geometry.size, insets: geometry.safeAreaInsets, sidebarOnRight: sidebarOnRight, avoiding: avoiding)
         guard let target = editor.selectionScreenRect else {
-            let frame = HmmFloatingPlacement.docked(panelSize, in: room, side: side)
-            return HmmFloatingPlacement.Result(frame: frame, side: side, coverage: 0)
+            return (HmmFloatingPlacement.docked(panelSize, in: room, side: side), side)
         }
-        return HmmFloatingPlacement.place(panelSize, beside: target, in: room, current: side)
+        let placed = HmmFloatingPlacement.place(panelSize, beside: target, in: room, current: side)
+        return (placed.frame, placed.side)
     }
 
     /// The part of the stage the inspector may use, clear of the chrome and of an open panel on either side.

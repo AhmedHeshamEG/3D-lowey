@@ -176,7 +176,7 @@ struct TheaterDialogs: ViewModifier {
             .alert("New stack", isPresented: present($state.naming)) {
                 TextField("Name", text: $state.nameText)
                 Button("Stack") {
-                    if let ids = state.naming { withHmmAnimation(.standard) { app.stackProjects(ids, named: state.nameText) } }
+                    if let ids = state.naming { withHmmAnimation(.standard) { _ = app.stackProjects(ids, named: state.nameText) } }
                     state.endSelecting()
                 }
                 Button("Cancel", role: .cancel) {}

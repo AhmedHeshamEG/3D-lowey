@@ -1,5 +1,6 @@
 import HmmCommands
 import LoweyCore
+import LoweyEngine
 import SwiftUI
 
 /// The menu bar (iPadOS 26) with every keyboard shortcut. It acts on the open project.
