@@ -197,7 +197,7 @@ struct BrushAboutPage: View {
             .textFieldStyle(.roundedBorder)
             .onAppear { name = brush.name }
             .onSubmit { brushes.rename(brush.id, to: name) }
-        Text(origin).font(.hmm(.footnote)).foregroundStyle(theme.text2)
+        Text(LocalizedStringKey(caption)).font(.hmm(.footnote)).foregroundStyle(theme.text2)
         if let author = brush.about.author {
             Text("Made by \(author)").font(.hmm(.footnote)).foregroundStyle(theme.text2)
         }
@@ -209,13 +209,14 @@ struct BrushAboutPage: View {
         }
     }
 
-    private var origin: String {
+    /// Where the brush came from.
+    private var caption: String {
         switch brush.about.origin {
-        case .builtIn: String(localized: "Comes with Maquette")
-        case .made: String(localized: "Made here")
-        case .procreate: String(localized: "Imported from Procreate")
-        case .photoshop: String(localized: "Imported from Photoshop")
-        case .shared: String(localized: "Shared with you")
+        case .builtIn: "Comes with Maquette"
+        case .made: "Made here"
+        case .procreate: "Imported from Procreate"
+        case .photoshop: "Imported from Photoshop"
+        case .shared: "Shared with you"
         }
     }
 }

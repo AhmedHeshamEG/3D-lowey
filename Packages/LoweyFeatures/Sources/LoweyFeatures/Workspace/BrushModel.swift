@@ -134,8 +134,14 @@ final class BrushModel {
 
     // MARK: Files
 
-    /// Imports a `.brushset`, `.brush`, `.abr` or `.maquettebrushes` as a new set; returns what to tell the person.
-    func importFile(_ url: URL) async -> (message: String, failed: Bool) {
+    /// How an import went.
+    enum ImportOutcome {
+        case added(set: String, count: Int)
+        case failed(file: String)
+    }
+
+    /// Imports a `.brushset`, `.brush`, `.abr` or `.maquettebrushes` as a new set.
+    func importFile(_ url: URL) async -> ImportOutcome {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let name = url.lastPathComponent
@@ -158,11 +164,10 @@ final class BrushModel {
             for note in imported.notes {
                 logger.notice("Import of \(name, privacy: .public): \(note, privacy: .public)")
             }
-            let count = imported.brushes.count
-            return (count == 1 ? "Added “\(imported.setName)”" : "Added \(count) brushes in “\(imported.setName)”", false)
+            return .added(set: imported.setName, count: imported.brushes.count)
         case let .failure(error):
             logger.error("Brush import failed: \(String(describing: error), privacy: .public)")
-            return ((error as? BrushImportError)?.description ?? "Couldn't read “\(name)”", true)
+            return .failed(file: name)
         }
     }
 

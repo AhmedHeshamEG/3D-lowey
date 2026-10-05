@@ -162,10 +162,7 @@ extension AppModel {
         case _ where ext == ProjectPackage.fileExtension || ProjectPackage.legacyExtensions.contains(ext):
             importPackage(url)
         case _ where BrushFileImport.fileExtensions.contains(ext):
-            Task {
-                let result = await brushes.importFile(url)
-                show(String.LocalizationValue(result.message), kind: result.failed ? .error : .info)
-            }
+            Task { await importBrushes(url) }
         case "json" where editor != nil:
             if let data = try? Data(contentsOf: url) { editor?.importScript(data, source: url.lastPathComponent) }
         default:
@@ -173,6 +170,18 @@ extension AppModel {
                 let imported = await library.importFiles([url])
                 if imported > 0 { show(imported == 1 ? "Added to your library" : "Added \(imported) models to your library") }
             }
+        }
+    }
+
+    /// A brush file (Procreate, Photoshop or a shared set) joins the brush library as a new set.
+    func importBrushes(_ url: URL) async {
+        switch await brushes.importFile(url) {
+        case let .added(set, count) where count == 1:
+            show("Added “\(set)” to your brushes")
+        case let .added(set, count):
+            show("Added \(count) brushes in “\(set)”")
+        case let .failed(file):
+            show("“\(file)” isn't a brush file Maquette can open", kind: .error)
         }
     }
 

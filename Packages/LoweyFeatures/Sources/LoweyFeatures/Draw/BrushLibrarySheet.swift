@@ -36,13 +36,13 @@ struct BrushLibrarySheet: View {
     }
 
     var body: some View {
-        HmmSheet("Brushes", subtitle: editor.brushTool == .ink ? "For ink" : "For flipbooks") {
+        HmmSheet("Brushes", subtitle: subtitle) {
             HStack(spacing: HmmSpacing.xs) {
                 HmmPillButton("Import brushes", systemName: "square.and.arrow.down") { importing = true }
                     .accessibilityIdentifier("import-brushes")
                 HmmPillButton("New set", systemName: "folder.badge.plus") {
-                    let id = brushes.addSet(named: String(localized: "My brushes"))
-                    renaming = Renaming(target: .set(id), name: String(localized: "My brushes"))
+                    let name = String(localized: "New set")
+                    renaming = Renaming(target: .set(brushes.addSet(named: name)), name: name)
                 }
                 .accessibilityIdentifier("new-brush-set")
             }
@@ -61,8 +61,7 @@ struct BrushLibrarySheet: View {
             guard case let .success(urls) = result else { return }
             Task {
                 for url in urls {
-                    let outcome = await brushes.importFile(url)
-                    editor.app.show(String.LocalizationValue(outcome.message), kind: outcome.failed ? .error : .info)
+                    await editor.app.importBrushes(url)
                 }
             }
         }
@@ -72,6 +71,11 @@ struct BrushLibrarySheet: View {
             Button("Rename") { commitRename() }
             Button("Cancel", role: .cancel) { renaming = nil }
         }
+    }
+
+    /// Which tool the chosen brush is for.
+    private var subtitle: String {
+        editor.brushTool == .ink ? "For ink" : "For flipbooks"
     }
 
     static let importTypes: [UTType] = BrushFileImport.fileExtensions.compactMap { UTType(filenameExtension: $0) }

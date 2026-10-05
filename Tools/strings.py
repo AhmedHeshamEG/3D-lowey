@@ -28,7 +28,9 @@ CORE_TITLES = ROOT / "Packages" / "LoweyCore" / "Sources"
 CALLS = ["Text", "Button", "Label", "Toggle", "Picker", "Menu", "Section", "TextField", "SecureField", "HmmPillButton", "HmmSectionHeader",
          "HmmPanel", "HmmSheet", "HmmSidebarSlider", "HmmEmptyState", "Hint", "LabeledSlider", "ControlGroup", "Link", "Stepper",
          "navigationTitle", "accessibilityLabel", "accessibilityHint", "accessibilityValue", "help", "confirmationDialog", "alert", "show",
-         "ShareLink", "PanelSection", "ContentUnavailableView", "LabeledContent", "GroupBox", "DisclosureGroup", "Tab"]
+         "ShareLink", "PanelSection", "ContentUnavailableView", "LabeledContent", "GroupBox", "DisclosureGroup", "Tab",
+         # The panels' own slider helpers (`slider("Volume", …)`).
+         "slider"]
 # A literal right after one of the calls (first argument), or after a display keyword argument.
 CALL_LITERAL = re.compile(r"\b(?:" + "|".join(CALLS) + r")\(\s*\"((?:[^\"\\]|\\.)*)\"")
 KEYWORD_LITERAL = re.compile(r"\b(?:title|label|message|subtitle|text|hint|prompt|actionTitle|placeholder|caption|summary|reason):\s*\"((?:[^\"\\]|\\.)*)\"")
@@ -37,7 +39,7 @@ LITERAL = re.compile(r"\"((?:[^\"\\]|\\.)*)\"")
 # Not text for people: identifiers, symbol names, file names, keys, formats.
 INTERPOLATION = re.compile(r"\\\(((?:[^()]|\([^()]*\))*)\)")
 # Interpolations of integers: SwiftUI and String.LocalizationValue key them as %lld, everything else as %@.
-NUMERIC = re.compile(r"(^|\.)(count|placed|accentCount|hold|onionAfter|onionBefore)$|^Int\(|^\$0$|\+ 1$|\.count - \d+$")
+NUMERIC = re.compile(r"(^|\.)(count|placed|accentCount|hold|onionAfter|onionBefore|segments)$|^Int\(|^\$0$|\+ 1$|\.count - \d+$")
 NOT_TEXT = re.compile(r"^([a-z0-9]+([.\-_][a-z0-9]+)+|[a-z]+[A-Z][A-Za-z0-9]*|[A-Z_]+|#?[0-9A-Fa-f]{6,8}|%[^ ]*|[\W\d_]*)$")
 
 
