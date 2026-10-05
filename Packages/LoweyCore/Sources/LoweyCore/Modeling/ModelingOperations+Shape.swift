@@ -12,12 +12,14 @@ public extension ModelingOperations {
         case inset(Inset.Failure)
         case bevel(EdgeBevel.Failure)
         case shell(Shell.Failure)
+        case architecture(Architecture.Failure)
 
         public var description: String {
             switch self {
             case let .inset(failure): failure.description
             case let .bevel(failure): failure.description
             case let .shell(failure): failure.description
+            case let .architecture(failure): failure.description
             }
         }
     }

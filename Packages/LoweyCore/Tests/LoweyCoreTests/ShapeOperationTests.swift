@@ -306,3 +306,64 @@ private func XCTAssertEqual(_ lhs: [Double], _ rhs: [Double], accuracy: Double, 
         XCTAssertEqual(a, b, accuracy: accuracy, file: file, line: line)
     }
 }
+
+/// Walls, openings, floors and stairs.
+final class ArchitectureTests: XCTestCase {
+    func testAnOpenWallIsASolidBlockAlongThePath() throws {
+        let wall = try Architecture.walls(along: [Vec3(0, 0, 0), Vec3(4, 0, 0)], closed: false, height: 2.7, thickness: 0.2)
+        XCTAssertTrue(MeshTopology(wall).isClosedManifold)
+        XCTAssertEqual(wall.volume, 4 * 2.7 * 0.2, accuracy: 1e-9)
+        let bounds = try XCTUnwrap(wall.bounds)
+        XCTAssertEqual(bounds.size.z, 0.2, accuracy: 1e-12)
+        XCTAssertThrowsError(try Architecture.walls(along: [.zero], closed: false))
+    }
+
+    func testARoomOfWallsJoinsAtItsCorners() throws {
+        let corners = [Vec3(0, 0, 0), Vec3(5, 0, 0), Vec3(5, 0, -4), Vec3(0, 0, -4)]
+        let room = try Architecture.walls(along: corners, closed: true, height: 3, thickness: 0.2)
+        XCTAssertTrue(MeshTopology(room).isClosedManifold)
+        XCTAssertTrue(MeshBoolean.isSolid(room))
+        // Outer 5.2 × 4.2, inner 4.8 × 3.8, 3 m tall.
+        XCTAssertEqual(room.volume, (5.2 * 4.2 - 4.8 * 3.8) * 3, accuracy: 1e-9)
+        // An L of walls mitres too.
+        let ell = try Architecture.walls(along: [Vec3(0, 0, 0), Vec3(3, 0, 0), Vec3(3, 0, -3)], closed: false, height: 2, thickness: 0.2)
+        XCTAssertTrue(MeshTopology(ell).isClosedManifold)
+        XCTAssertEqual(ell.volume, (3 * 0.2 + 3 * 0.2) * 2, accuracy: 1e-9)
+    }
+
+    func testDoorsAndWindowsCutThroughAWall() throws {
+        let wall = try Architecture.walls(along: [Vec3(-3, 0, 0), Vec3(3, 0, 0)], closed: false, height: 2.7, thickness: 0.2)
+        let object = SceneObject(id: "w", name: "Walls", kind: .mesh(wall))
+        let scene = Scene(id: "s", name: "S", objects: ["w": object], roots: ["w"])
+        var document = Document(project: ProjectInfo(id: "p", name: "P", created: Date(timeIntervalSince1970: 0),
+                                                     modified: Date(timeIntervalSince1970: 0), sceneOrder: ["s"], sceneNames: ["s": "S"]),
+                                scene: scene)
+        let door = try ModelingOperations.cutOpening(.door, in: "w", at: Vec3(-1, 1, 0.1), facing: .unitZ, in: scene)
+        _ = try door.apply(to: &document)
+        let window = try ModelingOperations.cutOpening(.window, in: "w", at: Vec3(1.5, 1.5, 0.1), facing: .unitZ, in: document.scene)
+        _ = try window.apply(to: &document)
+        guard case let .mesh(cut)? = document.scene.objects["w"]?.kind else { return XCTFail("a mesh") }
+        XCTAssertTrue(MeshTopology(cut).isClosedManifold)
+        XCTAssertEqual(cut.volume, wall.volume - (0.9 * 2.1 + 1.2 * 1.2) * 0.2, accuracy: 1e-9)
+        XCTAssertThrowsError(try ModelingOperations.cutOpening(.door, in: "w", at: Vec3(0, 2.7, 0), facing: .unitY, in: scene))
+    }
+
+    func testFloorsAndStairs() throws {
+        let floor = try Architecture.slab(outline: [Vec3(0, 0, 0), Vec3(4, 0, 0), Vec3(4, 0, -3), Vec3(0, 0, -3)], thickness: 0.2)
+        XCTAssertTrue(MeshTopology(floor).isClosedManifold)
+        XCTAssertEqual(floor.volume, 4 * 3 * 0.2, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(floor.bounds).max.y, 0, accuracy: 1e-12, "its top is where it was drawn")
+        let stairs = Architecture.Stairs()
+        XCTAssertEqual(stairs.steps, 16)
+        let flight = Architecture.stairs(stairs, from: .zero, direction: Vec3(0, 0, -1))
+        XCTAssertTrue(MeshTopology(flight).isClosedManifold)
+        XCTAssertTrue(MeshBoolean.isSolid(flight))
+        let bounds = try XCTUnwrap(flight.bounds)
+        XCTAssertEqual(bounds.size.y, 2.8, accuracy: 1e-9)
+        XCTAssertEqual(bounds.size.z, stairs.run, accuracy: 1e-9)
+        // Filled underneath: the sum of the step columns.
+        let step = 2.8 / 16
+        let expected = (1 ... 16).reduce(0.0) { $0 + Double($1) * step * 0.28 } * 1.0
+        XCTAssertEqual(flight.volume, expected, accuracy: 1e-9)
+    }
+}
