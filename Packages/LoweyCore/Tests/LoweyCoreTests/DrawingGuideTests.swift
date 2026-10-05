@@ -96,4 +96,14 @@ final class DrawingGuideTests: XCTestCase {
         let guide = DrawingGuide(kind: .symmetry, spacing: 0.2, angle: 15, symmetry: .radial, segments: 7, mirrorRadial: true)
         XCTAssertEqual(try JSONDecoder().decode(DrawingGuide.self, from: JSONEncoder().encode(guide)), guide)
     }
+
+    func testGuidesLiveInTheWorkspace() throws {
+        var workspace = ProjectWorkspace()
+        workspace.frameGuide = .perspective(points: 3)
+        workspace.planeGuide = DrawingGuide(kind: .symmetry, symmetry: .radial)
+        let back = try JSONDecoder().decode(ProjectWorkspace.self, from: JSONEncoder().encode(workspace))
+        XCTAssertEqual(back.frameGuide, workspace.frameGuide)
+        XCTAssertEqual(back.planeGuide, workspace.planeGuide)
+        XCTAssertNil(try JSONDecoder().decode(ProjectWorkspace.self, from: Data(#"{"frameGuide": 3}"#.utf8)).frameGuide)
+    }
 }
