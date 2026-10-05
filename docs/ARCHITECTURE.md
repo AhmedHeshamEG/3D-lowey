@@ -274,7 +274,7 @@ flowchart LR
 ```
 
 The tools job also checks that `AppUITests/LayoutWalk.swift` is what `Tools/layout_walk.py` makes of docs/LAYOUT.md;
-the UI tests walk every row (four tests, by precondition), measure the idle stage's share of the screen and run the Home benchmark.
+the UI tests walk every row (five tests, by precondition, Model on its own), measure the idle stage's share of the screen and run the Home benchmark.
 
 Golden images are recorded on the CI simulator (`TEST_RUNNER_GOLDEN_OUTPUT`), reviewed and committed under
 `Packages/LoweyEngine/Tests/LoweyEngineTests/Golden`.

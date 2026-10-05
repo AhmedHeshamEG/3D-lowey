@@ -60,8 +60,13 @@ final class LayoutTests: XCTestCase {
         }
     }
 
+    /// Everything but Model (the walk outgrew ten minutes in one test at M4).
     func testPanelAndChromeControlsAreReachable() {
-        walkInAProject(["", "blob"])
+        walkInAProject(["", "blob"]) { $0.home != "Model" }
+    }
+
+    func testModelControlsAreReachable() {
+        walkInAProject([""]) { $0.home == "Model" }
     }
 
     func testSelectionControlsAreReachable() {
@@ -72,12 +77,12 @@ final class LayoutTests: XCTestCase {
         walkInAProject(["timeline", "transport"])
     }
 
-    /// Every row with these preconditions, from a new project.
-    private func walkInAProject(_ preconditions: [String]) {
+    /// Every row with these preconditions (that `include` keeps), from a new project.
+    private func walkInAProject(_ preconditions: [String], include: (LayoutWalk.Row) -> Bool = { _ in true }) {
         newProject("Walk")
         for precondition in preconditions {
             prepare(precondition)
-            for row in LayoutWalk.rows where row.precondition == precondition {
+            for row in LayoutWalk.rows where row.precondition == precondition && include(row) {
                 walk(row)
             }
             shot("Walked [\(precondition.isEmpty ? "start" : precondition)]")
