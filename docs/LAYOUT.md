@@ -93,7 +93,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Duplicate as My Look (and its editor) | `Look › duplicate-look` |
 | Moods | `Look › mood-dusk` |
 | Palette (linked colours; the sidebar's Pick fills the slot being edited) | `Look › Add a colour` |
-| Finish | `Look › Finish` |
+| Finish (clean, cinematic, dreamy, retro, ink outlines, collage, old film; grain, bloom) | `Look › Cinematic` |
 | Fine tune the world | `Look › Fine tune the world` |
 | Save the world to the library | `Look › Save this world to the library` |
 

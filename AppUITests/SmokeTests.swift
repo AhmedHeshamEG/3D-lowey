@@ -50,10 +50,10 @@ final class SmokeTests: XCTestCase {
         shot("A cube")
         tap("Model")
         tap("add-sphere")
-        tap("Undo")
-        tap("Redo")
         tap("gizmo-rotate")
         shot("Turn gizmo")
+        tap("Undo")
+        tap("Redo")
         tap("Home")
         let card = app.descendants(matching: .any)["project-Smoke"].firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
