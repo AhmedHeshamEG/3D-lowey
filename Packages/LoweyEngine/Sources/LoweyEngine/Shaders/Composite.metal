@@ -11,7 +11,7 @@ struct CompositeUniforms {
     float4 effects;      // x = glitch, y = speed lines, z = flash, w = glitch seed
     float4 flashColor;   // rgb linear, w = speed-line seed
     float4 guides;       // x = show, y = mask aspect (w / h, 0 = none), z = thirds, w = safe areas
-    float4 options;      // x = overlay present, y = premultiplied alpha output, z = opaque output, w = flipbook layers (1 multiply, 2 screen, 4 add)
+    float4 options;      // x = overlay present, y = premultiplied alpha output, z = opaque output, w = flipbook layers (1 multiply, 2 screen, 4 add, 8 normal)
 };
 
 constexpr sampler lw_compositeSampler(coord::normalized, address::clamp_to_edge, filter::linear);
@@ -127,8 +127,8 @@ static inline float3 lw_guides(float3 color, float2 pixel, constant CompositeUni
     return mix(color, float3(1.0), line * 0.45);
 }
 
-/// Flipbook tracks drawn in multiply, screen or add (premultiplied sRGB from Core Graphics), blended in sRGB the way
-/// a painting app blends layers.
+/// Flipbook tracks drawn in multiply, screen or add (premultiplied sRGB stamped by the brush engine), blended in sRGB
+/// the way a painting app blends layers.
 static inline float4 lw_flipbookLayers(float4 color, float2 uv, texture2d<float, access::sample> multiply,
                                        texture2d<float, access::sample> screen, texture2d<float, access::sample> add, uint mask) {
     float3 below = lw_linearToSrgb(saturate(color.rgb));
@@ -157,6 +157,7 @@ kernel void lw_composite(texture2d<float, access::sample> to [[texture(0)]],
                          texture2d<float, access::sample> multiply [[texture(4)]],
                          texture2d<float, access::sample> screen [[texture(5)]],
                          texture2d<float, access::sample> add [[texture(6)]],
+                         texture2d<float, access::sample> normal [[texture(7)]],
                          constant CompositeUniforms &u [[buffer(0)]],
                          uint2 gid [[thread_position_in_grid]]) {
     if (gid.x >= uint(u.size.x) || gid.y >= uint(u.size.y)) { return; }
@@ -165,6 +166,13 @@ kernel void lw_composite(texture2d<float, access::sample> to [[texture(0)]],
     uint layers = uint(u.options.w + 0.5);
     if (layers != 0u) {
         color = lw_flipbookLayers(color, uv, multiply, screen, add, layers);
+    }
+    if ((layers & 8u) != 0u) {
+        // Normal flipbooks: laid over the shot, under the overlays.
+        float4 layer = normal.sample(lw_compositeSampler, uv);
+        float3 below = lw_linearToSrgb(saturate(color.rgb));
+        color.rgb = lw_srgbToLinear(layer.rgb + below * (1.0 - layer.a));
+        color.a = layer.a + color.a * (1.0 - layer.a);
     }
     if (u.options.x > 0.5) {
         // Overlays and captions: premultiplied sRGB drawn by Core Graphics.

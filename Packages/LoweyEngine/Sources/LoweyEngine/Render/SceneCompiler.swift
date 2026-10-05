@@ -12,6 +12,8 @@ final class SceneCompiler {
     let meshes: MeshCache
     let textures: TextureStore
     let models: ModelLibrary
+    /// Ink strokes' stamps.
+    let stamper: BrushStamper
     /// The camera of the frame being compiled (ink strokes turn to face it).
     var eye = SIMD3<Float>.zero
     /// The smear of the object being compiled (and its parts), applied on top of its world matrix.
@@ -19,11 +21,12 @@ final class SceneCompiler {
     /// The outline width of the character part being compiled.
     var activeHull: Float = 0
 
-    init(device: MTLDevice, meshes: MeshCache, textures: TextureStore, models: ModelLibrary) {
+    init(device: MTLDevice, meshes: MeshCache, textures: TextureStore, models: ModelLibrary, stamper: BrushStamper) {
         self.device = device
         self.meshes = meshes
         self.textures = textures
         self.models = models
+        self.stamper = stamper
     }
 
     /// What an object passes down to its children.
@@ -158,7 +161,7 @@ final class SceneCompiler {
     }
 
     func add(_ mesh: GPUMesh, world: simd_float4x4, uniforms base: ObjectUniforms, texture: MTLTexture? = nil, castsShadow: Bool,
-             scene: inout RenderScene) {
+             scene: inout RenderScene, brushDrawn: Bool = false) {
         var uniforms = base
         let world = activeDeform.map { $0 * world } ?? world
         uniforms.model = world
@@ -170,7 +173,7 @@ final class SceneCompiler {
         let ink = (base.ids.z & ObjectFlags.ink.rawValue) != 0
         scene.add(DrawItem(mesh: mesh, uniforms: uniforms, texture: ghost ? nil : texture, blended: blended,
                            castsShadow: castsShadow && !ghost, worldBounds: bounds, ghost: ghost,
-                           hull: ghost || blended || ink ? 0 : activeHull))
+                           hull: ghost || blended || ink ? 0 : activeHull, brushDrawn: brushDrawn))
     }
 
     /// A ghost: flat in its tint, see-through, not pickable (object index 0).

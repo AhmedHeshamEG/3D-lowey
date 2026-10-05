@@ -24,6 +24,21 @@ public enum InkMesher {
         return mesh
     }
 
+    /// The strokes showing at `reveal` (0…1 of the total drawn length): the brush engine stamps these.
+    public static func revealed(_ recipe: DrawingRecipe, reveal: Double) -> [DrawingRecipe.Stroke] {
+        guard reveal < 1 else { return reveal > 0 ? recipe.strokes : [] }
+        guard reveal > 0 else { return [] }
+        let lengths = recipe.strokes.map { length(of: $0.points) }
+        var remaining = lengths.reduce(0, +) * reveal
+        var shown: [DrawingRecipe.Stroke] = []
+        for (index, stroke) in recipe.strokes.enumerated() {
+            guard remaining > 0 || lengths[index] == 0 else { break }
+            shown.append(trimmed(stroke, to: remaining))
+            remaining -= lengths[index]
+        }
+        return shown
+    }
+
     /// One stroke as a camera-facing ribbon (a dot becomes a small diamond).
     public static func ribbon(_ stroke: DrawingRecipe.Stroke, fullLength: Double? = nil, eye: Vec3?, planeNormal: Vec3) -> MeshData {
         var mesh = MeshData()

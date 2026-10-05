@@ -276,3 +276,10 @@ public enum BrushKey {
         return String(repeating: "0", count: max(16 - digits.count, 0)) + digits
     }
 }
+
+/// The brush a stroke names, from the project's frozen copies (Ink Pen when it names none, or one that's missing).
+public enum BrushResolver {
+    public static func brush(_ key: String?, in brushes: [String: Brush]) -> Brush {
+        key.flatMap { brushes[$0] } ?? BuiltInBrushes.inkPen
+    }
+}

@@ -1,3 +1,4 @@
+import CoreGraphics
 import LoweyCore
 import Metal
 import simd
@@ -65,8 +66,9 @@ extension LoweyRenderer {
         encodePrepass(frame: native, ordered: ordered, gpu: gpu, targets: targets, ground: showsGround, commandBuffer: commandBuffer)
         encodeAO(frame: frame, targets: targets, look: gpu.looks[0], commandBuffer: commandBuffer)
         let groundColor = request.input.document.effectiveLook.ground.color.linear * frame.skyHorizon.w
-        report.drawCalls += encodeShading(frame: &frame, ordered: ordered, gpu: gpu, targets: targets,
-                                          ground: showsGround ? groundColor : nil, commandBuffer: commandBuffer, triangles: &report.triangles)
+        report.drawCalls += encodeShading(frame: &frame, ordered: ordered, gpu: gpu, targets: targets, ground: showsGround ? groundColor : nil,
+                                          brushes: (scene.brushes, request.input.mediaImage), commandBuffer: commandBuffer,
+                                          triangles: &report.triangles)
         if let upscaled = targets.upscaled {
             upscaler.encode(from: targets.color, to: upscaled, commandBuffer: commandBuffer, pipelines: device.pipelines)
         }
@@ -172,7 +174,8 @@ extension LoweyRenderer {
     // MARK: Shading
 
     func encodeShading(frame: inout FrameUniforms, ordered: [DrawItem], gpu: FrameBuffers, targets: FrameTargets, ground: SIMD3<Float>?,
-                       commandBuffer: MTLCommandBuffer, triangles: inout Int) -> Int {
+                       brushes: (batches: [BrushBatch], image: (String) -> CGImage?), commandBuffer: MTLCommandBuffer,
+                       triangles: inout Int) -> Int {
         let pass = MTLRenderPassDescriptor()
         let multisampled = targets.msaaColor != nil
         pass.colorAttachments[0].texture = targets.msaaColor ?? targets.color
@@ -217,7 +220,7 @@ extension LoweyRenderer {
                                           indexBuffer: groundMesh.indices, indexBufferOffset: 0)
             draws += 1
         }
-        for run in Self.runs(ordered, where: { _ in true }) {
+        for run in Self.runs(ordered, where: { !$0.brushDrawn }) {
             let item = ordered[run.start]
             let skinned = item.mesh.isSkinned
             if item.blended {
@@ -230,6 +233,15 @@ extension LoweyRenderer {
             draw(item.mesh, run: run, encoder: encoder, objects: gpu.objects)
             draws += 1
             triangles += item.mesh.indexCount / 3 * run.count
+        }
+        if !brushes.batches.isEmpty {
+            // Ink: stamps over everything shaded, hidden where something stands in front.
+            encoder.setRenderPipelineState(device.pipelines.brushScene)
+            encoder.setDepthStencilState(device.pipelines.depthRead)
+            let view = BrushStamper.WorldView(viewProjection: frame.viewProjection, view: frame.view, eye: frame.cameraPosition.xyz4)
+            stamper.encode(brushes.batches, encoder: encoder, view: view, width: targets.shadingWidth, height: targets.shadingHeight,
+                           image: brushes.image)
+            draws += brushes.batches.count
         }
         draws += encodeHulls(ordered: ordered, gpu: gpu, encoder: encoder)
         encoder.endEncoding()

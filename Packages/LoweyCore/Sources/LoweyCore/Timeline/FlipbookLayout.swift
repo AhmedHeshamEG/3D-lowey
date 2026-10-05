@@ -48,6 +48,25 @@ public struct FlipbookDraw: Hashable, Sendable {
     public var blend: FlipbookBlend
     public var opacity: Double
     public var strokes: [FlipbookPixelStroke]
+
+    public init(track: String, blend: FlipbookBlend, opacity: Double, strokes: [FlipbookPixelStroke]) {
+        self.track = track
+        self.blend = blend
+        self.opacity = opacity
+        self.strokes = strokes
+    }
+
+    /// Laid out in another frame of pixels: every point × `scale` + `offset` (the stage's points → its pixels).
+    public func scaled(by scale: Double, offset: Vec2 = Vec2(0, 0)) -> FlipbookDraw {
+        var draw = self
+        draw.strokes = strokes.map { stroke in
+            var moved = stroke
+            moved.points = stroke.points.map { $0 * scale + offset }
+            moved.widths = stroke.widths.map { $0 * scale }
+            return moved
+        }
+        return draw
+    }
 }
 
 /// Lays out the flipbooks of a moment for a frame of `width` × `height` pixels. `project` maps a world point to

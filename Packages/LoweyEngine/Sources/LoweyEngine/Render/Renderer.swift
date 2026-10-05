@@ -20,8 +20,8 @@ public struct FrameRequest {
     public var transparent: Bool
     /// Overlays and captions, drawn by Core Graphics at the output size (premultiplied sRGB).
     public var overlay: CGImage?
-    /// Flipbook tracks that blend (multiply, screen, add), one image per mode at the output size.
-    public var flipbookLayers: [FlipbookBlend: CGImage] = [:]
+    /// The flipbook drawings showing, laid out in the output's pixels (stamped by the brush engine).
+    public var flipbooks: [FlipbookDraw] = []
     /// Stage-only drawing (grid, gizmo, helpers, guide, stroke preview).
     public var editor: EditorScene?
     /// Director view framing guides.
@@ -90,6 +90,10 @@ public final class LoweyRenderer: SceneRendering {
     /// The last stroke preview and its GPU mesh (`EditorLayer`).
     var strokePreviewCache: (mesh: MeshData, gpu: GPUMesh)?
     var modelOverlayCache: [(EditorOverlay, GPUMesh)] = []
+    /// The brush engine's stamps (ink, flipbooks, the stroke being drawn).
+    let stamper: BrushStamper
+    /// Flipbook layers by blend mode, and the scratch layer, at the output size.
+    var flipbookTargets: [String: MTLTexture] = [:]
     /// The last frame, for picking.
     private(set) var lastScene: RenderScene?
     private(set) var lastCamera: RenderCamera?
@@ -98,7 +102,8 @@ public final class LoweyRenderer: SceneRendering {
         self.device = device
         self.quality = quality
         textures = TextureStore(device: device.device)
-        compiler = SceneCompiler(device: device.device, meshes: meshes, textures: textures, models: models)
+        stamper = try BrushStamper(device: device.device)
+        compiler = SceneCompiler(device: device.device, meshes: meshes, textures: textures, models: models, stamper: stamper)
         upscaler = Upscaler(device: device)
         shadowMap = try device.makeTexture(RenderDevice.depthFormat, width: quality.shadowMapSize, height: quality.shadowMapSize,
                                            usage: [.renderTarget, .shaderRead], label: "sun shadows", arrayLength: 2)
@@ -116,6 +121,8 @@ public final class LoweyRenderer: SceneRendering {
     public func trimCaches() {
         meshes.trim()
         textures.removeAll()
+        stamper.trim()
+        flipbookTargets.removeAll()
     }
 
     func targets(width: Int, height: Int, scale: Float) throws -> FrameTargets {
@@ -142,10 +149,7 @@ public final class LoweyRenderer: SceneRendering {
         try encodeShot(main, request: request, scene: scene, ordered: ordered, gpu: gpu, targets: targets, commandBuffer: commandBuffer,
                        report: &report)
         let overlay = request.overlay.flatMap { textures.texture(for: $0, key: "overlay", maxSide: 8192, holdsImage: true) }
-        var layers: [FlipbookBlend: MTLTexture] = [:]
-        for (blend, image) in request.flipbookLayers {
-            layers[blend] = textures.texture(for: image, key: "flipbook:" + blend.rawValue, maxSide: 8192, holdsImage: true)
-        }
+        let layers = encodeFlipbookLayers(request, width: output.width, height: output.height, commandBuffer: commandBuffer)
         encodeComposite(request, targets: targets, overlay: overlay, flipbooks: layers, output: output, commandBuffer: commandBuffer)
         if let editor = request.editor {
             encodeEditor(editor, request: request, scene: scene, targets: targets, output: output, commandBuffer: commandBuffer)

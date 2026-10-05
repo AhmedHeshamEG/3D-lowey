@@ -50,6 +50,8 @@ public final class RenderDevice: @unchecked Sendable {
     public static let idFormat = MTLPixelFormat.r32Uint
     public static let depthFormat = MTLPixelFormat.depth32Float
     public static let outputFormat = MTLPixelFormat.bgra8Unorm
+    /// Flipbook layers and brush previews: premultiplied sRGB, like the overlay image.
+    public static let layerFormat = MTLPixelFormat.rgba8Unorm
     public static let shadowMapSize = 2048
 
     public init(device: MTLDevice? = MTLCreateSystemDefaultDevice()) throws {
@@ -129,6 +131,12 @@ struct Pipelines {
     let sky: MTLRenderPipelineState
     let editor: MTLRenderPipelineState
     let grid: MTLRenderPipelineState
+    let brushScene: MTLRenderPipelineState
+    let brushEditor: MTLRenderPipelineState
+    let brushLayer: MTLRenderPipelineState
+    let brushFill: MTLRenderPipelineState
+    let brushFillEditor: MTLRenderPipelineState
+    let brushCompose: MTLRenderPipelineState
     let ssao: MTLComputePipelineState
     let lines: MTLComputePipelineState
     let bloomPrefilter: MTLComputePipelineState
@@ -160,6 +168,12 @@ struct Pipelines {
         sky = try builder.sky()
         editor = try builder.editor(fragment: "lw_editorFragment")
         grid = try builder.editor(fragment: "lw_gridFragment")
+        brushScene = try builder.brush(.scene)
+        brushEditor = try builder.brush(.editor)
+        brushLayer = try builder.brush(.layer)
+        brushFill = try builder.brush(.layer, vertex: "lw_brushFillVertex", fragment: "lw_brushFillFragment")
+        brushFillEditor = try builder.brush(.editor, vertex: "lw_brushFillVertex", fragment: "lw_brushFillFragment")
+        brushCompose = try builder.brush(.layer, vertex: "lw_brushLayerVertex", fragment: "lw_brushLayerFragment")
         ssao = try builder.compute("lw_ssao")
         lines = try builder.compute("lw_lines")
         bloomPrefilter = try builder.compute("lw_bloomPrefilter")

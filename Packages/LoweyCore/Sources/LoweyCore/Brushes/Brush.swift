@@ -142,7 +142,7 @@ public struct BrushGrain: Codable, Hashable, Sendable {
 
     /// nil: a plain tip.
     public var source: BrushImageSource?
-    /// Grain tile size: as a multiple of the tip's diameter (rolling) or of the drawing's height / 100 (texturized).
+    /// Grain tile size: as a multiple of the tip's diameter (rolling) or of 15 % of the view's height (texturized).
     public var scale: Double
     /// How much the grain takes away (0 none, 1 all of it).
     public var depth: Double

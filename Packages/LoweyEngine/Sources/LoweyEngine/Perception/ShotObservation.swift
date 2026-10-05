@@ -129,7 +129,7 @@ extension ExportSession {
         plan.lens = nil
         plan.transition = nil
         plan.overlay = nil
-        plan.flipbookLayers = [:]
+        plan.flipbooks = []
         plan.screen = ScreenState()
         let bytes = try await frames.bytes(plan, width: size.width, height: size.height)
         let image = try FrameRenderer.image(bgra: bytes, width: size.width, height: size.height, transparent: false)
