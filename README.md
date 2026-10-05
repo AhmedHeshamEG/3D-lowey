@@ -4,10 +4,14 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
-**0.1** (phase M1): the app is Maquette; **nothing is ever lost** (every change is recorded the moment it happens,
-undo survives closing the app, Actions ▸ History scrubs back through every step and keeps versions); the Pencil's
-hover point sits exactly under the tip; every iPad gets a preview tuned to it; a hidden load meter speaks up before
-frames drop.
+**0.2** (phase M2): **the canvas owns the screen**. The making tools are Model, Draw, Paint, Animate and Cast; the
+timeline comes when called; the inspector floats beside what's selected; every panel resizes. **Home** is a living
+gallery where each project's model turns in its own Look, grows into the stage when tapped, and can be stacked,
+searched and sorted. New projects start from a template (print, room, character, animation, blank).
+
+**0.1** (phase M1): **nothing is ever lost** (every change is recorded the moment it happens, undo survives closing
+the app, Actions ▸ History scrubs back through every step); the Pencil's hover point sits exactly under the tip; every
+iPad gets a preview tuned to it; a hidden load meter speaks up before frames drop.
 
 **From 2.0.** A Metal renderer and five Looks (Ink, Comic, Sketch, Clay, Low-poly), a layout without modes, ink strokes
 and flipbooks, a Kit of about 350 real-size models, one Cast for every kind of character, and Claude as a director's
@@ -48,15 +52,17 @@ it tracks your face and streams it to the iPad on the same Wi-Fi.
 
 ## Find your way around
 
-The **stage** is on top, the **timeline** below (drag the divider; collapse it to a transport bar).
+The **stage** fills the screen. Everything else floats in two corners and a thin sidebar, and comes when called. Every
+control's home is in [docs/LAYOUT.md](docs/LAYOUT.md).
 
 | Where | What's there |
 |---|---|
-| Top left | **Theater** (your projects) · **Actions** (photos and video, sound, voiceover, export, scripts, the AI & laptop bridge, gestures, tour, diagnostics, settings) · **Look** (Looks, mood, palette, finish) · **Select** (tap, lasso, select similar) |
-| Top right | **Build** (shapes, lights and cameras, 3D text, titles and labels, effects, screen effects) · **Draw** (ink strokes, solid shapes on guides, flipbooks, Shadow Brush) · **Transform** (gizmo, snapping, align, Fly the camera) · **Cast** (Blob, Puppet, Rigged; clips, poses, faces, lip sync) · **Library** (the Kit's Sets and your models) |
+| Top left | **Home** (your projects) · **Actions** (export, the project file, the Monitor, scenes, history, scripts, the AI & laptop bridge, gestures, tour, diagnostics, settings) · **Look** (Looks, mood, palette, finish) · **Select** (tap, lasso, select similar, the outliner) |
+| Top right | **Model** (shapes, lights and cameras, 3D text, titles, photos and videos, effects; the Kit and your models; snapping) · **Draw** (ink strokes, solid shapes on guides, flipbooks) · **Paint** (Shadow Brush, Scatter) · **Animate** (opens the timeline) · **Cast** (Blob, Puppet, Rigged; clips, poses, faces, lip sync) |
 | Side | two sliders for what you're doing, **Pick**, undo, redo |
-| Right | the **inspector**, while something is selected: its menu has array, scatter, group, swap for a model, save to the library |
-| Bottom | the timeline: **Compose** (move animation in time), **Perform** (record by touch), **Keyframe** (keys, easing, auto-key) |
+| Beside the selection | the **inspector**: move, turn, size; numbers; Look override; motion; its menu has array, group, swap for a model, save to the library |
+| Bottom right | the **timeline** control (call the transport, send it away), views, frame the selection, the Director view |
+| Bottom, when called | the timeline: **Compose** (move animation in time), **Perform** (record by touch), **Keyframe** (keys, easing, auto-key), sound and words |
 
 | Gesture | Does |
 |---|---|
@@ -67,7 +73,8 @@ The **stage** is on top, the **timeline** below (drag the divider; collapse it t
 | Four-finger tap | hide everything but the stage |
 | Pencil | draws; hover previews; Pencil Pro squeeze plays and pauses; roll during Perform |
 
-Keyboard: ⌘1–5 Select, Build, Draw, Transform, Look · Space play · ⌘K key · ⌘M marker · ⌥⌘D Director view ·
+Keyboard: ⌘1–5 Model, Draw, Paint, Animate, Cast · ⌘6–8 Actions, Look, Select · ⌘L library · ⌘T timeline ·
+⌥⌘1–3 move, turn, size · Space play · ⌘K key · ⌘M marker · ⌥⌘D Director view ·
 ⌥⌘Y fly the camera · ⇧⌘R record a performance · ⌥⌘R record voiceover · ⇧⌘T transcript · ⇧⌘U audio · ⌘E export ·
 ⇧⌘B bridge · ⌥⌘V paste a Scene Script · ⌥⌘N monitor window · ⌘Z / ⇧⌘Z.
 
@@ -76,12 +83,12 @@ will export.
 
 ### A first shot
 
-1. Theater → **New project**: a name, a mood, a Look.
-2. Place **Library** models from the Kit (they arrive at real size) and draw with **Draw ▸ Ink**; **Cast** → add a Blob.
+1. Home → **New project**: a name and a template (a mood and a Look are suggested; change them if you like).
+2. **Model ▸ Library**: place models from the Kit (they arrive at real size); draw with **Draw ▸ Ink**; **Cast** → add a Blob.
 3. **Look** → try the five Looks; **Finish** for grain, bloom, outlines.
-4. Select something → **Inspector ▸ Motion** → a preset (Pop in, Bounce…), or **Perform** and move it while it plays.
-5. **Build** → camera, then **Director view** (⌥⌘D) to aim it; Inspector ▸ Camera for moves and focus.
-6. **Actions** → **Voiceover** to record, then **Transcribe**; attach things to spoken words from the transcript.
+4. Select something → the inspector's **Motion** → a preset (Pop in, Bounce…), or **Animate ▸ Perform** and move it while it plays.
+5. **Model** → camera, then **Director view** (⌥⌘D) to aim it; the inspector's Camera for moves and focus.
+6. **Animate** → **Sound and words** to record a voiceover, then **Transcribe**; attach things to spoken words from the transcript.
 7. **Actions** → **Export** → a preset (YouTube 4K, Shorts, GIF loop…).
 
 ---

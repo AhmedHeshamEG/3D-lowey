@@ -16,8 +16,11 @@ My film.maquette/                 (3D-lowey's .lowey packages open too, and are 
   assets/                         library models the project carries (written by "Share as one file")
   audio/                          voiceovers and sounds
   renders/                        exports kept with the project
-  thumbnail.png, thumbnail-loop.gif   the Home card
+  thumbnail.png, thumbnail-loop.gif   the Home card (a still, and the model turning once in its Look)
+  workspace.json                  how the project shows: the timeline, snapping, the grid (not part of undo)
 ```
+
+Beside the packages, the projects folder holds `gallery.json`: Home's stacks and sort order (below).
 
 Every JSON file is written atomically and keeps the previous good version beside it as `<name>.bak`; a damaged file
 is read from its backup.
@@ -121,6 +124,33 @@ and opening reads only the newest 64; older ones are read when undo reaches them
 `versions/index.json` lists them (`id`, `name`, `date`, `automatic`); `versions/<id>.json` holds each as a snapshot.
 Maquette keeps one automatically each time a scene opens and after each hour of work (the newest 40), and whenever
 the history scrubber goes back (the state it left). Named versions stay until deleted.
+
+## workspace.json
+
+How the project shows when it opens. It isn't the project (it's never undone and isn't in the journal); it's
+written moments after it changes and when the project closes. A missing file means the defaults; a damaged value
+falls back to its default; unknown keys are ignored. Plain JSON, no envelope.
+
+| Key | Type | Meaning |
+|---|---|---|
+| `schemaVersion` | number | 1. |
+| `template` | string? | The starter template it began from: `blank`, `print`, `room`, `character`, `animation`. |
+| `timeline` | string | `hidden` (the default), `transport` (the slim transport) or `full`. |
+| `timelineHeight` | number | The whole timeline's height in points, 150–900 (260 by default). |
+| `snap` | object | `grid`, `gridSize` (m), `rotation`, `rotationStep` (degrees), `ground`, `objects`, `objectThreshold` (m). |
+| `showsGrid` | bool | The grid on the ground. |
+| `shapeSize` | number | New shapes' size in metres (1; `print` uses 0.05). |
+| `firstPanel` | string? | A tool panel to open the first time the project opens (then removed): `model`, `cast`. |
+
+## gallery.json (in the projects folder)
+
+Home's arrangement, beside the packages (it moves with them to iCloud Drive). Plain JSON, dates in ISO 8601.
+
+```json
+{"schemaVersion": 1, "sort": "recent", "stacks": [{"id": "…", "name": "Rooms", "members": ["<project id>", "…"], "created": "2026-10-05T10:00:00Z"}]}
+```
+
+`sort` is `recent`, `name` or `created`. A project id that no longer exists is dropped; a stack left empty goes.
 
 ## Sharing
 

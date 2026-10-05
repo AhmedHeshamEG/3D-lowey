@@ -12,7 +12,7 @@ reference and stays.
 | Nothing is ever lost: the history journal, undo after relaunch, versions, the History scrubber | **0.1.** [PROJECT_FORMAT.md](PROJECT_FORMAT.md) |
 | Apple Pencil: hover point at the tip in the stage's own pass, outline only while resizing | **0.1** |
 | Device tiers (A/B/C) and the hidden load meter | **0.1** |
-| The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | M2. Today: 2.0's layout (section 9). |
+| The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | M3 |
 | Modelling II (bevel, shell, mirror, array, units, snapping, measure, section, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, Blender package) | M4. Today: glTF/GLB, USDZ and OBJ import, video and stills export. |
 | One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | M5. Today: 2.0's ink strokes and flipbooks. |
@@ -48,6 +48,37 @@ Tiers never remove features, and exports always render at full quality. The stag
 refresh. Diagnostics shows the tier and runs the Night Market benchmark (and, on an M iPad, the same run with the
 Tier B preview). A calm chip appears at the bottom of the stage only when a scene nears what the iPad keeps smooth,
 offering a lighter preview (or adaptive resolution, when Full-resolution stage is on).
+
+### The canvas owns the screen (0.2)
+
+The layout that freezes at 1.0; [LAYOUT.md](LAYOUT.md) maps every control to its one home and the UI tests walk it.
+At rest the stage holds at least 85% of the screen.
+
+- **Top left: the document and the app.** Home · Actions (export, the project file, the Monitor, scenes, history,
+  scripts, the AI & laptop bridge, gestures, the tour, diagnostics, settings) · Look · Select.
+- **Top right: making**, in the order a thing gets made. **Model**: shapes, lights, cameras, words, photos and videos,
+  marks on the frame, effects and screen effects (Add); the Kit and your models (Library); snapping and the grid
+  (Snapping). **Draw**: ink, solid shapes, flipbooks. **Paint**: the Shadow Brush and Scatter. **Animate**: opens the
+  whole timeline. **Cast**: characters, expressions, clips, lip sync, your face.
+- **Time on call.** A new project shows no timeline. The control at the bottom right calls the slim transport (play,
+  the time) and sends the timeline away; Animate opens the whole timeline. Its divider resizes it, and each project
+  remembers whether it was hidden, slim or whole and how tall.
+- **The inspector floats beside the selection**, on whichever side has room, flipping at the screen's edge and
+  gliding over when the view settles. Move, turn and size are at its top; align and distribute appear when several
+  things are selected.
+- **Every panel resizes** from the grip in its corner (double-tap it for the original size) and remembers its size.
+- **The joystick** shows under a selection by default; its × hides it, Settings ▸ Stage brings it back.
+- **Home, the living gallery.** Each card is the project's model slowly turning in its own Look while the card is on
+  screen (Reduce Motion keeps a still). Tap a card and it grows into the stage; Home in the corner shrinks it back.
+  Drag a card onto another to stack them; search finds projects and stacks by name; sort by Recent, Name or Date
+  created; Select acts on several (stack, move out, duplicate, archive, delete).
+- **Starter templates** in New project: Blank, Model to print (a 1 cm grid, 5 cm shapes, close up, Clay), Room or
+  building (a 25 cm grid, the view from above), Character (Cast open, eye level), Animation (the timeline open). Each
+  suggests a Look and a Mood, both changeable there and later. Sketch arrives with the Schizzo board (M9);
+  millimetres, the print-bed outline and the walls tool with the modelling phases (M3, M4).
+- **Keyboard**: ⌘1–⌘5 Model, Draw, Paint, Animate, Cast; ⌘6–⌘8 Actions, Look, Select; ⌘L the library; ⌥⌘1–3 move,
+  turn, size; ⌘T the timeline.
+- Diagnostics also runs the **Home benchmark**: a hundred projects turning while the gallery scrolls for 20 seconds.
 
 ---
 
@@ -178,7 +209,7 @@ hmm-kit), the Words lane with snapping, the Transcript sheet (jump, pick a phras
 marker; fix words), a placeholder voice, lip sync. Attaching things to a spoken word is a first-class action. A
 sound-effects track with a synthesised CC0 foley set (whoosh, pop, impact, click, swell) whose hits land on words.
 
-## 9. Layout
+## 9. Layout (2.0; Maquette 0.2's layout above replaces it)
 
 - **Theater** (home): project cards with looping previews; New project asks for a name, a Mood and a Look; samples;
   a card menu to share a `.loweypack`, duplicate, archive.
