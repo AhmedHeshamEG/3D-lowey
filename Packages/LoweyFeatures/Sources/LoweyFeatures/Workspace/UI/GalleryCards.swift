@@ -99,7 +99,7 @@ struct StackCard: View {
                         .clipShape(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous).stroke(theme.line))
                         .scaleEffect(1 - CGFloat(index) * 0.06)
-                        .offset(y: CGFloat(index) * -10)
+                        .offset(y: CGFloat(index) * -HmmSpacing.xs)
                         .shadow(color: .black.opacity(0.25), radius: 6, y: 3)
                 }
             }

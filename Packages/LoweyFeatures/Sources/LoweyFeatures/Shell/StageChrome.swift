@@ -158,7 +158,7 @@ private struct JoystickHideButton: View {
             hide()
             app.show("The joystick is in Settings ▸ Stage when you want it back")
         }
-        .offset(x: 10, y: -10)
+        .offset(x: HmmSpacing.xs, y: -HmmSpacing.xs)
         .accessibilityIdentifier("hide-joystick")
     }
 }
