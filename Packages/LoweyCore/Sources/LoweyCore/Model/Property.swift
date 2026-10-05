@@ -313,7 +313,8 @@ public struct PropertySpec: Sendable, Hashable {
         .airborne: PropertySpec(type: .bool, animatable: false, label: "In the air on purpose"),
         .bevel: PropertySpec(type: .float, animatable: false, label: "Bevel"),
         .bevelSegments: PropertySpec(type: .int, animatable: false, label: "Bevel segments"),
-        .smear: PropertySpec(type: .float, animatable: true, label: "Smear")
+        .smear: PropertySpec(type: .float, animatable: true, label: "Smear"),
+        .symmetry: PropertySpec(type: .enumeration, animatable: false, label: "Symmetry")
     ]
 }
 

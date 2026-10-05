@@ -9,6 +9,7 @@ public enum ModelingOperations {
         case noSuchRegion
         case pushPull(PushPull.Failure)
         case boolean(MeshBoolean.Failure)
+        case shape(ShapeFailure)
 
         public var description: String {
             switch self {
@@ -17,6 +18,7 @@ public enum ModelingOperations {
             case .noSuchRegion: "That area isn't closed."
             case let .pushPull(failure): failure.description
             case let .boolean(failure): failure.description
+            case let .shape(failure): failure.description
             }
         }
     }
@@ -65,15 +67,10 @@ public enum ModelingOperations {
 
     // MARK: Push/pull
 
-    /// Moves a face of an object along its normal by an exact distance (metres).
+    /// Moves a face of an object along its normal by an exact distance (metres); under live symmetry its mirror image
+    /// moves with it.
     public static func pushPull(_ id: ObjectID, face: Int, distance: Double, in scene: Scene) throws(Failure) -> EditCommand {
-        guard let object = scene.objects[id], let (mesh, bakes) = bakedMesh(of: object) else { throw .notEditable }
-        do {
-            let moved = try PushPull.apply(mesh, face: face, distance: distance)
-            return .batch("Push/pull", setMesh(id, moved, bakesScale: bakes))
-        } catch {
-            throw .pushPull(error)
-        }
+        try pushPull(id, faces: [face], distance: distance, in: scene)
     }
 
     // MARK: Booleans
