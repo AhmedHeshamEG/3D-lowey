@@ -3,6 +3,31 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.4] — Maquette — modelling II & interop (phase M4)
+
+- **Bevel, round, inset, shell** from the Model tool's bar: pick edges and bevel or round them, pick faces and inset
+  them or hollow the solid leaving them open. Each runs at once at a size that suits the units; tap the size that
+  floats beside it to type an exact one.
+- **Mirror** across the picked face or the middle, and **live symmetry** (left and right, front and back, top and
+  bottom): change one side and the other follows (Model ▸ Shape).
+- **Array along a sketch** from the inspector's Array, optionally turning with the curve.
+- **Model ▸ Precision** (was Snapping): snap to corners, edge middles, edges and faces as well as the grid (grid sizes
+  follow the units); the stage marks what a point snapped to.
+- **Measure** between two points, with how far apart along x, y and z; **keep** it on the stage as a dimension that
+  moves with what it measures.
+- **Section view**: cut the stage open across x, y or z, or along a face; slide the cut, keep the other side. Exports
+  are never cut.
+- **3D printing** (Model ▸ Shape ▸ 3D print): the printer's build volume on the stage, **Check for printing** (holes,
+  inside-out faces, walls too thin for the printer, fitting the bed) and **Repair**.
+- **Building** (Model ▸ Add): walls along tapped corners (height and thickness typed beside them), floors, doors and
+  windows cut into walls, stairs.
+- **Export a 3D model** as **glTF** (the scene with its hierarchy, materials, cameras, lights and animation), **USDZ**,
+  **OBJ**, **STL** or **3MF** (millimetres, standing on the bed), or a **Blender package** that builds a
+  ready-to-render .blend with the Look, lights and cameras.
+- **Import STL and 3MF**; **Make editable** takes a placed model apart, keeping a glTF's hierarchy and animation.
+- Booleans are exact to the nanometre where shapes cross, and keep their faces whole.
+- Projects are schema 6 (kept dimensions, symmetry); Maquette 0.3 asks for a newer version instead of opening them.
+
 ## [0.3] — Maquette — modelling I (phase M3)
 
 - **Model ▸ Shape**: sketch, push/pull and booleans, Shapr3D's core loop. Choose a shape or a mode and the stage is

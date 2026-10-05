@@ -4,6 +4,13 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.4** (phase M4): **modelling II and interop**. Bevel and round edges, inset faces, hollow solids into shells,
+mirror and model with live symmetry, array along a sketch; snap to corners, edge middles, edges and faces, measure and
+keep dimensions, cut the stage open with a section view; check a part for 3D printing, repair it and export STL or
+3MF that stand on the bed; draw walls, floors, doors, windows and stairs. Export glTF (hierarchy, materials,
+animation), USDZ, OBJ, STL, 3MF, or a Blender package that rebuilds the scene for rendering on a computer; import STL
+and 3MF, and take placed models apart to edit them.
+
 **0.3** (phase M3): **modelling**. Model ▸ Shape sketches on any surface (lines, rectangles, circles, arcs, splines,
 offsets), pulls closed shapes into solids or cuts them into the face below, picks faces, edges and corners, pushes and
 pulls faces with the distance floating beside them, and combines solids with union, subtract and intersect. Every

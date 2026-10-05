@@ -937,3 +937,102 @@ selects similar, and ✕ leaves it. A Pencil loop picks elements; a finger drag 
 or region, where it pushes or pulls. The inspector shows the selection's size and what's picked; it steps aside while a sketch shape is chosen (the
 floating numbers are the controls then, and it would cover them beside a large selection). *Rejected:* a sixth
 top-right button (CONTEXT allows five); a separate Select-elements tool in the top left (picking faces is modelling).
+
+## Maquette 0.4 — M4, modelling II & interop
+
+**D-125 — Bevel and round are swept cutters through the boolean path.** Each edge gets its profile (the corner
+beyond a flat cut, or beyond a quarter arc) swept along it in the plane square to the edge; outside edges are cut
+away, inside edges filled, then the result is rebuilt into whole faces like every boolean. Cuts run a hair past the
+edge's ends (beyond is empty space); fills stop exactly at them. Where several bevelled edges meet, the cuts meet in a
+point (no rolling-ball corner patch). Arcs are eight strips a quarter turn. *Rejected:* a topological bevel with
+vertex blends (a large, fragile algorithm for the same everyday result); Manifold has no fillet operation.
+
+**D-126 — New boolean corners land exactly on their planes; faces close over T-junctions.** Corners Manifold creates
+where two shapes cross came back in Float, so a 2 mm bevel was 1.9999999 mm and coplanar pieces failed to merge into
+one face. Each new corner pinned by three or more input planes is solved in Double (least squares, Cramer's rule),
+unless it would land within the tolerance of another corner (Manifold keeps nearly coincident corners apart on
+purpose). Where two neighbouring faces kept different corners of one straight edge, `MeshBuilder` puts the missing
+corner into the other face's edge. The 1 000-case soak passes. *Rejected:* welding (it joined pieces Manifold keeps
+apart: D-117); leaving Float (faces split into slivers after a few operations).
+
+**D-127 — Live symmetry is "keep the touched side, mirror it".** Symmetry is a per-object property (`symmetry`:
+x, y or z, the plane through the pivot); switching it on moves the pivot to the middle of the shape on that axis and
+makes it symmetric (keeping the bigger side). After every Model edit the side the edit touched is kept (cut with a
+half-space), mirrored and joined with a boolean, so push/pull, bevel, inset, shell and sketch pulls all stay
+symmetric without knowing about it. A push/pull drag previews the face and its mirror image sliding together.
+*Rejected:* a mirror modifier storing half the mesh (every reader of a mesh would need the evaluated one); mirroring
+the pick only (breaks as soon as the two sides differ by a hair).
+
+**D-128 — Shape operations run at once at a size that suits the units; the size floats to retype.** Bevel, round,
+inset and shell happen on the tap (1 mm in millimetres, 5 mm in centimetres, 5 cm in metres; halved up to four times
+when it doesn't fit); the size floats beside the pick like every number on the stage (D-122), and typing a new one
+undoes the operation and does it again from the same pick. *Rejected:* a size dialog first (a decision wall,
+CONTEXT §3.4); drag handles (no exact number, and a second gesture grammar on the stage).
+
+**D-129 — Points snap by distance on screen: corners, edge middles, edges, faces, the grid.** Within 12 points of the
+finger or Pencil, in that order; corners hidden behind the surface under the finger don't count; of corners on top of
+each other on screen the nearest the eye wins. Sketching, measuring, walls and floors share it; the stage marks a
+corner, middle or edge snap. Snap settings gain the three switches and read older settings without losing them.
+*Rejected:* a radius in metres (too much at a distance, nothing up close).
+
+**D-130 — Kept dimensions are objects.** A `dimension` object (two points in its own space) sits under the object it
+measured, so it moves with it, and is drawn on the stage only, like sketches. Schema 6 makes older apps refuse files
+that have one (the D-118 precedent). *Rejected:* annotations in `workspace.json` (they'd stay behind when the object
+moves, and undo wouldn't know them).
+
+**D-131 — The section view is a hardware clip distance, and cut solids show flat inside.** The plane lives in
+`workspace.json` and reaches the renderer through the stage's editor scene only, so exports and thumbnails are never
+cut. The surface vertex stages emit `SurfaceOut` (the varyings plus `[[clip_distance]]`); the fragment stages read
+`SurfaceVaryings`, a subset. With the cut on, back faces (the inside of a cut solid) shade flat in the object's colour
+darkened, which reads as a solid section. *Rejected:* true caps with a stencil pass (another pass and pipeline states
+for a preview aid); discarding in the fragment shader (it costs early depth testing on every frame, cut or not).
+
+**D-132 — Print files are millimetres with Z up; the check is topology, Manifold and rays.** STL and 3MF turn the
+scene a quarter turn about X (Y up → Z up, winding kept) and scale metres to millimetres, so a part stands on the bed
+in any slicer. The check: every edge walked once each way by two faces, consistent winding, positive volume, Manifold
+accepts it; walls by a ray straight in from each face's middle and its triangles' middles (thinner than 0.8 mm for
+filament or 0.5 mm for resin is flagged); the bed by its build volume. Repair welds near corners, drops slivers and
+doubled faces, turns faces to agree and point out, and closes holes with a fan. *Rejected:* exporting Y-up metres
+(parts lie on their side, a thousand times too small).
+
+**D-133 — FBX isn't offered (spike).** Autodesk's FBX SDK licence lets an app ship the runtime but forbids
+redistributing or repackaging the SDK without written permission; open-source projects must link to Autodesk's site
+for users to install it themselves. Maquette's repository is public until launch and its CI would have to fetch the
+SDK from behind a click-through licence, so it can't be built in. glTF reaches the same apps (Blender, Unity, Unreal
+import it natively). *Rejected:* vendoring the SDK; downloading it in CI; a home-made FBX writer (an undocumented,
+versioned binary format to keep up with).
+
+**D-134 — glTF keeps the scene as built, and comes back editable.** The export is one node per object with its own
+transform under its parent, a material per surface, cameras, lights (KHR_lights_punctual) and the timeline's
+position, rotation and size keys (linear and held keys as they are; eased ones sampled at the frame rate). Reading a
+glTF scene gives groups and editable meshes with the same hierarchy, materials (read straight from the JSON so dark
+colours don't lose precision to 8-bit steps), cameras, lights and keys, up to 200 000 triangles. Library imports stay
+library models; **Make editable** takes a placed one apart into a group with the model's id (its keys still point at
+it). *Rejected:* the 2.0 flat world-space export (no hierarchy, no animation); taking every import apart (a
+100 000-triangle prop in the journal on every placement).
+
+**D-135 — "Render on your computer" is a Blender package built by a script it carries.** A zip of `scene.glb`,
+`maquette.json` (the Look, sun, sky, ground, camera cuts and render settings) and `setup_maquette.py`, which imports
+the glTF (fps set first, so keys land on frames), turns toon Looks into Shader-to-RGB ramps and Ink outlines into
+Freestyle, adds the sun and the sky, binds camera cuts to markers and saves a .blend. CI renders a frame with it in
+Blender 4.2 LTS and 5.2 LTS. *Rejected:* writing .blend files (undocumented); USD (Blender reads it, but loses the
+Look); shipping the script separately (it must match the app that wrote the package).
+
+**D-136 — Walls are one solid from their centre line; openings are booleans.** The tapped corners are a centre line;
+both sides are offset by half the thickness with mitred corners (capped at four times the thickness), and the
+outline swept up the height: one closed solid, a ring for a closed room. Doors and windows cut a block square to the
+wall through its measured thickness. Floors are slabs under an outline (their top where it was drawn); stairs are a
+side profile swept across the width. Everything stays an editable mesh. *Rejected:* one object per wall segment
+(corners that don't meet); parametric walls (a second modelling system before 1.0).
+
+**D-137 — Zip entries are inflated in pure Swift.** 3MF files from slicers are deflated zips; Core must build and
+test on Linux, where Apple's Compression framework doesn't exist, so a small RFC 1951 decoder (stored, fixed and
+dynamic Huffman blocks) sits in Core. *Rejected:* zlib through a system module (another C dependency for every
+platform); refusing deflated files (every 3MF from another app).
+
+**D-138 — Homes for modelling II (LAYOUT.md).** What the pick can do (bevel, round, inset, shell) is in the Model
+tool's bar, beside grow and shrink; mirror, symmetry and the 3D-print check are in Model ▸ Shape; snapping, units,
+measuring, kept dimensions and the section view are Model ▸ **Precision** (was Snapping: M2 said measuring would join
+it); walls, floors, doors, windows and stairs are Model ▸ Add ▸ Building; array along a sketch is in the inspector's
+Array; the formats are a picker on Export's 3D model. No new button anywhere in the frozen layout. *Rejected:* a sixth
+making tool for building (the ≤ 5 rule); a separate Print panel (printing is shaping).
