@@ -1036,3 +1036,107 @@ measuring, kept dimensions and the section view are Model ▸ **Precision** (was
 it); walls, floors, doors, windows and stairs are Model ▸ Add ▸ Building; array along a sketch is in the inspector's
 Array; the formats are a picker on Export's 3D model. No new button anywhere in the frozen layout. *Rejected:* a sixth
 making tool for building (the ≤ 5 rule); a separate Print panel (printing is shaping).
+
+## Maquette 0.5 — M5, brushes & drawing guides
+
+**D-139 — One brush engine: Core plans the stamps, one Metal pipeline draws them.** A brush is a tip and a grain
+stamped along the stroke (Procreate's model). `BrushStroker` (Core, pure Swift, Linux-tested) turns Pencil samples
+into a stored path (streamline, pressure/tilt/speed dynamics) and a path into seeded stamps (spacing, jitter, scatter,
+count, tapers, fall-off, flow). One instanced-quad pipeline (`Brush.metal`) samples the tip and the grain for every
+target: billboards in the scene's shading pass for ink, a layer texture per blend mode for flipbooks, the stage's editor
+layer for the stroke under the Pencil, Brush Studio's pad and the library's previews. *Rejected:* a ribbon mesh with a
+brush shader (no stamps, so no scatter, rotation or count); Core Graphics for 2D (a second engine, CPU-bound); an
+engine per target.
+
+**D-140 — A stroke keeps its path, a brush key and a seed; a project freezes the brushes it uses.** Strokes store the
+smoothed path with each point's radius and opacity (the dynamics already applied), the project brush's key and the
+jitter seed, so a stroke draws the same in every frame and export, and erasing still splits it anywhere. The first
+stroke with a brush adds a frozen copy to `ProjectInfo.brushes` under a content key (`BrushKey`: a hash of its
+settings) with the new `setBrushes` command, in the same undo step; its pictures are copied into `assets/brushes/`.
+Editing a brush in the library makes a new key, so old strokes keep the old brush (Procreate's behaviour: what you drew
+stays drawn). Schema 7, with no-op migrations. Old strokes have no brush and draw with Ink Pen. *Rejected:* storing the
+stamps (megabytes per drawing); strokes pointing at library brushes (an edit would redraw finished work, and the
+project wouldn't open the same on another iPad); storing raw samples (dynamics would re-run on every frame).
+
+**D-141 — Procreate and Photoshop import, checked against real files (spike passed).** The spike read four real
+Procreate `.brush` files and two real `.brushset`s made from them (public GitHub repositories), and two real Photoshop
+`.abr` files (18 and 13 sampled tips, from a file-format research collection), in Swift on Linux. Findings: a `.brush`
+is a zip of `Brush.archive` (an `NSKeyedArchiver` binary plist of a `SilicaBrush`, 196 settings) with `Shape.png` and
+`Grain.png` when the brush has its own pictures, else `bundledShapePath`/`bundledGrainPath` naming Procreate's own; a
+`.brushset` is `brushset.plist` (name, brush folders) and a folder per brush. ABR 6 has `8BIM` sections: `samp` (tips:
+an id, 10 bytes of header in 6.1 or 264 in 6.2, bounds, depth, raw or PackBits rows) and `desc` (names, spacing,
+`sampledData` ids). Read with a pure-Swift binary plist reader (`BinaryPlist`, `KeyedArchive`) and the existing zip
+reader. Mapping (Procreate → Maquette): plotSpacing s → spacing 0.02 + 1.98 s²; plotSmoothing / moving average →
+streamline; plotJitter → jitter × 2; dynamicsFalloff → fall-off; pencil taper lengths × 0.4 → tapers, taper size and
+opacity as they are; shapeRoundness; shapeRotation × 180°; oriented → turns with the stroke; shapeScatter → rotation
+jitter; shapeCount → 1 + 15 c; flip jitters; inverted; textureScale → grain scale 0.05 + 2 t; grainDepth;
+textureMovement ≥ 0.5 → rolling, else texturized; pressure size and opacity, the pressure size curve, tilt size and
+opacity, speed size and opacity, size and opacity jitter; glazed flow → flow; wet edges. Not mapped (no counterpart
+yet): colour dynamics, smudge and erase settings, dual brush, wet mix, bleed, height/metallic/roughness. Bundled
+pictures become the nearest built-in by name (Hard/Point → hard round, Soft/Air → soft round, Pencil, Chalk / Charcoal /
+Grit, Bristle / Acrylic / Oil, Splat / Spray, Flat; grains Canvas, Charcoal, Paper, else Noise). Photoshop: sampled
+tips (grey, box-filtered to 512 px) with their names and spacing; computed brushes and Photoshop's dynamics are left
+out. Fixtures are made from scratch in those formats by `Tools/make_brush_fixtures.py` (the repository is public:
+nobody's brushes are committed). *Rejected:* Foundation's unarchiver (Procreate's classes don't exist, and Linux has no
+keyed-archive UIDs); committing the real files (their licences don't allow it).
+
+**D-142 — Stamps add up to the stroke's opacity.** About 1 / spacing stamps cover any point, so a half-opacity stroke
+of plain stamps would pile up nearly solid. Each stamp's opacity is 1 − (1 − a)^spacing, so they add up to a; flow then
+multiplies every stamp, so low flow still builds where the Pencil goes over the same place (Procreate's opacity and
+flow). *Rejected:* drawing each stroke into its own layer with max blending (a render pass per stroke, every frame).
+
+**D-143 — Ink shows its stamps; its ribbon stays for picking, shadows and export.** In the scene, each stroke's stamps
+are camera-facing billboards in the stroke's space (the drawing's matrix moves them), drawn at the end of the shading
+pass, depth-tested without writing depth. The camera-facing ribbon from 2.0 still draws into the prepass (the ID buffer
+picks it, the selection outline follows it), casts the shadow and is what glTF, USDZ and the Blender package export;
+onion-skin ghosts draw it tinted. Stamp buffers are cached per path, brush and seed. *Rejected:* every stamp in the ID
+buffer (an alpha-tested prepass of thousands of quads for a pick); exporting stamps (no 3D file format carries them).
+
+**D-144 — Flipbooks are stamped into a layer per blend mode.** The renderer stamps each blend mode's drawings into a
+layer at the output size; the composite blends multiply, screen and add over the shot, then lays the normal layer under
+the overlays and captions (where 2.0 drew normal flipbooks, inside the overlay image beneath the titles). A see-through
+track paints into a scratch layer and is laid down at its opacity, so its own strokes don't darken where they cross.
+Filled shapes (drawn effects) stay flat triangles with a rim of stamps; drawn effects' lines now draw with Ink Pen
+(soft tapered ends). *Rejected:* keeping Core Graphics for flipbooks (two engines; the stage repainted them on the CPU).
+
+**D-145 — The stroke under the Pencil is the stroke that's kept.** While drawing, the stage stamps the same path with
+the same brush and the seed chosen at touch-down, in its editor layer, with UIKit's predicted touches appended (never
+kept); a symmetry guide's copies show live too. Ink stamps are depth-tested in the world, flipbook stamps lie on the
+screen. *Rejected:* the flat preview mesh and the SwiftUI path (a frame behind, and not what lands).
+
+**D-146 — Latency is measured from the touch to the GPU finishing the frame, plus one refresh.** Each live stroke
+sample's touch timestamp is compared with the moment its frame's command buffer completes, plus one refresh of the
+screen (the frame appears at the next one): an upper bound, because this SDK (Xcode 27) gives a drawable no presented
+time. A signpost marks each measured sample; Diagnostics ▸ Apple Pencil shows the median and 95th percentile, and every
+tenth stroke writes them to the log. The device checklist records the numbers. *Rejected:* the drawable's presented
+handler and presented time (unavailable to Swift in this SDK).
+
+**D-147 — The built-in brushes are drawn by code.** Tips (hard and soft round, pencil, chalk, bristles, flat,
+splatter) and grains (paper, canvas, noise, charcoal) are generated by `BrushImages` (value noise that tiles): no
+bitmap of anyone else's ships, and every device draws the same bytes. Ten brushes in three sets (Inking, Sketching,
+Painting); Ink Pen is the default for ink and flipbooks and draws 2.0's line. *Rejected:* bundling PNG tips (made or
+licensed: more to ship and to keep consistent).
+
+**D-148 — The brush library lives on the iPad; sets travel as files.** `Brushes/brushes.json` (a versioned envelope)
+beside content-keyed PNGs, next to the model library. Built-in brushes can be edited and reset; imported brushes reset
+to how they arrived; made and imported ones can be deleted; sets are made, renamed, deleted and shared as a
+`.maquettebrushes` file (a zip of the set and its pictures). Procreate and Adobe publish no type identifiers, so
+`.brushset`, `.brush` and `.abr` are declared by extension under Maquette's own imported types; they open from Files,
+AirDrop and Import. *Rejected:* the library in iCloud (it follows the projects' storage when that arrives for both);
+sharing as `.brushset` (Procreate's archive can't hold Maquette's settings).
+
+**D-149 — Drawing guides: every kind on the frame, grid/isometric/symmetry on the guide plane.** Flipbooks get a 2D
+grid, isometric, 1-, 2- and 3-point perspective and symmetry (vertical, horizontal, quadrant, radial with optional
+mirror) over the frame; ink drawn on a guide plane gets the grid, isometric and symmetry laid on the plane (the stage is
+already in real perspective, so vanishing points would only fight it). Drawing Assist straightens a stroke along the
+guide direction nearest the way it was drawn (from where it began to its farthest point); symmetry copies are kept with
+the stroke as one undo step. Both guides are how the project shows, so they live in `workspace.json`, outside undo.
+Perspective is set by its horizon, how far apart the points are and where the third one sits. Solid shapes keep their
+own Mirror. *Rejected:* dragging vanishing points on the stage (a second gesture grammar while the Pencil draws);
+symmetry for solid shapes (Mirror already does it).
+
+**D-150 — Homes for brushes and guides (LAYOUT.md).** The brush a tool holds is a row at the top of Draw ▸ Ink and
+Draw ▸ Flipbook; tapping it opens the brush library sheet, and Brush Studio opens from a brush's menu inside it. The
+drawing guides are a section of the same pages. Diagnostics gains Apple Pencil. No new button anywhere in the frozen
+layout; Paint (M6) opens the same sheet for its own tool. *Rejected:* a brush button in the sidebar (the sidebar holds
+the two context sliders and undo); a Brushes item in Actions (brushes belong to the tool that draws).

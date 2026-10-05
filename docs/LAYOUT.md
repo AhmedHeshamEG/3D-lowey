@@ -81,7 +81,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Paste a Scene Script | `Actions › Paste script` |
 | Gestures | `Actions › Gestures` |
 | The tour | `Actions › Tour` |
-| Diagnostics, the benchmark | `Actions › Diagnostics` |
+| Diagnostics, the benchmark, the Pencil's touch-to-screen latency | `Actions › Diagnostics` |
 | Settings | `Actions › Settings` |
 
 ### Look
@@ -152,8 +152,15 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Control | Walk |
 |---|---|
 | Ink: draw, erase, select strokes | `Draw › tool-ink › ink-erase` |
+| The brush ink draws with (opens the brush library) | `Draw › tool-ink › brush-ink` |
+| Ink's drawing guide on the guide plane: grid, isometric, symmetry; Drawing assist | `Draw › tool-ink › drawing-guide` |
 | Solid shape: tube, ribbon, extrude, lathe; guide; mirror | `Draw › tool-draw › Tube` |
 | Flipbook: draw, erase, tracks | `Draw › tool-flipbook › flipbook-tracks` |
+| The brush flipbooks draw with (opens the brush library) | `Draw › tool-flipbook › brush-flipbook` |
+| The frame's drawing guide: 2D grid, isometric, 1-, 2- and 3-point perspective, symmetry; Drawing assist | `Draw › tool-flipbook › drawing-guide` |
+| Brush library: sets, choose a brush, new set, share a set, import Procreate (.brushset, .brush) and Photoshop (.abr) brushes | the brush row's sheet |
+| A brush's menu: Brush Studio, duplicate, reset, rename, move to a set, delete | touch and hold a brush in the library |
+| Brush Studio: stroke, shape, grain, dynamics, Pencil, rendering, about; the pad to try it | a brush's menu ▸ Edit in Brush Studio |
 
 ### Paint
 

@@ -15,11 +15,32 @@ reference and stays.
 | The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
 | Modelling II (bevel, round, inset, shell, mirror and live symmetry, array along a path, corner/edge/midpoint/face snapping, measure, section view, kept dimensions, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, the Blender package) | **0.4.** FBX isn't offered (D-133). |
-| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | M5. Today: 2.0's ink strokes and flipbooks. |
+| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink and flipbooks draw with it; painting on models (M6) and the Schizzo board (M9) will. |
 | Painting on models | M6 |
 | One skeleton system, draw a bone, one-tap human rig, 2D puppets | M7. Today: 2.0's Cast (Blob, Puppet, Rigged). |
 | Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, 1.0 polish | M8 |
 | Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | Free updates after 1.0 |
+
+### Brushes and drawing guides (0.5)
+
+- **One brush engine** (D-139) draws ink in the scene, flipbooks over the shot and the stroke under the Pencil: a tip
+  and a grain stamped along the stroke, with spacing, StreamLine, jitter, fall-off, tapers, pressure/tilt/speed
+  dynamics, flow, wet edges and a soft edge. What's drawn while the Pencil moves is what's kept (UIKit's predicted
+  touches draw ahead, the stroke's own seed keeps its jitter).
+- **Brushes**: ten built-in brushes in three sets (Inking: Ink Pen, Technical Pen, Brush Pen, Marker; Sketching:
+  Pencil, Charcoal; Painting: Dry Brush, Watercolour, Soft Airbrush, Splatter). Their tips and grains are drawn by code.
+  Draw ▸ Ink and Draw ▸ Flipbook each hold a brush; the row at the top opens the library.
+- **The brush library**: sets (make, rename, delete, share as a `.maquettebrushes` file), choose a brush, touch and hold
+  for Brush Studio, duplicate, reset, rename, move to a set, delete. **Import** Procreate `.brushset` and `.brush` files
+  and Photoshop `.abr` brushes (from the library, or Open in from Files and AirDrop); the mapping is D-141.
+- **Brush Studio**: every setting on seven pages (Stroke, Shape, Grain, Dynamics, Pencil, Rendering, About), your own
+  picture as a tip or grain, and a pad to try the brush as it changes.
+- **Strokes keep their brush**: a project carries a frozen copy of each brush it used, so editing the library never
+  redraws finished work and a project opens the same on another iPad (D-140).
+- **Drawing guides** (D-149): over the frame for flipbooks a 2D grid, isometric, 1-, 2- and 3-point perspective, and
+  symmetry (vertical, horizontal, quadrant, radial with mirror); on the guide plane for ink a grid, isometric and
+  symmetry. Drawing Assist straightens strokes along the guide; symmetry mirrors them as you draw.
+- **Latency**: Diagnostics ▸ Apple Pencil shows how long a Pencil sample takes to reach the screen (D-146).
 
 ### Nothing is ever lost (0.1)
 
@@ -217,8 +238,8 @@ Comic, Collage, Old film, plus sliders) and **Finish ▸ Outline** work over eve
 
 - **Primitives** (cube, sphere, cylinder, cone, plane, torus, ramp) with a small **bevel** by default, pivoted at the
   centre of their base.
-- **Ink strokes**: pressure ribbons drawn with the Pencil on the guides; select (tap or loop), move, erase, smooth and
-  change width; strokes are objects, animatable and able to write themselves on.
+- **Ink strokes**: Pencil strokes in 3D on the guides, drawn with a brush (0.5: stamps turned to the camera); select
+  (tap or loop), move, erase, smooth and change width; strokes are objects, animatable and able to write themselves on.
 - **Solid shapes**: tube, ribbon, extrude, lathe on guides (facing me, ground, front, side, box, cylinder, sphere, on
   an object), mirror, Pencil-only, QuickShape.
 - **The Kit**: about 350 CC0 models (Kenney, Quaternius) in nine Sets, at real size, with the surfaces things stand on
@@ -252,7 +273,7 @@ copy / paste / mirror / reverse / faster / slower; track groups; per-object fram
 motion paths with draggable key dots; 3D onion skin; a graph editor; smears on fast moves; multi-select of clips with
 the Pencil lasso.
 
-**Flipbooks**: frame-by-frame drawing over the shot, anchored to the camera or an object, with onion skin, holds,
+**Flipbooks**: frame-by-frame drawing with a brush over the shot, anchored to the camera or an object, with onion skin, holds,
 blend modes (normal, multiply, screen, add) and several tracks; drawn FX (speed lines, impact burst, sweat drop,
 sparkle, smear) placed on a word.
 

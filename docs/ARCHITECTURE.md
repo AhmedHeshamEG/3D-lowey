@@ -35,9 +35,9 @@ flowchart TD
 
 | Module | Imports | What it holds | Tests |
 |---|---|---|---|
-| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
+| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush engine's arithmetic and brush import, the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
 | **Manifold** (`Packages/Manifold`) | the C++ standard library | Manifold 3.5.4 (Apache-2.0) as a C++17 target, single-threaded, and `ManifoldBridge.h`: boolean and validate in plain C, so Swift needs no C++ interop. `VENDORED.md` says how to update it | Linux and the iPad simulator (its own tests; LoweyCore's boolean tests) |
-| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2, the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
+| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2 (with the brush engine's stamps), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
 | **LoweyFeatures** | Core, Engine, SwiftUI, hmm-kit's Design / Bridge / Documents / Diagnostics | The editor. `Workspace/` is shared by every feature (app and editor models, the session API, controls); each other folder is one feature's views; `Shell/` composes them | iPad simulator: bridge security, editor flows |
 | **App** | Features, ActivityKit, BackgroundTasks | `LoweyApp`, the export Live Activity, the widget extension | UI smoke tests |
 
@@ -136,6 +136,41 @@ Everything is Core (pure Swift, Linux-tested) except reading USDZ (ModelIO) and 
 Engine's `ModelExport` hands Core as `GLTFScene.LocalPart`s. 3MF reading uses Core's `Inflate` (D-137). CI checks the
 M3 block's STL and 3MF with trimesh and renders a frame of a Blender package in Blender 4.2 and 5.2 (the `interop`
 job, from files LoweyCore's tests write to `ACCEPTANCE_DIR`).
+
+## Brushes (0.5)
+
+```mermaid
+flowchart LR
+    Pencil[StrokeGestureRecognizer<br/>coalesced + predicted, pressure, tilt, time] --> SG[StageGestures+Brush]
+    SG --> Guide[EditorModel+Brushes<br/>GuideAssist: straighten · symmetry copies]
+    Guide --> Path[BrushStroker.path<br/>Core: streamline, dynamics]
+    Path --> Dabs[BrushStroker.dabs<br/>Core: spacing, jitter, tapers, flow · seeded]
+    Dabs --> Live[EditorScene.liveStroke<br/>editor layer]
+    Path --> Commit[commitInkStrokes / commitFlipbookStrokes<br/>+ setBrushes on first use]
+    Commit --> Doc[Document<br/>strokes: path + brush key + seed<br/>project.brushes: frozen copies]
+    Doc --> Ink[SceneCompiler+Ink<br/>stamps per stroke, cached]
+    Doc --> Flip[Renderer+Flipbooks<br/>a layer per blend mode]
+    Ink & Flip & Live --> Stamper[BrushStamper<br/>Brush.metal: one instanced quad per stamp]
+```
+
+- **Core `Brushes/`**: `Brush` (shape, grain, stroke, dynamics, rendering, about) and `BrushCurve`; `BrushStroker` (the
+  path and the stamps, generic over `Vec2` and `Vec3`); `BrushImages` (the built-in tips and grains, drawn by code) and
+  `GreyPNG`; `BuiltInBrushes` (ten brushes, three sets); `BrushLibrary` + `BrushLibraryStore` (the device's library) and
+  `BrushKey` (content keys for brushes and pictures); `BrushResolver` (a stroke's brush from the project's copies);
+  `DrawingGuide`, `GuideAssist`, `GuideLines`; `StrokeLatency`. `Import/`: `BinaryPlist` + `KeyedArchive`,
+  `ProcreateBrushImport`, `ABRBrushImport`, `BrushSetFile` (`.maquettebrushes`) and `BrushFileImport` (by extension).
+- **Engine `Render/Brushes/`**: `BrushStamper` (stamp buffers cached per path, brush and seed; `encode` with whatever
+  pipeline is set), `BrushTextureCache` (grey textures with a CPU mip chain; imported pictures come through the frame's
+  `mediaImage` as `brushes/<hash>.png`), `BrushPreviewRenderer` (offscreen pictures: the library's previews, Brush
+  Studio's pad, the goldens). Pipelines: `brushScene` (the shading pass, MSAA, depth-tested), `brushEditor` (the editor
+  layer), `brushLayer`, `brushFill`, `brushCompose` (flipbook layers). Ink keeps its ribbon in the prepass and shadows
+  (`DrawItem.brushDrawn`); its stamps are `RenderScene.brushes`, drawn at the end of the shading pass. Flipbooks reach
+  the renderer as `FrameRequest.flipbooks` (pixel layouts) and become layer textures the composite blends.
+- **Features**: `BrushModel` (the library, the brush each tool holds, imports, shares, previews) on `AppModel`;
+  `EditorModel+Brushes` (frozen copies, guides, seeds); `StageGestures+Brush` (live strokes); `Draw/BrushLibrarySheet`,
+  `Draw/BrushStudioView` + `BrushStudioPages`, `Draw/BrushAndGuideControls`. The sheet is `EditorSheet.brushes`.
+- **Latency**: `StageView.measureLatency` (touch timestamp → GPU completion + one refresh) into `StrokeLatency`;
+  Diagnostics ▸ Apple Pencil, and the log every tenth stroke.
 
 ## LoweyRender 2
 
