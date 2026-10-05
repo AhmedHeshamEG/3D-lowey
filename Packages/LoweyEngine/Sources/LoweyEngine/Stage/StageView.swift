@@ -96,7 +96,8 @@ public final class StageView: MTKView {
     public func setViewpoint(_ newValue: Viewpoint, notify: Bool = true) {
         var value = newValue
         value.pitch = min(max(value.pitch, -89.9), 89.9)
-        value.distance = min(max(value.distance, 0.2), 400)
+        // Close enough for a millimetre part (3 cm), far enough for a town.
+        value.distance = min(max(value.distance, 0.03), 400)
         viewpoint = value
         if notify { onCameraChanged?(value) }
         redraw()
@@ -136,7 +137,8 @@ public final class StageView: MTKView {
         var target = viewpoint
         if let bounds {
             target.target = bounds.center
-            let radius = max(bounds.size.length / 2, 0.25)
+            // Down to a centimetre: double-tap frames a small printed part too.
+            let radius = max(bounds.size.length / 2, 0.01)
             target.distance = radius / sin(viewpoint.fieldOfView * .pi / 360) * 1.1
         } else {
             target.target = Vec3(0, 0.5, 0)
