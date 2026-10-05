@@ -158,6 +158,15 @@ final class BrushEngineTests: XCTestCase {
         for y in stride(from: 0.0, to: 1.0, by: 0.1) {
             XCTAssertEqual(noise.value(0, y), noise.value(1, y), accuracy: 1e-12)
         }
+        // Every built-in grain's opposite edges match closely (no seam where the tile repeats).
+        for grain in BuiltInBrushImage.allCases where grain.isGrain {
+            let image = BrushImages.image(grain)
+            let size = image.width
+            let seam = (0 ..< size).map { abs(Int(image.pixels[$0 * size]) - Int(image.pixels[$0 * size + size - 1])) }.reduce(0, +)
+            let inside = (0 ..< size).map { abs(Int(image.pixels[$0 * size + size / 2]) - Int(image.pixels[$0 * size + size / 2 + 1])) }
+                .reduce(0, +)
+            XCTAssertLessThan(seam, inside * 3 + size * 4, "\(grain) has a seam")
+        }
     }
 
     func testGreyPNGDecodesBack() throws {

@@ -108,10 +108,11 @@ public enum BrushImages {
             let noise = ValueNoise(seed: 7, cells: 128)
             return GreyImage(width: size, height: size) { x, y in noise.value(x, y) }
         case .charcoal:
-            let streaks = ValueNoise(seed: 13, cells: 8)
+            // Long streaks: few cells across x, many down y (whole multiples, so the grain still tiles).
+            let streaks = ValueNoise(seed: 13, cells: 4)
             let fine = ValueNoise(seed: 17, cells: 96)
             return GreyImage(width: size, height: size) { x, y in
-                smooth(0.25, 0.75, 0.6 * streaks.value(x * 0.25, y * 8) + 0.4 * fine.value(x, y))
+                smooth(0.25, 0.75, 0.6 * streaks.value(x, y * 16) + 0.4 * fine.value(x, y))
             }
         default:
             let noise = ValueNoise(seed: 3, cells: 32)
@@ -121,12 +122,13 @@ public enum BrushImages {
 
     private static func bristles() -> GreyImage {
         var random = SeededRandom(seed: 31)
-        let hairs = (0 ..< 28).map { _ in (x: 0.08 + random.unit() * 0.84, width: 0.006 + random.unit() * 0.012, ink: 0.45 + random.unit() * 0.55) }
+        // Hairs side by side across the tip (y), so stamped along the stroke (x) they draw parallel streaks.
+        let hairs = (0 ..< 28).map { _ in (y: 0.08 + random.unit() * 0.84, width: 0.006 + random.unit() * 0.012, ink: 0.45 + random.unit() * 0.55) }
         return GreyImage(width: tipSize, height: tipSize) { x, y in
-            let body = 1 - smooth(0.42, 0.5, abs(y - 0.5) * (1 + 0.3 * abs(x - 0.5)))
+            let body = 1 - smooth(0.42, 0.5, abs(x - 0.5) * (1 + 0.3 * abs(y - 0.5)))
             var ink = 0.0
             for hair in hairs {
-                ink = max(ink, hair.ink * (1 - smooth(hair.width * 0.5, hair.width, abs(x - hair.x))))
+                ink = max(ink, hair.ink * (1 - smooth(hair.width * 0.5, hair.width, abs(y - hair.y))))
             }
             return ink * body
         }
