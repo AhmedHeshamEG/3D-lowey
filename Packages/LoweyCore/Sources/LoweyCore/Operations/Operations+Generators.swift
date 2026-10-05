@@ -33,6 +33,8 @@ public extension Operations {
                 if faceCenter { t.rotation = (yaw * base.rotation).normalized }
                 transforms.append(t)
             }
+        case let .path(count, points, closed, align):
+            transforms = PathSampler.transforms(along: points, closed: closed, count: count, from: base, align: align)
         }
         return makeCopies(of: source, object: object, transforms: transforms, in: scene, groupName: "\(object.name) array")
     }

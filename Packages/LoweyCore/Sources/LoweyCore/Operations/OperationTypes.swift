@@ -5,6 +5,9 @@ public enum ArrayLayout: Hashable, Sendable, Codable {
     case line(count: Int, step: Vec3)
     case grid(columns: Int, rows: Int, spacingX: Double, spacingZ: Double)
     case circle(count: Int, radius: Double, faceCenter: Bool)
+    /// Copies spaced evenly along a path in the world (a sketch's curve), starting where the object is; `align`
+    /// turns each copy with the path.
+    case path(count: Int, points: [Vec3], closed: Bool, align: Bool)
 }
 
 /// Scatter settings. Defaults give good results with no tweaking.
