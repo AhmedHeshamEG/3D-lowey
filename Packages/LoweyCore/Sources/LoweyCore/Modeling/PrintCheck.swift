@@ -20,16 +20,28 @@ public struct PrintReport: Hashable, Sendable {
 
     public var isReady: Bool { isWatertight && thinFaces.isEmpty && fitsBed != false }
 
-    /// One sentence per problem, in the order to fix them.
-    public var problems: [String] {
-        var lines: [String] = []
-        if openEdges > 0 { lines.append("It has holes in its surface (\(openEdges) open edges).") }
-        if tangledEdges > 0 { lines.append("Some edges are shared by more than two faces (\(tangledEdges)).") }
-        if insideOut { lines.append("Some faces point inward.") }
-        if !thinFaces.isEmpty { lines.append("Some walls are thinner than this printer can print.") }
-        if fitsBed == false { lines.append("It's bigger than the printer's build volume.") }
-        return lines
+    /// The problems, in the order to fix them (the app words them).
+    public var problems: [PrintProblem] {
+        var found: [PrintProblem] = []
+        if openEdges > 0 { found.append(.holes(openEdges)) }
+        if tangledEdges > 0 { found.append(.tangledEdges(tangledEdges)) }
+        if insideOut { found.append(.insideOut) }
+        if !thinFaces.isEmpty { found.append(.thinWalls) }
+        if fitsBed == false { found.append(.tooBig) }
+        return found
     }
+}
+
+/// What stops a shape printing well.
+public enum PrintProblem: Hashable, Sendable {
+    /// Open edges (holes in the surface).
+    case holes(Int)
+    /// Edges shared by more than two faces.
+    case tangledEdges(Int)
+    case insideOut
+    case thinWalls
+    /// Bigger than the printer's build volume.
+    case tooBig
 }
 
 /// Checking and repairing shapes for 3D printing.

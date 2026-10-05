@@ -208,6 +208,12 @@ fragment ShadeOut lw_shade(SurfaceVaryings in [[stage_in]], bool frontFacing [[f
         out.light = 1.0;
         return out;
     }
+    if (!frontFacing && lw_sectionOn(frame)) {
+        // Inside a cut solid: the cut face, flat, in the object's own colour a little darker, so it reads as solid.
+        out.color = float4(object.baseColor.rgb * 0.62, 1.0);
+        out.light = 1.0;
+        return out;
+    }
     SurfaceInput s = lw_surfaceInput(in, object, frame, look, albedo, ao, shadowMap, frontFacing);
     float2x4 shaded = lw_shadeSurface(s, frame, look, lights);
     out.color = shaded[0];

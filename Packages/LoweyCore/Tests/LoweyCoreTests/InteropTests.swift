@@ -196,3 +196,37 @@ final class BlenderPackageTests: XCTestCase {
         }
     }
 }
+
+/// Make editable on a placed library model.
+final class EditableImportTests: XCTestCase {
+    func testAPlacedModelBecomesAGroupOfEditableParts() throws {
+        let box = EditableMesh.box(min: .zero, max: Vec3(1, 1, 1)).renderMesh()
+        let model = ImportedModel(parts: [ImportedPart(name: "Seat", mesh: box, material: 0), ImportedPart(name: "Back", mesh: box, material: 1)],
+                                  materials: [ImportedMaterial(name: "Red", baseColor: RGBA(1, 0, 0)), ImportedMaterial(name: "Blue")])
+        var ids = IDFactory.sequential("p")
+        let parts = try ModelingOperations.editableParts(of: model, ids: &ids)
+        XCTAssertEqual(parts.objects.count, 2)
+        guard case let .mesh(seat) = parts.objects[0].kind else { return XCTFail("a mesh") }
+        XCTAssertEqual(seat.faces.count, 6)
+        XCTAssertEqual(parts.objects[0].color?.resolved(in: .empty), RGBA(1, 0, 0))
+
+        let chair = SceneObject(id: "chair", name: "Chair", kind: .asset("kit.chair"), transform: Transform(position: Vec3(2, 0, 0)))
+        let lamp = SceneObject(id: "lamp", name: "Lamp", kind: .light(.point))
+        let slide = Track(id: "t", target: "chair", property: .position, keyframes: [Keyframe(time: 0, value: .vec3(.zero))])
+        let scene = Scene(id: "s", name: "S", objects: ["lamp": lamp, "chair": chair], roots: ["lamp", "chair"], timeline: Timeline(tracks: [slide]))
+        var document = Document(project: ProjectInfo(id: "p", name: "P", created: Date(timeIntervalSince1970: 0),
+                                                     modified: Date(timeIntervalSince1970: 0), sceneOrder: ["s"], sceneNames: ["s": "S"]),
+                                scene: scene)
+        let command = try XCTUnwrap(ModelingOperations.replace("chair", withParts: parts, in: scene))
+        let inverse = try command.apply(to: &document).inverse
+        let group = try XCTUnwrap(document.scene.objects["chair"])
+        XCTAssertEqual(group.kind, .group)
+        XCTAssertEqual(group.children.count, 2)
+        XCTAssertEqual(document.scene.roots, ["lamp", "chair"], "in the same place in the list")
+        XCTAssertEqual(document.scene.worldTransform(of: group.children[0]).position.x, 2, accuracy: 1e-12)
+        XCTAssertEqual(document.scene.timeline.tracks.first?.target, "chair", "its keys still point at it")
+        _ = try inverse.apply(to: &document)
+        XCTAssertEqual(document.scene.objects["chair"]?.kind, .asset("kit.chair"))
+        XCTAssertEqual(document.scene.objects.count, 2)
+    }
+}

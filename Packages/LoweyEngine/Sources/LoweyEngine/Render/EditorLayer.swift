@@ -47,6 +47,8 @@ public struct EditorScene {
     public var pointer: PencilPointer?
     /// Radians per pixel (2·tan(fov/2) / height in pixels), for the grid's one-pixel lines.
     public var pixelAngle: Float = 0.0012
+    /// The section view: what's beyond the plane is cut away on the stage (never in exports, which have no editor).
+    public var section: SectionPlane?
 
     public init() {}
 

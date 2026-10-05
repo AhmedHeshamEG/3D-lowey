@@ -49,6 +49,7 @@ struct FrameUniforms {
     float4 fog;              // linear rgb, w = density (1 / distance, 0 = off)
     float4 cascades;         // x = far of cascade 0, y = far of cascade 1, z = 1 / shadow map size, w = frame index
     float4 misc;             // x = light count, y = near plane, z = far plane, w = orthographic (1) or not
+    float4 section;          // the stage's section view: xyz = normal, w = offset (normal · p > offset is cut); 0 = off
 };
 
 struct LookUniforms {
@@ -106,6 +107,36 @@ struct SurfaceVaryings {
     float shadowBias;
     uint objectIndex [[flat]];
 };
+
+/// What the surface vertex stages emit: the varyings plus the section view's clip distance (the fragment stages
+/// read `SurfaceVaryings`, a subset).
+struct SurfaceOut {
+    float4 position [[position]];
+    float3 worldPosition;
+    float3 worldNormal;
+    float3 viewPosition;
+    float2 uv;
+    float shadowBias;
+    uint objectIndex [[flat]];
+    float clip [[clip_distance]] [1];
+};
+
+static inline bool lw_sectionOn(constant FrameUniforms &frame) {
+    return dot(frame.section.xyz, frame.section.xyz) > 0.5;
+}
+
+static inline SurfaceOut lw_clipped(SurfaceVaryings v, constant FrameUniforms &frame) {
+    SurfaceOut out;
+    out.position = v.position;
+    out.worldPosition = v.worldPosition;
+    out.worldNormal = v.worldNormal;
+    out.viewPosition = v.viewPosition;
+    out.uv = v.uv;
+    out.shadowBias = v.shadowBias;
+    out.objectIndex = v.objectIndex;
+    out.clip[0] = lw_sectionOn(frame) ? frame.section.w - dot(frame.section.xyz, v.worldPosition) : 1.0;
+    return out;
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Colour

@@ -135,21 +135,32 @@ final class ExportTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
     }
 
-    func testSceneExportsAsGLBAndUSDZ() throws {
+    func testSceneExportsInEveryFormat() throws {
         let (info, scenes) = try EnigmaSample.build()
         let cave = scenes[2]
-        let meshes = ModelExport.meshes(nil, scene: cave, look: cave.look ?? info.look, catalog: .empty, models: ModelLibrary())
+        let look = cave.look ?? info.look
+        let meshes = ModelExport.meshes(nil, scene: cave, look: look, catalog: .empty, models: ModelLibrary())
         XCTAssertGreaterThan(meshes.count, 20)
-        let glb = ModelExport.data(.glb, meshes: meshes)
-        XCTAssertEqual(glb.prefix(4), Data("glTF".utf8))
         let folder = try ImageChecks.temporaryFolder("model")
-        try glb.write(to: folder.appendingPathComponent("cave.glb"))
-        let usdz = ModelExport.data(.usdz, meshes: meshes)
+        for format in ModelExportFormat.allCases {
+            let files = ModelExport.files(format, ids: nil, scene: cave, look: look, preset: .ink, catalog: .empty, models: ModelLibrary(),
+                                          name: "cave")
+            XCTAssertFalse(files.isEmpty, format.title)
+            for file in files {
+                XCTAssertGreaterThan(file.data.count, 100, file.name)
+                try file.data.write(to: folder.appendingPathComponent(file.name))
+            }
+        }
+        let glb = try XCTUnwrap(ModelExport.files(.glb, ids: nil, scene: cave, look: look, preset: .ink, catalog: .empty, name: "cave").first).data
+        XCTAssertEqual(glb.prefix(4), Data("glTF".utf8))
+        // The .glb keeps the scene's objects as nodes: it reads back as editable objects.
+        var ids = IDFactory.sequential("back")
+        let back = try GLTFSceneReader.read(glb, ids: &ids)
+        XCTAssertGreaterThan(back.fragment.objects.count, 20)
+        let usdz = try XCTUnwrap(ModelExport.files(.usdz, ids: nil, scene: cave, look: look, preset: .ink, catalog: .empty, name: "cave").first).data
         XCTAssertEqual(usdz.prefix(2), Data("PK".utf8), "a zip package")
-        XCTAssertGreaterThan(usdz.count, 1000)
-        // The .glb reads back through the importer as the same number of parts.
-        let model = try GLTFMeshReader.model(data: glb)
-        XCTAssertEqual(model.parts.count, meshes.count)
+        let obj = ModelExport.files(.obj, ids: nil, scene: cave, look: look, preset: .ink, catalog: .empty, name: "cave")
+        XCTAssertEqual(obj.map(\.name), ["cave.obj", "cave.mtl"])
     }
 }
 

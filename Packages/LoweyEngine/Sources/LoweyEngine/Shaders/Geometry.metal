@@ -34,16 +34,16 @@ static inline SurfaceVaryings lw_surface(float4 local, float3 localNormal, float
     return out;
 }
 
-vertex SurfaceVaryings lw_vertexStatic(VertexIn in [[stage_in]], uint instance [[instance_id]],
+vertex SurfaceOut lw_vertexStatic(VertexIn in [[stage_in]], uint instance [[instance_id]],
                                         constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
                                         constant FrameUniforms &frame [[buffer(LW_FRAME)]]) {
     constant ObjectUniforms &object = objects[instance];
     SurfaceVaryings out = lw_surface(float4(in.position, 1.0), in.normal, in.uv, in.shadowBias, object, frame);
     out.objectIndex = instance;
-    return out;
+    return lw_clipped(out, frame);
 }
 
-vertex SurfaceVaryings lw_vertexSkinned(SkinnedVertexIn in [[stage_in]], uint instance [[instance_id]],
+vertex SurfaceOut lw_vertexSkinned(SkinnedVertexIn in [[stage_in]], uint instance [[instance_id]],
                                          constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
                                          constant FrameUniforms &frame [[buffer(LW_FRAME)]],
                                          constant float4x4 *palette [[buffer(LW_JOINTS)]]) {
@@ -51,7 +51,7 @@ vertex SurfaceVaryings lw_vertexSkinned(SkinnedVertexIn in [[stage_in]], uint in
     Skinned skinned = lw_skin(in.position, in.normal, in.joints, in.weights, palette, object.ids.w);
     SurfaceVaryings out = lw_surface(skinned.position, skinned.normal, in.uv, in.shadowBias, object, frame);
     out.objectIndex = instance;
-    return out;
+    return lw_clipped(out, frame);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -65,17 +65,17 @@ static inline SurfaceVaryings lw_hull(SurfaceVaryings out, float width, constant
     return out;
 }
 
-vertex SurfaceVaryings lw_vertexHull(VertexIn in [[stage_in]], uint instance [[instance_id]],
+vertex SurfaceOut lw_vertexHull(VertexIn in [[stage_in]], uint instance [[instance_id]],
                                       constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
                                       constant FrameUniforms &frame [[buffer(LW_FRAME)]],
                                       constant float &width [[buffer(LW_CASCADE)]]) {
     constant ObjectUniforms &object = objects[instance];
     SurfaceVaryings out = lw_hull(lw_surface(float4(in.position, 1.0), in.normal, in.uv, 0.0, object, frame), width, frame);
     out.objectIndex = instance;
-    return out;
+    return lw_clipped(out, frame);
 }
 
-vertex SurfaceVaryings lw_vertexHullSkinned(SkinnedVertexIn in [[stage_in]], uint instance [[instance_id]],
+vertex SurfaceOut lw_vertexHullSkinned(SkinnedVertexIn in [[stage_in]], uint instance [[instance_id]],
                                              constant ObjectUniforms *objects [[buffer(LW_OBJECTS)]],
                                              constant FrameUniforms &frame [[buffer(LW_FRAME)]],
                                              constant float4x4 *palette [[buffer(LW_JOINTS)]],
@@ -84,7 +84,7 @@ vertex SurfaceVaryings lw_vertexHullSkinned(SkinnedVertexIn in [[stage_in]], uin
     Skinned skinned = lw_skin(in.position, in.normal, in.joints, in.weights, palette, object.ids.w);
     SurfaceVaryings out = lw_hull(lw_surface(skinned.position, skinned.normal, in.uv, 0.0, object, frame), width, frame);
     out.objectIndex = instance;
-    return out;
+    return lw_clipped(out, frame);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -145,8 +145,9 @@ fragment PrepassOut lw_prepassGround(SurfaceVaryings in [[stage_in]]) {
     return out;
 }
 
-vertex SurfaceVaryings lw_vertexGround(VertexIn in [[stage_in]], constant FrameUniforms &frame [[buffer(LW_FRAME)]]) {
-    SurfaceVaryings out;
+vertex SurfaceOut lw_vertexGround(VertexIn in [[stage_in]], constant FrameUniforms &frame [[buffer(LW_FRAME)]]) {
+    SurfaceOut out;
+    out.clip[0] = 1.0;
     float radius = max(frame.groundBounce.w, 1.0);
     float4 world = float4(in.position.x * radius, 0.0, in.position.z * radius, 1.0);
     out.worldPosition = world.xyz;

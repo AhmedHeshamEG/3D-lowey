@@ -139,7 +139,7 @@ final class PrintingTests: XCTestCase {
     func testASolidPartIsReadyToPrint() throws {
         let report = try PrintCheck.check(m3Block(), bed: PrintBed.standard)
         XCTAssertTrue(report.isWatertight)
-        XCTAssertTrue(report.isReady, report.problems.joined(separator: " "))
+        XCTAssertTrue(report.isReady, "\(report.problems)")
         XCTAssertEqual(try XCTUnwrap(report.thinnestWall), 7 * mm, accuracy: 0.5 * mm, "from the hole to the nearest side")
     }
 
@@ -149,7 +149,7 @@ final class PrintingTests: XCTestCase {
         let report = PrintCheck.check(open, bed: nil)
         XCTAssertFalse(report.isWatertight)
         XCTAssertEqual(report.openEdges, 4)
-        XCTAssertFalse(report.problems.isEmpty)
+        XCTAssertEqual(report.problems, [.holes(4)])
         let repaired = PrintCheck.repair(open)
         XCTAssertTrue(PrintCheck.check(repaired, bed: nil).isWatertight)
         XCTAssertEqual(repaired.volume, box.volume, accuracy: 1e-15)
