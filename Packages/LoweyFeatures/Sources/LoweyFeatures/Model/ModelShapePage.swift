@@ -92,7 +92,7 @@ struct ModelOptionsBar: View {
                 Divider().frame(height: 24)
                 HmmButton("plus.magnifyingglass", label: "Grow", size: 36) { editor.growPick() }
                 HmmButton("minus.magnifyingglass", label: "Shrink", size: 36) { editor.shrinkPick() }
-                HmmButton("square.grid.3x3.square", label: "Select similar", size: 36) { editor.selectSimilar() }
+                HmmButton("square.grid.3x3.square", label: "Select similar", size: 36) { editor.selectSimilarElements() }
             }
             HmmButton("xmark", label: "Done modelling", size: 36) { editor.stopModeling() }
         }

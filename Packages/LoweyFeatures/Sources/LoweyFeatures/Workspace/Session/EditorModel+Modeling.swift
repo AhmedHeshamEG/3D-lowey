@@ -15,7 +15,7 @@ extension EditorModel {
         if mode.pickMode != modeling.mode.pickMode { modeling.elements = nil }
         modeling.mode = mode
         if tool != .model { tool = .model }
-        if let kind = mode.sketchKind { app.show(kind.hint(points: 0)) }
+        if let kind = mode.sketchKind { app.show(String.LocalizationValue(kind.hint(points: 0))) }
         refreshModelOverlay()
     }
 
@@ -101,14 +101,15 @@ extension EditorModel {
 
     /// Performs a modelling command, or explains why it couldn't be done.
     @discardableResult
-    func runModeling(_ make: () throws(ModelingOperations.Failure) -> EditCommand) -> Bool {
+    func runModeling(_ make: () throws -> EditCommand) -> Bool {
         do {
             let command = try make()
             guard perform(command) else { return false }
             HmmHaptics.play(.commit)
             return true
         } catch {
-            app.show(error.description, kind: .error)
+            let message = (error as? ModelingOperations.Failure)?.description ?? String(describing: error)
+            app.show(String.LocalizationValue(message), kind: .error)
             HmmHaptics.play(.error)
             return false
         }
@@ -175,7 +176,7 @@ extension EditorModel {
 
     func growPick() { changePick { $0.grown(in: $1) } }
     func shrinkPick() { changePick { $0.shrunk(in: $1) } }
-    func selectSimilar() { changePick { $0.similar(in: $1) } }
+    func selectSimilarElements() { changePick { $0.similar(in: $1) } }
 
     private func changePick(_ change: (MeshSelection, EditableMesh) -> MeshSelection) {
         guard let id = modeling.target, let elements = modeling.elements, let (mesh, _) = modelMesh(of: id) else { return }

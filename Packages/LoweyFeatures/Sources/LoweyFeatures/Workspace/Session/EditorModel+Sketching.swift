@@ -163,7 +163,7 @@ extension EditorModel {
             break
         }
         pending = modeling.pending ?? pending
-        if modeling.pending != nil { app.show(kind.hint(points: pending.points.count)) }
+        if modeling.pending != nil { app.show(String.LocalizationValue(kind.hint(points: pending.points.count))) }
     }
 
     private func push(_ point: Vec2) {
