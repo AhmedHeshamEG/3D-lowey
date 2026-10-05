@@ -73,6 +73,11 @@ final class EditorModel {
         didSet { if modeling.overlayKey != oldValue.overlayKey { refreshModelOverlay() } }
     }
 
+    /// Precision, printing and building settings (`EditorModel+Precision`).
+    var precision = PrecisionState() {
+        didSet { if precision != oldValue { precisionChanged(from: oldValue) } }
+    }
+
     /// The unit lengths are shown and typed in (`workspace.json`).
     var units: LengthUnit = .centimetre {
         didSet { if units != oldValue { workspaceChanged() } }
@@ -348,6 +353,7 @@ final class EditorModel {
             validateModelPick()
             refreshModelOverlay()
         }
+        refreshPrecisionOverlay()
         journalChanged()
         app.bridge.notify("scene", ["revision": String(session.revision)])
     }

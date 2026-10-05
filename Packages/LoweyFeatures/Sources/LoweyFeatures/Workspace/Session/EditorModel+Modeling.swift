@@ -12,10 +12,15 @@ extension EditorModel {
         HmmHaptics.play(.selection)
         modeling.pending = nil
         modeling.offsetSource = nil
+        modeling.measure = []
+        modeling.build = []
+        modeling.snapMark = nil
         if mode.pickMode != modeling.mode.pickMode { modeling.elements = nil }
         modeling.mode = mode
         if tool != .model { tool = .model }
         if let kind = mode.sketchKind { app.show(String.LocalizationValue(kind.hint(points: 0))) }
+        if let build = mode.buildTool { app.show(String.LocalizationValue(build.hint)) }
+        if mode == .measure { app.show("Tap the first point") }
         refreshModelOverlay()
     }
 
@@ -39,10 +44,11 @@ extension EditorModel {
 
     /// A tap with the Model tool: draw with a sketch shape, else pick a face, edge or corner.
     func modelTap(at point: CGPoint) {
-        if modeling.mode.sketchKind != nil {
-            sketchTap(at: point)
-        } else {
-            pickElement(at: point, additive: false)
+        switch modeling.mode {
+        case .sketch: sketchTap(at: point)
+        case .pick: pickElement(at: point, additive: false)
+        case .measure: measureTap(at: point)
+        case .build: buildTap(at: point)
         }
     }
 
@@ -76,16 +82,22 @@ extension EditorModel {
         selection.filter { id in baseScene.objects[id].map(ModelingOperations.canModel) ?? false }
     }
 
-    /// The single selected object, when it's a shape that isn't an editable mesh yet.
+    /// The single selected object, when it's a shape that isn't an editable mesh yet, or a placed library model.
     var convertibleSelection: ObjectID? {
-        guard let object = singleSelection, ModelingOperations.canModel(object) else { return nil }
+        guard let object = singleSelection else { return nil }
+        if object.kind.assetID != nil { return object.id }
+        guard ModelingOperations.canModel(object) else { return nil }
         if case .mesh = object.kind { return nil }
         return object.id
     }
 
     func makeSelectionEditable() {
         guard let id = convertibleSelection else { return }
-        runModeling { try ModelingOperations.makeEditable(id, in: baseScene) }
+        if baseScene.objects[id]?.kind.assetID != nil {
+            makeModelEditable(id)
+        } else {
+            runModeling { try ModelingOperations.makeEditable(id, in: baseScene) }
+        }
     }
 
     func combineSelection(_ operation: MeshBoolean.Operation) {

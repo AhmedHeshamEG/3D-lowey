@@ -1,10 +1,19 @@
 import Foundation
 import LoweyCore
+import LoweyEngine
 
-/// What a tap does with the Model tool on the stage: pick faces, edges or corners, or draw a sketch shape.
+/// What a tap does with the Model tool on the stage: pick faces, edges or corners, draw a sketch shape, measure, or
+/// build (walls, floors, doors, windows, stairs).
 enum ModelingMode: Hashable, Sendable {
     case pick(MeshSelection.Mode)
     case sketch(SketchKind)
+    case measure
+    case build(BuildTool)
+
+    var buildTool: BuildTool? {
+        if case let .build(tool) = self { return tool }
+        return nil
+    }
 
     var sketchKind: SketchKind? {
         if case let .sketch(kind) = self { return kind }
@@ -87,6 +96,91 @@ enum SketchKind: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// Model ▸ Add ▸ Building: tap tools for rooms and buildings.
+enum BuildTool: String, CaseIterable, Identifiable, Sendable {
+    case walls, floor, door, window, stairs
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .walls: "Walls"
+        case .floor: "Floor"
+        case .door: "Door"
+        case .window: "Window"
+        case .stairs: "Stairs"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .walls: "square.split.bottomrightquarter"
+        case .floor: "square.fill"
+        case .door: "door.left.hand.open"
+        case .window: "window.vertical.closed"
+        case .stairs: "stairs"
+        }
+    }
+
+    /// Before the first tap.
+    var hint: String {
+        switch self {
+        case .walls: "Tap the corners of the walls. Tap the first one to close the room"
+        case .floor: "Tap the corners of the floor. Tap the first one to finish"
+        case .door: "Tap the side of a wall where the door goes"
+        case .window: "Tap the side of a wall where the window goes"
+        case .stairs: "Tap where the stairs start: they climb away from you"
+        }
+    }
+
+    var opening: Architecture.Opening? {
+        switch self {
+        case .door: .door
+        case .window: .window
+        default: nil
+        }
+    }
+}
+
+/// The shape operation just done: tapping its number types a new size (it's done again from the same pick).
+struct ShapeOpRecord: Hashable, Sendable {
+    enum Kind: String, Sendable {
+        case bevel, round, inset, shell
+
+        var title: String {
+            switch self {
+            case .bevel: "Bevel"
+            case .round: "Round"
+            case .inset: "Inset"
+            case .shell: "Shell"
+            }
+        }
+    }
+
+    var kind: Kind
+    var object: ObjectID
+    var edges: Set<MeshEdge> = []
+    var faces: Set<Int> = []
+    var amount: Double
+    /// Where its number floats (world space).
+    var anchor: Vec3
+}
+
+/// Precision, printing and building settings that outlive the Model tool (the first three live in `workspace.json`).
+struct PrecisionState: Equatable {
+    var section: SectionPlane?
+    var printBed: String?
+    var showsDimensions = true
+    var wallHeight = Architecture.wallHeight
+    var wallThickness = Architecture.wallThickness
+    var exportFormat: ModelExportFormat = .glb
+    /// The last printability check (Model ▸ Shape ▸ 3D print) and what it checked.
+    var printReport: PrintReport?
+    var printChecked: [ObjectID] = []
+
+    var bed: PrintBed? { PrintBed.preset(printBed) }
+}
+
 /// A region of a sketch object (by index into `Sketch.regions`).
 struct SketchRegionRef: Hashable, Sendable {
     var sketch: ObjectID
@@ -117,6 +211,14 @@ enum DimensionField: Hashable, Sendable {
     case diameter
     case lineLength
     case offset
+    /// The size of the shape operation just done (bevel, round, inset, shell).
+    case shapeAmount
+    /// The measure tool's distance (tap it to keep it).
+    case measured
+    /// A kept dimension (tap it to select it).
+    case kept(ObjectID)
+    case wallHeight
+    case wallThickness
 }
 
 /// The Model tool's state on the stage. View state, not the document: none of it is undone or saved.
@@ -134,11 +236,19 @@ struct ModelingState: Sendable {
     /// The push/pull distance while dragging (metres along the normal).
     var pull: Double?
     var editing: DimensionField?
+    /// The measure tool's points (world space; two when measured) and the object both are on.
+    var measure: [Vec3] = []
+    var measureOwner: ObjectID?
+    /// The corners tapped so far with Walls or Floor (world space).
+    var build: [Vec3] = []
+    /// What the last point snapped to, marked on the stage.
+    var snapMark: SnapResult?
+    var shapeOp: ShapeOpRecord?
 
     /// What the stage's marks depend on (they're rebuilt when it changes).
     var overlayKey: [AnyHashable] {
         [AnyHashable(mode), AnyHashable(target), AnyHashable(elements), AnyHashable(region), AnyHashable(pending?.points),
-         AnyHashable(pull), AnyHashable(offsetSource)]
+         AnyHashable(pull), AnyHashable(offsetSource), AnyHashable(measure), AnyHashable(build), AnyHashable(snapMark)]
     }
 
     var hasPick: Bool { region != nil || (elements.map { !$0.isEmpty } ?? false) }

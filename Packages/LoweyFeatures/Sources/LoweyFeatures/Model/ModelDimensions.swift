@@ -49,14 +49,14 @@ private struct DimensionChip: View {
             } else {
                 Button {
                     HmmHaptics.play(.selection)
-                    editor.modeling.editing = label.field
+                    if !editor.dimensionTapped(label.field) { editor.modeling.editing = label.field }
                 } label: {
                     Text(label.text).monospacedDigit()
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("dimension-\(Self.identifier(label.field))")
                 .accessibilityLabel(Text(label.text))
-                .accessibilityHint(Text("Type an exact length"))
+                .accessibilityHint(Self.hint(label.field))
             }
         }
         .font(.hmm(.footnote, weight: .semibold))
@@ -75,6 +75,19 @@ private struct DimensionChip: View {
         case .diameter: "diameter"
         case .lineLength: "length"
         case .offset: "offset"
+        case .shapeAmount: "shape-size"
+        case .measured: "measured"
+        case let .kept(id): "kept-\(id.raw)"
+        case .wallHeight: "wall-height"
+        case .wallThickness: "wall-thickness"
+        }
+    }
+
+    static func hint(_ field: DimensionField) -> Text {
+        switch field {
+        case .measured: Text("Keep this measurement on the stage")
+        case .kept: Text("Select this dimension")
+        default: Text("Type an exact length")
         }
     }
 }

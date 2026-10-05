@@ -259,7 +259,7 @@ extension ObjectKind {
         case let (.asset(a), .asset(b)): a == b
         case let (.prefab(a), .prefab(b)): a == b
         case (.light, .light), (.camera, .camera), (.drawing, .drawing), (.text, .text), (.overlay, .overlay),
-             (.particles, .particles), (.card, .card), (.mesh, .mesh), (.sketch, .sketch), (.group, .group): true
+             (.particles, .particles), (.card, .card), (.mesh, .mesh), (.sketch, .sketch), (.dimension, .dimension), (.group, .group): true
         default: false
         }
     }

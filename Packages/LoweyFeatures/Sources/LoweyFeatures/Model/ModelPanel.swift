@@ -2,8 +2,9 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Model: everything that goes into the world (shapes, lights, cameras, words, effects), shaping it (sketches,
-/// push/pull, booleans), the library of models, and snapping and units.
+/// Model: everything that goes into the world (shapes, lights, cameras, words, effects, buildings), shaping it
+/// (sketches, push/pull, booleans, bevels, shells, symmetry, printing), the library of models, and precision (snapping,
+/// units, measuring, the section view).
 struct ModelPanel: View {
     @Bindable var editor: EditorModel
 
@@ -15,7 +16,7 @@ struct ModelPanel: View {
                 case .add: ModelAddPage(editor: editor)
                 case .shape: ModelShapePage(editor: editor)
                 case .library: LibraryBrowser(editor: editor)
-                case .snapping: SnappingPage(editor: editor)
+                case .precision: PrecisionPage(editor: editor)
                 }
             }
         }

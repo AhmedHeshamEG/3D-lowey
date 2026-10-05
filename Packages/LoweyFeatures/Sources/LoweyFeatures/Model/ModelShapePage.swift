@@ -2,8 +2,9 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Model ▸ Shape: sketch on any surface, pick faces / edges / corners to push and pull, combine solids. Choosing a
-/// sketch shape or a pick mode closes the panel so the stage is free; the bar at the bottom holds the rest.
+/// Model ▸ Shape: sketch on any surface, pick faces / edges / corners to push and pull, combine solids, mirror and
+/// symmetry, and get a part ready to print. Choosing a sketch shape or a pick mode closes the panel so the stage is
+/// free; the bar at the bottom holds what the pick can do (bevel, round, inset, shell).
 struct ModelShapePage: View {
     let editor: EditorModel
 
@@ -38,6 +39,12 @@ struct ModelShapePage: View {
                 }
                 .disabled(editor.modelableSelection.count < 2)
                 Hint("Select two or more shapes (touch and hold adds one). The first one keeps its look and place.")
+            }
+            PanelSection("Mirror & symmetry") {
+                MirrorControls(editor: editor)
+            }
+            PanelSection("3D print") {
+                PrintCheckControls(editor: editor)
             }
             if editor.convertibleSelection != nil {
                 HmmPillButton("Make editable", systemName: "cube.transparent") { editor.makeSelectionEditable() }
@@ -88,12 +95,15 @@ struct ModelOptionsBar: View {
             if editor.modeling.pending != nil {
                 HmmButton("checkmark", label: "Done", size: 36) { editor.finishSketchShape() }
             }
-            if editor.modeling.elements.map({ !$0.isEmpty }) == true {
+            if let elements = editor.modeling.elements, !elements.isEmpty {
                 Divider().frame(height: 24)
                 HmmButton("plus.magnifyingglass", label: "Grow", size: 36) { editor.growPick() }
                 HmmButton("minus.magnifyingglass", label: "Shrink", size: 36) { editor.shrinkPick() }
                 HmmButton("square.grid.3x3.square", label: "Select similar", size: 36) { editor.selectSimilarElements() }
+                Divider().frame(height: 24)
+                PickActions(editor: editor, mode: elements.mode)
             }
+            ModelToolExtras(editor: editor)
             HmmButton("xmark", label: "Done modelling", size: 36) { editor.stopModeling() }
         }
         .padding(HmmSpacing.xs)

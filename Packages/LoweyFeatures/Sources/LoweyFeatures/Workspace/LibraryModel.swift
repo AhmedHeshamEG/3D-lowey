@@ -28,7 +28,7 @@ final class LibraryModel {
 
     static let importTypes: [UTType] = {
         var types: [UTType] = [.usdz, .usd, .folder]
-        for ext in ["glb", "gltf", "obj", "usdc", "usda"] {
+        for ext in ["glb", "gltf", "obj", "usdc", "usda", "stl", "3mf"] {
             if let type = UTType(filenameExtension: ext) { types.append(type) }
         }
         return types

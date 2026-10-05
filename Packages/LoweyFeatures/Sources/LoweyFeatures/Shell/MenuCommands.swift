@@ -47,7 +47,7 @@ public struct LoweyMenuCommands: Commands {
             Button("Select") { tool(.select, panel: .select) }.keyboardShortcut("8", modifiers: .command)
             Divider()
             Button("Library") { modelPage(.library) }.keyboardShortcut("l", modifiers: .command)
-            Button("Snapping") { modelPage(.snapping) }
+            Button("Precision") { modelPage(.precision) }
             Button("Solid Shape") { tool(.draw, panel: .draw) }
             Button("Flipbook") { tool(.flipbook, panel: .draw) }
             Button("Shadow Brush") { tool(.shadowBrush, panel: .paint) }

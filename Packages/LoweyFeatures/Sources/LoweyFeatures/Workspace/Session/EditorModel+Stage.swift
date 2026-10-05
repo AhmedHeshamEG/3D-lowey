@@ -24,6 +24,8 @@ extension EditorModel {
             performance.recordScene(stage.lastReport, tier: stage.renderer.quality.tier)
         }
         stage.frameSource = { [weak self] stage in self?.stageFrame(for: stage) }
+        stage.section = precision.section
+        refreshPrecisionOverlay()
         refreshGuide()
         refreshSelectionOverlay()
         stage.redraw()
@@ -153,6 +155,7 @@ extension EditorModel {
         if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
         if tool.usesGuide { refreshGuide() }
         if tool == .model { modelCameraMoved() }
+        if precision.bed != nil || precision.showsDimensions { refreshPrecisionOverlay() }
         if !selection.isEmpty { refreshSelectionScreenRect(after: 0.15) }
         viewpointSaveTask?.cancel()
         viewpointSaveTask = Task { [weak self] in

@@ -153,6 +153,7 @@ struct InspectorPanel: View {
         case .card: "photo.on.rectangle"
         case .mesh: "cube.transparent"
         case .sketch: "pencil.and.ruler"
+        case .dimension: "ruler"
         }
     }
 }

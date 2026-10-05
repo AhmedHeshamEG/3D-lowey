@@ -82,7 +82,7 @@ public enum ClusterPanel: String, Identifiable, Sendable {
 
 /// The Model panel's pages: things to add, shaping (sketch, push/pull, booleans), the library of models, snapping.
 public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
-    case add, shape, library, snapping
+    case add, shape, library, precision
 
     public var id: String { rawValue }
 
@@ -91,7 +91,7 @@ public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
         case .add: "Add"
         case .shape: "Shape"
         case .library: "Library"
-        case .snapping: "Snapping"
+        case .precision: "Precision"
         }
     }
 
@@ -100,7 +100,7 @@ public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
         case .add: "plus"
         case .shape: "cube.transparent"
         case .library: "books.vertical"
-        case .snapping: "square.grid.3x3"
+        case .precision: "ruler"
         }
     }
 }

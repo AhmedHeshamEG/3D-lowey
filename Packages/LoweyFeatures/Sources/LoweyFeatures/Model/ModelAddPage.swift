@@ -21,6 +21,17 @@ struct ModelAddPage: View {
                     }
                 }
             }
+            PanelSection("Building") {
+                TileGrid {
+                    ForEach(BuildTool.allCases) { build in
+                        TileButton(title: build.title, systemName: build.systemImage, identifier: "build-\(build.rawValue)") {
+                            editor.startModeling(.build(build))
+                            editor.openPanel = nil
+                        }
+                    }
+                }
+                Hint("Walls follow the corners you tap; doors and windows go where you tap a wall.")
+            }
             PanelSection("Light & camera") {
                 TileGrid {
                     TileButton(title: "Lamp", systemName: "lightbulb.fill", identifier: "add-lamp") { place { editor.addLight(.point) } }

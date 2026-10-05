@@ -89,15 +89,25 @@ extension EditorModel {
     /// Shows the face slid for real, or (when it needs a boolean) leaves the prism to the overlay.
     private func previewPull(_ distance: Double) {
         guard let (id, face) = pickedFace, let object = baseScene.objects[id], case let .mesh(mesh) = object.kind,
-              PushPull.slides(mesh, face: face) else {
+              PushPull.slides(mesh, faces: Self.mirrored(face, of: object, mesh: mesh)) else {
             kindOverride = [:]
             refreshModelOverlay()
             return
         }
-        if let moved = try? PushPull.apply(mesh, face: face, distance: localDistance(distance, object: object, mesh: mesh, face: face)) {
+        // Under live symmetry the face's mirror image slides with it.
+        let faces = Self.mirrored(face, of: object, mesh: mesh)
+        if let moved = try? PushPull.apply(mesh, faces: faces, distance: localDistance(distance, object: object, mesh: mesh, face: face)) {
             kindOverride = [id: .mesh(moved)]
         }
         refreshDisplay()
+    }
+
+    /// The face and, under live symmetry, its mirror image.
+    static func mirrored(_ face: Int, of object: SceneObject, mesh: EditableMesh) -> [Int] {
+        guard let axis = ModelingOperations.symmetry(of: object), let twin = MeshMirror.counterpart(of: face, in: mesh, across: axis.plane) else {
+            return [face]
+        }
+        return Array(Set([face, twin])).sorted()
     }
 
     /// A world distance along a face's normal in the object's own units (they differ when it keeps a scale).
@@ -144,7 +154,8 @@ extension EditorModel {
             let made = Set(baseScene.objects.keys).subtracting(before).first
             if let solid = target ?? made { setSelection([solid]) }
         } else if let (id, face) = pickedFace, prepareFacePull(), let object = baseScene.objects[id], case let .mesh(mesh) = object.kind {
-            let slides = PushPull.slides(mesh, face: face)
+            // Symmetry joins the halves with a boolean, which renumbers the faces like a sweep does.
+            let slides = PushPull.slides(mesh, face: face) && ModelingOperations.symmetry(of: object) == nil
             let local = localDistance(distance, object: object, mesh: mesh, face: face)
             guard runModeling({ try ModelingOperations.pushPull(id, face: face, distance: local, in: baseScene) }) else { return }
             // A slide keeps the faces; a boolean renumbers them.
