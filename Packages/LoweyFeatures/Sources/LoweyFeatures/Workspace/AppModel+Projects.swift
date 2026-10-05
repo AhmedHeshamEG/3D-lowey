@@ -5,12 +5,19 @@ import UIKit
 
 /// Making, copying and moving projects (Theater actions), the samples, and files coming in from elsewhere.
 extension AppModel {
-    /// A new project: a name, a Mood and a Look (the only two choices).
-    func createProject(named name: String, mood: LightingPreset, look presetID: String) {
+    /// A new project from a starter template, in a Mood and a Look (the template suggests both). Made inside a stack,
+    /// it joins the stack.
+    func createProject(named name: String, template: StarterTemplate = .blank, mood: LightingPreset, look presetID: String,
+                       inStack stack: String? = nil) {
         do {
             var look = Look.default.applying(mood)
             look.presetID = presetID
-            let (url, _) = try projectStore.createProject(name: name.isEmpty ? "Untitled" : name, look: look)
+            let title = name.isEmpty ? String(localized: "Untitled") : name
+            let (url, document) = try projectStore.createProject(name: title, template: template, look: look)
+            if let stack {
+                gallery.add([document.project.id.raw], to: stack)
+                saveGallery()
+            }
             refreshProjects()
             open(url: url)
         } catch {
@@ -30,13 +37,13 @@ extension AppModel {
     func delete(_ project: ProjectSummary) {
         perform("delete") {
             try projectStore.deleteProject(at: project.url)
-            thumbnails[project.id] = nil
+            cardImages.remove(project.id)
         }
     }
 
     func archive(_ project: ProjectSummary) {
         perform("archive") { _ = try projectStore.archiveProject(at: project.url) }
-        show("Archived. Find it in Theater ▸ Archive")
+        show("Archived. Find it in Home ▸ Archive")
     }
 
     func unarchive(_ project: ProjectSummary) {
@@ -101,6 +108,7 @@ extension AppModel {
             fresh.id = .make()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
             refreshProjects()
+            drawSampleCard(url)
             if shouldOpen { open(url: url) }
         } catch {
             show("Couldn't add the island: \(error.localizedDescription)", kind: .error)
@@ -117,6 +125,7 @@ extension AppModel {
             fresh.modified = Date()
             let url = try projectStore.writeProject(info: fresh, scenes: scenes)
             refreshProjects()
+            drawSampleCard(url)
             let voice = url.appendingPathComponent(ProjectLayout.audioFolder).appendingPathComponent(EnigmaSample.voiceoverFile)
             Task {
                 try? await PlaceholderVoice.render(EnigmaSample.narration.map { ($0.sentence, $0.start) }, duration: 12.6, to: voice)
@@ -125,6 +134,12 @@ extension AppModel {
         } catch {
             show("Couldn't add the sample: \(error.localizedDescription)", kind: .error)
         }
+    }
+
+    /// A new sample's card is drawn right away, so Home is alive from the first launch.
+    private func drawSampleCard(_ url: URL) {
+        guard !AppIdentity.isUITesting || AppIdentity.isTakingScreenshots, let document = try? projectStore.openDocument(at: url) else { return }
+        Task { await drawCard(EditorModel.CardJob(document: document, viewpoint: document.scene.viewpoint, projectURL: url)) }
     }
 
     /// The 60-second tour happens on the welcome island (added if it isn't there).

@@ -2,13 +2,12 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Draw: ink strokes and solid shapes in 3D on a guide, and the Shadow Brush. The Pencil draws, fingers keep moving
-/// the view.
+/// Draw: ink strokes, solid shapes on a guide, and flipbooks. The Pencil draws, fingers keep moving the view.
 struct DrawToolsPanel: View {
     @Bindable var editor: EditorModel
 
     var body: some View {
-        HmmPanel("Draw", width: 360, close: { editor.openPanel = nil }) {
+        HmmPanel("Draw", width: 360, sizing: HmmPanelSizing(id: "draw"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.m) {
                 HStack(spacing: HmmSpacing.xs) {
                     ChoiceChip(title: "Ink", systemName: "pencil.tip", isOn: editor.tool == .ink) { editor.tool = .ink }
@@ -17,20 +16,15 @@ struct DrawToolsPanel: View {
                         .accessibilityIdentifier("tool-draw")
                     ChoiceChip(title: "Flipbook", systemName: "book.pages", isOn: editor.tool == .flipbook) { editor.tool = .flipbook }
                         .accessibilityIdentifier("tool-flipbook")
-                    ChoiceChip(title: "Shadow Brush", systemName: "circle.lefthalf.striped.horizontal", isOn: editor.tool == .shadowBrush) {
-                        editor.tool = .shadowBrush
-                    }
-                    .accessibilityIdentifier("tool-shadow-brush")
                 }
                 switch editor.tool {
-                case .shadowBrush: shadowBrush
                 case .draw: solidShape
                 case .flipbook: FlipbookSection(editor: editor)
                 default: InkSection(editor: editor)
                 }
             }
         }
-        .onAppear { if !editor.tool.paints { editor.tool = .ink } }
+        .onAppear { if !editor.tool.draws { editor.tool = .ink } }
     }
 
     private var solidShape: some View {
@@ -54,30 +48,6 @@ struct DrawToolsPanel: View {
         }
         .font(.hmm(.body))
     }
-
-    private var shadowBrush: some View {
-        VStack(alignment: .leading, spacing: HmmSpacing.s) {
-            HStack(spacing: HmmSpacing.xs) {
-                ChoiceChip(title: "Push shadow in", systemName: "circle.lefthalf.filled", isOn: editor.shadowBrush.pushesShadow) {
-                    editor.shadowBrush.pushesShadow = true
-                }
-                ChoiceChip(title: "Pull light out", systemName: "sun.max", isOn: !editor.shadowBrush.pushesShadow) {
-                    editor.shadowBrush.pushesShadow = false
-                }
-            }
-            Hint("Paint on an object with the Pencil: its toon shadow follows your strokes (faces get clean, designed shadow shapes). "
-                + "Size and strength are the sidebar's sliders. Each stroke is one undo step.")
-            PanelSection("Presets") {
-                FlowChips(items: ShadowPreset.allCases.map { preset in (preset.rawValue, preset.title) }, isOn: { _ in false }) { key in
-                    if let preset = ShadowPreset(rawValue: key) { editor.applyShadowPreset(preset) }
-                }
-                Hint("On the selection; a character's goes on its head.")
-            }
-            if editor.selectionHasShadowPaint {
-                HmmPillButton("Clear the selection's shadow painting", systemName: "eraser", role: .destructive) { editor.clearShadowPaint() }
-            }
-        }
-    }
 }
 
 /// The solid-shape tool's quick options at the bottom of the stage.
@@ -93,23 +63,6 @@ struct DrawOptionsBar: View {
                 editor.draw.mirror.toggle()
             }
             HmmButton("xmark", label: "Done drawing", size: 36) { editor.tool = .select }
-        }
-        .padding(HmmSpacing.xs)
-        .hmmPanelBackground()
-    }
-}
-
-/// The Shadow Brush's quick options.
-struct ShadowBrushOptionsBar: View {
-    @Bindable var editor: EditorModel
-
-    var body: some View {
-        HStack(spacing: HmmSpacing.xs) {
-            ChoiceChip(title: "Shadow in", systemName: "circle.lefthalf.filled", isOn: editor.shadowBrush.pushesShadow) {
-                editor.shadowBrush.pushesShadow = true
-            }
-            ChoiceChip(title: "Light out", systemName: "sun.max", isOn: !editor.shadowBrush.pushesShadow) { editor.shadowBrush.pushesShadow = false }
-            HmmButton("xmark", label: "Done painting shadows", size: 36) { editor.tool = .select }
         }
         .padding(HmmSpacing.xs)
         .hmmPanelBackground()

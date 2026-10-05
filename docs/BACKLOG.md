@@ -3,6 +3,15 @@
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
 phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
 
+## Left from M2 (Maquette 0.2)
+
+- [ ] The device checklist in the "Maquette 0.2 — M2" PR (the layout on the iPad, the inspector beside the
+      selection, time on call, panel resizing, Home's turning cards and the zoom into the stage, stacks, the
+      templates, the Home benchmark at Tier A).
+- [ ] Millimetres and the print-bed outline in *Model to print*, the walls tool near *Room or building*: they come
+      with the precision and architecture tools (M3, M4). (D-111)
+- [ ] *Sketch* in New project when the Schizzo board exists (M9). (D-111)
+
 ## Left from M1 (Maquette 0.1)
 
 - [ ] The device checklist in the "Maquette 0.1 — M1" PR (hover, force-quit recovery, the History scrubber, the
@@ -22,6 +31,11 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 - A studio bundle with the other hmm. apps; the StoreKit configuration is ready for testing it. (R52)
 
 ## Known limitations
+
+- **The inspector moves after things stop.** While you orbit or drag, it stays where it was and glides beside the
+  selection once the view or the object rests (measuring every frame would cost the stage frames). (D-105)
+- **A card shows its still until the project is opened and closed once in 0.2.** Turntables are drawn when a
+  project closes; projects from earlier versions keep their old preview until then.
 
 - **A change made in the last 50 ms before the app is killed can be lost.** The journal group-commits within 50 ms
   (D-90); nobody force-quits that fast, but a crash can.

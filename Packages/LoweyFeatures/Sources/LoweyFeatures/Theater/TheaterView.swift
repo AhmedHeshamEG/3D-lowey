@@ -1,89 +1,68 @@
 import HmmDesign
+import HmmDocuments
 import LoweyCore
 import SwiftUI
 
-/// Home: project cards with looping previews, New project (a name, a Mood and a Look), the samples, and the
-/// touch-and-hold menu (share, duplicate, rename, archive, delete).
+/// Home, the living gallery (CONTEXT §4.2): Procreate's grid where each card is the real model turning in its own
+/// light. Tap a card and it grows into the stage. Stacks keep projects together (drag one card onto another), search
+/// finds them anywhere, the sort is remembered, and Select acts on several at once.
 struct TheaterView: View {
+    let zoom: Namespace.ID
     @Environment(AppModel.self) private var app
-    @Environment(\.hmmTheme) private var theme
-    @State private var showNewProject = false
-    @State private var renaming: ProjectSummary?
-    @State private var renameText = ""
-    @State private var deleting: ProjectSummary?
-    @State private var sharing: URL?
-    @State private var importing = false
-    @State private var showArchive = false
-
-    private let columns = [GridItem(.adaptive(minimum: 260, maximum: 380), spacing: HmmSpacing.l)]
+    @State private var state = GalleryState()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: HmmSpacing.xl) {
-                header
-                LazyVGrid(columns: columns, spacing: HmmSpacing.l) {
-                    NewProjectCard { showNewProject = true }
-                    ForEach(app.projects) { project in
-                        ProjectCard(project: project, thumbnail: app.thumbnails[project.id], loop: app.loops[project.id],
-                                    inICloud: app.storage.isICloud)
-                            .onTapGesture { app.open(url: project.url) }
-                            .accessibilityAddTraits(.isButton)
-                            .contextMenu { menu(for: project) }
-                            .accessibilityIdentifier("project-\(project.info.name)")
-                    }
-                }
-                samples
+                TheaterHeader(state: state)
+                grid
+                if state.openStack == nil, state.query.isEmpty { samples }
             }
             .padding(HmmSpacing.xl)
         }
-        .sheet(isPresented: $showNewProject) {
-            NewProjectSheet { name, mood, look in
-                showNewProject = false
-                app.createProject(named: name, mood: mood, look: look)
-            }
-            .presentationDetents([.large])
+        .onScrollPhaseChange { _, phase in state.scrolling = phase.isScrolling }
+        .safeAreaInset(edge: .bottom) {
+            if state.selecting { GallerySelectionBar(state: state).transition(.move(edge: .bottom).combined(with: .opacity)) }
         }
-        .alert("Rename project", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Name", text: $renameText)
-            Button("Rename") {
-                if let renaming { app.rename(renaming, to: renameText) }
-                renaming = nil
-            }
-            Button("Cancel", role: .cancel) { renaming = nil }
-        }
-        .confirmationDialog("Delete this project?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-                            titleVisibility: .visible) {
-            Button("Delete \(deleting?.info.name ?? "")", role: .destructive) {
-                if let deleting { app.delete(deleting) }
-                deleting = nil
-            }
-        } message: {
-            Text("Its scenes and renders are removed. Library items stay in your library.")
-        }
-        .sheet(item: Binding(get: { sharing.map(IdentifiedURL.init) }, set: { sharing = $0?.url })) { ShareSheet(items: [$0.url]) }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.item]) { result in
-            if case let .success(url) = result { app.importPackage(url) }
-        }
-        .sheet(isPresented: $showArchive) { ArchiveSheet().presentationDetents([.medium]) }
+        .hmmAnimation(.standard, value: state.selecting)
+        .modifier(TheaterDialogs(state: state))
+        .accessibilityIdentifier("home")
     }
 
-    private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: HmmSpacing.xxs) {
-                Text(AppIdentity.displayName).font(.hmm(.title1, weight: .semibold)).foregroundStyle(theme.text)
-                Text("Build a world. Direct it. Make the video.").font(.hmm(.headline)).foregroundStyle(theme.text2)
-            }
-            Spacer()
-            Menu {
-                Button("Import a project (.maquettepack)", systemImage: "square.and.arrow.down") { importing = true }
-                Button("Archive (\(app.archived.count))", systemImage: "archivebox") { showArchive = true }
-                Button("Take the tour", systemImage: "hand.wave") { app.startTour() }
-            } label: {
-                Image(systemName: "ellipsis.circle").font(.system(size: 24)).frame(width: 44, height: 44)
-            }
-            .accessibilityLabel("More")
-            .accessibilityIdentifier("theater-menu")
-            HmmButton("gearshape", label: "Settings") { app.showsSettings = true }
+    private var entries: [GalleryEntry] {
+        app.gallery.entries(app.galleryItems, in: state.openStack, query: state.query)
+    }
+
+    /// Cards play only while the gallery rests and no project is open over it.
+    private var playing: Bool { !state.scrolling && app.editor == nil }
+
+    @ViewBuilder private var grid: some View {
+        let entries = entries
+        if entries.isEmpty, !state.query.isEmpty {
+            HmmEmptyState("questionmark.folder", title: "Nothing called “\(state.query)”",
+                          message: "Search looks through every project and stack by name.", actionTitle: "Clear the search") { state.query = "" }
+        } else {
+            GalleryGrid(entries: entries, zoom: zoom, playing: playing, selected: state.selecting ? state.selected : nil,
+                        newProject: state.query.isEmpty && !state.selecting ? { state.showNewProject = true } : nil,
+                        open: tap,
+                        openStack: { stack in
+                            withHmmAnimation(.gentle) {
+                                state.query = ""
+                                state.openStack = stack.id
+                            }
+                        },
+                        drop: { id, entry in withHmmAnimation(.standard) { app.drop(id, onto: entry) } },
+                        projectMenu: { ProjectMenu(project: $0, state: state) },
+                        stackMenu: { StackMenu(stack: $0, state: state) })
+        }
+    }
+
+    private func tap(_ project: ProjectSummary) {
+        if state.selecting {
+            HmmHaptics.play(.selection)
+            state.selected.formSymmetricDifference([project.id.raw])
+        } else {
+            app.open(url: project.url)
         }
     }
 
@@ -96,38 +75,78 @@ struct TheaterView: View {
             }
         }
     }
+}
 
-    @ViewBuilder
-    private func menu(for project: ProjectSummary) -> some View {
-        Button("Open", systemImage: "arrow.up.forward.app") { app.open(url: project.url) }
-        Button("Rename", systemImage: "pencil") {
-            renameText = project.info.name
-            renaming = project
-        }
-        Button("Duplicate", systemImage: "plus.square.on.square") { app.duplicate(project) }
-        Button("Share as one file (.maquettepack)", systemImage: "square.and.arrow.up") { sharing = app.package(project) }
-        Button("Export folder (with library items)", systemImage: "folder") { sharing = app.exportFolder(project) }
-        Button("Archive", systemImage: "archivebox") { app.archive(project) }
-        Button("Delete", systemImage: "trash", role: .destructive) { deleting = project }
+/// What Home is showing and doing: the open stack, the search, selecting, and the dialogs in flight.
+@Observable
+@MainActor
+final class GalleryState {
+    var query = ""
+    var openStack: String?
+    var selecting = false
+    var selected: Set<String> = []
+    var scrolling = false
+    var showNewProject = false
+    var showArchive = false
+    var importing = false
+    var sharing: URL?
+    var renaming: ProjectSummary?
+    var renamingStack: GalleryStack?
+    var naming: [String]?
+    var nameText = ""
+    var deleting: [String] = []
+
+    func endSelecting() {
+        selecting = false
+        selected = []
     }
 }
 
-/// Archived projects, ready to restore.
-private struct ArchiveSheet: View {
+/// A project's touch-and-hold menu.
+private struct ProjectMenu: View {
+    let project: ProjectSummary
+    let state: GalleryState
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        HmmSheet("Archive") {
-            if app.archived.isEmpty {
-                Hint("Nothing archived. Archive a project from its menu (touch and hold) to tidy the Theater without deleting it.")
+        let id = project.id.raw
+        Button("Open", systemImage: "arrow.up.forward.app") { app.open(url: project.url) }
+        Button("Rename", systemImage: "pencil") {
+            state.nameText = project.info.name
+            state.renaming = project
+        }
+        Button("Duplicate", systemImage: "plus.square.on.square") { app.duplicate(project) }
+        Menu("Add to stack", systemImage: "square.stack") {
+            Button("New stack…", systemImage: "plus") {
+                state.nameText = ""
+                state.naming = [id]
             }
-            ForEach(app.archived) { project in
-                HStack {
-                    Text(project.info.name).font(.hmm(.headline, weight: .semibold))
-                    Spacer()
-                    HmmPillButton("Restore", systemName: "arrow.uturn.backward") { app.unarchive(project) }
-                }
+            ForEach(app.gallery.stacks.filter { !$0.members.contains(id) }) { stack in
+                Button(stack.name) { app.addToStack([id], stack: stack.id) }
             }
         }
+        if app.gallery.stack(containing: id) != nil {
+            Button("Move out of the stack", systemImage: "arrow.up.square") { app.moveOutOfStacks([id]) }
+        }
+        Button("Share as one file (.maquettepack)", systemImage: "square.and.arrow.up") { state.sharing = app.package(project) }
+        Button("Export folder (with library items)", systemImage: "folder") { state.sharing = app.exportFolder(project) }
+        Button("Archive", systemImage: "archivebox") { app.archive(project) }
+        Button("Delete", systemImage: "trash", role: .destructive) { state.deleting = [id] }
+    }
+}
+
+/// A stack's touch-and-hold menu.
+private struct StackMenu: View {
+    let stack: GalleryStack
+    let state: GalleryState
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        Button("Open", systemImage: "square.stack") { state.openStack = stack.id }
+        Button("Rename", systemImage: "pencil") {
+            state.nameText = stack.name
+            state.renamingStack = stack
+        }
+        Button("Unstack", systemImage: "square.stack.3d.down.right") { withHmmAnimation(.standard) { app.unstack(stack.id) } }
     }
 }

@@ -1,8 +1,9 @@
 import Foundation
 import LoweyCore
 
-/// Where you left off: the open project and scene, the playhead, the open panel, the Director view, the timeline's
-/// state. Saved when the app leaves the screen and on every autosave; the next launch reopens it.
+/// Where you left off: the open project and scene, the playhead, the open panel, the Director view. Saved when the
+/// app leaves the screen and on every save; the next launch reopens it. The timeline's state belongs to the project
+/// (its workspace).
 struct SessionRestoration: Codable, Equatable {
     /// The project package's file name in the projects folder (the folder itself moves with iCloud).
     var project: String
@@ -10,7 +11,6 @@ struct SessionRestoration: Codable, Equatable {
     var time: Double
     var panel: String?
     var directorView: Bool
-    var timelineCollapsed: Bool
 
     static let key = "session.restoration"
 
@@ -21,7 +21,6 @@ struct SessionRestoration: Codable, Equatable {
         time = editor.time
         panel = editor.openPanel?.rawValue
         directorView = editor.directorView
-        timelineCollapsed = editor.timelineCollapsed
     }
 
     static func load(from defaults: UserDefaults = .standard) -> SessionRestoration? {
@@ -45,7 +44,6 @@ struct SessionRestoration: Codable, Equatable {
         editor.setTime(min(max(time, 0), editor.timeline.duration))
         editor.openPanel = panel.flatMap(ClusterPanel.init(rawValue:))
         if directorView, editor.shotCamera != nil { editor.setDirectorView(true) }
-        editor.timelineCollapsed = timelineCollapsed
     }
 }
 

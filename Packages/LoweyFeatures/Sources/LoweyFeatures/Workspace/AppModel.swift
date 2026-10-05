@@ -17,9 +17,12 @@ public final class AppModel {
     let library: LibraryModel
     private(set) var projects: [ProjectSummary] = []
     private(set) var archived: [ProjectSummary] = []
-    var thumbnails: [ProjectID: UIImage] = [:]
-    /// Looping previews (a few frames of each project's first seconds) for the Theater cards.
-    var loops: [ProjectID: [CGImage]] = [:]
+    /// Bumped when a project's card is drawn again, so its still and turntable reload. Cards load their own pictures
+    /// when they come on screen (`cardImage`), and read the turntable a frame at a time while they're visible.
+    var cardRevisions: [ProjectID: Int] = [:]
+    @ObservationIgnored let cardImages = CardImageCache()
+    /// How the gallery is arranged: stacks and the sort (`gallery.json` beside the projects).
+    var gallery = GalleryArrangement()
     var editor: EditorModel?
     var toast: HmmToastMessage?
     /// The 60-second tour (first launch, or Settings ▸ Take the tour).
@@ -38,15 +41,18 @@ public final class AppModel {
     @ObservationIgnored private var started = false
     @ObservationIgnored let logger = Logger(subsystem: AppIdentity.subsystem, category: "app")
 
-    public init() {
+    public convenience init() {
         let documents = DocumentLocator.defaultLocalRoot
         let base = AppIdentity.isUITesting ? documents.appendingPathComponent("UITest-\(UUID().uuidString)") : documents
         let locator = DocumentLocator(containerIdentifier: nil, subfolder: "Projects", localRoot: base)
-        let local = locator.localFolder
-        try? FileManager.default.createDirectory(at: local, withIntermediateDirectories: true)
-        storage = .local(local)
-        projectStore = ProjectStore(root: local)
-        let libraryRoot = base.appendingPathComponent("Lowey Library")
+        self.init(projects: locator.localFolder, library: base.appendingPathComponent("Lowey Library"))
+    }
+
+    /// Projects and library in the given folders, on this device (the app's own, or the Home benchmark's scratch ones).
+    init(projects: URL, library libraryRoot: URL) {
+        try? FileManager.default.createDirectory(at: projects, withIntermediateDirectories: true)
+        storage = .local(projects)
+        projectStore = ProjectStore(root: projects)
         try? FileManager.default.createDirectory(at: libraryRoot, withIntermediateDirectories: true)
         library = LibraryModel(store: LibraryStore(root: libraryRoot))
     }
@@ -174,32 +180,53 @@ public final class AppModel {
         }
     }
 
+    /// Back home: the project is saved, the editor closes (shrinking into its card), then the card is drawn again.
     func closeEditor() {
         guard let editor else { return }
         Task {
-            await editor.saveNow(thumbnail: true)
+            await editor.saveNow(thumbnail: false)
+            let card = editor.cardJob
             editor.tearDown()
             self.editor = nil
             SessionRestoration.clear()
             refreshProjects()
+            await drawCard(card)
         }
     }
 
     // MARK: Thumbnails
 
-    func setThumbnail(_ image: UIImage, loop: [CGImage], for id: ProjectID) {
-        thumbnails[id] = image
-        if !loop.isEmpty { loops[id] = loop }
+    func setThumbnail(_ image: UIImage, for id: ProjectID) {
+        cardImages.set(image, for: id)
+        cardRevisions[id, default: 0] += 1
+    }
+
+    /// A project's still for its card, decoded off the main thread and kept in a small cache.
+    func cardImage(for project: ProjectSummary) async -> UIImage? {
+        if let cached = cardImages.image(for: project.id) { return cached }
+        let url = project.thumbnailURL
+        let image = await Task.detached(priority: .userInitiated) {
+            UIImage(contentsOfFile: url.path)?.preparingThumbnail(of: CGSize(width: 640, height: 360))
+        }.value
+        if let image { cardImages.set(image, for: project.id) }
+        return image
     }
 
     func refreshProjects() {
         projects = projectStore.listProjects()
-        for project in projects {
-            if let data = try? Data(contentsOf: project.thumbnailURL), let image = UIImage(data: data) {
-                thumbnails[project.id] = image
-            }
-            let loopURL = project.url.appendingPathComponent(Thumbnailer.loopFile)
-            if loops[project.id] == nil, let frames = Thumbnailer.readLoop(loopURL) { loops[project.id] = frames }
+        gallery = GalleryArrangement.load(from: projectStore.root)
+        let ids = Set(projects.map(\.id.raw))
+        let before = gallery
+        gallery.prune(keeping: ids)
+        if gallery != before { saveGallery() }
+    }
+
+    /// Writes the gallery's arrangement (a failure only costs the arrangement, never a project).
+    func saveGallery() {
+        do {
+            try gallery.save(to: projectStore.root)
+        } catch {
+            logger.error("Couldn't save the gallery: \(error.localizedDescription)")
         }
     }
 
@@ -220,5 +247,27 @@ struct ProjectConflict: Identifiable, Sendable {
     @MainActor var thisVersion: ConflictVersion {
         let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date()
         return ConflictVersion(id: "current", deviceName: UIDevice.current.name, modified: modified)
+    }
+}
+
+/// The Home cards' stills: a bounded cache, so a gallery of hundreds of projects keeps only what's near the screen.
+@MainActor
+final class CardImageCache {
+    private let cache = NSCache<NSString, UIImage>()
+
+    init(limit: Int = 80) {
+        cache.countLimit = limit
+    }
+
+    func image(for id: ProjectID) -> UIImage? {
+        cache.object(forKey: id.raw as NSString)
+    }
+
+    func set(_ image: UIImage, for id: ProjectID) {
+        cache.setObject(image, forKey: id.raw as NSString)
+    }
+
+    func remove(_ id: ProjectID) {
+        cache.removeObject(forKey: id.raw as NSString)
     }
 }

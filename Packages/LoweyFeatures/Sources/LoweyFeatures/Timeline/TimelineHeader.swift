@@ -25,7 +25,7 @@ struct TimelineHeader: View {
             HmmButton("flag", label: "Add marker", size: 40) { editor.addMarker() }
             HmmButton("waveform", label: "Sound and words", size: 40) { editor.sheet = .audio }
             menu
-            HmmButton("chevron.down", label: "Collapse the timeline", size: 36) { editor.timelineCollapsed = true }
+            HmmButton("chevron.down", label: "Collapse the timeline", size: 36) { editor.timelinePresence = .transport }
         }
         .environment(\.hmmInsideGlass, true)
     }

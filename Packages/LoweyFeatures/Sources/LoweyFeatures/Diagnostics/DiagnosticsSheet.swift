@@ -12,6 +12,7 @@ struct DiagnosticsSheet: View {
     @AppStorage(AppSettings.showsPerformanceHUD) private var showsHUD = false
     @State private var sharing: [URL] = []
     @State private var runningBenchmark = false
+    @State private var runningHomeBenchmark = false
     @State private var benchmarkTier = PreviewQuality.current.tier
     @State private var reports: [URL] = []
     @Environment(\.hmmTheme) private var theme
@@ -39,6 +40,9 @@ struct DiagnosticsSheet: View {
                     .accessibilityIdentifier("run-benchmark-tier-b")
                 }
             }
+            Hint("Home, 20 s: a hundred projects turning in their cards while the gallery scrolls down and back. Same pass rule.")
+            HmmPillButton("Run the Home benchmark", systemName: "square.grid.2x2") { runningHomeBenchmark = true }
+                .accessibilityIdentifier("run-home-benchmark")
             ForEach(reports, id: \.self) { url in
                 HStack {
                     Label(url.lastPathComponent, systemImage: "doc.text").font(.hmm(.footnote)).lineLimit(1)
@@ -57,6 +61,9 @@ struct DiagnosticsSheet: View {
             .accessibilityIdentifier("export-logs")
         }
         .onAppear(perform: loadReports)
+        .fullScreenCover(isPresented: $runningHomeBenchmark, onDismiss: loadReports) {
+            HomeBenchmarkView(diagnostics: app.diagnostics)
+        }
         .fullScreenCover(isPresented: $runningBenchmark, onDismiss: loadReports) {
             BenchmarkRunView(diagnostics: app.diagnostics, tier: benchmarkTier)
         }

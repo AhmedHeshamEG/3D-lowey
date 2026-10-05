@@ -3,9 +3,9 @@ import LoweyCore
 import SwiftUI
 import UIKit
 
-/// Search first, browse second: your models, builds, worlds and scripts. Tap to place, drag onto the stage, touch and
-/// hold for options.
-struct LibraryPanel: View {
+/// Model ▸ Library. Search first, browse second: the Kit, your models, builds, worlds and scripts. Tap to place, drag
+/// onto the stage, touch and hold for options. While swapping, tapping a model swaps the selection for it.
+struct LibraryBrowser: View {
     @Bindable var editor: EditorModel
     @State private var query = ""
     @State private var filter: LibraryFilter = .sets
@@ -20,49 +20,47 @@ struct LibraryPanel: View {
     private var library: LibraryModel { editor.library }
 
     var body: some View {
-        HmmPanel(isSwapping ? "Swap for…" : "Library", width: 400, close: close) {
-            VStack(alignment: .leading, spacing: HmmSpacing.s) {
-                HStack {
-                    Image(systemName: "magnifyingglass").foregroundStyle(theme.text2)
-                    TextField("Search: tree, desk, robot…", text: $query)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .accessibilityIdentifier("library-search")
-                    HmmButton("square.and.arrow.down", label: "Import models", size: 36) { importing = true }
-                }
-                .padding(.horizontal, HmmSpacing.s)
-                .frame(height: 44)
-                .background(RoundedRectangle(cornerRadius: HmmRadius.control, style: .continuous).fill(theme.surface2))
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: HmmSpacing.xs) {
-                        ForEach(isSwapping ? [.models, .favorites, .recent] : LibraryFilter.allCases, id: \.self) { item in
-                            ChoiceChip(title: item.displayName, isOn: filter == item) { filter = item }
-                        }
+        VStack(alignment: .leading, spacing: HmmSpacing.s) {
+            HStack {
+                Image(systemName: "magnifyingglass").foregroundStyle(theme.text2)
+                TextField("Search: tree, desk, robot…", text: $query)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .accessibilityIdentifier("library-search")
+                HmmButton("square.and.arrow.down", label: "Import models", size: 36) { importing = true }
+            }
+            .padding(.horizontal, HmmSpacing.s)
+            .frame(height: 44)
+            .background(RoundedRectangle(cornerRadius: HmmRadius.control, style: .continuous).fill(theme.surface2))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: HmmSpacing.xs) {
+                    ForEach(isSwapping ? [.models, .favorites, .recent] : LibraryFilter.allCases, id: \.self) { item in
+                        ChoiceChip(title: item.displayName, isOn: filter == item) { filter = item }
                     }
                 }
-                if library.importing > 0 {
-                    Label("Importing \(library.importing)…", systemImage: "arrow.down.circle").font(.hmm(.footnote)).foregroundStyle(theme.text2)
-                }
-                if filter == .sets, query.isEmpty, !isSwapping {
-                    KitBrowser(editor: editor, selectedSet: $kitSet, expanded: $expanded)
-                } else if results.isEmpty {
-                    HmmEmptyState(query.isEmpty ? "shippingbox" : "questionmark.folder",
-                                  title: query.isEmpty ? "Your library is empty" : "Nothing called “\(query)” yet",
-                                  message: "Import USDZ, glTF, GLB or OBJ models (a whole folder works), or build something and Save to library.",
-                                  actionTitle: "Import models") { importing = true }
-                } else {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: HmmSpacing.s)], spacing: HmmSpacing.s) {
-                        ForEach(results) { item in
-                            LibraryTile(item: item, thumbnail: library.thumbnail(for: item))
-                                .onAppear { library.requestThumbnail(for: item) }
-                                .onTapGesture {
-                                    HmmHaptics.play(.commit)
-                                    editor.place(item)
-                                }
-                                .accessibilityAddTraits(.isButton)
-                                .draggable(item.id)
-                                .contextMenu { menu(for: item) }
-                        }
+            }
+            if library.importing > 0 {
+                Label("Importing \(library.importing)…", systemImage: "arrow.down.circle").font(.hmm(.footnote)).foregroundStyle(theme.text2)
+            }
+            if filter == .sets, query.isEmpty, !isSwapping {
+                KitBrowser(editor: editor, selectedSet: $kitSet, expanded: $expanded)
+            } else if results.isEmpty {
+                HmmEmptyState(query.isEmpty ? "shippingbox" : "questionmark.folder",
+                              title: query.isEmpty ? "Your library is empty" : "Nothing called “\(query)” yet",
+                              message: "Import USDZ, glTF, GLB or OBJ models (a whole folder works), or build something and Save to library.",
+                              actionTitle: "Import models") { importing = true }
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: HmmSpacing.s)], spacing: HmmSpacing.s) {
+                    ForEach(results) { item in
+                        LibraryTile(item: item, thumbnail: library.thumbnail(for: item))
+                            .onAppear { library.requestThumbnail(for: item) }
+                            .onTapGesture {
+                                HmmHaptics.play(.commit)
+                                editor.place(item)
+                            }
+                            .accessibilityAddTraits(.isButton)
+                            .draggable(item.id)
+                            .contextMenu { menu(for: item) }
                     }
                 }
             }
@@ -105,11 +103,6 @@ struct LibraryPanel: View {
                 false
             }
         }
-    }
-
-    private func close() {
-        editor.openPanel = nil
-        editor.libraryPurpose = .place
     }
 
     @ViewBuilder

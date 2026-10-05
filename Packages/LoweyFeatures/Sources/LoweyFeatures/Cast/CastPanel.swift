@@ -9,7 +9,7 @@ struct CastPanel: View {
     @Environment(\.hmmTheme) private var theme
 
     var body: some View {
-        HmmPanel("Cast", width: 360, close: { editor.openPanel = nil }) {
+        HmmPanel("Cast", width: 360, sizing: HmmPanelSizing(id: "cast"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.m) {
                 PanelSection("Add") {
                     TileGrid {

@@ -769,3 +769,91 @@ so auto-merge waits for it. The release workflow skips commits marked `[build-on
 PR ran twice (push + PR). After, on this phase's PR with every job routed in (Core, kit, Engine, Features and App all
 changed): **21.5 min**, once. The slowest job is now the Engine render tests (21 min); the app build and UI tests
 finish in 12 min beside it instead of 28 min after it. A docs-only change runs only the routing job and `CI result`.
+
+## Maquette 0.2 — M2, the canvas owns the screen
+
+**D-101 — The making tools are Model, Draw, Paint, Animate and Cast.** Model holds what 2.0 called Build (shapes,
+lights, cameras, words, marks on the frame, effects, screen effects, and now photos and videos), the Library (the
+Kit and your models) and snapping, as three pages; the modelling tools of M3 join it. Draw keeps ink, solid shapes
+and flipbooks. Paint has the Shadow Brush and Scatter, which already paint (on objects and over the ground); colour
+painting joins them in M6. Animate has no panel: it calls the whole timeline (again: back to the transport). Cast is
+unchanged. *Rejected:* the Library as a sixth button (CONTEXT allows five); Animate as a panel (it would repeat the
+timeline's header); hiding Paint until M6 (it has real tools today, so it isn't empty).
+
+**D-102 — One home per function, and time lives in the timeline.** The audit (docs/LAYOUT.md) found six controls in
+two places: Actions ▸ Sound and Voiceover beside the timeline's Sound and words, Actions ▸ Timeline beside the
+timeline menu's settings, Transform's Drop to the ground beside the inspector's, the palette's own Pick beside the
+sidebar's, Build's "Open the library" beside the Library button. Each now has one home; sound and the timeline's
+settings stay in the timeline, which the corner control calls in one tap. The menu bar and the keyboard are other
+ways in, not other homes. *Rejected:* keeping Sound in Actions for discoverability (the tour now says time is called
+from Animate and the corner control).
+
+**D-103 — The timeline is on call: hidden, the slim transport, or whole.** A new project shows no timeline. The
+corner control (bottom right, beside the views) calls the transport and sends the timeline away; Animate opens it
+whole and, tapped again, folds it to the transport. The divider resizes it; dragged down past the transport it goes
+away. Each project remembers which of the three it was and its height. *Rejected:* one global height (2.0's
+`@AppStorage`): a character piece and an animation want different room.
+
+**D-104 — How a project shows lives in `workspace.json`, beside `project.json`.** The timeline's presence and
+height, snapping, the grid, the starter template and its first panel. It's view state, not the project, so it stays
+out of the history journal and undo, is written 0.4 s after a change (and when the project closes), and falls back
+to the defaults when missing, damaged or from the future. It travels with the package (copies, `.maquettepack`,
+iCloud Drive). *Rejected:* a `project.json` field (every resize would be a command in the journal and an undo step);
+`UserDefaults` keyed by project (it wouldn't follow the project to another device).
+
+**D-105 — The inspector floats beside the selection.** hmm-kit's `HmmFloatingPlacement` keeps it on its side while
+it fits, flips it at the screen's edge and, when neither side fits, covers as little as it can. The selection's
+box is projected onto the stage at once when the selection changes, 0.12 s after edits to it pause and 0.15 s after
+the camera stops moving, so a drag or an orbit doesn't re-run SwiftUI 120 times a second; the inspector glides over
+when things come to rest. It stays
+in the room the chrome leaves (below the clusters, clear of the sidebar, an open panel and the bottom row), docks to
+the edge when the selection is off screen, and hides while a making tool's panel is open. *Rejected:* tracking every
+frame (layout per frame for a panel nobody reads mid-orbit); a popover (it closes on the first touch of the stage).
+
+**D-106 — Every panel resizes from a corner grip and remembers its size on the device.** hmm-kit's `hmmResizable`
+(`HmmPanel(sizing:)` uses it): drag the grip, double-tap it for the original size; sizes live in `UserDefaults` per
+panel. *Rejected:* sizes per project (they fit the person's screen and hands, not the project).
+
+**D-107 — The joystick is on by default and can leave from its own ×.** Settings ▸ Stage brings it back and holds its
+speed. *Rejected:* keeping its toggle in a tool panel (a preference isn't a tool).
+
+**D-108 — Home's cards turn: a turntable rendered once, played a frame at a time.** When a project closes, its card
+is drawn after the editor has gone (closing no longer waits): the still first, then 48 frames of the scene turning
+once around everything in it, from the work view's height, in its Look (6 s a turn at 8 fps, 480 px wide), cached in
+the package as a GIF. A card opens the GIF only while it's on screen and decodes just the frame it shows; it pauses
+while the gallery scrolls and while a project is open; Reduce Motion keeps the still. Stills load off the main
+thread into an 80-card cache. *Rejected:* rendering each card live with Metal (a GPU pass per card); keeping decoded
+frames (25 MB a project, 2.5 GB at a hundred); looping HEVC with a player per card (a dozen hardware decoders).
+
+**D-109 — A card grows into the stage with the system's zoom transition.** The open project is a full-screen cover
+over Home with `navigationTransition(.zoom)` from the card's picture, so it grows out of the card and shrinks back
+into it. Interactive dismissal is off: pinching and dragging belong to the stage, and the project closes from Home in
+the corner. *Rejected:* a hand-built matched-geometry overlay (it re-lays out the Metal stage every frame of the
+animation).
+
+**D-110 — Stacks, search and sort are hmm-kit's `GalleryArrangement`, saved as `gallery.json` beside the projects.**
+Cutaway's home will use the same. Drop a card on another to stack them; projects that disappear are pruned; search
+looks through every project and stack by name; the sort (Recent, Name, Date created) is remembered. *Rejected:*
+stacks as folders on disk (the project list, iCloud Drive and Files bookmarks all follow package locations).
+
+**D-111 — Starter templates prepare the workspace and place nothing.** Blank, Model to print (Clay, studio light, a
+1 cm grid, 5 cm shapes, close up, Model open), Room or building (a 25 cm grid, the view from above, Model open),
+Character (Cast open, eye level, the transport showing), Animation (the timeline open). Each suggests a Look and a
+Mood that New project lets you change. Sketch arrives with the Schizzo board; millimetres and the print-bed outline
+with M3/M4's precision tools; the walls tool with M4. *Rejected:* listing Sketch now (a template promising a tool
+that isn't there is a stub); templates that place objects (CONTEXT §4.2: an empty project).
+
+**D-112 — LAYOUT.md is walked by the UI tests, and the gates are measured.** `Tools/layout_walk.py` turns each walkable
+row into `AppUITests/LayoutWalk.swift` (CI fails when they disagree) and `LayoutTests` taps every row from a new
+project. The idle stage's share is the window minus the frames of the clusters, the sidebar and the bottom-right
+controls. The Home benchmark (Diagnostics) builds a hundred projects in a scratch folder as clones of one real project
+(no extra space on APFS), scrolls the real gallery grid down and back for 20 s at one speed and records every
+presented frame with the Night Market's pass rule; CI runs it on the simulator to prove it runs, and the device JSON
+is the gate (CONTEXT §6). *Rejected:* a synthetic grid of placeholder cards (it wouldn't measure the cards people see).
+
+**D-113 — Panel section titles are translated too.** `Tools/strings.py` didn't scan `PanelSection`, so 27 section
+titles (Shapes, Light & camera, Palette…) showed in English in the Italian and Arabic builds; they're found and
+translated now. In Arabic, Move is نقل: it read the same as Animate (تحريك), now beside it.
+
+**D-114 — People see "Home", and the studio is studio h.** The Theater is called Home everywhere a person reads it
+(code names stay); Settings ▸ About says "Made by studio h.".

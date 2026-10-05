@@ -120,7 +120,7 @@ public final class MarketBenchmark {
     }
 
     /// The app's physical memory footprint in megabytes.
-    static func memoryFootprintMB() -> Double {
+    public static func memoryFootprintMB() -> Double {
         var info = task_vm_info_data_t()
         var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
         let result = withUnsafeMutablePointer(to: &info) { pointer in

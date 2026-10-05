@@ -18,6 +18,7 @@ public struct ProjectSummary: Hashable, Sendable, Identifiable {
 ///       audio/
 ///       renders/
 ///       thumbnail.png
+///       workspace.json  how the project is shown (timeline, snapping, grid); outside the journal
 public enum ProjectLayout {
     public static let fileExtension = "maquette"
     /// 3D-lowey projects (`.lowey`) still open, list and import.
@@ -35,6 +36,7 @@ public enum ProjectLayout {
     public static let audioFolder = "audio"
     public static let rendersFolder = "renders"
     public static let thumbnail = "thumbnail.png"
+    public static let workspaceFile = "workspace.json"
 
     public static func sceneURL(_ id: SceneID, in project: URL) -> URL {
         project.appendingPathComponent(scenesFolder).appendingPathComponent("\(id.raw).json")
@@ -99,22 +101,32 @@ public struct ProjectStore: Sendable {
 
     // MARK: Create / delete / duplicate / rename
 
-    /// Creates a project with one empty scene and returns its URL and first document.
-    public func createProject(name: String, look: Look = .default, firstSceneName: String = "Scene 1") throws -> (URL, Document) {
+    /// Creates a project with one empty scene and returns its URL and first document. A starter template's workspace
+    /// and starting view come along when given.
+    public func createProject(name: String, look: Look = .default, firstSceneName: String = "Scene 1", viewpoint: Viewpoint = .default,
+                              workspace: ProjectWorkspace? = nil) throws -> (URL, Document) {
         let url = uniqueURL(for: name)
         let fileManager = FileManager.default
         for folder in [ProjectLayout.scenesFolder, ProjectLayout.assetsFolder, ProjectLayout.audioFolder, ProjectLayout.rendersFolder] {
             try fileManager.createDirectory(at: url.appendingPathComponent(folder), withIntermediateDirectories: true)
         }
         try DocumentPackage(url: url).writeManifest(ProjectLayout.manifest())
-        let scene = Scene(id: .make(), name: firstSceneName)
+        let scene = Scene(id: .make(), name: firstSceneName, viewpoint: viewpoint)
         let info = ProjectInfo(
             id: .make(), name: name, look: look,
             sceneOrder: [scene.id], sceneNames: [scene.id: scene.name], lastOpenedScene: scene.id
         )
         let document = Document(project: info, scene: scene)
         try save(document, to: url)
+        if let workspace { try saveWorkspace(workspace, at: url) }
         return (url, document)
+    }
+
+    /// A new project from a starter template, in the Look and Mood chosen (the template's suggestion by default).
+    public func createProject(name: String, template: StarterTemplate, look: Look? = nil) throws -> (URL, Document) {
+        var chosen = look ?? Look.default.applying(template.mood)
+        if look == nil { chosen.presetID = template.lookPresetID }
+        return try createProject(name: name, look: chosen, viewpoint: template.viewpoint, workspace: template.workspace)
     }
 
     /// Writes a complete, already-built project (used by samples and imports).

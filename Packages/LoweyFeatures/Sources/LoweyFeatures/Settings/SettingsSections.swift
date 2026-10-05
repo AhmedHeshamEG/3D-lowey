@@ -11,6 +11,8 @@ struct PreferencesForm: View {
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
     @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
     @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
+    @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
+    @AppStorage(AppSettings.joystickSpeed) private var joystickSpeed = 1.0
     @AppStorage(AppSettings.storeInICloud) private var iCloud = true
 
     var body: some View {
@@ -26,6 +28,12 @@ struct PreferencesForm: View {
             Toggle("Always full resolution", isOn: $fullResolution)
             LabeledSlider(title: "Moving around (orbit, pan, zoom)", value: navigationSpeed, range: AppSettings.navigationSpeedRange,
                           format: { String(format: "%.2g×", $0) }) { navigationSpeed = $0 }
+            Toggle("Joystick under a selection", isOn: $showsJoystick)
+                .accessibilityIdentifier("settings-joystick")
+            if showsJoystick {
+                LabeledSlider(title: "Joystick speed", value: joystickSpeed, range: AppSettings.joystickSpeedRange,
+                              format: { String(format: "%.2g×", $0) }) { joystickSpeed = $0 }
+            }
         }
         Section {
             Toggle("Keep projects in iCloud Drive", isOn: Binding(get: { iCloud }, set: { value in
@@ -46,7 +54,7 @@ struct AboutSection: View {
     var body: some View {
         Section("About") {
             LabeledContent("Version", value: AppIdentity.version)
-            LabeledContent("Made by", value: "hmm. studio")
+            LabeledContent("Made by", value: "studio h.")
             NavigationLink("Licences") { AcknowledgementsView() }
             Text("No account, no tracking: nothing leaves this iPad unless you share it.").font(.hmm(.footnote))
         }

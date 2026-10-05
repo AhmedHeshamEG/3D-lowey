@@ -3,6 +3,30 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.2] — Maquette — the canvas owns the screen (phase M2)
+
+- **The stage owns the screen.** At rest it holds at least 85% of it: two corner clusters, a thin sidebar, and
+  everything else when called. The layout that freezes at 1.0, every control mapped to one home in
+  [docs/LAYOUT.md](docs/LAYOUT.md).
+- **Model, Draw, Paint, Animate, Cast** top right. Model gathers what you put into the world (shapes, lights,
+  cameras, words, photos and videos, effects), the Kit and your models, and snapping. Paint has the Shadow Brush and
+  Scatter. Animate opens the timeline. Top left is now **Home** · Actions · Look · Select.
+- **Time on call.** New projects start without a timeline. The control at the bottom right calls the slim
+  transport; Animate opens the whole timeline; each project remembers how it left it, and how tall.
+- **The inspector floats beside what's selected**, on whichever side has room, and glides over when the view
+  settles. Move, turn and size are at its top; align and distribute when several things are selected.
+- **Every panel resizes** from the grip in its corner and remembers its size (double-tap the grip to reset).
+- **The joystick is on by default**, with its own × to hide it (Settings ▸ Stage brings it back).
+- **Home, the living gallery.** Each card is the model slowly turning in its own Look; tap it and it grows into the
+  stage. Stacks (drag a card onto another), search, sort, and Select for several at once. Closing a project no
+  longer waits for its card to be drawn.
+- **Starter templates** in New project: Model to print, Room or building, Character, Animation, Blank.
+- Nothing appears in two places any more: sound and the timeline's settings live in the timeline, photos and videos
+  are added from Model, Pick is the sidebar's.
+- **Diagnostics ▸ Run the Home benchmark**: a hundred projects turning while the gallery scrolls for 20 seconds.
+- Section titles in panels are translated into Italian and Arabic too; Settings ▸ About says studio h.
+- hmm-kit 0.3.0: resizable panels (`hmmResizable`), `HmmFloatingPlacement`, `GalleryArrangement`.
+
 ## [0.1] — Maquette — foundation & feel (phase M1)
 
 - **3D-lowey is now Maquette**, by studio h.: its own name, icon (temporary, until the identity phase), bundle id and

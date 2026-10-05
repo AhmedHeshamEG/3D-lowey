@@ -13,7 +13,7 @@ struct LookPanel: View {
     private var look: Look { editor.look }
 
     var body: some View {
-        HmmPanel("Look", width: 380, close: { editor.openPanel = nil }) {
+        HmmPanel("Look", width: 380, sizing: HmmPanelSizing(id: "look"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.m) {
                 Toggle("Only this scene", isOn: Binding(get: { editor.lookIsSceneOnly }, set: { editor.setLookSceneOnly($0) }))
                     .font(.hmm(.body, weight: .semibold))
@@ -106,7 +106,8 @@ struct LookPanel: View {
     }
 }
 
-/// The palette: linked colours (change one and everything using it follows), Pick, add and remove.
+/// The palette: linked colours (change one and everything using it follows), add and remove. The sidebar's Pick takes
+/// a colour from the stage into the slot being edited.
 struct PaletteSection: View {
     @Bindable var editor: EditorModel
     @State private var editingSlot: Int?
@@ -117,11 +118,6 @@ struct PaletteSection: View {
     var body: some View {
         PanelSection("Palette") {
             HStack {
-                HmmButton("eyedropper.halffull", label: "Pick a colour", isOn: editor.pickActive, size: 36) {
-                    editor.pickSlot = editingSlot ?? 0
-                    editor.pickActive.toggle()
-                    if editor.pickActive { editor.app.show("Tap an object to take its colour into slot \(editor.pickSlot + 1)") }
-                }
                 HmmButton("plus", label: "Add a colour", size: 36) { editor.addPaletteSwatch() }
                 Spacer()
             }
@@ -132,6 +128,7 @@ struct PaletteSection: View {
                 editingSlot = slot
                 slotColor = palette.color(at: slot).color
                 editor.currentColor = .palette(slot)
+                editor.pickSlot = slot
             }
             if let slot = editingSlot, palette.swatches.indices.contains(slot) {
                 ColorPicker(palette.swatches[slot].name, selection: $slotColor, supportsOpacity: false)

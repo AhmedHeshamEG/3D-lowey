@@ -3,28 +3,20 @@ import LoweyCore
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Actions: add media, export and share, the project's scenes and timeline settings, scripts and the AI bridge,
-/// help, diagnostics and settings.
+/// Actions, the long tail: export and share, the project's scenes, history, scripts and the AI bridge, help,
+/// diagnostics and settings. (Sound and the timeline's settings live in the timeline; photos and videos are added
+/// from Model.)
 struct ActionsPanel: View {
     @Bindable var editor: EditorModel
     @Environment(AppModel.self) private var app
-    @State private var importingMedia = false
-    @State private var importingAudio = false
     @State private var renamingScene = false
     @State private var sceneName = ""
     @State private var sharing: URL?
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        HmmPanel("Actions", width: 340, close: { editor.openPanel = nil }) {
+        HmmPanel("Actions", width: 340, sizing: HmmPanelSizing(id: "actions"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.m) {
-                PanelSection("Add") {
-                    TileGrid {
-                        TileButton(title: "Photo or video", systemName: "photo.on.rectangle", identifier: "add-media") { importingMedia = true }
-                        TileButton(title: "Sound", systemName: "waveform") { importingAudio = true }
-                        TileButton(title: "Voiceover", systemName: "mic") { open(.audio) }
-                    }
-                }
                 PanelSection("Share") {
                     TileGrid {
                         TileButton(title: "Export", systemName: "square.and.arrow.up", identifier: "open-export") { open(.export) }
@@ -39,8 +31,7 @@ struct ActionsPanel: View {
                 PanelSection("Project") {
                     TileGrid {
                         TileButton(title: "History", systemName: "clock.arrow.circlepath", identifier: "open-history") { editor.openHistory() }
-                        TileButton(title: "Timeline", systemName: "timeline.selection") { open(.timelineSettings) }
-                        TileButton(title: "Scripts", systemName: "curlybraces") { editor.openScript(nil) }
+                        TileButton(title: "Scripts", systemName: "curlybraces", identifier: "open-scripts") { editor.openScript(nil) }
                         if FeatureFlags.aiBridge {
                             TileButton(title: "AI & laptop", systemName: "network", identifier: "open-bridge") { open(.bridge) }
                             TileButton(title: "Paste script", systemName: "doc.on.clipboard") { editor.importScriptFromClipboard() }
@@ -56,12 +47,6 @@ struct ActionsPanel: View {
                     }
                 }
             }
-        }
-        .fileImporter(isPresented: $importingMedia, allowedContentTypes: [.image, .movie]) { result in
-            if case let .success(url) = result { Task { await editor.importMedia(url) } }
-        }
-        .fileImporter(isPresented: $importingAudio, allowedContentTypes: [.audio], allowsMultipleSelection: true) { result in
-            if case let .success(urls) = result { editor.importAudio(urls, role: .sfx) }
         }
         .alert("Rename scene", isPresented: $renamingScene) {
             TextField("Name", text: $sceneName)

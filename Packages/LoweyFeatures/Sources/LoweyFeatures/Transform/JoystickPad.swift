@@ -164,7 +164,7 @@ private struct JoystickWell: View {
             compass(radius: radius)
             Circle()
                 .fill(theme.accent)
-                .overlay(Image(systemName: TransformPanel.icon(mode)).font(.system(size: 14, weight: .bold)).foregroundStyle(theme.onAccent))
+                .overlay(Image(systemName: mode.systemImage).font(.system(size: 14, weight: .bold)).foregroundStyle(theme.onAccent))
                 .frame(width: 50, height: 50)
                 .scaleEffect(held ? 1.08 : 1)
                 .offset(stick)

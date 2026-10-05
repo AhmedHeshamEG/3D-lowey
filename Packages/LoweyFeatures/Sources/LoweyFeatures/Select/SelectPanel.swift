@@ -11,7 +11,7 @@ struct SelectPanel: View {
     @State private var renameText = ""
 
     var body: some View {
-        HmmPanel("Select", width: 340, close: { editor.openPanel = nil }) {
+        HmmPanel("Select", width: 340, sizing: HmmPanelSizing(id: "select"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.s) {
                 HStack(spacing: HmmSpacing.xs) {
                     ChoiceChip(title: "Tap", systemName: "hand.point.up.left", isOn: editor.tool == .select) { editor.tool = .select }
@@ -26,6 +26,7 @@ struct SelectPanel: View {
                 }
                 Hint("Touch and hold an object on the stage to add it to the selection.")
                 HmmSectionHeader("Outliner · \(editor.scene.objects.count)")
+                    .accessibilityIdentifier("outliner")
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(rows, id: \.id) { row in
                         OutlinerRow(object: row.object, depth: row.depth, isExpanded: expanded.contains(row.id),

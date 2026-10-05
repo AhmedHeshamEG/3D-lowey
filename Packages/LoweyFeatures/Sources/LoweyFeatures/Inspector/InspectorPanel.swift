@@ -2,10 +2,14 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Slides in from the right while something is selected: Transform · Look override · Lines · Motion · Metadata, and
-/// the actions. The few controls used most come first; the rest sit behind More.
+/// Floats beside the selection (the Shell places it): Move · Turn · Size, Transform · Look override · Lines · Motion ·
+/// Metadata, and the actions. The few controls used most come first; the rest sit behind More. Its corner grip
+/// resizes it; the Shell sizes it from `size`.
 struct InspectorPanel: View {
     @Bindable var editor: EditorModel
+    @Binding var size: HmmPanelSize?
+    static let sizing = HmmPanelSizing(id: "inspector", minimum: CGSize(width: 290, height: 240), maximum: CGSize(width: 520, height: 1400))
+    static let defaultSize = CGSize(width: 330, height: 560)
     @State private var name = ""
     @State private var showsMore = false
     @State private var savingPrefab = false
@@ -19,11 +23,13 @@ struct InspectorPanel: View {
                 .padding(.top, HmmSpacing.s)
             ScrollView {
                 VStack(alignment: .leading, spacing: HmmSpacing.m) {
+                    GizmoModeRow(editor: editor)
                     if let object = editor.singleSelection {
                         single(object)
                     } else {
                         Text("\(editor.selection.count) objects").font(.hmm(.body)).foregroundStyle(theme.text2)
                         PaletteRow(palette: editor.look.palette, selected: nil) { editor.setColor(.palette($0)) }
+                        ArrangeSection(editor: editor)
                         LookOverrideSection(editor: editor, object: nil)
                         MotionSection(editor: editor)
                     }
@@ -33,8 +39,8 @@ struct InspectorPanel: View {
             }
             .scrollBounceBehavior(.basedOnSize)
         }
-        .frame(width: 330)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .hmmResizable(Self.sizing, size: $size, defaultWidth: Self.defaultSize.width, title: "Inspector", appliesFrame: false)
         .hmmPanelBackground()
         .onAppear { name = editor.singleSelection?.name ?? "" }
         .onChange(of: editor.selection) { _, _ in name = editor.singleSelection?.name ?? "" }
@@ -112,7 +118,6 @@ struct InspectorPanel: View {
                 Button("Circle of 8") { editor.array(.circle(count: 8, radius: max(step * 1.5, 1), faceCenter: true)) }
                 Button("Circle of 12") { editor.array(.circle(count: 12, radius: max(step * 2, 1.5), faceCenter: true)) }
             }
-            Button("Scatter", systemImage: "circle.hexagongrid") { editor.tool = .scatter }
             Button("To the ground", systemImage: "arrow.down.to.line") { editor.dropSelectionToGround() }
         }
         Section {

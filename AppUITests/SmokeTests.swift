@@ -41,21 +41,20 @@ final class SmokeTests: XCTestCase {
 
     func testCreateBuildUndoAndReopen() {
         launch()
-        shot("Theater")
+        shot("Home")
         newProject("Smoke")
         shot("Empty stage")
-        tap("Build")
+        tap("Model")
         tap("add-cube")
-        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5), "the inspector slides in for the new cube")
+        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5), "the inspector floats in beside the new cube")
         shot("A cube")
-        tap("Build")
+        tap("Model")
         tap("add-sphere")
-        tap("Undo")
-        tap("Redo")
-        tap("Transform")
         tap("gizmo-rotate")
         shot("Turn gizmo")
-        tap("Theater")
+        tap("Undo")
+        tap("Redo")
+        tap("Home")
         let card = app.descendants(matching: .any)["project-Smoke"].firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         card.tap()
@@ -70,7 +69,7 @@ final class SmokeTests: XCTestCase {
         tap("look-clay")
         tap("duplicate-look")
         shot("My Look")
-        tap("Build")
+        tap("Model")
         tap("add-camera")
         tap("director-view")
         shot("Director view")
@@ -88,6 +87,7 @@ final class SmokeTests: XCTestCase {
         tap("add-me")
         tap("Cast")
         shot("A Blob")
+        tap("Animate")
         tap("timeline-mode-keyframe")
         tap("timeline-mode-perform")
         shot("Perform")
@@ -113,14 +113,14 @@ final class SmokeTests: XCTestCase {
         launch(["-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG"])
         shot("Theater (ar)")
         newProject("RTL")
-        let build = app.descendants(matching: .any)["Build"].firstMatch
+        let model = app.descendants(matching: .any)["Model"].firstMatch
         let look = app.descendants(matching: .any)["Look"].firstMatch
-        XCTAssertTrue(build.waitForExistence(timeout: 10))
+        XCTAssertTrue(model.waitForExistence(timeout: 10))
         XCTAssertTrue(look.exists)
-        XCTAssertLessThan(build.frame.midX, look.frame.midX, "Build (top right in English) sits on the left in Arabic")
-        XCTAssertNotEqual(build.label, "Build", "the label is translated")
-        tap("Build")
-        shot("Build panel (ar)")
+        XCTAssertLessThan(model.frame.midX, look.frame.midX, "Model (top right in English) sits on the left in Arabic")
+        XCTAssertNotEqual(model.label, "Model", "the label is translated")
+        tap("Model")
+        shot("Model panel (ar)")
     }
 
     func testItalianLabels() {

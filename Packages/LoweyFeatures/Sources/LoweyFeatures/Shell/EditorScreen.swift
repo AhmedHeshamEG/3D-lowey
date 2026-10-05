@@ -2,31 +2,33 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// The open project, Procreate Dreams grammar: the Stage on top, the Timeline below (resizable, collapsible to a
-/// transport bar); document and app things in the top-left cluster, the making tools in the top-right one, two
-/// context sliders and undo / redo in the sidebar, the inspector sliding in from the right while something is
-/// selected. Four fingers hide everything but the stage; playback fades the chrome after two seconds.
+/// The open project (docs/LAYOUT.md): the stage owns the screen. Document and app things in the top-left cluster,
+/// the making tools in the top-right one, two context sliders and undo / redo in the sidebar, the inspector floating
+/// beside the selection, and time on call: the timeline is hidden until the corner control or Animate calls it, as a
+/// slim transport or the whole timeline at the height this project remembers. Four fingers hide everything but the
+/// stage; playback fades the chrome after two seconds.
 struct EditorScreen: View {
     @Bindable var editor: EditorModel
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.preferredPencilSqueezeAction) private var squeezeAction
-    @AppStorage("timeline.height") private var timelineHeight = 260.0
     @AppStorage(AppSettings.showsPerformanceHUD) private var showsHUD = false
 
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 stageArea
-                if !editor.chromeHidden {
-                    TimelineDivider(height: $timelineHeight, collapsed: $editor.timelineCollapsed, maximum: geometry.size.height * 0.6)
-                    if editor.timelineCollapsed {
+                if !editor.chromeHidden, editor.timelinePresence != .hidden {
+                    TimelineDivider(editor: editor, maximum: geometry.size.height * 0.6)
+                    if editor.timelinePresence == .transport {
                         TransportBar(editor: editor)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     } else {
                         // Time runs left to right in every language (as on a ruler); the panels around it mirror.
                         TimelinePane(editor: editor)
                             .environment(\.layoutDirection, .leftToRight)
-                            .frame(height: min(max(timelineHeight, 150), geometry.size.height * 0.6))
+                            .frame(height: min(editor.timelineHeight, geometry.size.height * 0.6))
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
             }
@@ -52,7 +54,7 @@ struct EditorScreen: View {
             return true
         }
         .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.chromeHidden)
-        .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.timelineCollapsed)
+        .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.timelinePresence)
         .onAppear { editor.loadWaveforms() }
     }
 
@@ -101,13 +103,15 @@ private struct ChromeRestoreButton: View {
     }
 }
 
-/// The handle between stage and timeline: drag to resize, tap to collapse the timeline into a transport bar.
+/// The handle between stage and timeline: drag to resize (down past the transport sends the timeline away), tap to
+/// switch between the whole timeline and the slim transport. The project remembers the height.
 private struct TimelineDivider: View {
-    @Binding var height: Double
-    @Binding var collapsed: Bool
+    let editor: EditorModel
     let maximum: CGFloat
     @State private var start: Double?
     @Environment(\.hmmTheme) private var theme
+
+    static let transportHeight = 56.0
 
     var body: some View {
         ZStack {
@@ -119,19 +123,24 @@ private struct TimelineDivider: View {
         .gesture(
             DragGesture(minimumDistance: 2)
                 .onChanged { value in
-                    if start == nil { start = collapsed ? 150 : height }
-                    let proposed = (start ?? height) - Double(value.translation.height)
-                    collapsed = proposed < 110
-                    height = min(max(proposed, 150), Double(maximum))
+                    if start == nil { start = editor.timelinePresence == .full ? editor.timelineHeight : Self.transportHeight }
+                    let proposed = (start ?? editor.timelineHeight) - Double(value.translation.height)
+                    switch proposed {
+                    case ..<24: editor.timelinePresence = .hidden
+                    case ..<110: editor.timelinePresence = .transport
+                    default:
+                        editor.timelinePresence = .full
+                        editor.setTimelineHeight(min(proposed, Double(maximum)))
+                    }
                 }
                 .onEnded { _ in start = nil }
         )
         .onTapGesture {
             HmmHaptics.play(.selection)
-            collapsed.toggle()
+            editor.timelinePresence = editor.timelinePresence == .full ? .transport : .full
         }
         .accessibilityElement()
-        .accessibilityLabel(collapsed ? "Show the timeline" : "Collapse the timeline")
+        .accessibilityLabel(editor.timelinePresence == .full ? "Collapse the timeline" : "Show the timeline")
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("timeline-divider")
     }

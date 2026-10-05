@@ -201,7 +201,8 @@ struct PanelSection<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.xs) {
-            HmmSectionHeader(title)
+            // A stable handle for the layout walk (the header's label is upper-cased for display).
+            HmmSectionHeader(title).accessibilityIdentifier("section-\(title)")
             content()
         }
         .padding(.top, HmmSpacing.xxs)

@@ -101,7 +101,8 @@ flowchart LR
 ## Documents
 
 A project is a `.maquette` folder package (3D-lowey's `.lowey` ones open too): `project.json`, `scenes/*.json`,
-`history/`, `assets/`, `audio/`, `renders/`, a thumbnail and a looping preview. Every file is a versioned envelope
+`history/`, `assets/`, `audio/`, `renders/`, a thumbnail and its turntable, and `workspace.json` (how it shows:
+Core's `ProjectWorkspace`, outside the journal). Every file is a versioned envelope
 `{schemaVersion, kind, payload}`; older versions migrate on load (1.x projects included), newer ones are refused with a
 clear message. Writes are atomic and keep a `.bak` of the last good version. The format is documented for readers in
 [PROJECT_FORMAT.md](PROJECT_FORMAT.md).
@@ -115,6 +116,22 @@ by reference, then write `project.json` and the scene file from the same state. 
 reaches them). The history scrubber (`HistoryCursor` in Core, Actions ▸ History) walks the undo steps both ways from
 wherever it is; versions live in `history/<scene-id>/versions/`. hmm-kit's `DocumentLocator` puts projects in iCloud Drive when the build has the
 entitlement, on the device otherwise; `HmmConflictSheet` resolves conflicting versions.
+
+## The layout
+
+docs/LAYOUT.md is the map; the Shell composes it. `RootView` shows Home (`TheaterView`) and presents the open project
+over it as a full-screen cover with the zoom transition from the card's picture. `EditorScreen` stacks the stage and
+the timeline by `EditorModel.timelinePresence` (hidden, transport, full; height and presence come from and go back to
+`workspace.json` through `EditorModel+Workspace`). `StageChrome` lays out the two clusters, the panel each opens, the
+sidebar and the bottom row; `FloatingInspector` places `InspectorPanel` with hmm-kit's `HmmFloatingPlacement`
+beside `EditorModel.selectionScreenRect` (the selection's box projected by the stage, refreshed on edits and after the
+camera settles: `EditorModel+Inspector`). Panels resize with hmm-kit's `hmmResizable`.
+
+Home's cards (`Workspace/UI`: `GalleryGrid`, `ProjectCard`, `StackCard`, `TurntableView`) are shared by Home and
+the Home benchmark (Diagnostics), so the benchmark measures the real grid. The turntable is drawn after a project
+closes (`AppModel.drawCard`, `Thumbnailer.turntable`) and read a frame at a time while a card is visible. Stacks,
+search and sort are hmm-kit's `GalleryArrangement` (`gallery.json` in the projects folder; `AppModel+Gallery`).
+Starter templates are Core's `StarterTemplate`: a Look and Mood to suggest, a starting viewpoint and a workspace.
 
 ## Device tiers and the load meter
 
@@ -186,6 +203,9 @@ flowchart LR
     Gate -->|yes| Rel[GitHub Release + .ipa]
     Gate -->|yes, ASC secrets set| TF[TestFlight: App Store build]
 ```
+
+The tools job also checks that `AppUITests/LayoutWalk.swift` is what `Tools/layout_walk.py` makes of docs/LAYOUT.md;
+the UI tests walk every row (four tests, by precondition), measure the idle stage's share of the screen and run the Home benchmark.
 
 Golden images are recorded on the CI simulator (`TEST_RUNNER_GOLDEN_OUTPUT`), reviewed and committed under
 `Packages/LoweyEngine/Tests/LoweyEngineTests/Golden`.

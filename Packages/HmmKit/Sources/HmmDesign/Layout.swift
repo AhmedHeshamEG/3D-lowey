@@ -105,21 +105,38 @@
     }
 
     /// A floating panel with a title row: opens from the button that called it, scrolls when Dynamic Type grows.
+    /// With `sizing`, a grip in its bottom corner resizes it and the size is remembered (`hmmResizable`).
     public struct HmmPanel<Content: View>: View {
         private let title: String
         private let width: Double
         private let close: (() -> Void)?
+        private let sizing: HmmPanelSizing?
+        private let gripOnTrailing: Bool
         private let content: Content
+        @State private var size: HmmPanelSize?
         @Environment(\.hmmTheme) private var theme
 
-        public init(_ title: String, width: Double = 340, close: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
+        public init(_ title: String, width: Double = 340, sizing: HmmPanelSizing? = nil, gripOnTrailing: Bool = true,
+                    close: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
             self.title = title
             self.width = width
+            self.sizing = sizing
+            self.gripOnTrailing = gripOnTrailing
             self.close = close
             self.content = content()
         }
 
         public var body: some View {
+            if let sizing {
+                panel
+                    .hmmResizable(sizing, size: $size, defaultWidth: width, gripOnTrailing: gripOnTrailing, title: title)
+                    .hmmPanelBackground()
+            } else {
+                panel.frame(width: width).hmmPanelBackground()
+            }
+        }
+
+        private var panel: some View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text(LocalizedStringKey(title))
@@ -142,8 +159,102 @@
                 }
                 .scrollBounceBehavior(.basedOnSize)
             }
-            .frame(width: width)
-            .hmmPanelBackground()
+        }
+    }
+
+    public extension View {
+        /// A resize grip in the bottom corner: drag it to resize, double-tap it for the original size. The size is
+        /// remembered per panel (`sizing`) and shared through `size` (nil = the original size). With `appliesFrame`
+        /// off, the caller sizes the view from `size` itself (a panel placed by `HmmFloatingPlacement`).
+        func hmmResizable(_ sizing: HmmPanelSizing, size: Binding<HmmPanelSize?>, defaultWidth: Double, gripOnTrailing: Bool = true,
+                          title: String, appliesFrame: Bool = true) -> some View {
+            modifier(HmmResizable(sizing: sizing, size: size, defaultWidth: defaultWidth, gripOnTrailing: gripOnTrailing, title: title,
+                                  appliesFrame: appliesFrame))
+        }
+    }
+
+    struct HmmResizable: ViewModifier {
+        let sizing: HmmPanelSizing
+        @Binding var size: HmmPanelSize?
+        let defaultWidth: Double
+        let gripOnTrailing: Bool
+        let title: String
+        let appliesFrame: Bool
+        @State private var dragStart: HmmPanelSize?
+        @State private var shownHeight: Double = 0
+        @Environment(\.layoutDirection) private var layoutDirection
+
+        func body(content: Content) -> some View {
+            framed(content)
+                .onGeometryChange(for: Double.self) { Double($0.size.height) } action: { shownHeight = $0 }
+                .overlay(alignment: gripOnTrailing ? .bottomTrailing : .bottomLeading) { grip }
+                .onAppear { if size == nil { size = sizing.load() } }
+        }
+
+        @ViewBuilder
+        private func framed(_ content: Content) -> some View {
+            if appliesFrame {
+                content
+                    .frame(width: size?.width ?? defaultWidth)
+                    .frame(maxHeight: size?.height.map { CGFloat($0) })
+            } else {
+                content
+            }
+        }
+
+        /// Whether the grip is on the right as the glass shows it (global drags are measured that way; the trailing
+        /// edge is the left one in right-to-left languages).
+        private var gripOnRight: Bool { gripOnTrailing != (layoutDirection == .rightToLeft) }
+
+        private func resetSize() {
+            sizing.reset()
+            withHmmAnimation(.standard) { size = nil }
+        }
+
+        private var grip: some View {
+            HmmResizeGrip(mirrored: !gripOnRight)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                        .onChanged { value in
+                            let start = dragStart ?? size ?? HmmPanelSize(width: defaultWidth)
+                            if dragStart == nil { dragStart = start }
+                            size = sizing.resized(start, shownHeight: shownHeight, dx: Double(value.translation.width),
+                                                  dy: Double(value.translation.height), gripOnRight: gripOnRight)
+                        }
+                        .onEnded { _ in
+                            dragStart = nil
+                            if let size { sizing.save(size) }
+                        }
+                )
+                .onTapGesture(count: 2, perform: resetSize)
+                .accessibilityElement()
+                .accessibilityLabel(Text("Resize \(title)"))
+                .accessibilityHint(Text("Double-tap for the original size"))
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { resetSize() }
+                .accessibilityIdentifier("resize-\(sizing.id)")
+        }
+    }
+
+    /// The two short diagonal strokes in a resizable panel's corner.
+    struct HmmResizeGrip: View {
+        let mirrored: Bool
+        @Environment(\.hmmTheme) private var theme
+
+        var body: some View {
+            Canvas { context, canvas in
+                var path = Path()
+                let inset: CGFloat = 12
+                for step in [CGFloat(6), 12] {
+                    path.move(to: CGPoint(x: canvas.width - inset - step, y: canvas.height - inset))
+                    path.addLine(to: CGPoint(x: canvas.width - inset, y: canvas.height - inset - step))
+                }
+                context.stroke(path, with: .color(theme.text3), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            }
+            .scaleEffect(x: mirrored ? -1 : 1)
+            .allowsHitTesting(false)
         }
     }
 

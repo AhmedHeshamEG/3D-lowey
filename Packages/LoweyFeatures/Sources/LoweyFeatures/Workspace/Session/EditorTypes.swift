@@ -48,16 +48,23 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     /// Tools where the Pencil (and, if allowed, a finger) paints instead of navigating.
     public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook }
 
+    /// The Draw tools (top right: Draw).
+    public var draws: Bool { self == .ink || self == .draw || self == .flipbook }
+
+    /// The Paint tools (top right: Paint): on objects and over the ground.
+    public var paintsSurfaces: Bool { self == .shadowBrush || self == .scatter }
+
     /// Tools that draw on a guide surface.
     public var usesGuide: Bool { self == .ink || self == .draw }
 }
 
-/// The floating panels the corner clusters open. One at a time; tapping its button again closes it.
+/// The floating panels the corner clusters open. One at a time; tapping its button again closes it. Animate, the
+/// fourth making tool, has no panel: it calls the timeline (docs/LAYOUT.md).
 public enum ClusterPanel: String, Identifiable, Sendable {
     // Top-left: document and app.
     case actions, look, select
     // Top-right: making.
-    case build, draw, transform, cast, library
+    case model, draw, paint, cast
 
     public var id: String { rawValue }
 
@@ -65,6 +72,29 @@ public enum ClusterPanel: String, Identifiable, Sendable {
         switch self {
         case .actions, .look, .select: true
         default: false
+        }
+    }
+}
+
+/// The Model panel's three pages: things to add, the library of models, snapping and the grid.
+public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
+    case add, library, snapping
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .add: "Add"
+        case .library: "Library"
+        case .snapping: "Snapping"
+        }
+    }
+
+    public var systemImage: String {
+        switch self {
+        case .add: "plus"
+        case .library: "books.vertical"
+        case .snapping: "square.grid.3x3"
         }
     }
 }

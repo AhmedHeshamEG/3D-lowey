@@ -1,5 +1,6 @@
 import HmmCommands
 import LoweyCore
+import LoweyEngine
 import SwiftUI
 
 /// The menu bar (iPadOS 26) with every keyboard shortcut. It acts on the open project.
@@ -33,19 +34,29 @@ public struct LoweyMenuCommands: Commands {
             Button("Group") { editor?.groupSelection() }.keyboardShortcut("g", modifiers: .command)
             Button("Ungroup") { editor?.ungroupSelection() }.keyboardShortcut("g", modifiers: [.command, .shift])
         }
+        // The making tools in the order of the top-right cluster, then the document's panels.
         CommandMenu("Tools") {
-            Button("Select") { tool(.select, panel: nil) }.keyboardShortcut("1", modifiers: .command)
-            Button("Build") { panel(.build) }.keyboardShortcut("2", modifiers: .command)
-            Button("Draw") { tool(.ink, panel: .draw) }.keyboardShortcut("3", modifiers: .command)
-            Button("Transform") { panel(.transform) }.keyboardShortcut("4", modifiers: .command)
-            Button("Look") { panel(.look) }.keyboardShortcut("5", modifiers: .command)
+            Button("Model") { panel(.model) }.keyboardShortcut("1", modifiers: .command)
+            Button("Draw") { tool(.ink, panel: .draw) }.keyboardShortcut("2", modifiers: .command)
+            Button("Paint") { tool(.shadowBrush, panel: .paint) }.keyboardShortcut("3", modifiers: .command)
+            Button("Animate") { editor?.toggleAnimate() }.keyboardShortcut("4", modifiers: .command)
+            Button("Cast") { panel(.cast) }.keyboardShortcut("5", modifiers: .command)
             Divider()
-            Button("Library") { panel(.library) }.keyboardShortcut("l", modifiers: .command)
-            Button("Cast") { panel(.cast) }
+            Button("Actions") { panel(.actions) }.keyboardShortcut("6", modifiers: .command)
+            Button("Look") { panel(.look) }.keyboardShortcut("7", modifiers: .command)
+            Button("Select") { tool(.select, panel: .select) }.keyboardShortcut("8", modifiers: .command)
+            Divider()
+            Button("Library") { modelPage(.library) }.keyboardShortcut("l", modifiers: .command)
+            Button("Snapping") { modelPage(.snapping) }
             Button("Solid Shape") { tool(.draw, panel: .draw) }
             Button("Flipbook") { tool(.flipbook, panel: .draw) }
-            Button("Shadow Brush") { tool(.shadowBrush, panel: .draw) }
+            Button("Shadow Brush") { tool(.shadowBrush, panel: .paint) }
+            Button("Scatter") { tool(.scatter, panel: .paint) }
             Button("Lasso") { tool(.lasso, panel: nil) }
+            Divider()
+            Button("Move") { gizmo(.move) }.keyboardShortcut("1", modifiers: [.command, .option])
+            Button("Turn") { gizmo(.rotate) }.keyboardShortcut("2", modifiers: [.command, .option])
+            Button("Size") { gizmo(.scale) }.keyboardShortcut("3", modifiers: [.command, .option])
         }
         CommandMenu("Scene") {
             Button("Frame Selection") { editor?.frameSelection() }.keyboardShortcut("f", modifiers: .command)
@@ -61,6 +72,8 @@ public struct LoweyMenuCommands: Commands {
             Button("New Monitor Window") { openWindow(id: LoweyWindow.monitor) }.keyboardShortcut("n", modifiers: [.command, .option])
         }
         CommandMenu("Timeline") {
+            Button(editor?.timelinePresence == .hidden ? "Show Timeline" : "Hide Timeline") { editor?.toggleTimeline() }
+                .keyboardShortcut("t", modifiers: .command)
             Button("Play / Pause") { editor?.togglePlay() }
             Button("Key the Selection") { editor?.keySelection() }.keyboardShortcut("k", modifiers: .command)
             Button("Record a Performance") { editor?.armPerform() }.keyboardShortcut("r", modifiers: [.command, .shift])
@@ -85,5 +98,17 @@ public struct LoweyMenuCommands: Commands {
         guard let editor else { return }
         editor.tool = tool
         if let panel { editor.openPanel = panel }
+    }
+
+    private func modelPage(_ page: ModelPage) {
+        guard let editor else { return }
+        editor.modelPage = page
+        editor.openPanel = .model
+    }
+
+    private func gizmo(_ mode: GizmoMode) {
+        guard let editor else { return }
+        editor.tool = .select
+        editor.gizmoMode = mode
     }
 }
