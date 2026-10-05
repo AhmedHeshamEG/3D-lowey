@@ -56,9 +56,11 @@ struct StageChrome: View {
         .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: showsInspector)
     }
 
-    /// The inspector floats while something is selected and no making tool's panel is open.
+    /// The inspector floats while something is selected and no making tool's panel is open. While sketching it steps
+    /// aside: the numbers on the stage are what you're working with then (D-124).
     private var showsInspector: Bool {
         !editor.selection.isEmpty && editor.openPanel?.isLeading != false
+            && !(editor.tool == .model && editor.modeling.mode.sketchKind != nil)
     }
 
     // MARK: Clusters

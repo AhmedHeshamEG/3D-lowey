@@ -932,5 +932,6 @@ per-element ID pass (GPU memory and a readback for something the CPU answers in 
 modes and the booleans (and Make editable when a shape is selected); choosing a shape or a mode closes the panel so the
 stage is free, and the Model tool's bar at the bottom switches modes, finishes a line or spline, grows / shrinks /
 selects similar, and ✕ leaves it. A Pencil loop picks elements; a finger drag still orbits, except on the picked face
-or region, where it pushes or pulls. The inspector shows the selection's size and what's picked. *Rejected:* a sixth
+or region, where it pushes or pulls. The inspector shows the selection's size and what's picked; it steps aside while a sketch shape is chosen (the
+floating numbers are the controls then, and it would cover them beside a large selection). *Rejected:* a sixth
 top-right button (CONTEXT allows five); a separate Select-elements tool in the top left (picking faces is modelling).

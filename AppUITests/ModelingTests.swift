@@ -84,6 +84,8 @@ final class ModelingTests: XCTestCase {
         tapStage(centre)
         type("10", into: "pull")
         XCTAssertTrue(element("debug-trail").label.contains("cmd=Pull"), "the region became a solid")
+        // Picking faces brings the inspector back (it steps aside while sketching).
+        XCTAssertTrue(tap("Faces"))
         let sizeLabel = element("selection-size")
         XCTAssertTrue(sizeLabel.waitForExistence(timeout: 3))
         XCTAssertEqual(sizeLabel.label, "40 × 10 × 20 mm")
@@ -103,6 +105,8 @@ final class ModelingTests: XCTestCase {
 
         let trail = element("debug-trail").label
         XCTAssertTrue(trail.contains("cmd=Cut"), "the circle cut through the block: \(trail)")
+        XCTAssertTrue(tap("Faces"))
+        XCTAssertTrue(element("selection-size").waitForExistence(timeout: 3))
         XCTAssertEqual(element("selection-size").label, "40 × 10 × 20 mm", "the block keeps its size")
         let report = XCTAttachment(string: String(format: "Built in %.1f s of taps", elapsed))
         report.lifetime = .keepAlways
