@@ -226,4 +226,19 @@ final class BrushEngineTests: XCTestCase {
         XCTAssertEqual(try SchemaCoder.shared.decode(ProjectInfo.self, kind: .project, from: encoded).brushes, [key: frozen])
         XCTAssertFalse(String(decoding: try SchemaCoder.shared.encode(document.project, kind: .project), as: UTF8.self).contains("brushes"))
     }
+
+    func testLatencyKeepsAMedianAndATail() {
+        var latency = StrokeLatency()
+        XCTAssertNil(latency.summary)
+        for value in 1 ... 100 { latency.add(Double(value)) }
+        latency.add(-1)
+        latency.add(.nan)
+        XCTAssertEqual(latency.samples.count, 100)
+        XCTAssertEqual(latency.median, 50)
+        XCTAssertEqual(latency.p95, 95)
+        XCTAssertEqual(latency.summary, "50.0 ms median · 95.0 ms p95 · 100 samples")
+        for _ in 0 ..< StrokeLatency.capacity { latency.add(10) }
+        XCTAssertEqual(latency.samples.count, StrokeLatency.capacity)
+        XCTAssertEqual(latency.median, 10)
+    }
 }
