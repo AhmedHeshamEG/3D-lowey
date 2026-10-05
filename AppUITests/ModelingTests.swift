@@ -44,8 +44,7 @@ final class ModelingTests: XCTestCase {
     /// the clock is running.
     private func type(_ text: String, into dimension: String) {
         element("dimension-\(dimension)").tap()
-        app.textFields["dimension-field"].typeText(text + "
-")
+        app.textFields["dimension-field"].typeText(text + "\n")
     }
 
     /// Double-tap: frame what's selected (or everything), then let the camera settle.
