@@ -89,6 +89,7 @@ public final class LoweyRenderer: SceneRendering {
     let buffers: BufferRing
     /// The last stroke preview and its GPU mesh (`EditorLayer`).
     var strokePreviewCache: (mesh: MeshData, gpu: GPUMesh)?
+    var modelOverlayCache: [(EditorOverlay, GPUMesh)] = []
     /// The last frame, for picking.
     private(set) var lastScene: RenderScene?
     private(set) var lastCamera: RenderCamera?

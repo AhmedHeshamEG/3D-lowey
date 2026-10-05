@@ -18,6 +18,22 @@ public enum GizmoMode: String, Sendable, CaseIterable {
     case move, rotate, scale
 }
 
+/// A modelling mark on the stage: wireframe, picked faces, sketch lines (world-space triangles, flat colour).
+public struct EditorOverlay: Equatable, Sendable {
+    public var mesh: MeshData
+    public var color: RGBA
+    public var opacity: Float
+    /// Drawn through everything (picked corners, the line being drawn) instead of hidden behind surfaces.
+    public var onTop: Bool
+
+    public init(mesh: MeshData, color: RGBA, opacity: Float = 1, onTop: Bool = false) {
+        self.mesh = mesh
+        self.color = color
+        self.opacity = opacity
+        self.onTop = onTop
+    }
+}
+
 /// What the stage draws over the finished frame (never exported).
 public struct EditorScene {
     public var showsGrid = true
@@ -25,6 +41,8 @@ public struct EditorScene {
     public var gizmo: (mode: GizmoMode, pivot: Vec3, size: Double)?
     public var guide: GuideSurface?
     public var strokePreview: (mesh: MeshData, color: RGBA)?
+    /// The Model tool's marks (`EditorOverlay`).
+    public var modelOverlay: [EditorOverlay] = []
     /// The hovering Pencil (drawn last, on top of everything).
     public var pointer: PencilPointer?
     /// Radians per pixel (2·tan(fov/2) / height in pixels), for the grid's one-pixel lines.
@@ -153,7 +171,24 @@ extension LoweyRenderer {
             draws.append(EditorDraw(mesh: gpu, item: EditorItemUniforms(model: matrix_identity_float4x4, color: SIMD4<Float>(color.srgbVector, 1),
                                                                         params: SIMD4<Float>(1, 0, 0, 0)), depthTested: true))
         }
+        draws += modelOverlayDraws(editor.modelOverlay)
         if let gizmo = editor.gizmo { draws += gizmoDraws(gizmo.mode, pivot: gizmo.pivot, size: Float(gizmo.size)) }
+        return draws
+    }
+
+    /// The Model tool's marks, uploaded once per change (kept while they stay the same).
+    private func modelOverlayDraws(_ overlays: [EditorOverlay]) -> [EditorDraw] {
+        var kept: [(EditorOverlay, GPUMesh)] = []
+        var draws: [EditorDraw] = []
+        for overlay in overlays where !overlay.mesh.isEmpty {
+            let gpu = modelOverlayCache.first { $0.0.mesh == overlay.mesh }?.1 ?? GPUMesh(device: device.device, mesh: overlay.mesh, label: "model overlay")
+            guard let gpu else { continue }
+            kept.append((overlay, gpu))
+            let color = SIMD4<Float>(overlay.color.srgbVector, overlay.opacity)
+            draws.append(EditorDraw(mesh: gpu, item: EditorItemUniforms(model: matrix_identity_float4x4, color: color, params: .zero),
+                                    depthTested: !overlay.onTop))
+        }
+        modelOverlayCache = kept
         return draws
     }
 

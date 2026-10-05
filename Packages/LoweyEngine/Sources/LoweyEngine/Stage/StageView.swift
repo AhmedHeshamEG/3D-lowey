@@ -37,6 +37,7 @@ public final class StageView: MTKView {
     public var showsGrid = true
     public private(set) var guide: GuideSurface?
     private var strokePreview: (MeshData, RGBA)?
+    private var modelOverlay: [EditorOverlay] = []
     /// The hovering Pencil, drawn in this view's own render pass.
     public private(set) var pointer: PencilPointer?
     private var lastFrameStart: CFTimeInterval = 0
@@ -238,6 +239,21 @@ public final class StageView: MTKView {
         redraw()
     }
 
+    /// The Model tool's marks (wireframe, picked parts, sketches), drawn in the editor pass.
+    public func showModelOverlay(_ overlays: [EditorOverlay]) {
+        guard overlays != modelOverlay else { return }
+        modelOverlay = overlays
+        redraw()
+    }
+
+    /// World units per screen point at a point (for marks that should look the same size anywhere).
+    public func worldPerPoint(at point: Vec3) -> Double {
+        let pose = camera
+        let distance = (Vec3(pose.position) - point).length
+        let height = max(Double(bounds.height), 1)
+        return 2 * distance * tan(Double(pose.fieldOfView) * .pi / 360) / height
+    }
+
     /// The gizmo's size in world units (a constant size on screen).
     public var gizmoScale: Double {
         guard let pivot = gizmoPivot else { return 1 }
@@ -255,6 +271,7 @@ public final class StageView: MTKView {
         if let pivot = gizmoPivot { scene.gizmo = (gizmoMode, pivot, gizmoScale) }
         scene.guide = guide
         scene.strokePreview = strokePreview
+        scene.modelOverlay = modelOverlay
         scene.pointer = pointer
         let pixels = Double(bounds.height * contentScaleFactor)
         if pixels > 1 { scene.pixelAngle = Float(2 * tan(Double(camera.fieldOfView) * .pi / 360) / pixels) }
