@@ -433,6 +433,22 @@
         }
       }
     },
+    "3D print": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stampa 3D"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طباعة ثلاثية الأبعاد"
+          }
+        }
+      }
+    },
     "3D text": {
       "localizations": {
         "it": {
@@ -637,6 +653,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "تحتفظ الألوان المميِّزة بلونها"
+          }
+        }
+      }
+    },
+    "Across the ground": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispetto al suolo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على مستوى الأرض"
+          }
+        }
+      }
+    },
+    "Across the middle, front to back": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispetto al centro, davanti e dietro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عبر المنتصف، من الأمام إلى الخلف"
+          }
+        }
+      }
+    },
+    "Across the middle, left to right": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispetto al centro, sinistra e destra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عبر المنتصف، من اليسار إلى اليمين"
+          }
+        }
+      }
+    },
+    "Across the picked face": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispetto alla faccia scelta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الوجه المختار"
           }
         }
       }
@@ -2001,6 +2081,22 @@
         }
       }
     },
+    "Building": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edifici"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مبانٍ"
+          }
+        }
+      }
+    },
     "Built": {
       "localizations": {
         "it": {
@@ -2317,6 +2413,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "شخصية"
+          }
+        }
+      }
+    },
+    "Check for printing": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla per la stampa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افحص للطباعة"
           }
         }
       }
@@ -3409,6 +3521,22 @@
         }
       }
     },
+    "Cut along the picked face": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taglia lungo la faccia scelta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقطع على امتداد الوجه المختار"
+          }
+        }
+      }
+    },
     "Cut here": {
       "localizations": {
         "it": {
@@ -3437,6 +3565,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اقطع هنا إلى…"
+          }
+        }
+      }
+    },
+    "Cuts the stage open to show inside a part, a wall or a room. Exports are never cut.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apre la scena per mostrare l'interno di un pezzo, di un muro o di una stanza. Le esportazioni non vengono mai tagliate."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يفتح المشهد ليُظهر داخل قطعة أو جدار أو غرفة. التصدير لا يُقطع أبدًا."
           }
         }
       }
@@ -3933,6 +4077,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "انتهى النثر"
+          }
+        }
+      }
+    },
+    "Door": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باب"
           }
         }
       }
@@ -4977,6 +5137,22 @@
         }
       }
     },
+    "Export it from Actions ▸ Export ▸ 3D model as STL or 3MF: millimetres, standing on the bed.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esportalo da Azioni ▸ Esporta ▸ Modello 3D come STL o 3MF: in millimetri, in piedi sul piano."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صدّره من إجراءات ▸ تصدير ▸ نموذج ثلاثي الأبعاد بصيغة STL أو 3MF: بالمليمتر، قائمًا على سطح الطابعة."
+          }
+        }
+      }
+    },
     "Export logs": {
       "localizations": {
         "it": {
@@ -5537,6 +5713,22 @@
         }
       }
     },
+    "Floor": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pavimento"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرضية"
+          }
+        }
+      }
+    },
     "Fly speed": {
       "localizations": {
         "it": {
@@ -5777,6 +5969,22 @@
         }
       }
     },
+    "Format": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formato"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصيغة"
+          }
+        }
+      }
+    },
     "Forward 10 seconds": {
       "localizations": {
         "it": {
@@ -6013,6 +6221,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "أمامي"
+          }
+        }
+      }
+    },
+    "Front and back": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Davanti e dietro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأمام والخلف"
           }
         }
       }
@@ -6881,6 +7105,22 @@
         }
       }
     },
+    "Inset": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rientro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزاحة للداخل"
+          }
+        }
+      }
+    },
     "Inspector": {
       "localizations": {
         "it": {
@@ -6941,6 +7181,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPad ككاميرا"
+          }
+        }
+      }
+    },
+    "It has holes in its surface (%lld open edges).": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha dei buchi nella superficie (%lld bordi aperti)."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في سطحه ثقوب (%lld حواف مفتوحة)."
+          }
+        }
+      }
+    },
+    "It's bigger than the printer's build volume.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È più grande del volume di stampa della stampante."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنه أكبر من حجم الطباعة في الطابعة."
           }
         }
       }
@@ -7073,6 +7345,22 @@
         }
       }
     },
+    "Keep": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ"
+          }
+        }
+      }
+    },
     "Keep Both": {
       "localizations": {
         "it": {
@@ -7121,6 +7409,22 @@
         }
       }
     },
+    "Keep the other side": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni l'altro lato"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ بالجانب الآخر"
+          }
+        }
+      }
+    },
     "Keep the Other Version": {
       "localizations": {
         "it": {
@@ -7133,6 +7437,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الاحتفاظ بالنسخة الأخرى"
+          }
+        }
+      }
+    },
+    "Keep this measurement on the stage": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni questa misura sulla scena"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ بهذا القياس على المشهد"
           }
         }
       }
@@ -7389,6 +7709,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "خراطة"
+          }
+        }
+      }
+    },
+    "Left and right": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinistra e destra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليسار واليمين"
           }
         }
       }
@@ -8129,6 +8465,22 @@
         }
       }
     },
+    "Measure": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Misura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قياس"
+          }
+        }
+      }
+    },
     "Medium": {
       "localizations": {
         "it": {
@@ -8237,6 +8589,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "عكس"
+          }
+        }
+      }
+    },
+    "Mirror & symmetry": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specchio e simmetria"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرآة وتناظر"
           }
         }
       }
@@ -9249,6 +9617,22 @@
         }
       }
     },
+    "Off": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spento"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        }
+      }
+    },
     "Off: every change from Claude waits here as a proposal, with a preview. Each one is a single undo step.": {
       "localizations": {
         "it": {
@@ -10257,6 +10641,54 @@
         }
       }
     },
+    "Pick a face first (Model ▸ Shape ▸ Face)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima scegli una faccia (Modello ▸ Forma ▸ Faccia)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر وجهًا أولًا (نموذج ▸ شكل ▸ وجه)"
+          }
+        }
+      }
+    },
+    "Pick the edges first (Edge, then tap or loop them)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima scegli i bordi (Bordo, poi toccali o circondali)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر الحواف أولًا (حافة، ثم المسها أو أحِطها)"
+          }
+        }
+      }
+    },
+    "Pick the faces first (Face, then tap or loop them)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima scegli le facce (Faccia, poi toccale o circondale)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر الأوجه أولًا (وجه، ثم المسها أو أحِطها)"
+          }
+        }
+      }
+    },
     "Picked": {
       "localizations": {
         "it": {
@@ -10529,6 +10961,22 @@
         }
       }
     },
+    "Precision": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precisione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدقة"
+          }
+        }
+      }
+    },
     "Presets": {
       "localizations": {
         "it": {
@@ -10605,6 +11053,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإطار السابق"
+          }
+        }
+      }
+    },
+    "Printer": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stampante"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطابعة"
           }
         }
       }
@@ -10961,6 +11425,22 @@
         }
       }
     },
+    "Ready to print": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pronto da stampare"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جاهز للطباعة"
+          }
+        }
+      }
+    },
     "Recent": {
       "localizations": {
         "it": {
@@ -11281,6 +11761,22 @@
         }
       }
     },
+    "Repair": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripara"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إصلاح"
+          }
+        }
+      }
+    },
     "Replace with the selection": {
       "localizations": {
         "it": {
@@ -11565,6 +12061,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الدوران"
+          }
+        }
+      }
+    },
+    "Round": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrotonda"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تدوير"
           }
         }
       }
@@ -12129,6 +12641,22 @@
         }
       }
     },
+    "Section view": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista in sezione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض المقطع"
+          }
+        }
+      }
+    },
     "Select": {
       "localizations": {
         "it": {
@@ -12157,6 +12685,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر كاميرا وانقر اقطع هنا"
+          }
+        }
+      }
+    },
+    "Select a solid first": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima seleziona un solido"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد مجسمًا أولًا"
           }
         }
       }
@@ -12333,6 +12877,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر الموضوع المراد تأطيره أولًا"
+          }
+        }
+      }
+    },
+    "Select this dimension": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona questa quota"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد هذا القياس"
           }
         }
       }
@@ -12769,6 +13329,38 @@
         }
       }
     },
+    "Shell": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guscio"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تجويف"
+          }
+        }
+      }
+    },
+    "Shell, leaving these open": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guscio, lasciando aperte queste"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تجويف مع ترك هذه مفتوحة"
+          }
+        }
+      }
+    },
     "Shorter hold": {
       "localizations": {
         "it": {
@@ -12861,6 +13453,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إظهار الواجهة"
+          }
+        }
+      }
+    },
+    "Show kept dimensions": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra le quote tenute"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أظهر القياسات المحفوظة"
           }
         }
       }
@@ -13249,6 +13857,54 @@
         }
       }
     },
+    "Snap to corners and middles": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggancia ad angoli e punti medi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التقاط الزوايا والمنتصفات"
+          }
+        }
+      }
+    },
+    "Snap to edges": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggancia ai bordi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التقاط الحواف"
+          }
+        }
+      }
+    },
+    "Snap to faces": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggancia alle facce"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التقاط الأوجه"
+          }
+        }
+      }
+    },
     "Snap to grid": {
       "localizations": {
         "it": {
@@ -13389,6 +14045,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "شكل مُجسَّم"
+          }
+        }
+      }
+    },
+    "Some edges are shared by more than two faces (%lld).": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcuni bordi sono condivisi da più di due facce (%lld)."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعض الحواف مشتركة بين أكثر من وجهين (%lld)."
+          }
+        }
+      }
+    },
+    "Some faces point inward.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcune facce sono rivolte verso l'interno."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعض الأوجه متجهة إلى الداخل."
+          }
+        }
+      }
+    },
+    "Some walls are thinner than this printer can print.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcune pareti sono più sottili di quanto questa stampante possa stampare."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعض الجدران أرق مما تستطيع هذه الطابعة طباعته."
           }
         }
       }
@@ -13741,6 +14445,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المسرح"
+          }
+        }
+      }
+    },
+    "Stairs": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scale"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "درج"
           }
         }
       }
@@ -14241,6 +14961,86 @@
         }
       }
     },
+    "Symmetry": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simmetria"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التناظر"
+          }
+        }
+      }
+    },
+    "Symmetry keeps both sides alike as you model: whatever you change on one side, the other follows.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La simmetria tiene uguali i due lati mentre modelli: quello che cambi da una parte, l'altra lo segue."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التناظر يُبقي الجانبين متشابهين أثناء النمذجة: ما تغيّره في جانب يتبعه الجانب الآخر."
+          }
+        }
+      }
+    },
+    "Symmetry: front and back": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simmetria: davanti e dietro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التناظر: الأمام والخلف"
+          }
+        }
+      }
+    },
+    "Symmetry: left and right": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simmetria: sinistra e destra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التناظر: اليسار واليمين"
+          }
+        }
+      }
+    },
+    "Symmetry: top and bottom": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simmetria: sopra e sotto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التناظر: الأعلى والأسفل"
+          }
+        }
+      }
+    },
     "Tags, comma separated": {
       "localizations": {
         "it": {
@@ -14465,6 +15265,38 @@
         }
       }
     },
+    "Tap the corners of the floor. Tap the first one to finish": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca gli angoli del pavimento. Tocca il primo per finire"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس زوايا الأرضية. المس الأولى لتنتهي"
+          }
+        }
+      }
+    },
+    "Tap the corners of the walls. Tap the first one to close the room": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca gli angoli dei muri. Tocca il primo per chiudere la stanza"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس زوايا الجدران. المس الأولى لتغلق الغرفة"
+          }
+        }
+      }
+    },
     "Tap the edge": {
       "localizations": {
         "it": {
@@ -14477,6 +15309,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المس الحافة"
+          }
+        }
+      }
+    },
+    "Tap the first point": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca il primo punto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس النقطة الأولى"
           }
         }
       }
@@ -14513,6 +15361,54 @@
         }
       }
     },
+    "Tap the second point": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca il secondo punto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس النقطة الثانية"
+          }
+        }
+      }
+    },
+    "Tap the side of a wall where the door goes": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca il lato di un muro dove va la porta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس جانب الجدار حيث يوضع الباب"
+          }
+        }
+      }
+    },
+    "Tap the side of a wall where the window goes": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca il lato di un muro dove va la finestra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس جانب الجدار حيث توضع النافذة"
+          }
+        }
+      }
+    },
     "Tap through the curve. Tap the start to close": {
       "localizations": {
         "it": {
@@ -14525,6 +15421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المس على طول المنحنى. المس البداية للإغلاق"
+          }
+        }
+      }
+    },
+    "Tap two points: corners and edges snap. Tap the number to keep it on the stage; it moves with what it measures.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca due punti: angoli e bordi si agganciano. Tocca il numero per tenerlo sulla scena; si muove con ciò che misura."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس نقطتين: الزوايا والحواف تلتقط. المس الرقم لتحتفظ به على المشهد؛ يتحرك مع ما يقيسه."
           }
         }
       }
@@ -14589,6 +15501,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المس حيث يبدأ الخط"
+          }
+        }
+      }
+    },
+    "Tap where the stairs start: they climb away from you": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca dove iniziano le scale: salgono allontanandosi da te"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس حيث يبدأ الدرج: يصعد مبتعدًا عنك"
           }
         }
       }
@@ -14669,6 +15597,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا ليس Scene Script (JSON يحتوي \"actions\")"
+          }
+        }
+      }
+    },
+    "That model can't be taken apart yet: it's still loading": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quel modello non si può ancora scomporre: sta ancora caricando"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن تفكيك هذا النموذج بعد: ما زال يُحمَّل"
           }
         }
       }
@@ -14977,6 +15921,22 @@
         }
       }
     },
+    "The selection. ": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La selezione. "
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحديد. "
+          }
+        }
+      }
+    },
     "The sidebar's sliders change with what you're doing. Two-finger tap undoes, three redoes.": {
       "localizations": {
         "it": {
@@ -15105,6 +16065,22 @@
         }
       }
     },
+    "The whole scene. ": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutta la scena. "
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المشهد كله. "
+          }
+        }
+      }
+    },
     "Theater": {
       "localizations": {
         "it": {
@@ -15153,6 +16129,22 @@
         }
       }
     },
+    "There's no solid to check yet": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non c'è ancora un solido da controllare"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد مجسم لفحصه بعد"
+          }
+        }
+      }
+    },
     "Thicker": {
       "localizations": {
         "it": {
@@ -15181,6 +16173,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "أرفع"
+          }
+        }
+      }
+    },
+    "Thinnest wall: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parete più sottile: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرق جدار: %@"
           }
         }
       }
@@ -15517,6 +16525,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "علوي"
+          }
+        }
+      }
+    },
+    "Top and bottom": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sopra e sotto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأعلى والأسفل"
           }
         }
       }
@@ -16401,6 +17425,38 @@
         }
       }
     },
+    "Walls": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muri"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جدران"
+          }
+        }
+      }
+    },
+    "Walls follow the corners you tap; doors and windows go where you tap a wall.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I muri seguono gli angoli che tocchi; porte e finestre vanno dove tocchi un muro."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجدران تتبع الزوايا التي تلمسها؛ الأبواب والنوافذ توضع حيث تلمس جدارًا."
+          }
+        }
+      }
+    },
     "Watch the shot": {
       "localizations": {
         "it": {
@@ -16493,6 +17549,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "أين"
+          }
+        }
+      }
+    },
+    "Where it cuts": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dove taglia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مكان القطع"
           }
         }
       }
@@ -16621,6 +17693,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تمايل الريح"
+          }
+        }
+      }
+    },
+    "Window": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finestra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نافذة"
           }
         }
       }

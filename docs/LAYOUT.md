@@ -70,7 +70,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 
 | Control | Walk |
 |---|---|
-| Export (presets, stills, GIF, background export) | `Actions › open-export` |
+| Export (presets, stills, GIF, a 3D model as glTF, USDZ, OBJ, STL, 3MF or a Blender package; background export) | `Actions › open-export` |
 | Share the project file | `Actions › Project file` |
 | Monitor window (Stage Manager, external display) | `Actions › open-monitor` |
 | Scenes: switch, new, duplicate, rename | `Actions › Rename` |
@@ -114,6 +114,8 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 |---|---|
 | Shapes (cube, sphere, cylinder, cone, plane, torus, ramp; bevelled) | `Model › model-add › add-cube` |
 | | `Model › model-add › add-ramp` |
+| Building: walls along tapped corners, floor, door, window, stairs | `Model › model-add › build-walls` |
+| | `Model › model-add › build-stairs` |
 | Lamp, spot, sun | `Model › model-add › add-spot` |
 | Camera from this view | `Model › model-add › add-camera` |
 | 3D text | `Model › model-add › add-text3d` |
@@ -126,16 +128,23 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | | `Model › model-shape › sketch-offset` |
 | Push/pull: pick faces, edges or corners (tap, Pencil loop) | `Model › model-shape › pick-face` |
 | Booleans: union, subtract, intersect (two or more shapes selected) | `Model › model-shape › boolean-subtract` |
-| Make a shape an editable mesh | `[cube] Model › model-shape › make-editable` |
-| The Model tool's bar: pick modes, sketch shapes, Done, grow / shrink / select similar, ✕ | shown at the bottom while the Model tool is on |
-| The numbers on the stage (pull distance, sides, diameter, length, offset): tap to type | shown beside what they measure |
+| Mirror (across the picked face or the middle), live symmetry | `[cube] Model › model-shape › symmetry` |
+| 3D print: the printer, check for printing, repair | `Model › model-shape › print-check` |
+| Make a shape (or a placed library model) editable | `[cube] Model › model-shape › make-editable` |
+| The Model tool's bar: pick modes, sketch shapes, Done, grow / shrink / select similar, bevel / round (edges), inset / shell (faces), the measurement and Keep, ✕ | shown at the bottom while the Model tool is on |
+| The numbers on the stage (pull distance, sides, diameter, length, offset, a bevel's or shell's size, the wall height and thickness): tap to type | shown beside what they measure |
+| Measurements and kept dimensions on the stage: tap one to keep it, or to select it | shown beside what they measure |
 | Library: the Kit's sets, your models, builds, worlds, scripts; search | `Model › model-library › library-search` |
-| Import models (USDZ, glTF, GLB, OBJ) | `Model › model-library › Import models` |
-| Snap to grid and its size | `Model › model-snapping › snap-grid` |
-| Snap to objects, to the ground | `Model › model-snapping › Snap to objects` |
-| Turn in steps | `Model › model-snapping › Turn in steps` |
-| Grid on the ground | `Model › model-snapping › show-grid` |
-| Units (mm, cm, m, in, ft) | `Model › model-snapping › units` |
+| Import models (USDZ, glTF, GLB, OBJ, STL, 3MF) | `Model › model-library › Import models` |
+| Snap to grid and its size | `Model › model-precision › snap-grid` |
+| Snap to corners and middles, edges, faces | `Model › model-precision › snap-corners` |
+| Snap to objects, to the ground | `Model › model-precision › Snap to objects` |
+| Turn in steps | `Model › model-precision › Turn in steps` |
+| Grid on the ground | `Model › model-precision › show-grid` |
+| Units (mm, cm, m, in, ft) | `Model › model-precision › units` |
+| Measure (two taps; keep it as a dimension) | `Model › model-precision › measure` |
+| Show kept dimensions | `Model › model-precision › show-dimensions` |
+| Section view: across x, y or z, along the picked face; where it cuts; the other side | `Model › model-precision › section-x` |
 | Swap a shape for a model | `[cube] more-actions` (Swap for a model… opens Model's library) |
 
 ### Draw
@@ -241,7 +250,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Build | Model ▸ Add | Model is the making tool for things in the world |
 | Library (top right) | Model ▸ Library | Placing a model is modelling; a sixth button would break the ≤ 5 rule |
 | Transform: gizmo modes | the inspector | They act on the selection |
-| Transform: snapping, grid | Model ▸ Snapping | Precision is modelling (units and measuring join it) |
+| Transform: snapping, grid | Model ▸ Precision | Precision is modelling: units, measuring and the section view are there too |
 | Transform: align, distribute | the inspector (several selected) | They act on the selection |
 | Transform: drop to the ground | the inspector's More actions | It was in both |
 | Transform: joystick toggle and speed | Settings ▸ Stage, and the joystick's own × | A preference, not a tool; on by default now |
