@@ -23,7 +23,10 @@ public enum ProjectHistory {
 
     /// Recorded ops use the document schema (`LoweySchema`): a schema change that alters a command's JSON adds an
     /// op migration here, keyed by the version it upgrades from (a Core test fails when one is missing).
-    public static let opMigrations: [Int: HistoryJournalFormat<EditCommand>.Migration] = [:]
+    public static let opMigrations: [Int: HistoryJournalFormat<EditCommand>.Migration] = [
+        // 4 → 5 only adds object kinds (`mesh`, `sketch`): schema-4 commands read as they are.
+        4: { $0 }
+    ]
     /// The first schema journals were written with (Maquette 0.1).
     public static let firstJournalSchema = 4
 
