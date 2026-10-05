@@ -15,6 +15,8 @@ extension EditorModel {
         precision.section = workspace.section
         precision.printBed = workspace.printBed
         precision.showsDimensions = workspace.showsDimensions
+        frameGuide = workspace.frameGuide
+        planeGuide = workspace.planeGuide
         if let first = workspace.firstPanel.flatMap(ClusterPanel.init(rawValue:)) {
             openPanel = first
             workspace.firstPanel = nil
@@ -42,6 +44,8 @@ extension EditorModel {
         workspace.section = precision.section
         workspace.printBed = precision.printBed
         workspace.showsDimensions = precision.showsDimensions
+        workspace.frameGuide = frameGuide
+        workspace.planeGuide = planeGuide
         do {
             try store.saveWorkspace(workspace, at: projectURL)
         } catch {

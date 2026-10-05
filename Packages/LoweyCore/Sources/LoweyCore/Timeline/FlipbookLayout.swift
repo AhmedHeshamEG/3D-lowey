@@ -23,13 +23,23 @@ public struct FlipbookPixelStroke: Hashable, Sendable {
     public var widths: [Double]
     public var color: RGBA
     public var filled: Bool
+    public var alphas: [Double]
+    /// The project brush key (nil = Ink Pen) and the jitter's seed.
+    public var brush: String?
+    public var seed: UInt64
 
-    public init(points: [Vec2], widths: [Double], color: RGBA, filled: Bool) {
+    public init(points: [Vec2], widths: [Double], color: RGBA, filled: Bool, alphas: [Double]? = nil, brush: String? = nil, seed: UInt64 = 0) {
         self.points = points
         self.widths = widths
         self.color = color
         self.filled = filled
+        self.alphas = alphas ?? Array(repeating: 1, count: points.count)
+        self.brush = brush
+        self.seed = seed
     }
+
+    /// The path the brush engine stamps along.
+    public var path: BrushPath<Vec2> { BrushPath(points: points, widths: widths, alphas: alphas) }
 }
 
 /// One visible flipbook drawing at a moment.
@@ -38,6 +48,25 @@ public struct FlipbookDraw: Hashable, Sendable {
     public var blend: FlipbookBlend
     public var opacity: Double
     public var strokes: [FlipbookPixelStroke]
+
+    public init(track: String, blend: FlipbookBlend, opacity: Double, strokes: [FlipbookPixelStroke]) {
+        self.track = track
+        self.blend = blend
+        self.opacity = opacity
+        self.strokes = strokes
+    }
+
+    /// Laid out in another frame of pixels: every point × `scale` + `offset` (the stage's points → its pixels).
+    public func scaled(by scale: Double, offset: Vec2 = Vec2(0, 0)) -> FlipbookDraw {
+        var draw = self
+        draw.strokes = strokes.map { stroke in
+            var moved = stroke
+            moved.points = stroke.points.map { $0 * scale + offset }
+            moved.widths = stroke.widths.map { $0 * scale }
+            return moved
+        }
+        return draw
+    }
 }
 
 /// Lays out the flipbooks of a moment for a frame of `width` × `height` pixels. `project` maps a world point to
@@ -89,7 +118,8 @@ public struct FlipbookLayout {
                   let frame = anchorFrame(track, in: scene) else { return nil }
             let strokes = track.frames[index].strokes.map { stroke in
                 FlipbookPixelStroke(points: stroke.points.map(frame.pixel), widths: stroke.widths.map { $0 * frame.pixelsPerUnit },
-                                    color: stroke.color.resolved(in: palette), filled: stroke.filled)
+                                    color: stroke.color.resolved(in: palette), filled: stroke.filled, alphas: stroke.alphas, brush: stroke.brush,
+                                    seed: stroke.seed ?? 0)
             }
             return strokes.isEmpty ? nil : FlipbookDraw(track: track.id, blend: track.blend, opacity: track.opacity, strokes: strokes)
         }

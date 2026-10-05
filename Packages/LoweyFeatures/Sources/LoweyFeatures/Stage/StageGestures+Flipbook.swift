@@ -10,38 +10,41 @@ extension StageGestures {
         switch recognizer.state {
         case .began:
             gestureKey = UUID().uuidString
+            strokeSeed = EditorModel.strokeSeed()
             consumedSamples = 0
             inkPath = []
-            strokePressures = []
-            flipbookContinue(Array(samples), editor: editor)
+            flipSamples = []
+            flipbookContinue(Array(samples), recognizer: recognizer, editor: editor)
         case .changed:
-            flipbookContinue(Array(samples.suffix(from: min(consumedSamples, samples.count))), editor: editor)
+            flipbookContinue(Array(samples.suffix(from: min(consumedSamples, samples.count))), recognizer: recognizer, editor: editor)
         case .ended:
-            flipbookContinue(Array(samples.suffix(from: min(consumedSamples, samples.count))), editor: editor)
-            if editor.flipbook.mode == .draw { editor.commitFlipbookStroke(points: inkPath, pressures: strokePressures) }
+            flipbookContinue(Array(samples.suffix(from: min(consumedSamples, samples.count))), recognizer: recognizer, editor: editor)
+            if editor.flipbook.mode == .draw { editor.commitFlipbookStrokes(flipbookCopies(flipSamples, editor: editor), seed: strokeSeed) }
             flipbookFinish(editor: editor)
         default:
             flipbookFinish(editor: editor)
         }
     }
 
-    private func flipbookContinue(_ samples: [StrokeGestureRecognizer.Sample], editor: EditorModel) {
+    private func flipbookContinue(_ samples: [StrokeGestureRecognizer.Sample], recognizer: StrokeGestureRecognizer, editor: EditorModel) {
         consumedSamples += samples.count
         let points = samples.map(\.location)
         inkPath += points
-        strokePressures += samples.map(\.pressure)
+        flipSamples += samples.map { BrushInput(point: Vec2(Double($0.location.x), Double($0.location.y)), pressure: $0.pressure,
+                                                altitude: $0.altitude, time: $0.time) }
         if editor.flipbook.mode == .erase {
             editor.eraseFlipbook(at: points, gesture: gestureKey)
-        } else {
-            editor.flipbook.livePoints = inkPath
+        } else if let stage {
+            showFlipbookPreview(recognizer, editor: editor, stage: stage)
         }
     }
 
     private func flipbookFinish(editor: EditorModel) {
-        editor.flipbook.livePoints = []
+        stage?.showLiveStroke(nil)
+        editor.strokeEnded()
         editor.endGesture()
         inkPath = []
-        strokePressures = []
+        flipSamples = []
         consumedSamples = 0
     }
 }

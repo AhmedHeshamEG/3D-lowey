@@ -3,6 +3,20 @@
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
 phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
 
+## Left from M5 (Maquette 0.5)
+
+- [ ] The device checklist in the "Maquette 0.5 — M5" PR (drawing feel with every built-in brush, prediction, tilt
+      shading, the latency numbers, Brush Studio and its pad, importing real Procreate and Photoshop files, the guides
+      with the Pencil, sharing a set by AirDrop).
+- [ ] Brush settings Procreate has and the engine doesn't yet: colour dynamics, dual brush, wet mix and bleed, smudge
+      and erase per brush. (D-141)
+- [ ] The eraser is still a circle of points on screen, not a brush.
+- [ ] Vanishing points are set with sliders; dragging them on the stage while the guide is shown. (D-149)
+- [ ] The touch-to-screen latency is an upper bound (GPU completion + one refresh) until the SDK gives a drawable's
+      presented time again. (D-146)
+- [ ] A texturized grain on ink is fixed to the screen, so it slides over a stroke when the camera moves.
+- [ ] 3D exports (glTF, USDZ, the Blender package) carry ink as its ribbon, not its brush stamps. (D-143)
+
 ## Left from M4 (Maquette 0.4)
 
 - [ ] The device checklist in the "Maquette 0.4 — M4" PR (bevel, round, inset and shell on real parts; symmetry while
@@ -70,8 +84,8 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 - **3D-lowey projects start their journal when Maquette first opens them.** Their earlier history doesn't exist, so a
   future time-lapse of them starts there.
 - **The load meter's scene costs are estimates** until the device benchmarks calibrate them (D-97).
-- **The brush outline's line gets thicker with the brush.** It's the gizmo's ring mesh scaled; a ring with a constant
-  line width comes with the brush engine (M5).
+- **The brush outline's line gets thicker with the brush.** It's the gizmo's ring mesh scaled (the Shadow Brush's
+  resize outline); a ring with a constant line width comes with painting on models (M6), which draws its own.
 
 - **A script loop that never calls the API can't be stopped.** The time limit is checked at every `lowey` / `scene`
   call; JavaScriptCore has no public execution time limit on iOS. A pure `while (true) {}` keeps its worker thread

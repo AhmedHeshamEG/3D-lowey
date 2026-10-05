@@ -110,6 +110,39 @@ struct PipelineBuilder {
         return try render(descriptor, name: fragment)
     }
 
+    /// Where brush stamps land: the scene's shading pass (MSAA, linear, depth-tested), the stage's editor layer, or a
+    /// plain layer texture (flipbooks, previews).
+    enum BrushTarget {
+        case scene, editor, layer
+    }
+
+    /// Premultiplied stamps (`lw_brushVertex` / `lw_brushFragment`), or a layer's other passes by name.
+    func brush(_ target: BrushTarget, vertex: String = "lw_brushVertex", fragment: String = "lw_brushFragment") throws -> MTLRenderPipelineState {
+        let descriptor = MTLRenderPipelineDescriptor()
+        descriptor.vertexFunction = try function(vertex)
+        descriptor.fragmentFunction = try function(fragment)
+        let color = descriptor.colorAttachments[0]
+        switch target {
+        case .scene:
+            descriptor.rasterSampleCount = samples
+            color?.pixelFormat = RenderDevice.colorFormat
+            descriptor.colorAttachments[1].pixelFormat = RenderDevice.lightFormat
+            descriptor.colorAttachments[1].writeMask = []
+            descriptor.depthAttachmentPixelFormat = RenderDevice.depthFormat
+        case .editor:
+            color?.pixelFormat = RenderDevice.outputFormat
+            descriptor.depthAttachmentPixelFormat = RenderDevice.depthFormat
+        case .layer:
+            color?.pixelFormat = RenderDevice.layerFormat
+        }
+        color?.isBlendingEnabled = true
+        color?.sourceRGBBlendFactor = .one
+        color?.destinationRGBBlendFactor = .oneMinusSourceAlpha
+        color?.sourceAlphaBlendFactor = .one
+        color?.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        return try render(descriptor, name: "\(fragment) (\(target))")
+    }
+
     func compute(_ name: String) throws -> MTLComputePipelineState {
         do {
             return try device.makeComputePipelineState(function: function(name))

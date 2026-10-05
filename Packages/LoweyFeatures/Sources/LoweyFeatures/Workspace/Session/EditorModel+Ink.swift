@@ -21,29 +21,54 @@ extension EditorModel {
 
     // MARK: Drawing
 
-    /// A finished Pencil stroke (world points on the guide, Pencil pressure 0…1).
-    func commitInkStroke(points rawPoints: [Vec3], pressures: [Double]) {
-        guard !rawPoints.isEmpty else { return }
-        let widths = pressures.map { ink.width * (0.25 + 0.75 * min(max($0, 0), 1)) }
-        let filtered = StrokeFilter.process(points: rawPoints, widths: widths, smoothing: ink.smoothing, minSpacing: 0.003)
-        guard !filtered.points.isEmpty else { return }
-        if let target = activeInk, let recipe = inkRecipe(target) {
+    /// A finished stroke from points and pressures alone (scripts and tests; the Pencil gives full samples).
+    func commitInkStroke(points: [Vec3], pressures: [Double]) {
+        let samples = points.enumerated().map { index, point in
+            BrushInput(point: point, pressure: pressures.indices.contains(index) ? pressures[index] : 1, time: Double(index) / 240)
+        }
+        commitInkStroke(samples, seed: Self.strokeSeed())
+    }
+
+    /// The path the current ink brush makes of Pencil samples (world points on the guide): the same function draws
+    /// the live stroke and the one that's kept.
+    func inkPath(_ samples: [BrushInput<Vec3>]) -> BrushPath<Vec3> {
+        BrushStroker.path(samples, brush: currentBrush(for: .ink), size: ink.width, streamline: ink.smoothing * 0.6,
+                          minimumSpacing: ink.width * 0.25)
+    }
+
+    /// A finished Pencil stroke: joins the selected ink drawing, or starts one. With the brush's first use in this
+    /// project it's one undo step.
+    func commitInkStroke(_ samples: [BrushInput<Vec3>], seed: UInt64) {
+        commitInkStrokes([samples], seed: seed)
+    }
+
+    /// A stroke and its symmetry copies (the guide plane's guide), as one undo step; each copy keeps its own seed.
+    func commitInkStrokes(_ copies: [[BrushInput<Vec3>]], seed: UInt64) {
+        let paths = copies.map(inkPath).filter { !$0.points.isEmpty }
+        guard let first = paths.first else { return }
+        let (key, brushCommand) = projectBrush(currentBrush(for: .ink))
+        func stroke(_ path: BrushPath<Vec3>, index: Int, map: (Vec3) -> Vec3, scale: Double) -> DrawingRecipe.Stroke {
+            DrawingRecipe.Stroke(points: path.points.map(map), widths: path.widths.map { $0 / scale }, alphas: path.alphas, brush: key,
+                                 seed: seed &+ UInt64(index))
+        }
+        if let target = activeInk, var recipe = inkRecipe(target) {
             let world = displayed.scene.worldTransform(of: target.id)
             let scale = max(abs(world.scale.x), abs(world.scale.y), abs(world.scale.z), 1e-4)
-            let local = DrawingRecipe.Stroke(points: filtered.points.map { world.inverseApply(to: $0) },
-                                             widths: filtered.widths.map { $0 / scale })
-            perform(.setKind(target.id, .drawing(InkEditing.appending(local, to: recipe))))
+            for (index, path) in paths.enumerated() {
+                recipe = InkEditing.appending(stroke(path, index: index, map: { world.inverseApply(to: $0) }, scale: scale), to: recipe)
+            }
+            performStroke(.setKind(target.id, .drawing(recipe)), brush: brushCommand)
             return
         }
-        let origin = filtered.points[0]
-        let stroke = DrawingRecipe.Stroke(points: filtered.points.map { $0 - origin }, widths: filtered.widths)
+        let origin = first.points[0]
+        let strokes = paths.enumerated().map { stroke($1, index: $0, map: { $0 - origin }, scale: 1) }
         // Facing the camera it was drawn from (the ribbons' plane when there's no camera: export, picking).
         let normal = stage.map { (Vec3($0.camera.position) - origin).normalized } ?? .unitZ
-        var object = factory.drawing(DrawingRecipe(style: .ink, strokes: [stroke], normal: normal), transform: CoreTransform(position: origin),
+        var object = factory.drawing(DrawingRecipe(style: .ink, strokes: strokes, normal: normal), transform: CoreTransform(position: origin),
                                      color: currentColor)
         if ink.opacity < 0.999 { object[.opacity] = .float(ink.opacity) }
         object.name = ObjectFactory.uniqueName(object.name, in: scene)
-        if perform(operations.add(object)) { selection = [object.id] }
+        if performStroke(operations.add(object), brush: brushCommand) { selection = [object.id] }
     }
 
     // MARK: Erasing

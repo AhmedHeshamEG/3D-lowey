@@ -15,6 +15,8 @@ public final class AppModel {
     private(set) var projectStore: ProjectStore
     private(set) var storage: DocumentStorage
     let library: LibraryModel
+    /// The brush library, and the brush each drawing tool holds.
+    let brushes: BrushModel
     private(set) var projects: [ProjectSummary] = []
     private(set) var archived: [ProjectSummary] = []
     /// Bumped when a project's card is drawn again, so its still and turntable reload. Cards load their own pictures
@@ -55,6 +57,7 @@ public final class AppModel {
         projectStore = ProjectStore(root: projects)
         try? FileManager.default.createDirectory(at: libraryRoot, withIntermediateDirectories: true)
         library = LibraryModel(store: LibraryStore(root: libraryRoot))
+        brushes = BrushModel(root: libraryRoot.deletingLastPathComponent().appendingPathComponent("Brushes"))
     }
 
     /// Launch: diagnostics, storage, library, projects, first-run samples and tour.
@@ -66,6 +69,7 @@ public final class AppModel {
             show("Maquette quit unexpectedly last time. Your work was autosaved.", kind: .error)
         }
         library.load()
+        brushes.load()
         refreshProjects()
         if !AppIdentity.isUITesting { await resolveStorage() }
         let wantsSamples = !AppIdentity.isUITesting || ProcessInfo.processInfo.arguments.contains("-ui-testing-sample")

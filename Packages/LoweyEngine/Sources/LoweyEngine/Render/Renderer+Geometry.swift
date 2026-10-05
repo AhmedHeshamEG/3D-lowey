@@ -1,3 +1,4 @@
+import CoreGraphics
 import LoweyCore
 import Metal
 import simd
@@ -65,8 +66,9 @@ extension LoweyRenderer {
         encodePrepass(frame: native, ordered: ordered, gpu: gpu, targets: targets, ground: showsGround, commandBuffer: commandBuffer)
         encodeAO(frame: frame, targets: targets, look: gpu.looks[0], commandBuffer: commandBuffer)
         let groundColor = request.input.document.effectiveLook.ground.color.linear * frame.skyHorizon.w
-        report.drawCalls += encodeShading(frame: &frame, ordered: ordered, gpu: gpu, targets: targets,
-                                          ground: showsGround ? groundColor : nil, commandBuffer: commandBuffer, triangles: &report.triangles)
+        report.drawCalls += encodeShading(frame: &frame, ordered: ordered, gpu: gpu, targets: targets, ground: showsGround ? groundColor : nil,
+                                          brushes: (scene.brushes, request.input.mediaImage), commandBuffer: commandBuffer,
+                                          triangles: &report.triangles)
         if let upscaled = targets.upscaled {
             upscaler.encode(from: targets.color, to: upscaled, commandBuffer: commandBuffer, pipelines: device.pipelines)
         }
@@ -171,8 +173,8 @@ extension LoweyRenderer {
 
     // MARK: Shading
 
-    func encodeShading(frame: inout FrameUniforms, ordered: [DrawItem], gpu: FrameBuffers, targets: FrameTargets, ground: SIMD3<Float>?,
-                       commandBuffer: MTLCommandBuffer, triangles: inout Int) -> Int {
+    /// The shading pass: colour and light (MSAA, resolved), its own depth.
+    func shadingPass(_ targets: FrameTargets) -> MTLRenderPassDescriptor {
         let pass = MTLRenderPassDescriptor()
         let multisampled = targets.msaaColor != nil
         pass.colorAttachments[0].texture = targets.msaaColor ?? targets.color
@@ -189,7 +191,24 @@ extension LoweyRenderer {
         pass.depthAttachment.loadAction = .clear
         pass.depthAttachment.clearDepth = 0
         pass.depthAttachment.storeAction = .dontCare
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return 0 }
+        return pass
+    }
+
+    /// Ink: the brush engine's stamps over everything shaded, hidden where something stands in front.
+    func encodeInkStamps(_ batches: [BrushBatch], frame: FrameUniforms, targets: FrameTargets, image: (String) -> CGImage?,
+                         encoder: MTLRenderCommandEncoder) -> Int {
+        guard !batches.isEmpty else { return 0 }
+        encoder.setRenderPipelineState(device.pipelines.brushScene)
+        encoder.setDepthStencilState(device.pipelines.depthRead)
+        let view = BrushStamper.WorldView(viewProjection: frame.viewProjection, view: frame.view, eye: frame.cameraPosition.xyz4)
+        stamper.encode(batches, encoder: encoder, view: view, width: targets.shadingWidth, height: targets.shadingHeight, image: image)
+        return batches.count
+    }
+
+    func encodeShading(frame: inout FrameUniforms, ordered: [DrawItem], gpu: FrameBuffers, targets: FrameTargets, ground: SIMD3<Float>?,
+                       brushes: (batches: [BrushBatch], image: (String) -> CGImage?), commandBuffer: MTLCommandBuffer,
+                       triangles: inout Int) -> Int {
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: shadingPass(targets)) else { return 0 }
         encoder.setFrontFacing(.counterClockwise)
         encoder.label = "Look shading"
         encoder.setCullMode(.none)
@@ -217,7 +236,7 @@ extension LoweyRenderer {
                                           indexBuffer: groundMesh.indices, indexBufferOffset: 0)
             draws += 1
         }
-        for run in Self.runs(ordered, where: { _ in true }) {
+        for run in Self.runs(ordered, where: { !$0.brushDrawn }) {
             let item = ordered[run.start]
             let skinned = item.mesh.isSkinned
             if item.blended {
@@ -231,6 +250,7 @@ extension LoweyRenderer {
             draws += 1
             triangles += item.mesh.indexCount / 3 * run.count
         }
+        draws += encodeInkStamps(brushes.batches, frame: frame, targets: targets, image: brushes.image, encoder: encoder)
         draws += encodeHulls(ordered: ordered, gpu: gpu, encoder: encoder)
         encoder.endEncoding()
         return draws

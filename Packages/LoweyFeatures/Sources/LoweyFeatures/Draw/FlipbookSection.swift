@@ -15,6 +15,9 @@ struct FlipbookSection: View {
                         .accessibilityIdentifier("flipbook-\(mode.rawValue)")
                 }
             }
+            if editor.flipbook.mode == .draw {
+                BrushRow(editor: editor, tool: .flipbook)
+            }
             PanelSection("Tracks") {
                 FlowChips(items: trackChoices, isOn: { $0 == editor.flipbook.track }) { key in
                     if key == "new" { editor.startNewFlipbook() } else { editor.flipbook.track = key }
@@ -26,6 +29,8 @@ struct FlipbookSection: View {
                 trackOptions(track)
                 drawings(track)
             }
+            DrawingGuideControls(guide: editor.frameGuide, kinds: DrawingGuide.Kind.allCases, spacing: 0.01 ... 0.3,
+                                 formatSpacing: { "\(Int(($0 * 100).rounded())) %" }) { editor.setFrameGuide($0) }
             PanelSection("Drawn effects") {
                 FlowChips(items: FlipbookFX.allCases.map { ($0.rawValue, $0.title) }, isOn: { _ in false }) { key in
                     if let fx = FlipbookFX(rawValue: key) { editor.addFlipbookEffect(fx) }

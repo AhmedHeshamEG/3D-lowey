@@ -37,11 +37,6 @@ struct StageOverlayView: View {
             IKHandleMarks(editor: editor)
             PickedStrokes(editor: editor)
             FlipbookOnionSkin(editor: editor)
-            if editor.flipbook.livePoints.count > 1 {
-                Path { path in path.addLines(editor.flipbook.livePoints) }
-                    .stroke(editor.currentColor.swatch(in: editor.look.palette),
-                            style: StrokeStyle(lineWidth: CGFloat(editor.flipbook.width * 2), lineCap: .round, lineJoin: .round))
-            }
         }
         .allowsHitTesting(false)
     }

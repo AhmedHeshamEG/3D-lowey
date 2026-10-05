@@ -37,13 +37,18 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
     public var section: SectionPlane?
     /// Kept dimensions show on the stage.
     public var showsDimensions: Bool
+    /// The drawing guide over the frame for flipbooks (grid, isometric, perspective, symmetry), nil when off.
+    public var frameGuide: DrawingGuide?
+    /// The drawing guide on the 3D guide plane for ink and solid shapes (grid, isometric, symmetry), nil when off.
+    public var planeGuide: DrawingGuide?
 
     public static let defaultTimelineHeight = 260.0
     public static let timelineHeightRange = 150.0 ... 900.0
 
     public init(template: StarterTemplate.Kind? = nil, timeline: TimelinePresence = .hidden, timelineHeight: Double = Self.defaultTimelineHeight,
                 snap: SnapSettings = SnapSettings(), showsGrid: Bool = true, shapeSize: Double = 1, firstPanel: String? = nil,
-                units: LengthUnit = .centimetre, printBed: String? = nil, section: SectionPlane? = nil, showsDimensions: Bool = true) {
+                units: LengthUnit = .centimetre, printBed: String? = nil, section: SectionPlane? = nil, showsDimensions: Bool = true,
+                frameGuide: DrawingGuide? = nil, planeGuide: DrawingGuide? = nil) {
         schemaVersion = Self.schemaVersion
         self.template = template
         self.timeline = timeline
@@ -56,10 +61,13 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         self.printBed = printBed
         self.section = section
         self.showsDimensions = showsDimensions
+        self.frameGuide = frameGuide
+        self.planeGuide = planeGuide
     }
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, template, timeline, timelineHeight, snap, showsGrid, shapeSize, firstPanel, units, printBed, section, showsDimensions
+        case frameGuide, planeGuide
     }
 
     /// Unknown or missing values fall back to the defaults: a damaged or future workspace never stops a project opening.
@@ -80,6 +88,8 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         printBed = (try? container.decodeIfPresent(String.self, forKey: .printBed)).flatMap { PrintBed.preset($0)?.id }
         section = try? container.decodeIfPresent(SectionPlane.self, forKey: .section)
         showsDimensions = (try? container.decodeIfPresent(Bool.self, forKey: .showsDimensions)) ?? defaults.showsDimensions
+        frameGuide = try? container.decodeIfPresent(DrawingGuide.self, forKey: .frameGuide)
+        planeGuide = try? container.decodeIfPresent(DrawingGuide.self, forKey: .planeGuide)
     }
 }
 

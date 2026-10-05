@@ -1,9 +1,9 @@
 import Foundation
 import HmmDocuments
 
-/// The JSON files inside a `.lowey` package and the library.
+/// The JSON files inside a `.lowey` package, the library and the brush library.
 public enum FileKind: String, Sendable {
-    case project, scene, library
+    case project, scene, library, brushes
 }
 
 public extension Migration {
@@ -39,7 +39,8 @@ public extension SchemaCoder {
 public enum LoweySchema {
     /// 5: Maquette 0.3's `mesh` and `sketch` objects (older apps refuse these files instead of misreading them).
     /// 6: Maquette 0.4's `dimension` objects and the `symmetry` property.
-    public static let currentVersion = 6
+    /// 7: Maquette 0.5's brushes: strokes name a brush, projects keep the brushes they use, the `setBrushes` command.
+    public static let currentVersion = 7
 
     public static let migrations: [Migration] = [
         Migration(kind: .scene, from: 0, transform: liftSceneV0),
@@ -61,7 +62,11 @@ public enum LoweySchema {
         // 5 → 6 adds an object kind; nothing older changes shape.
         Migration(kind: .scene, from: 5) { $0 },
         Migration(kind: .project, from: 5) { $0 },
-        Migration(kind: .library, from: 5) { $0 }
+        Migration(kind: .library, from: 5) { $0 },
+        // 6 → 7 adds optional brush fields; nothing older changes shape.
+        Migration(kind: .scene, from: 6) { $0 },
+        Migration(kind: .project, from: 6) { $0 },
+        Migration(kind: .library, from: 6) { $0 }
     ]
 
     /// The render style a 1.x look maps to.

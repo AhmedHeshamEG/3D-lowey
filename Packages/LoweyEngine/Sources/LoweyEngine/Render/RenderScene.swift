@@ -82,6 +82,8 @@ struct DrawItem {
     var ghost = false
     /// A character part's outline (inverted hull) width in metres; 0 = none.
     var hull: Float = 0
+    /// Ink whose brush stamps show instead: in the prepass (picking, selection) and shadows, not shaded.
+    var brushDrawn = false
 }
 
 /// An editor helper (light bulb, camera box, particle emitter): drawn only on the stage, picked by its sphere.
@@ -106,6 +108,8 @@ struct RenderScene {
     var joints: [simd_float4x4] = []
     var helpers: [HelperItem] = []
     var bounds: Bounds?
+    /// Ink strokes' brush stamps, drawn at the end of the shading pass.
+    var brushes: [BrushBatch] = []
 
     /// Registers a scene object for picking and returns its index.
     mutating func index(for id: ObjectID, lineWeight: Float) -> UInt32 {

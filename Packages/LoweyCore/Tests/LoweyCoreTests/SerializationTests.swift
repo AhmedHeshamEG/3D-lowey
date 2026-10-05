@@ -118,7 +118,7 @@ final class SerializationTests: XCTestCase {
         let library = try SchemaCoder.shared.decode(LibraryManifest.self, kind: .library,
                                                     from: Data(#"{"schemaVersion":1,"kind":"library","payload":{"assets":[],"prefabs":[],"looks":[]}}"#.utf8))
         XCTAssertTrue(library.scripts.isEmpty)
-        XCTAssertEqual(LoweySchema.currentVersion, 6)
+        XCTAssertEqual(LoweySchema.currentVersion, 7)
     }
 
     func testVersion1LooksKeepTheirAppearance() throws {

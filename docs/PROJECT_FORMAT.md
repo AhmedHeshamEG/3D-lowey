@@ -5,7 +5,7 @@ surface of that package: power users, scripts and MCP clients may **read** any o
 (the laptop bridge), so undo and the history journal stay true; a file changed behind the app's back is overwritten at
 the next checkpoint.
 
-Format version: package **2**, document schema **6** (`LoweySchema.currentVersion`), journal **1**.
+Format version: package **2**, document schema **7** (`LoweySchema.currentVersion`), journal **1**.
 
 ```
 My film.maquette/                 (3D-lowey's .lowey packages open too, and are upgraded in place)
@@ -13,7 +13,8 @@ My film.maquette/                 (3D-lowey's .lowey packages open too, and are 
   project.json                    the project: name, scene list, the project Look
   scenes/<scene-id>.json          one scene each: objects, hierarchy, camera, timeline
   history/<scene-id>/             that scene's history journal (below)
-  assets/                         library models the project carries (written by "Share as one file")
+  assets/                         library models the project carries (written by "Share as one file"), media,
+                                  and brushes/<hash>.png: the pictures of the brushes its strokes use
   audio/                          voiceovers and sounds
   renders/                        exports kept with the project
   thumbnail.png, thumbnail-loop.gif   the Home card (a still, and the model turning once in its Look)
@@ -58,6 +59,7 @@ renamed one gets a migration.
 | `sceneNames` | {id: string} | Scene names by id. |
 | `lastOpenedScene` | string? | Where the project reopens. |
 | `looks` | [object]? | The project's own Looks ("My Look"); absent when there are none. |
+| `brushes` | {key: object}? | Since schema 7: a frozen copy of every brush a stroke uses, by its content key (`b-<hash>`); absent when there are none. See "Brushes" below. |
 
 ## scenes/<scene-id>.json (`kind: "scene"`)
 
@@ -154,6 +156,34 @@ stored is always the whole, symmetric shape.
 
 Schema 6 only added the kind and the property; files from schema 5 open unchanged, and Maquette 0.3 refuses schema 6.
 
+### Brushes (schema 7)
+
+A brush (`project.json` › `brushes` › `b-<hash>`) is `{"id", "name", "shape", "grain", "stroke", "dynamics", "rendering",
+"about"}`:
+
+- `shape`: `source` (a built-in tip: `hardRound`, `softRound`, `pencilTip`, `chalkTip`, `bristleTip`, `flatTip`,
+  `splatterTip`, or a picture key `brushes/<hash>.png` under `assets/`), `roundness`, `angle` (degrees),
+  `followsStroke`, `rotationJitter`, `flipXJitter`, `flipYJitter`, `count`, `inverted`.
+- `grain`: `source` (absent for none; `paper`, `canvas`, `noise`, `charcoal` or a picture key), `scale`, `depth`,
+  `movement` (`rolling` or `texturized`), `inverted`.
+- `stroke`: `spacing` (tip diameters), `streamline`, `jitter`, `falloff`, `taperStart`, `taperEnd`, `taperSize`,
+  `taperOpacity`.
+- `dynamics`: `pressureSize`, `pressureOpacity`, `pressureCurve` (`{"points": [{"x", "y"}…]}`), `tiltSize`,
+  `tiltOpacity`, `speedSize`, `speedOpacity`, `sizeJitter`, `opacityJitter`, `minimumSize`, `minimumOpacity`.
+- `rendering`: `flow`, `wetEdges`, `softness`. `about`: `origin` (`builtIn`, `made`, `procreate`, `photoshop`,
+  `shared`), `author`, `resetsTo`.
+
+The key is a hash of the settings, so the same brush is stored once however many strokes use it, and a brush edited in
+the library is a new key. Pictures are grey PNGs (white paints).
+
+An ink stroke (`drawing` › `strokes[]`) and a flipbook stroke (`timeline.flipbooks[]` › `frames[]` › `strokes[]`) may
+carry `alphas` (each point's opacity, from the brush's dynamics), `brush` (a key in `brushes`) and `seed` (the jitter's
+seed, so the stroke draws the same every time). A stroke without `brush` draws with Ink Pen, as 2.0's did. Points and
+widths are the smoothed path the brush stamps along (widths are radii).
+
+Schema 7 only added optional keys and the `setBrushes` journal command; files from schema 6 open unchanged, and
+Maquette 0.4 refuses schema 7.
+
 ## workspace.json
 
 How the project shows when it opens. It isn't the project (it's never undone and isn't in the journal); it's
@@ -174,6 +204,8 @@ falls back to its default; unknown keys are ignored. Plain JSON, no envelope.
 | `printBed` | string? | The 3D printer whose build volume the stage outlines (`PrintBed.presets`: `filament-220`, `filament-256`, `filament-180`, `prusa-mk4`, `bambu-x1`, `bambu-a1-mini`, `ender-3-v3`, `resin-218`, `form-4`); `print` starts with `filament-220`. An unknown id is dropped. |
 | `section` | object? | The section view: `{"normal": [x, y, z], "offset": d}`; what's beyond the plane (`normal · p > offset`) is cut away on the stage. Missing: off. |
 | `showsDimensions` | bool | Kept dimensions show on the stage (true). |
+| `frameGuide` | object? | Since 0.5: the drawing guide over the frame for flipbooks. `kind` (`grid`, `isometric`, `perspective`, `symmetry`), `assisted`, `spacing` (frame heights), `origin` (`{"x","y"}`, frame heights from the centre, y up), `angle` (degrees), `vanishingPoints` (1–3, same units), `symmetry` (`vertical`, `horizontal`, `quadrant`, `radial`), `segments`, `mirrorRadial`. Missing: off. |
+| `planeGuide` | object? | Since 0.5: the same, laid on the guide plane for ink (`grid`, `isometric`, `symmetry`; `spacing` in metres). Missing: off. |
 
 ## gallery.json (in the projects folder)
 

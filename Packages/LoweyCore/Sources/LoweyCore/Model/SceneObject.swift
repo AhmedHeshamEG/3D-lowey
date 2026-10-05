@@ -43,10 +43,29 @@ public struct DrawingRecipe: Codable, Hashable, Sendable {
         public var points: [Vec3]
         /// Per-point width (from Pencil pressure). Same count as `points`.
         public var widths: [Double]
+        /// Ink: per-point opacity from the brush's dynamics (nil = opaque).
+        public var alphas: [Double]?
+        /// Ink: the project brush it was drawn with (`ProjectInfo.brushes`; nil = Ink Pen).
+        public var brush: String?
+        /// Ink: the seed of the brush's jitter, so the stroke draws the same every time.
+        public var seed: UInt64?
 
-        public init(points: [Vec3], widths: [Double]) {
+        public init(points: [Vec3], widths: [Double], alphas: [Double]? = nil, brush: String? = nil, seed: UInt64? = nil) {
             self.points = points
             self.widths = widths.count == points.count ? widths : Array(repeating: widths.first ?? 0.05, count: points.count)
+            self.alphas = alphas.map { $0.count == points.count ? $0 : Array(repeating: $0.first ?? 1, count: points.count) }
+            self.brush = brush
+            self.seed = seed
+        }
+
+        /// The same stroke (brush, seed) over other points.
+        public func with(points: [Vec3], widths: [Double], alphas: [Double]?) -> Stroke {
+            Stroke(points: points, widths: widths, alphas: self.alphas == nil ? nil : alphas, brush: brush, seed: seed)
+        }
+
+        /// The stored path the brush engine draws.
+        public var path: BrushPath<Vec3> {
+            BrushPath(points: points, widths: widths, alphas: alphas ?? Array(repeating: 1, count: points.count))
         }
     }
 

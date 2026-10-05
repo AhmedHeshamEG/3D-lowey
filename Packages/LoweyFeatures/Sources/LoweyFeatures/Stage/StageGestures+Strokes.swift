@@ -26,6 +26,9 @@ extension StageGestures {
             strokePoints = []
             strokePressures = []
             strokeNormals = []
+            strokeAltitudes = []
+            strokeTimes = []
+            strokeSeed = EditorModel.strokeSeed()
             consumedSamples = 0
             strokeGuide = editor.currentGuide
             strokeTargetMesh = nil
@@ -39,8 +42,10 @@ extension StageGestures {
         case .ended:
             continueStroke(recognizer, editor: editor, stage: stage)
             stage.showStrokePreview(nil, color: .white)
+            stage.showLiveStroke(nil)
             if editor.tool == .ink {
-                editor.commitInkStroke(points: strokePoints, pressures: strokePressures)
+                editor.commitInkStrokes(inkCopies(inkSamples(stage: stage), editor: editor), seed: strokeSeed)
+                editor.strokeEnded()
             } else {
                 editor.commitStroke(points: strokePoints, pressures: strokePressures, normals: strokeNormals, guide: strokeGuide)
             }
@@ -48,6 +53,7 @@ extension StageGestures {
             snapped = nil
         default:
             stage.showStrokePreview(nil, color: .white)
+            stage.showLiveStroke(nil)
             consumedSamples = 0
             snapped = nil
         }
@@ -88,6 +94,8 @@ extension StageGestures {
         strokePoints = []
         strokePressures = []
         strokeNormals = []
+        strokeAltitudes = []
+        strokeTimes = []
         project(points.map { StrokeGestureRecognizer.Sample(location: CGPoint(x: $0.x, y: $0.y), pressure: pressure) }, editor: editor, stage: stage)
         updatePreview(editor: editor, stage: stage)
     }
@@ -113,16 +121,15 @@ extension StageGestures {
             strokePoints.append(hit.point + hit.normal * lift)
             strokePressures.append(sample.pressure)
             strokeNormals.append(hit.normal)
+            strokeAltitudes.append(sample.altitude)
+            strokeTimes.append(sample.time)
         }
     }
 
     private func updatePreview(editor: EditorModel, stage: StageView) {
         guard strokePoints.count >= 2 else { return }
         if editor.tool == .ink {
-            let widths = strokePressures.map { editor.ink.width * (0.25 + 0.75 * $0) }
-            let preview = DrawingRecipe.Stroke(points: strokePoints, widths: widths)
-            let mesh = InkMesher.ribbon(preview, eye: Vec3(stage.camera.position), planeNormal: strokeNormals.last ?? .unitY)
-            stage.showStrokePreview(mesh, color: editor.currentColor.resolved(in: editor.look.palette))
+            showInkPreview(stroke, editor: editor, stage: stage)
             return
         }
         let widths = strokePressures.map { editor.draw.width * (0.35 + 0.65 * $0) }

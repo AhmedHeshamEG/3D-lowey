@@ -37,6 +37,12 @@ public final class StageView: MTKView {
     public var showsGrid = true
     public private(set) var guide: GuideSurface?
     private var strokePreview: (MeshData, RGBA)?
+    private var liveStroke: LiveBrushStroke?
+    /// The timestamp of the newest real sample in `liveStroke` (latency is measured from it to the frame showing it).
+    private var liveStrokeTouch: TimeInterval?
+    /// Touch-to-photon latency of the strokes drawn here (median and 95th percentile in Diagnostics).
+    public private(set) var strokeLatency = StrokeLatency()
+    private var screenGuide: ScreenGuide?
     private var modelOverlay: [EditorOverlay] = []
     /// Marks that stay whatever the tool: kept dimensions, the printer's build volume.
     private var precisionOverlay: [EditorOverlay] = []
@@ -248,6 +254,20 @@ public final class StageView: MTKView {
         redraw()
     }
 
+    /// The stroke under the Pencil, stamped by the brush engine in the next frame (nil when it lands or stops).
+    public func showLiveStroke(_ stroke: LiveBrushStroke?, touchTime: TimeInterval? = nil) {
+        liveStroke = stroke
+        liveStrokeTouch = stroke == nil ? nil : touchTime
+        redraw()
+    }
+
+    /// A drawing guide's lines over the stage, in points (nil hides it).
+    public func showScreenGuide(_ guide: ScreenGuide?) {
+        guard guide != screenGuide else { return }
+        screenGuide = guide
+        redraw()
+    }
+
     /// The Model tool's marks (wireframe, picked parts, sketches), drawn in the editor pass.
     public func showModelOverlay(_ overlays: [EditorOverlay]) {
         guard overlays != modelOverlay else { return }
@@ -290,6 +310,9 @@ public final class StageView: MTKView {
         scene.modelOverlay = precisionOverlay + modelOverlay
         scene.section = section
         scene.pointer = pointer
+        scene.pixelsPerPoint = Double(contentScaleFactor)
+        scene.liveStroke = liveStroke?.inPixels(Double(contentScaleFactor))
+        scene.screenGuide = screenGuide
         let pixels = Double(bounds.height * contentScaleFactor)
         if pixels > 1 { scene.pixelAngle = Float(2 * tan(Double(camera.fieldOfView) * .pi / 360) / pixels) }
         return scene
@@ -316,6 +339,7 @@ extension StageView: MTKViewDelegate {
         } catch {
             return
         }
+        measureLatency(commandBuffer)
         commandBuffer.present(drawable)
         lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in
@@ -330,6 +354,23 @@ extension StageView: MTKViewDelegate {
             }
         }
         commandBuffer.commit()
+    }
+}
+
+extension StageView {
+    /// Touch to screen: from a live stroke sample's touch timestamp to its frame finishing on the GPU, plus one
+    /// refresh (the frame appears at the next one). An upper bound: this SDK gives no presented time for a drawable.
+    func measureLatency(_ commandBuffer: MTLCommandBuffer) {
+        guard let touch = liveStrokeTouch, liveStroke != nil else { return }
+        liveStrokeTouch = nil
+        signposts.event("Stroke sample encoded")
+        let refresh = 1 / Double(max(window?.windowScene?.screen.maximumFramesPerSecond ?? 60, 30))
+        commandBuffer.addCompletedHandler { [weak self] _ in
+            let finished = CACurrentMediaTime()
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.strokeLatency.add((finished + refresh - touch) * 1000) }
+            }
+        }
     }
 }
 

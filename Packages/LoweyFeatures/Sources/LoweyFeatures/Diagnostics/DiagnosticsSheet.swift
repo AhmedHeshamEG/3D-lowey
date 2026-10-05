@@ -50,6 +50,12 @@ struct DiagnosticsSheet: View {
                     HmmButton("square.and.arrow.up", label: "Share \(url.lastPathComponent)", size: 32) { sharing = [url] }
                 }
             }
+            HmmSectionHeader("Apple Pencil")
+            if let latency = editor?.stage?.strokeLatency.summary {
+                Text("Touch to screen: \(latency)").font(.hmm(.footnote)).foregroundStyle(theme.text2).textSelection(.enabled)
+            } else {
+                Hint("Draw a few ink or flipbook strokes, then come back: how long the Pencil takes to show on screen appears here.")
+            }
             HmmSectionHeader("This iPad")
             Text(DiagnosticsCenter.deviceSummary).font(.hmm(.footnote)).foregroundStyle(theme.text2).textSelection(.enabled)
             Text("Preview tier \(PreviewQuality.current.tier.rawValue): exports always render at full quality.")

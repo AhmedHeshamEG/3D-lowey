@@ -6,14 +6,24 @@ public final class StrokeGestureRecognizer: UIGestureRecognizer {
         public var location: CGPoint
         /// 0...1 (fingers report ~0.6).
         public var pressure: Double
+        /// The Pencil's angle from the screen (π/2 upright); nil for fingers.
+        public var altitude: Double?
+        /// The touch's timestamp (seconds since boot, the same clock as `CACurrentMediaTime`).
+        public var time: TimeInterval
 
-        public init(location: CGPoint, pressure: Double) {
+        public init(location: CGPoint, pressure: Double, altitude: Double? = nil, time: TimeInterval = 0) {
             self.location = location
             self.pressure = pressure
+            self.altitude = altitude
+            self.time = time
         }
     }
 
+    /// Every real sample of the stroke so far (coalesced touches included: the Pencil reports at 240 Hz).
     public private(set) var samples: [Sample] = []
+    /// Where UIKit predicts the tip is going next (drawn ahead of the real samples, replaced by each update, never
+    /// kept), which hides most of a frame of latency.
+    public private(set) var predicted: [Sample] = []
     private var trackedTouch: UITouch?
     /// Draw, then hold still: called once per stroke (QuickShape). Moving on after it keeps reporting samples.
     public var onHold: (() -> Void)?
@@ -43,6 +53,7 @@ public final class StrokeGestureRecognizer: UIGestureRecognizer {
         for item in coalesced {
             samples.append(sample(item))
         }
+        predicted = (event.predictedTouches(for: touch) ?? []).map(sample)
         if let last = samples.last?.location, !held,
            let anchor = holdAnchor, hypot(last.x - anchor.x, last.y - anchor.y) > holdTolerance {
             armHold(at: last)
@@ -66,6 +77,7 @@ public final class StrokeGestureRecognizer: UIGestureRecognizer {
     override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
         guard let touch = trackedTouch, touches.contains(touch) else { return }
         samples.append(sample(touch))
+        predicted = []
         state = .ended
     }
 
@@ -77,6 +89,7 @@ public final class StrokeGestureRecognizer: UIGestureRecognizer {
         super.reset()
         trackedTouch = nil
         samples = []
+        predicted = []
         held = false
         holdAnchor = nil
         holdTimer?.invalidate()
@@ -89,6 +102,7 @@ public final class StrokeGestureRecognizer: UIGestureRecognizer {
         } else {
             0.6
         }
-        return Sample(location: touch.preciseLocation(in: view), pressure: pressure)
+        let altitude: Double? = touch.type == .pencil ? Double(touch.altitudeAngle) : nil
+        return Sample(location: touch.preciseLocation(in: view), pressure: pressure, altitude: altitude, time: touch.timestamp)
     }
 }

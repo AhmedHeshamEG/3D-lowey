@@ -47,7 +47,7 @@ extension EditorModel {
         }
         let overlay = stageOverlay(for: stage, director: director != nil)
         request.overlay = overlay.image
-        request.flipbookLayers = overlay.layers
+        request.flipbooks = overlay.flipbooks
         if director != nil {
             var editor = stage.editorScene(showsSelection: false)
             editor.showsGrid = false
@@ -134,6 +134,21 @@ extension EditorModel {
 
     func refreshGuide() {
         stage?.showGuide(currentGuide)
+        stage?.showScreenGuide(screenGuide)
+        refreshPrecisionOverlay()
+    }
+
+    /// The frame's drawing guide over the stage while the flipbook tool draws.
+    var screenGuide: ScreenGuide? {
+        guard tool == .flipbook, flipbook.mode == .draw, let guide = frameGuide else { return nil }
+        let rect = frameRect
+        guard rect.height > 1 else { return nil }
+        let halfWidth = Double(rect.width / rect.height) / 2
+        let lines = GuideLines.lines(guide, in: (Vec2(-halfWidth, -0.5), Vec2(halfWidth, 0.5))).map { line in
+            let from = stagePoint(fromFrameGuide: line.from), to = stagePoint(fromFrameGuide: line.to)
+            return GuideLines.Line(from: Vec2(Double(from.x), Double(from.y)), to: Vec2(Double(to.x), Double(to.y)), major: line.major)
+        }
+        return ScreenGuide(lines: lines, color: RGBA(0.45, 0.75, 1))
     }
 
     func toolChanged() {
@@ -235,11 +250,11 @@ extension EditorModel {
             OverlayLayout.project(point, camera: pose, fieldOfView: fieldOfView, aspect: aspect)
         }
         let caption = director ? currentCaption(for: rect) : nil
-        let flipbooks = stageFlipbookLayout().map { $0.layout.draws(timeline, scene: displayed.scene, palette: document.palette, at: time) } ?? []
-        let image = OverlayCanvas.draw(placements, caption: caption, flipbooks: flipbooks.filter { $0.blend == .normal }, rect: rect, pixels: pixels,
-                                       scale: scale) { [weak self] in self?.mediaImage($0) }
-        let layers = FlipbookPainter.layers(flipbooks, pixels: pixels) { OverlayCanvas.prepare($0, rect: rect, pixels: pixels, scale: scale) }
-        let entry = StageOverlayCache.Entry(image: image, layers: layers)
+        // Flipbooks are laid out in the frame's points, then moved into the stage's pixels for the brush engine.
+        let flipbooks = (stageFlipbookLayout().map { $0.layout.draws(timeline, scene: displayed.scene, palette: document.palette, at: time) } ?? [])
+            .map { $0.scaled(by: Double(scale), offset: Vec2(Double(rect.minX * scale), Double(rect.minY * scale))) }
+        let image = OverlayCanvas.draw(placements, caption: caption, rect: rect, pixels: pixels, scale: scale) { [weak self] in self?.mediaImage($0) }
+        let entry = StageOverlayCache.Entry(image: image, flipbooks: flipbooks)
         overlayCache.store(entry, for: key)
         return entry
     }
@@ -271,13 +286,12 @@ enum DirectorFrame {
 enum OverlayCanvas {
     @MainActor
     static func draw(_ placements: [OverlayPlacement], caption: (page: CaptionPage, word: Int?, settings: CaptionSettings)?,
-                     flipbooks: [FlipbookDraw], rect: CGRect, pixels: CGSize, scale: CGFloat, image: (String) -> CGImage?) -> CGImage? {
-        guard !placements.isEmpty || caption != nil || !flipbooks.isEmpty, pixels.width >= 1, pixels.height >= 1,
+                     rect: CGRect, pixels: CGSize, scale: CGFloat, image: (String) -> CGImage?) -> CGImage? {
+        guard !placements.isEmpty || caption != nil, pixels.width >= 1, pixels.height >= 1,
               let context = CGContext(data: nil, width: Int(pixels.width), height: Int(pixels.height), bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         prepare(context, rect: rect, pixels: pixels, scale: scale)
-        FlipbookPainter.draw(flipbooks, in: context)
         OverlayRenderer.draw(placements, in: context, size: rect.size, image: image)
         if let caption {
             OverlayRenderer.drawCaption(caption.page, activeWord: caption.word, settings: caption.settings, in: context, size: rect.size)
@@ -297,7 +311,8 @@ enum OverlayCanvas {
 struct StageOverlayCache {
     struct Entry {
         var image: CGImage?
-        var layers: [FlipbookBlend: CGImage]
+        /// The flipbook drawings showing, in the stage's pixels.
+        var flipbooks: [FlipbookDraw]
     }
 
     struct Key: Equatable {

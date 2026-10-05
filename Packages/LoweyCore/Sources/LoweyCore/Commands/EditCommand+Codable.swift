@@ -5,12 +5,13 @@ import Foundation
 extension EditCommand: Codable {
     private enum Key: String, CodingKey {
         case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands, tracks
-        case dabs, looks, flipbooks, scene
+        case dabs, looks, flipbooks, scene, brushes
     }
 
     private enum Op: String, Codable {
         case insert, delete, restore, setProperties, rename, setKind, reparent, setLook, renameScene
         case setActiveCamera, setTimeline, setTracks, batch, setShadowPaint, setCustomLooks, setFlipbooks, replaceScene
+        case setBrushes
     }
 
     public init(from decoder: Decoder) throws {
@@ -47,7 +48,7 @@ extension EditCommand: Codable {
             self = try .setTracks(c.decode([TrackEdit].self, forKey: .tracks))
         case .batch:
             self = try .batch(c.decode(String.self, forKey: .label), c.decode([EditCommand].self, forKey: .commands))
-        case .setShadowPaint, .setCustomLooks, .setFlipbooks, .replaceScene:
+        case .setShadowPaint, .setCustomLooks, .setFlipbooks, .replaceScene, .setBrushes:
             self = try Self.decodeWholeValue(op, from: c)
         }
     }
@@ -61,6 +62,8 @@ extension EditCommand: Codable {
             try .setCustomLooks(c.decodeIfPresent([LookPreset].self, forKey: .looks) ?? [])
         case .setFlipbooks:
             try .setFlipbooks(c.decode([FlipbookEdit].self, forKey: .flipbooks))
+        case .setBrushes:
+            try .setBrushes(c.decodeIfPresent([String: Brush].self, forKey: .brushes) ?? [:])
         default:
             try .replaceScene(c.decode(Scene.self, forKey: .scene))
         }
@@ -114,7 +117,7 @@ extension EditCommand: Codable {
             try c.encode(Op.batch, forKey: .op)
             try c.encode(label, forKey: .label)
             try c.encode(commands, forKey: .commands)
-        case .setShadowPaint, .setCustomLooks, .setFlipbooks, .replaceScene:
+        case .setShadowPaint, .setCustomLooks, .setFlipbooks, .replaceScene, .setBrushes:
             try encodeWholeValue(into: &c)
         }
     }
@@ -131,6 +134,9 @@ extension EditCommand: Codable {
         case let .setFlipbooks(edits):
             try c.encode(Op.setFlipbooks, forKey: .op)
             try c.encode(edits, forKey: .flipbooks)
+        case let .setBrushes(brushes):
+            try c.encode(Op.setBrushes, forKey: .op)
+            try c.encode(brushes, forKey: .brushes)
         case let .replaceScene(scene):
             try c.encode(Op.replaceScene, forKey: .op)
             try c.encode(scene, forKey: .scene)

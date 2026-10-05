@@ -3,6 +3,25 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.5] — Maquette — brushes & drawing guides (phase M5)
+
+- **One brush engine** for ink and flipbooks: a tip and a grain stamped along the stroke, with StreamLine, spacing,
+  jitter, fall-off, tapers, pressure, tilt and speed, flow and wet edges. The stroke under the Pencil is drawn by the
+  same engine as the one that's kept, with the Pencil's predicted path drawn ahead.
+- **Ten brushes** in three sets (Inking, Sketching, Painting). Draw ▸ Ink and Draw ▸ Flipbook each hold a brush: tap it
+  for the **brush library**.
+- **Brush Studio**: every setting on seven pages, your own picture as a tip or a grain, a pad to try the brush on.
+  Duplicate, reset, rename, move between sets, delete; make, rename and delete sets.
+- **Import Procreate brushes** (`.brushset`, `.brush`) and **Photoshop brushes** (`.abr`) from the library or with
+  Open in from Files and AirDrop. **Share a set** as a `.maquettebrushes` file.
+- Strokes keep the brush they were drawn with: editing a brush never redraws finished work, and a project carries its
+  brushes to another iPad.
+- **Drawing guides**: for flipbooks a 2D grid, isometric, 1-, 2- and 3-point perspective and symmetry (vertical,
+  horizontal, quadrant, radial); for ink a grid, isometric or symmetry on the guide plane. Drawing Assist straightens
+  strokes along the guide; symmetry mirrors them as you draw.
+- **Diagnostics ▸ Apple Pencil**: how long the Pencil takes to show on screen (median and 95th percentile).
+- Projects are schema 7 (brushes); Maquette 0.4 asks for a newer version instead of opening them.
+
 ## [0.4] — Maquette — modelling II & interop (phase M4)
 
 - **Bevel, round, inset, shell** from the Model tool's bar: pick edges and bevel or round them, pick faces and inset

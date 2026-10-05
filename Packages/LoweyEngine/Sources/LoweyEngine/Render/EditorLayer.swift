@@ -49,6 +49,12 @@ public struct EditorScene {
     public var pixelAngle: Float = 0.0012
     /// The section view: what's beyond the plane is cut away on the stage (never in exports, which have no editor).
     public var section: SectionPlane?
+    /// The stroke being drawn, stamped by the brush engine.
+    public var liveStroke: LiveBrushStroke?
+    /// A drawing guide over the frame (flipbooks), in points.
+    public var screenGuide: ScreenGuide?
+    /// Pixels per point of the stage (screen stamps and guides are given in points).
+    public var pixelsPerPoint = 1.0
 
     public init() {}
 
@@ -138,6 +144,8 @@ extension LoweyRenderer {
         for draw in editorDraws(editor, scene: scene) {
             encode(draw, encoder: encoder)
         }
+        encodeEditorBrushes(editor, request: request, output: output, encoder: encoder)
+        encoder.setRenderPipelineState(device.pipelines.editor)
         if let pointer = editor.pointer {
             for draw in pointerDraws(pointer, camera: camera, aspect: Double(output.width) / Double(max(output.height, 1))) {
                 encode(draw, encoder: encoder)

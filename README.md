@@ -4,6 +4,12 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.5** (phase M5): **brushes and drawing guides**. One brush engine draws ink and flipbooks: ten brushes, Brush
+Studio with a pad to try every setting, your own pictures as tips and grains, Procreate (`.brushset`, `.brush`) and
+Photoshop (`.abr`) brushes imported, sets shared as files. Strokes keep the brush they were drawn with. Drawing guides:
+a 2D grid, isometric, 1-, 2- and 3-point perspective and symmetry for flipbooks, a grid, isometric or symmetry on the
+guide plane for ink, with Drawing Assist.
+
 **0.4** (phase M4): **modelling II and interop**. Bevel and round edges, inset faces, hollow solids into shells,
 mirror and model with live symmetry, array along a sketch; snap to corners, edge middles, edges and faces, measure and
 keep dimensions, cut the stage open with a section view; check a part for 3D printing, repair it and export STL or
@@ -70,7 +76,7 @@ control's home is in [docs/LAYOUT.md](docs/LAYOUT.md).
 | Where | What's there |
 |---|---|
 | Top left | **Home** (your projects) · **Actions** (export, the project file, the Monitor, scenes, history, scripts, the AI & laptop bridge, gestures, tour, diagnostics, settings) · **Look** (Looks, mood, palette, finish) · **Select** (tap, lasso, select similar, the outliner) |
-| Top right | **Model** (shapes, lights and cameras, 3D text, titles, photos and videos, effects; sketch, push/pull and booleans; the Kit and your models; snapping and units) · **Draw** (ink strokes, solid shapes on guides, flipbooks) · **Paint** (Shadow Brush, Scatter) · **Animate** (opens the timeline) · **Cast** (Blob, Puppet, Rigged; clips, poses, faces, lip sync) |
+| Top right | **Model** (shapes, lights and cameras, 3D text, titles, photos and videos, effects; sketch, push/pull and booleans; the Kit and your models; snapping and units) · **Draw** (ink strokes and flipbooks with brushes and drawing guides, solid shapes on guides) · **Paint** (Shadow Brush, Scatter) · **Animate** (opens the timeline) · **Cast** (Blob, Puppet, Rigged; clips, poses, faces, lip sync) |
 | Side | two sliders for what you're doing, **Pick**, undo, redo |
 | Beside the selection | the **inspector**: move, turn, size; numbers; Look override; motion; its menu has array, group, swap for a model, save to the library |
 | Bottom right | the **timeline** control (call the transport, send it away), views, frame the selection, the Director view |
