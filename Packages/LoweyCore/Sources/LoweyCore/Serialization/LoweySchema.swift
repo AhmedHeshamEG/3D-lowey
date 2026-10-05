@@ -37,7 +37,8 @@ public extension SchemaCoder {
 /// - v4 (2.0): looks gain a render style (`presetID`); projects gain their own Looks. Files from 1.x keep their
 ///   appearance: they open in Clay (the v1 look on the new renderer), or Low-poly when they were faceted.
 public enum LoweySchema {
-    public static let currentVersion = 4
+    /// 5: Maquette 0.3's `mesh` and `sketch` objects (older apps refuse these files instead of misreading them).
+    public static let currentVersion = 5
 
     public static let migrations: [Migration] = [
         Migration(kind: .scene, from: 0, transform: liftSceneV0),
@@ -51,7 +52,11 @@ public enum LoweySchema {
         Migration(kind: .library, from: 2) { $0 },
         Migration(kind: .scene, from: 3) { keepV1Appearance($0) },
         Migration(kind: .project, from: 3) { keepV1Appearance($0) },
-        Migration(kind: .library, from: 3) { keepV1Appearance($0) }
+        Migration(kind: .library, from: 3) { keepV1Appearance($0) },
+        // 4 → 5 adds object kinds; nothing older changes shape.
+        Migration(kind: .scene, from: 4) { $0 },
+        Migration(kind: .project, from: 4) { $0 },
+        Migration(kind: .library, from: 4) { $0 }
     ]
 
     /// The render style a 1.x look maps to.

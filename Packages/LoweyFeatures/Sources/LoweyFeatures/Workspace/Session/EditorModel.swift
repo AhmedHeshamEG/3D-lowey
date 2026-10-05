@@ -68,6 +68,18 @@ final class EditorModel {
     /// Strokes picked in the selected ink drawing (Ink ▸ Select strokes).
     var inkStrokes: Set<Int> = []
     var scatter = ScatterPanelSettings()
+    /// The Model tool on the stage (`EditorModel+Modeling`).
+    var modeling = ModelingState() {
+        didSet { if modeling.overlayKey != oldValue.overlayKey { refreshModelOverlay() } }
+    }
+
+    /// The unit lengths are shown and typed in (`workspace.json`).
+    var units: LengthUnit = .centimetre {
+        didSet { if units != oldValue { workspaceChanged() } }
+    }
+
+    /// Bumped as the camera moves while numbers float on the stage, so they follow what they measure.
+    var viewRevision = 0
     /// The current colour: new blockout, strokes and "paint" use it.
     var currentColor: ColorValue = .palette(0)
     var openPanel: ClusterPanel?
@@ -187,6 +199,8 @@ final class EditorModel {
     @ObservationIgnored var takes: [PerformChannel: PerformTake] = [:]
     @ObservationIgnored var performOverride: [ObjectID: CoreTransform] = [:]
     @ObservationIgnored var propertyOverride: [ObjectID: [PropertyKey: PropertyValue]] = [:]
+    /// Shapes shown instead of the document's while a push/pull is dragged (committed as one command on release).
+    @ObservationIgnored var kindOverride: [ObjectID: ObjectKind] = [:]
     @ObservationIgnored var performChannels = Set<PerformChannel>()
     @ObservationIgnored var performTouching = false
     @ObservationIgnored var virtualCamera: VirtualCameraController?
@@ -330,6 +344,10 @@ final class EditorModel {
         selectedKeys = selectedKeys.filter { key in timeline.track(key.track)?.key(at: key.time) != nil }
         operations.bounds = SceneBounds(library: library.manifest)
         refreshSelectionOverlay()
+        if tool == .model {
+            validateModelPick()
+            refreshModelOverlay()
+        }
         journalChanged()
         app.bridge.notify("scene", ["revision": String(session.revision)])
     }

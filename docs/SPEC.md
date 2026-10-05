@@ -13,8 +13,8 @@ reference and stays.
 | Apple Pencil: hover point at the tip in the stage's own pass, outline only while resizing | **0.1** |
 | Device tiers (A/B/C) and the hidden load meter | **0.1** |
 | The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
-| Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | M3 |
-| Modelling II (bevel, shell, mirror, array, units, snapping, measure, section, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, Blender package) | M4. Today: glTF/GLB, USDZ and OBJ import, video and stills export. |
+| Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
+| Modelling II (bevel, shell, mirror, array, edge/midpoint snapping, measure, section, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, Blender package) | M4. Today: units and grid snapping (0.3), glTF/GLB, USDZ and OBJ import, video and stills export. |
 | One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | M5. Today: 2.0's ink strokes and flipbooks. |
 | Painting on models | M6 |
 | One skeleton system, draw a bone, one-tap human rig, 2D puppets | M7. Today: 2.0's Cast (Blob, Puppet, Rigged). |
@@ -72,13 +72,41 @@ At rest the stage holds at least 85% of the screen.
   screen (Reduce Motion keeps a still). Tap a card and it grows into the stage; Home in the corner shrinks it back.
   Drag a card onto another to stack them; search finds projects and stacks by name; sort by Recent, Name or Date
   created; Select acts on several (stack, move out, duplicate, archive, delete).
-- **Starter templates** in New project: Blank, Model to print (a 1 cm grid, 5 cm shapes, close up, Clay), Room or
-  building (a 25 cm grid, the view from above), Character (Cast open, eye level), Animation (the timeline open). Each
-  suggests a Look and a Mood, both changeable there and later. Sketch arrives with the Schizzo board (M9);
-  millimetres, the print-bed outline and the walls tool with the modelling phases (M3, M4).
+- **Starter templates** in New project: Blank, Model to print (millimetres, a 1 cm grid, 5 cm shapes, close up,
+  Clay), Room or building (metres, a 25 cm grid, the view from above), Character (Cast open, eye level), Animation
+  (the timeline open). Each suggests a Look and a Mood, both changeable there and later. Sketch arrives with the
+  Schizzo board (M9); the print-bed outline and the walls tool with M4.
 - **Keyboard**: ⌘1–⌘5 Model, Draw, Paint, Animate, Cast; ⌘6–⌘8 Actions, Look, Select; ⌘L the library; ⌥⌘1–3 move,
   turn, size; ⌘T the timeline.
 - Diagnostics also runs the **Home benchmark**: a hundred projects turning while the gallery scrolls for 20 seconds.
+
+### Modelling I (0.3)
+
+Shapr3D's core loop, in **Model ▸ Shape**. Choosing a sketch shape or a pick mode closes the panel and puts the Model
+tool's bar at the bottom of the stage (pick modes, sketch shapes, Done, grow / shrink / select similar, ✕).
+
+- **Sketch on any surface.** The first tap lands on the face under it (or the ground) and the shape lies on that
+  plane: **line** (tap the corners, tap the first to close), **rectangle** (two corners), **circle** (centre, edge),
+  **arc** (start, end, bend), **spline** (tap through it; tap the start to close, or Done), **offset** (tap a curve,
+  type the distance). Points snap to corners already drawn, else to the grid. Closed shapes fill into regions; a
+  shape inside another makes a hole and is a region of its own. Sketches are construction lines: the stage shows them,
+  renders and exports never do.
+- **Pull a region into a solid, or cut it into the face below.** Tap a region and drag it, or tap its number and type:
+  up makes a solid (or adds to the object it was drawn on), down cuts into that object. The region's lines are used
+  up.
+- **Pick faces, edges or corners**: tap one, touch and hold to add or remove, draw a loop with the Pencil around
+  several; grow, shrink and select similar from the bar. Picks are highlighted in amber on the stage, with the
+  object's edges drawn over it.
+- **Push/pull a face** with its live distance floating beside it; snapping to other corners' heights and to the unit
+  while dragging; tap the number to type an exact one. A face whose neighbours stand square to it slides (the number
+  is the new size exactly); any other face adds or cuts a prism.
+- **Exact lengths everywhere**: every number on the stage takes `25`, `25mm`, `2*12`, `1ft 6in`, `(40-6)/2`, in the
+  project's units (Model ▸ Snapping: mm, cm, m, in, ft).
+- **Booleans**: union, subtract and intersect two or more selected shapes into the first one; results are clean
+  (coplanar faces merged, welded) closed solids. Any shape (a cube, a drawn solid) becomes an editable mesh on the way,
+  or with Make editable.
+- **The inspector shows sizes**: the selection's width × height × depth in the project's units, and what's picked
+  ("Face · 800 mm²", "2 edges · 80 mm").
 
 ---
 

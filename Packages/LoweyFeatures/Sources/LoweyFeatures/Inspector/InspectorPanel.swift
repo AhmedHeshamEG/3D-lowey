@@ -28,6 +28,7 @@ struct InspectorPanel: View {
                         single(object)
                     } else {
                         Text("\(editor.selection.count) objects").font(.hmm(.body)).foregroundStyle(theme.text2)
+                        SizeSection(editor: editor)
                         PaletteRow(palette: editor.look.palette, selected: nil) { editor.setColor(.palette($0)) }
                         ArrangeSection(editor: editor)
                         LookOverrideSection(editor: editor, object: nil)
@@ -59,6 +60,7 @@ struct InspectorPanel: View {
     @ViewBuilder
     private func single(_ object: SceneObject) -> some View {
         TransformSection(editor: editor, object: object)
+        SizeSection(editor: editor)
         if object.kind.hasSurface { SurfaceSection(editor: editor, object: object) }
         KindSection(editor: editor, object: object)
         if object.kind.hasSurface || object.kind == .group { LookOverrideSection(editor: editor, object: object) }
@@ -149,6 +151,8 @@ struct InspectorPanel: View {
         case .overlay: "square.on.square.intersection.dashed"
         case .particles: "sparkles"
         case .card: "photo.on.rectangle"
+        case .mesh: "cube.transparent"
+        case .sketch: "pencil.and.ruler"
         }
     }
 }

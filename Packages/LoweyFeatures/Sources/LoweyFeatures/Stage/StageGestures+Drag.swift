@@ -51,6 +51,8 @@ extension StageGestures {
             return .scatter(center: center)
         case .ink, .draw, .shadowBrush, .flipbook:
             return .orbit
+        case .model:
+            return beginModelDrag(at: point, editor: editor)
         case .select:
             return beginSelectDrag(at: point, editor: editor, stage: stage)
         }
@@ -127,9 +129,25 @@ extension StageGestures {
             editor.moveMotionPathKey(at: time, to: point, gesture: gestureKey)
         case let .ik(handle):
             editor.dragIK(handle, to: point, gesture: gestureKey)
+        case let .pushPull(axis, grab):
+            if let along = editor.pullDistance(at: point, axis: axis) { editor.updatePull(along - grab, axis: axis) }
+        case .modelLasso:
+            if let last = editor.lassoPoints.last, hypot(last.x - point.x, last.y - point.y) > 4 { editor.lassoPoints.append(point) }
         case .none:
             break
         }
+    }
+
+    /// With the Model tool: a drag on the picked face or region pulls it; a Pencil loops in a pick mode; else orbit.
+    private func beginModelDrag(at point: CGPoint, editor: EditorModel) -> DragKind {
+        if editor.canPull(at: point), editor.prepareFacePull(), let axis = editor.pullAxis {
+            return .pushPull(axis, grab: editor.pullDistance(at: point, axis: axis) ?? 0)
+        }
+        if panTouchIsPencil, editor.modeling.mode.pickMode != nil {
+            editor.lassoPoints = [point]
+            return .modelLasso
+        }
+        return .orbit
     }
 
     private func continueGizmo(_ handle: GizmoHandle, pivot: Vec3, from lastPoint: CGPoint, to point: CGPoint, accumulated: Double,
@@ -181,6 +199,11 @@ extension StageGestures {
             scatterRadius = 0
         case .perform:
             editor.performTouchEnded()
+        case .pushPull:
+            editor.endPull(commit: !cancelled)
+        case .modelLasso:
+            if !cancelled { editor.pickElements(inLoop: editor.lassoPoints) }
+            editor.lassoPoints = []
         case .turn, .orbit, .aimCamera, .moveOverlay, .pathKey, .ik, .none:
             break
         }

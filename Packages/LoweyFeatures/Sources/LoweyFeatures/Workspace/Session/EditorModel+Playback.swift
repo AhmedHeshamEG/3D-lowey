@@ -37,6 +37,9 @@ extension EditorModel {
     func refreshDisplay(_ changes: ChangeSet? = nil) {
         var animated = Animator.evaluate(historyPreview ?? session.document, at: time, rigs: rigs(), overrides: propertyOverride)
         applyPerformOverrides(&animated)
+        for (id, kind) in kindOverride where animated.scene.objects[id] != nil {
+            animated.scene.objects[id]?.kind = kind
+        }
         displayed = animated
         previousAnimated = animated.animated
         if changes != nil { overlayCache = StageOverlayCache() }

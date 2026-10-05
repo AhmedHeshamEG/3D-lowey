@@ -48,6 +48,7 @@ public enum SceneExport {
                 let data: MeshData? = switch object.kind {
                 case let .primitive(shape): PrimitiveMesh.make(shape, shading: shading)
                 case let .drawing(recipe): DrawingMesher.mesh(for: recipe).shaded(shading)
+                case let .mesh(mesh): mesh.renderMesh()
                 case let .text(recipe) where recipe.coreMeshable: BlockFont.mesh(for: recipe)
                 default: nil
                 }

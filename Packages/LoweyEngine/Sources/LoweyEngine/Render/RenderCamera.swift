@@ -72,11 +72,13 @@ public struct RenderCamera: Sendable, Hashable {
         return (far.eye, viewpoint.rotation, orthographicFieldOfView)
     }
 
-    /// The editor's orbit camera.
+    /// The editor's orbit camera. Up close (a printed part a few centimetres away) the near plane comes in with it;
+    /// from 20 cm out it stays at 2 cm, as before.
     public init(viewpoint: Viewpoint) {
         let pose = Self.pose(for: viewpoint)
+        let near = Float(min(0.02, max(0.002, viewpoint.distance * 0.1)))
         self.init(position: pose.eye.float3, orientation: pose.rotation.simd, fieldOfView: Float(pose.fieldOfView),
-                  near: viewpoint.projection == .orthographic ? 1 : 0.02, far: viewpoint.projection == .orthographic ? 60000 : 3000)
+                  near: viewpoint.projection == .orthographic ? 1 : near, far: viewpoint.projection == .orthographic ? 60000 : 3000)
     }
 
     /// The shot at a moment: the cut's camera (framed for `aspect`), else the scene's saved view.

@@ -138,6 +138,7 @@ extension EditorModel {
         switch object.kind {
         case let .primitive(shape): return PrimitiveMesh.bounds(shape)
         case let .drawing(recipe): return DrawingMesher.mesh(for: recipe).bounds
+        case let .mesh(mesh): return mesh.bounds ?? unit
         case let .asset(id): return library.manifest.asset(id)?.bounds ?? unit
         default: return unit
         }

@@ -3,6 +3,26 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.3] — Maquette — modelling I (phase M3)
+
+- **Model ▸ Shape**: sketch, push/pull and booleans, Shapr3D's core loop. Choose a shape or a mode and the stage is
+  yours, with the Model tool's bar at the bottom.
+- **Sketch on any surface**: line, rectangle, circle, arc, spline and offset, by tapping, on the face you tap or the
+  ground. Closed shapes fill; a shape inside another makes a hole.
+- **Pull a region into a solid or cut it into the face below**, by dragging or by typing the distance.
+- **Pick faces, edges and corners**: tap, touch and hold to add, a Pencil loop for many; grow, shrink, select similar.
+- **Push/pull faces** with the distance floating beside them, snapping to other corners and to the unit. Tap any
+  number on the stage and type an exact length: `25`, `25mm`, `2*12`, `1ft 6in`.
+- **Union, subtract, intersect** two or more shapes; results are clean solids (flat faces merged, no seams), ready to
+  keep modelling. Any shape becomes an editable mesh on the way.
+- **Units**: millimetres, centimetres, metres, inches, feet (Model ▸ Snapping). Model to print starts in millimetres,
+  Room or building in metres.
+- The inspector shows the selection's size, and what's picked.
+- The camera comes in to 3 cm, so double-tap frames a small printed part.
+- Projects are schema 5 (meshes and sketches); Maquette 0.2 and 3D-lowey ask for a newer version instead of opening
+  them.
+- Booleans by Manifold (Apache-2.0), vendored.
+
 ## [0.2] — Maquette — the canvas owns the screen (phase M2)
 
 - **The stage owns the screen.** At rest it holds at least 85% of it: two corner clusters, a thin sidebar, and

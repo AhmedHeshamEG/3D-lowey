@@ -141,6 +141,7 @@ extension EditorModel {
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
         if tool != .ink { inkStrokes = [] }
         if tool == .flipbook, flipbook.track == nil { flipbook.track = timeline.flipbooks.last?.id }
+        modelToolChanged()
         refreshSelectionOverlay()
         refreshGuide()
     }
@@ -151,6 +152,7 @@ extension EditorModel {
         if projection != viewpoint.projection { projection = viewpoint.projection }
         if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
         if tool.usesGuide { refreshGuide() }
+        if tool == .model { modelCameraMoved() }
         if !selection.isEmpty { refreshSelectionScreenRect(after: 0.15) }
         viewpointSaveTask?.cancel()
         viewpointSaveTask = Task { [weak self] in
@@ -165,7 +167,13 @@ extension EditorModel {
         stage?.frame(selection.isEmpty ? allBounds : selectionBounds)
     }
 
-    var allBounds: Bounds? { stage?.visualBounds(of: baseScene.roots) ?? operations.bounds.worldBounds(of: baseScene.roots, in: scene) }
+    /// Everything on the stage, sketches included (the renderer doesn't draw them, so it doesn't know their bounds).
+    var allBounds: Bounds? {
+        let drawn = stage?.visualBounds(of: baseScene.roots) ?? operations.bounds.worldBounds(of: baseScene.roots, in: scene)
+        let sketched = operations.bounds.worldBounds(of: sketches.map(\.id), in: scene)
+        guard let drawn else { return sketched }
+        return sketched.map { drawn.union($0) } ?? drawn
+    }
 
     func toggleProjection() {
         guard let stage else { return }

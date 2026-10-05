@@ -4,6 +4,11 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.3** (phase M3): **modelling**. Model ▸ Shape sketches on any surface (lines, rectangles, circles, arcs, splines,
+offsets), pulls closed shapes into solids or cuts them into the face below, picks faces, edges and corners, pushes and
+pulls faces with the distance floating beside them, and combines solids with union, subtract and intersect. Every
+number on the stage takes an exact length (`25`, `2*12`, `1ft 6in`) in the project's units.
+
 **0.2** (phase M2): **the canvas owns the screen**. The making tools are Model, Draw, Paint, Animate and Cast; the
 timeline comes when called; the inspector floats beside what's selected; every panel resizes. **Home** is a living
 gallery where each project's model turns in its own Look, grows into the stage when tapped, and can be stacked,
@@ -58,7 +63,7 @@ control's home is in [docs/LAYOUT.md](docs/LAYOUT.md).
 | Where | What's there |
 |---|---|
 | Top left | **Home** (your projects) · **Actions** (export, the project file, the Monitor, scenes, history, scripts, the AI & laptop bridge, gestures, tour, diagnostics, settings) · **Look** (Looks, mood, palette, finish) · **Select** (tap, lasso, select similar, the outliner) |
-| Top right | **Model** (shapes, lights and cameras, 3D text, titles, photos and videos, effects; the Kit and your models; snapping) · **Draw** (ink strokes, solid shapes on guides, flipbooks) · **Paint** (Shadow Brush, Scatter) · **Animate** (opens the timeline) · **Cast** (Blob, Puppet, Rigged; clips, poses, faces, lip sync) |
+| Top right | **Model** (shapes, lights and cameras, 3D text, titles, photos and videos, effects; sketch, push/pull and booleans; the Kit and your models; snapping and units) · **Draw** (ink strokes, solid shapes on guides, flipbooks) · **Paint** (Shadow Brush, Scatter) · **Animate** (opens the timeline) · **Cast** (Blob, Puppet, Rigged; clips, poses, faces, lip sync) |
 | Side | two sliders for what you're doing, **Pick**, undo, redo |
 | Beside the selection | the **inspector**: move, turn, size; numbers; Look override; motion; its menu has array, group, swap for a model, save to the library |
 | Bottom right | the **timeline** control (call the transport, send it away), views, frame the selection, the Director view |
@@ -120,7 +125,8 @@ is in [`skills/lowey`](skills/lowey). App Store builds ship without the bridge (
 Nothing needs a Mac: GitHub Actions builds, tests and packages everything.
 
 ```
-Packages/LoweyCore      pure Swift: model, commands, timeline, geometry, characters, glTF, Scene Scripts, samples
+Packages/LoweyCore      pure Swift: model, commands, timeline, geometry, modelling, characters, glTF, Scene Scripts, samples
+Packages/Manifold       Manifold (Apache-2.0) vendored for booleans, behind a small C face
 Packages/LoweyEngine    LoweyRender 2 (Metal), stage view, import, export, overlays, audio, face, scripting, benchmark
 Packages/LoweyFeatures  the SwiftUI editor (Workspace shared, one folder per feature, Shell composes them)
 Packages/HmmKit         hmm-kit (git subtree): design system, commands, documents, bridge, diagnostics, media…

@@ -3,7 +3,7 @@ import LoweyCore
 import SwiftUI
 
 /// Model ▸ Snapping: the grid, faces snapping flush to other objects and the ground, turning in steps. Precision for
-/// modelling lives here (units and measuring join it with the modelling tools).
+/// modelling lives here, with the units sizes are shown and typed in.
 struct SnappingPage: View {
     @Bindable var editor: EditorModel
 
@@ -34,6 +34,13 @@ struct SnappingPage: View {
             }
             Toggle("Grid on the ground", isOn: $editor.showsGrid)
                 .accessibilityIdentifier("show-grid")
+            Picker("Units", selection: $editor.units) {
+                ForEach(LengthUnit.allCases, id: \.self) { unit in
+                    Text(unit.symbol).tag(unit)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("units")
             Hint("This project remembers these. How close a face must be to snap is the sidebar's top slider.")
         }
         .font(.hmm(.body))

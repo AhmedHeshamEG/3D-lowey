@@ -2,8 +2,8 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Model: everything that goes into the world (shapes, lights, cameras, words, effects), the library of models, and
-/// snapping. Until the modelling tools arrive these are 2.0's Build, Library and Transform settings in one place.
+/// Model: everything that goes into the world (shapes, lights, cameras, words, effects), shaping it (sketches,
+/// push/pull, booleans), the library of models, and snapping and units.
 struct ModelPanel: View {
     @Bindable var editor: EditorModel
 
@@ -13,6 +13,7 @@ struct ModelPanel: View {
                 if !isSwapping { pages }
                 switch isSwapping ? ModelPage.library : editor.modelPage {
                 case .add: ModelAddPage(editor: editor)
+                case .shape: ModelShapePage(editor: editor)
                 case .library: LibraryBrowser(editor: editor)
                 case .snapping: SnappingPage(editor: editor)
                 }

@@ -11,7 +11,8 @@ flowchart TD
     App["App<br/>entry point · menu commands · background export · Live Activity widget"]
     Features["LoweyFeatures<br/>SwiftUI editor: Shell + one folder per feature + Workspace"]
     Engine["LoweyEngine<br/>LoweyRender 2 (Metal) · import · export · stage view · audio · face · scripting"]
-    Core["LoweyCore<br/>pure Swift: model · commands · timeline · geometry · characters · samples"]
+    Core["LoweyCore<br/>pure Swift: model · commands · timeline · geometry · modelling · characters · samples"]
+    Manifold["Manifold<br/>vendored C++ booleans behind a C face"]
     subgraph HmmKit["hmm-kit (Packages/HmmKit, git subtree)"]
         Design[HmmDesign]
         Commands[HmmCommands]
@@ -26,6 +27,7 @@ flowchart TD
     Features --> Engine
     Features --> Core
     Engine --> Core
+    Core --> Manifold
     Features --> Design & Bridge & Diagnostics & Documents & Perception
     Engine --> Media & Diagnostics & Transcript & Perception
     Core --> Commands & Documents & Transcript
@@ -33,7 +35,8 @@ flowchart TD
 
 | Module | Imports | What it holds | Tests |
 |---|---|---|---|
-| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
+| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
+| **Manifold** (`Packages/Manifold`) | the C++ standard library | Manifold 3.5.4 (Apache-2.0) as a C++17 target, single-threaded, and `ManifoldBridge.h`: boolean and validate in plain C, so Swift needs no C++ interop. `VENDORED.md` says how to update it | Linux and the iPad simulator (its own tests; LoweyCore's boolean tests) |
 | **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2, the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
 | **LoweyFeatures** | Core, Engine, SwiftUI, hmm-kit's Design / Bridge / Documents / Diagnostics | The editor. `Workspace/` is shared by every feature (app and editor models, the session API, controls); each other folder is one feature's views; `Shell/` composes them | iPad simulator: bridge security, editor flows |
 | **App** | Features, ActivityKit, BackgroundTasks | `LoweyApp`, the export Live Activity, the widget extension | UI smoke tests |
@@ -67,6 +70,34 @@ sequenceDiagram
 
 Continuous gestures (drags, sliders, the joystick, Perform) pass a coalesce key, so a whole gesture is one undo step.
 Scene Scripts and bridge proposals compile into one `batch` command. `J` is the scene's `HistoryJournal` (below).
+
+## Modelling
+
+```mermaid
+flowchart LR
+    Tap[Tap / drag / Pencil loop<br/>StageGestures] --> EM[EditorModel+Modeling<br/>+Sketching · +PushPull]
+    EM --> Ops[ModelingOperations<br/>Core]
+    Ops --> PP[PushPull · Prism]
+    Ops --> B[MeshBoolean]
+    B --> MF[Manifold<br/>C face]
+    B --> MB[MeshBuilder<br/>faces from triangles]
+    Ops --> Cmd[EditCommand batch<br/>setKind · insert · delete]
+    EM --> Ov[EditorModel+ModelOverlay] --> Stage[StageView.showModelOverlay<br/>editor pass]
+```
+
+- **`EditableMesh`** (Core `Modeling/`): vertices and faces (outline + holes) in the object's space, metres; the
+  `mesh` object kind. `MeshTopology` builds half-edges per operation; `MeshBuilder` turns triangles (primitives,
+  drawings, boolean results) into whole faces; `PolygonTriangulator` cuts faces with holes for the GPU and Manifold.
+- **`MeshBoolean`** flattens both meshes into the C structs, calls `MBBoolean`, and rebuilds faces (D-115, D-117).
+  `PushPull` slides a face when its neighbours stand square to it, else sweeps a `Prism` and combines it (D-119).
+- **`Sketch`** (the `sketch` kind): a world plane, curves (line, rectangle, circle, arc, spline, polyline), the object
+  it was drawn on; `regions` nest closed loops into areas with holes. `ModelingOperations` turns a pull, cut,
+  boolean, push/pull or new curve into one labelled batch of existing commands (D-118).
+- **On the stage** (Features `Workspace/Session`): `ModelingState` (mode, the picked elements or region, the shape
+  being drawn, the live pull) is view state, never undone. Taps go `StageGestures` → `modelTap`; a drag on the picked
+  face or region becomes `.pushPull`, a Pencil loop `.modelLasso`. While dragging, `kindOverride` shows a sliding face
+  without touching the document (D-120). `EditorModel+ModelOverlay` builds the marks as `EditorOverlay`s with Core's
+  `ModelOverlay` and the floating numbers (`DimensionLabel`, drawn by `Model/ModelDimensions` over the stage).
 
 ## LoweyRender 2
 

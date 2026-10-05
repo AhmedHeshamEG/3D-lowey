@@ -3,13 +3,23 @@
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
 phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
 
+## Left from M3 (Maquette 0.3)
+
+- [ ] The device checklist in the "Maquette 0.3 — M3" PR (sketching and push/pull with the Pencil and fingers, the
+      floating numbers and the keyboard, picks and the Pencil loop, booleans on real models, the marks' look).
+- [ ] Curves that cross each other don't split into separate regions yet: only closed curves (and open ones joined
+      end to end) fill. (D-121)
+- [ ] Edges and corners can be picked, grown and measured, but not moved yet: moving them (and bevelling edges)
+      comes with M4's shape operations.
+- [ ] Snapping to edges, midpoints and faces while sketching, the measure tool and dimensions that stay visible: M4.
+
 ## Left from M2 (Maquette 0.2)
 
 - [ ] The device checklist in the "Maquette 0.2 — M2" PR (the layout on the iPad, the inspector beside the
       selection, time on call, panel resizing, Home's turning cards and the zoom into the stage, stacks, the
       templates, the Home benchmark at Tier A).
-- [ ] Millimetres and the print-bed outline in *Model to print*, the walls tool near *Room or building*: they come
-      with the precision and architecture tools (M3, M4). (D-111)
+- [ ] The print-bed outline in *Model to print* and the walls tool near *Room or building* (M4). Millimetres and
+      metres arrived in 0.3. (D-111)
 - [ ] *Sketch* in New project when the Schizzo board exists (M9). (D-111)
 
 ## Left from M1 (Maquette 0.1)
@@ -31,6 +41,12 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 - A studio bundle with the other hmm. apps; the StoreKit configuration is ready for testing it. (R52)
 
 ## Known limitations
+
+- **Booleans keep everything in one object.** Subtracting a shape that splits a solid in two leaves both pieces in
+  the first object (separate them with M4's tools). Booleans need closed solids; a plane or an open drawing is
+  refused with a message.
+- **The renderer's mesh cache keys editable meshes by a 64-bit fingerprint.** Two different meshes with the same
+  fingerprint would share a GPU mesh; with FNV-1a over every coordinate that's vanishingly unlikely. (D-116)
 
 - **The inspector moves after things stop.** While you orbit or drag, it stays where it was and glides beside the
   selection once the view or the object rests (measuring every frame would cost the stage frames). (D-105)

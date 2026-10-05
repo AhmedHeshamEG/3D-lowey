@@ -161,6 +161,54 @@
         }
       }
     },
+    "%lld corners": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld vertici"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld زوايا"
+          }
+        }
+      }
+    },
+    "%lld edges · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld spigoli · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld حواف · %@"
+          }
+        }
+      }
+    },
+    "%lld faces · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld facce · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أوجه · %@"
+          }
+        }
+      }
+    },
     "%lld fps": {
       "localizations": {
         "it": {
@@ -1361,6 +1409,22 @@
         }
       }
     },
+    "Area · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Area · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساحة · %@"
+          }
+        }
+      }
+    },
     "Array": {
       "localizations": {
         "it": {
@@ -2161,6 +2225,22 @@
         }
       }
     },
+    "Centimetres": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centimetri"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنتيمترات"
+          }
+        }
+      }
+    },
     "Centre": {
       "localizations": {
         "it": {
@@ -2625,6 +2705,22 @@
         }
       }
     },
+    "Combine": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combina"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دمج"
+          }
+        }
+      }
+    },
     "Compose": {
       "localizations": {
         "it": {
@@ -2797,6 +2893,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "مجموعة الزاوية"
+          }
+        }
+      }
+    },
+    "Corners": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertici"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الزوايا"
           }
         }
       }
@@ -3777,6 +3889,22 @@
         }
       }
     },
+    "Done modelling": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine modellazione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء النمذجة"
+          }
+        }
+      }
+    },
     "Done painting shadows": {
       "localizations": {
         "it": {
@@ -4301,6 +4429,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "منحنى السرعة"
+          }
+        }
+      }
+    },
+    "Edge · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spigolo · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حافة · %@"
+          }
+        }
+      }
+    },
+    "Edges": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spigoli"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحواف"
           }
         }
       }
@@ -4993,6 +5153,38 @@
         }
       }
     },
+    "Face · %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faccia · %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وجه · %@"
+          }
+        }
+      }
+    },
+    "Faces": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facce"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأوجه"
+          }
+        }
+      }
+    },
     "Facing me": {
       "localizations": {
         "it": {
@@ -5085,6 +5277,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المفضلة"
+          }
+        }
+      }
+    },
+    "Feet": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Piedi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقدام"
           }
         }
       }
@@ -6593,6 +6801,22 @@
         }
       }
     },
+    "Inches": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pollici"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بوصات"
+          }
+        }
+      }
+    },
     "Ink": {
       "localizations": {
         "it": {
@@ -6669,6 +6893,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المراقب"
+          }
+        }
+      }
+    },
+    "Intersect": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interseca"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقاطع"
           }
         }
       }
@@ -7729,6 +7969,22 @@
         }
       }
     },
+    "Make editable": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendi modificabile"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اجعله قابلًا للتعديل"
+          }
+        }
+      }
+    },
     "Make things, top right": {
       "localizations": {
         "it": {
@@ -7885,6 +8141,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "لقطة متوسطة"
+          }
+        }
+      }
+    },
+    "Metres": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metri"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أمتار"
+          }
+        }
+      }
+    },
+    "Metres, a 25 cm grid, the view from above.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metri, una griglia da 25 cm, la vista dall'alto."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أمتار، شبكة 25 سم، والمنظر من الأعلى."
+          }
+        }
+      }
+    },
+    "Millimetres": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Millimetri"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مليمترات"
+          }
+        }
+      }
+    },
+    "Millimetres, 5 cm shapes on a 1 cm grid, close up.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Millimetri, forme da 5 cm su una griglia da 1 cm, da vicino."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مليمترات، أشكال 5 سم على شبكة 1 سم، عن قرب."
           }
         }
       }
@@ -8945,6 +9265,22 @@
         }
       }
     },
+    "Offset": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offset"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزاحة"
+          }
+        }
+      }
+    },
     "Old film": {
       "localizations": {
         "it": {
@@ -9921,6 +10257,22 @@
         }
       }
     },
+    "Picked": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scelto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المختار"
+          }
+        }
+      }
+    },
     "Pill": {
       "localizations": {
         "it": {
@@ -10397,6 +10749,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "دمية"
+          }
+        }
+      }
+    },
+    "Push & pull": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spingi e tira"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادفع واسحب"
           }
         }
       }
@@ -11889,6 +12257,22 @@
         }
       }
     },
+    "Select similar": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona simili"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر المتشابه"
+          }
+        }
+      }
+    },
     "Select something to paint (a character, a head, a shape)": {
       "localizations": {
         "it": {
@@ -11949,6 +12333,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر الموضوع المراد تأطيره أولًا"
+          }
+        }
+      }
+    },
+    "Select two or more shapes (touch and hold adds one). The first one keeps its look and place.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona due o più forme (tieni premuto per aggiungerne una). La prima mantiene aspetto e posizione."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر شكلين أو أكثر (المس مطولًا لإضافة شكل). يحتفظ الأول بمظهره ومكانه."
+          }
+        }
+      }
+    },
+    "Select two or more shapes first (touch and hold to add one)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima seleziona due o più forme (tieni premuto per aggiungerne una)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر شكلين أو أكثر أولًا (المس مطولًا لإضافة شكل)"
           }
         }
       }
@@ -12673,6 +13089,22 @@
         }
       }
     },
+    "Sketch": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schizzo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسم تخطيطي"
+          }
+        }
+      }
+    },
     "Skip the tour": {
       "localizations": {
         "it": {
@@ -13217,6 +13649,22 @@
         }
       }
     },
+    "Spline": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Curva"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منحنى"
+          }
+        }
+      }
+    },
     "Split": {
       "localizations": {
         "it": {
@@ -13617,6 +14065,22 @@
         }
       }
     },
+    "Subtract": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sottrai"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طرح"
+          }
+        }
+      }
+    },
     "Sun": {
       "localizations": {
         "it": {
@@ -13825,6 +14289,38 @@
         }
       }
     },
+    "Tap a face and drag it. Tap the number to type an exact size, like 25 or 2*12.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca una faccia e trascinala. Tocca il numero per scrivere una misura esatta, come 25 o 2*12."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس وجهًا واسحبه. المس الرقم لكتابة مقاس دقيق، مثل 25 أو 2*12."
+          }
+        }
+      }
+    },
+    "Tap a line of a sketch to offset it": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca una linea dello schizzo per spostarla in parallelo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس خطًا في الرسم لإزاحته"
+          }
+        }
+      }
+    },
     "Tap a sound in the timeline to edit it.": {
       "localizations": {
         "it": {
@@ -13889,6 +14385,54 @@
         }
       }
     },
+    "Tap how far it bends": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca quanto si piega"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس مقدار انحنائه"
+          }
+        }
+      }
+    },
+    "Tap on a face or the ground. Closed shapes fill; tap one and drag it up into a solid, or into a face to cut.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca una faccia o il terreno. Le forme chiuse si riempiono: toccane una e trascinala in su per farne un solido, o dentro una faccia per tagliare."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس وجهًا أو الأرض. الأشكال المغلقة تمتلئ؛ المس واحدًا واسحبه للأعلى ليصبح مجسمًا، أو داخل وجه لتقطعه."
+          }
+        }
+      }
+    },
+    "Tap one corner": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca un angolo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس زاوية"
+          }
+        }
+      }
+    },
     "Tap projects to select them": {
       "localizations": {
         "it": {
@@ -13901,6 +14445,150 @@
           "stringUnit": {
             "state": "translated",
             "value": "اضغط على المشاريع لتحديدها"
+          }
+        }
+      }
+    },
+    "Tap the centre": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca il centro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس المركز"
+          }
+        }
+      }
+    },
+    "Tap the edge": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca il bordo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس الحافة"
+          }
+        }
+      }
+    },
+    "Tap the next corner. Tap the first one to close": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca l'angolo successivo. Tocca il primo per chiudere"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس الزاوية التالية. المس الأولى للإغلاق"
+          }
+        }
+      }
+    },
+    "Tap the opposite corner": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca l'angolo opposto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس الزاوية المقابلة"
+          }
+        }
+      }
+    },
+    "Tap through the curve. Tap the start to close": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca lungo la curva. Tocca l'inizio per chiudere"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس على طول المنحنى. المس البداية للإغلاق"
+          }
+        }
+      }
+    },
+    "Tap where it ends": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca dove finisce"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس حيث ينتهي"
+          }
+        }
+      }
+    },
+    "Tap where the arc starts": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca dove inizia l'arco"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس حيث يبدأ القوس"
+          }
+        }
+      }
+    },
+    "Tap where the curve starts": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca dove inizia la curva"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس حيث يبدأ المنحنى"
+          }
+        }
+      }
+    },
+    "Tap where the line starts": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca dove inizia la linea"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس حيث يبدأ الخط"
           }
         }
       }
@@ -14013,6 +14701,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "كان ذلك التسجيل قصيرًا جدًا"
+          }
+        }
+      }
+    },
+    "That would turn the shape inside out": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La forma si rovescerebbe"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سينقلب الشكل من الداخل إلى الخارج"
           }
         }
       }
@@ -15281,6 +15985,38 @@
         }
       }
     },
+    "Type a length, like 25 or 2*12 or 1.5 cm": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrivi una lunghezza, come 25 o 2*12 o 1,5 cm"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب طولًا، مثل 25 أو 2*12 أو 1.5 سم"
+          }
+        }
+      }
+    },
+    "Type an exact length": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrivi una lunghezza esatta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب طولًا دقيقًا"
+          }
+        }
+      }
+    },
     "Typewriter": {
       "localizations": {
         "it": {
@@ -15357,6 +16093,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "فك التجميع"
+          }
+        }
+      }
+    },
+    "Union": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unisci"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توحيد"
+          }
+        }
+      }
+    },
+    "Units": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unità"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوحدات"
           }
         }
       }

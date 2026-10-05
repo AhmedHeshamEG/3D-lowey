@@ -18,6 +18,8 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case flipbook
     /// Drag on the ground to scatter copies of the selection.
     case scatter
+    /// Model ▸ Shape: pick faces, edges and corners, push/pull, sketch on surfaces (`ModelingState`).
+    case model
 
     public var id: String { rawValue }
 
@@ -30,6 +32,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .shadowBrush: "Shadow Brush"
         case .flipbook: "Flipbook"
         case .scatter: "Scatter"
+        case .model: "Shape"
         }
     }
 
@@ -42,6 +45,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .shadowBrush: "circle.lefthalf.striped.horizontal"
         case .flipbook: "book.pages"
         case .scatter: "circle.hexagongrid"
+        case .model: "cube.transparent"
         }
     }
 
@@ -76,15 +80,16 @@ public enum ClusterPanel: String, Identifiable, Sendable {
     }
 }
 
-/// The Model panel's three pages: things to add, the library of models, snapping and the grid.
+/// The Model panel's pages: things to add, shaping (sketch, push/pull, booleans), the library of models, snapping.
 public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
-    case add, library, snapping
+    case add, shape, library, snapping
 
     public var id: String { rawValue }
 
     public var title: String {
         switch self {
         case .add: "Add"
+        case .shape: "Shape"
         case .library: "Library"
         case .snapping: "Snapping"
         }
@@ -93,6 +98,7 @@ public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
     public var systemImage: String {
         switch self {
         case .add: "plus"
+        case .shape: "cube.transparent"
         case .library: "books.vertical"
         case .snapping: "square.grid.3x3"
         }

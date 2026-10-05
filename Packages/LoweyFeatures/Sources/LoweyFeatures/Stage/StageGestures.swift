@@ -38,6 +38,10 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         case pathKey(time: Double)
         /// Dragging a character's hand or foot.
         case ik(IKHandle)
+        /// Pulling the picked face or sketch region along its normal; `grab` is where on the axis the drag began.
+        case pushPull(PullAxis, grab: Double)
+        /// A Pencil loop around faces, edges or corners.
+        case modelLasso
         case none
     }
 
@@ -78,6 +82,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     /// Ink ▸ Erase / Select: the Pencil's path, and where a drag of picked strokes was last.
     var inkPath: [CGPoint] = []
     var inkDragLast: CGPoint?
+    /// The kind of touch that started the current one-finger drag (a Pencil loops, a finger orbits).
+    var panTouchIsPencil = false
 
     /// How far orbit, pan and zoom go per finger movement (Settings ▸ Speed).
     var navigationSpeed: Double { AppSettings.navigationFactor }
@@ -137,6 +143,11 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
 
     // MARK: Delegate
 
+    func gestureRecognizer(_ recognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if recognizer === oneFingerPan { panTouchIsPencil = touch.type == .pencil }
+        return true
+    }
+
     func gestureRecognizer(_ first: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith second: UIGestureRecognizer) -> Bool {
         if first === pencilRoll || second === pencilRoll || first === hover || second === hover { return true }
         let pair: Set<ObjectIdentifier> = [ObjectIdentifier(first), ObjectIdentifier(second)]
@@ -180,6 +191,10 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
             editor.select(overlay)
             return
         }
+        if editor.tool == .model, !editor.pickActive {
+            editor.modelTap(at: point)
+            return
+        }
         let picked = stage.pickObject(at: point)
         if editor.pickActive {
             if let (id, _) = picked { editor.pick(object: id) }
@@ -196,6 +211,10 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     /// Touch and hold: add to (or take out of) the selection.
     @objc private func handleLongPress(_ recognizer: UILongPressGestureRecognizer) {
         guard recognizer.state == .began, let editor, let stage else { return }
+        if editor.tool == .model, editor.modeling.mode.pickMode != nil {
+            editor.pickElement(at: recognizer.location(in: stage), additive: true)
+            return
+        }
         if let (id, _) = stage.pickObject(at: recognizer.location(in: stage)) {
             editor.select(id, additive: true)
             HmmHaptics.play(.selection)

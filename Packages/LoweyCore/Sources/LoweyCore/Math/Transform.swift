@@ -23,6 +23,12 @@ public struct Transform: Hashable, Sendable, Codable {
         rotation.act(direction.scaled(by: scale))
     }
 
+    /// Inverse mapping of `applyDirection(_:)` (not normalised).
+    public func inverseApplyDirection(_ direction: Vec3) -> Vec3 {
+        let local = rotation.inverse.act(direction)
+        return Vec3(scale.x != 0 ? local.x / scale.x : 0, scale.y != 0 ? local.y / scale.y : 0, scale.z != 0 ? local.z / scale.z : 0)
+    }
+
     /// Inverse mapping of `apply(to:)`.
     public func inverseApply(to point: Vec3) -> Vec3 {
         let local = rotation.inverse.act(point - position)

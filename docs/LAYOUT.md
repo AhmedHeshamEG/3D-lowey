@@ -122,12 +122,20 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Marks on the frame (arrow, circle, star…) | `Model › model-add › add-overlay-arrow` |
 | Effects (fire, sparks, smoke…) | `Model › model-add › add-fx-fire` |
 | Screen effects at the playhead | `Model › model-add › effect-flash` |
+| Sketch on a face or the ground: line, rectangle, circle, arc, spline, offset | `Model › model-shape › sketch-rectangle` |
+| | `Model › model-shape › sketch-offset` |
+| Push/pull: pick faces, edges or corners (tap, Pencil loop) | `Model › model-shape › pick-face` |
+| Booleans: union, subtract, intersect (two or more shapes selected) | `Model › model-shape › boolean-subtract` |
+| Make a shape an editable mesh | `[cube] Model › model-shape › make-editable` |
+| The Model tool's bar: pick modes, sketch shapes, Done, grow / shrink / select similar, ✕ | shown at the bottom while the Model tool is on |
+| The numbers on the stage (pull distance, sides, diameter, length, offset): tap to type | shown beside what they measure |
 | Library: the Kit's sets, your models, builds, worlds, scripts; search | `Model › model-library › library-search` |
 | Import models (USDZ, glTF, GLB, OBJ) | `Model › model-library › Import models` |
 | Snap to grid and its size | `Model › model-snapping › snap-grid` |
 | Snap to objects, to the ground | `Model › model-snapping › Snap to objects` |
 | Turn in steps | `Model › model-snapping › Turn in steps` |
 | Grid on the ground | `Model › model-snapping › show-grid` |
+| Units (mm, cm, m, in, ft) | `Model › model-snapping › units` |
 | Swap a shape for a model | `[cube] more-actions` (Swap for a model… opens Model's library) |
 
 ### Draw
@@ -171,6 +179,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Name | `[cube] inspector-name` |
 | Move, turn, size (the gizmo and the joystick) | `[cube] gizmo-rotate` |
 | Position, rotation, size as numbers | `[cube] transform-toggle` |
+| Its size in the project's units, and what the Model tool picked | `[cube] selection-size` |
 | Look override, lines, accents | `[cube] look-override` |
 | Motion, behaviours, physics | `[cube] section-Motion` |
 | More: metadata | `[cube] inspector-more` |

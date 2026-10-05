@@ -11,6 +11,7 @@ extension EditorModel {
         timelineHeight = workspace.timelineHeight
         snap = workspace.snap
         showsGrid = workspace.showsGrid
+        units = workspace.units
         if let first = workspace.firstPanel.flatMap(ClusterPanel.init(rawValue:)) {
             openPanel = first
             workspace.firstPanel = nil
@@ -34,6 +35,7 @@ extension EditorModel {
         workspace.timelineHeight = timelineHeight
         workspace.snap = snap
         workspace.showsGrid = showsGrid
+        workspace.units = units
         do {
             try store.saveWorkspace(workspace, at: projectURL)
         } catch {
