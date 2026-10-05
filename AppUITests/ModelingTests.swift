@@ -49,10 +49,10 @@ final class ModelingTests: XCTestCase {
         field.typeText(text + "\n")
     }
 
-    private func centre(of identifier: String) -> CGPoint {
-        let frame = element(identifier).frame
-        let origin = stage.frame.origin
-        return CGPoint(x: frame.midX - origin.x, y: frame.midY - origin.y)
+    /// Double-tap: frame what's selected (or everything), then let the camera settle.
+    private func frameAll() {
+        stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25)).doubleTap()
+        _ = XCTWaiter.wait(for: [XCTestExpectation(description: "camera settles")], timeout: 1)
     }
 
     func testABlockWithAHoleThroughItInUnderThirtySeconds() {
@@ -78,9 +78,10 @@ final class ModelingTests: XCTestCase {
         type("20", into: "depth")
         shot("A 40 × 20 mm rectangle")
 
-        // Inside the rectangle: across from its two sizes (the middle of its bottom side and of its right side).
-        let inside = CGPoint(x: centre(of: "dimension-width").x, y: centre(of: "dimension-depth").y)
-        tapStage(inside)
+        // Double-tap frames the work, so the rectangle's middle is the stage's middle.
+        frameAll()
+        let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+        tapStage(centre)
         type("10", into: "pull")
         XCTAssertTrue(element("debug-trail").label.contains("cmd=Pull"), "the region became a solid")
         let sizeLabel = element("selection-size")
@@ -88,9 +89,10 @@ final class ModelingTests: XCTestCase {
         XCTAssertEqual(sizeLabel.label, "40 × 10 × 20 mm")
         shot("A 40 × 20 × 10 mm block")
 
-        // A circle on the block's top (a little above the region's middle: the top face, not the front).
+        // A circle on the block's top: framed, the top face lies above the middle of the stage.
+        frameAll()
         XCTAssertTrue(tap("Circle"))
-        let top = CGPoint(x: inside.x, y: inside.y - 24)
+        let top = CGPoint(x: centre.x, y: centre.y - size.height * 0.06)
         tapStage(top)
         tapStage(CGPoint(x: top.x + 60, y: top.y))
         type("6", into: "diameter")

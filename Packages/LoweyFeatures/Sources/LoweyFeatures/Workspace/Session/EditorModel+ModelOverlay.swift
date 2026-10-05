@@ -88,6 +88,7 @@ extension EditorModel {
     /// The numbers on the stage now: the pull distance, the sizes of the shape just drawn, the offset.
     var dimensionLabels: [DimensionLabel] {
         _ = viewRevision
+        _ = displayRevision
         guard tool == .model, let stage else { return [] }
         var labels: [DimensionLabel] = []
         if let axis = pullAxis, let point = stage.screenPoint(of: axis.anchor + axis.normal * (modeling.pull ?? 0)) {
@@ -101,18 +102,26 @@ extension EditorModel {
         return labels
     }
 
+    /// Sizes of the shape just drawn, each pushed 30 points out from the shape's middle on screen so none covers it.
     private func curveLabels(_ stage: StageView) -> [DimensionLabel] {
         guard let ref = modeling.lastCurve, let sketch = sketch(ref.sketch), let curve = sketch.curves[safe: ref.index] else { return [] }
+        let points = curve.points
+        let middle = points.reduce(Vec2(0, 0)) { $0 + $1 } * (1 / Double(max(points.count, 1)))
+        let centre = stage.screenPoint(of: sketch.plane.lift(middle))
         func label(_ field: DimensionField, at point: Vec2, prefix: String = "") -> DimensionLabel? {
             guard let value = dimensionValue(field), let screen = stage.screenPoint(of: sketch.plane.lift(point)) else { return nil }
-            return DimensionLabel(field: field, point: screen, text: prefix + format(value))
+            var away = CGVector(dx: screen.x - (centre?.x ?? screen.x), dy: screen.y - (centre?.y ?? screen.y))
+            let length = hypot(away.dx, away.dy)
+            away = length > 1 ? CGVector(dx: away.dx / length, dy: away.dy / length) : CGVector(dx: 0, dy: 1)
+            return DimensionLabel(field: field, point: CGPoint(x: screen.x + away.dx * 30, y: screen.y + away.dy * 30), text: prefix + format(value))
         }
         switch curve {
         case let .rectangle(a, b):
             return [label(.rectangleSide(horizontal: true), at: Vec2((a.x + b.x) / 2, a.y)),
                     label(.rectangleSide(horizontal: false), at: Vec2(b.x, (a.y + b.y) / 2))].compactMap(\.self)
-        case let .circle(center, _):
-            return [label(.diameter, at: center, prefix: "⌀ ")].compactMap(\.self)
+        case let .circle(center, radius):
+            // Beside the rim, so the middle stays free to tap (and pick the disc).
+            return [label(.diameter, at: Vec2(center.x + radius, center.y), prefix: "⌀ ")].compactMap(\.self)
         case let .line(a, b):
             return [label(.lineLength, at: Vec2((a.x + b.x) / 2, (a.y + b.y) / 2))].compactMap(\.self)
         default:

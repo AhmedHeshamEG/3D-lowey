@@ -167,7 +167,13 @@ extension EditorModel {
         stage?.frame(selection.isEmpty ? allBounds : selectionBounds)
     }
 
-    var allBounds: Bounds? { stage?.visualBounds(of: baseScene.roots) ?? operations.bounds.worldBounds(of: baseScene.roots, in: scene) }
+    /// Everything on the stage, sketches included (the renderer doesn't draw them, so it doesn't know their bounds).
+    var allBounds: Bounds? {
+        let drawn = stage?.visualBounds(of: baseScene.roots) ?? operations.bounds.worldBounds(of: baseScene.roots, in: scene)
+        let sketched = operations.bounds.worldBounds(of: sketches.map(\.id), in: scene)
+        guard let drawn else { return sketched }
+        return sketched.map { drawn.union($0) } ?? drawn
+    }
 
     func toggleProjection() {
         guard let stage else { return }

@@ -101,7 +101,8 @@ extension EditorModel {
         return PlaneFrame(origin: origin, normal: normal, u: u, v: normal.cross(u))
     }
 
-    /// Snaps to the corners already drawn on the plane (within 12 points), else to the grid.
+    /// Snaps to the corners already drawn on the plane (within 12 points), else (with grid snapping on) to whole units:
+    /// a millimetre in a print project, the grid's own size when that's finer.
     private func snapped(_ point: Vec2, on pending: PendingSketch) -> Vec2 {
         guard let stage, let screen = stage.screenPoint(of: pending.plane.lift(point)) else { return point }
         var corners = pending.points
@@ -111,7 +112,7 @@ extension EditorModel {
         }
         if let near, distanceOnScreen(near, pending.plane, to: screen) < 12 { return near }
         guard snap.grid, snap.gridSize > 0 else { return point }
-        let step = min(snap.gridSize, units.metres * 10)
+        let step = min(snap.gridSize, pullStep)
         return Vec2((point.x / step).rounded() * step, (point.y / step).rounded() * step)
     }
 
