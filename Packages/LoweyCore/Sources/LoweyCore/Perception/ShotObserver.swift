@@ -125,7 +125,7 @@ public struct ShotObserver {
         func visit(_ id: ObjectID) {
             guard let object = scene.objects[id], object.isVisible else { return }
             switch object.kind {
-            case .light, .camera, .overlay, .particles:
+            case .light, .camera, .overlay, .particles, .sketch:
                 return
             case .group where !CharacterOutline.isCharacter(id, in: scene):
                 object.children.forEach(visit)

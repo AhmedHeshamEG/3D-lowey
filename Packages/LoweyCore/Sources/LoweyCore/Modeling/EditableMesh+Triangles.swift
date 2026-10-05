@@ -53,7 +53,7 @@ public extension EditableMesh {
 }
 
 /// A plane with two in-plane axes, to flatten a face into 2D and lift points back.
-public struct PlaneFrame: Hashable, Sendable {
+public struct PlaneFrame: Hashable, Sendable, Codable {
     public var origin: Vec3
     public var normal: Vec3
     public var u: Vec3

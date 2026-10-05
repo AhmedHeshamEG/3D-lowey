@@ -27,7 +27,9 @@ public enum PushPull {
         guard mesh.faces.indices.contains(face) else { throw .noSuchFace }
         guard abs(distance) > 1e-9 else { return mesh }
         if slides(mesh, face: face) { return try slide(mesh, face: face, distance: distance) }
-        let prism = Prism.make(mesh, face: face, distance: distance)
+        // Pushing in, the prism starts a hair outside the face so the two never lie exactly on top of each other.
+        let epsilon = max(mesh.bounds?.size.maxComponent ?? 1, 1e-3) * 1e-6
+        let prism = distance > 0 ? Prism.make(mesh, face: face, distance: distance) : Prism.make(mesh, face: face, from: epsilon, to: distance)
         do {
             return try MeshBoolean.combine(mesh, prism, distance > 0 ? .union : .subtract)
         } catch {
@@ -79,8 +81,12 @@ public enum PushPull {
 public enum Prism {
     /// The prism of a face of `mesh`, from the face to `distance` along its normal (either way).
     public static func make(_ mesh: EditableMesh, face: Int, distance: Double) -> EditableMesh {
+        make(mesh, face: face, from: 0, to: distance)
+    }
+
+    public static func make(_ mesh: EditableMesh, face: Int, from start: Double, to end: Double) -> EditableMesh {
         let loops = mesh.faces[face].loops.map { $0.map { mesh.vertices[$0] } }
-        return make(outline: loops[0], holes: Array(loops.dropFirst()), normal: mesh.normal(of: face), from: 0, to: distance)
+        return make(outline: loops[0], holes: Array(loops.dropFirst()), normal: mesh.normal(of: face), from: start, to: end)
     }
 
     /// A prism between heights `from` and `to` along `normal` (the outline counter-clockwise around the normal,
