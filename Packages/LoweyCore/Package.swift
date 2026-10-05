@@ -14,7 +14,8 @@ let package = Package(
         .library(name: "LoweyCore", targets: ["LoweyCore"])
     ],
     dependencies: [
-        .package(path: "../HmmKit")
+        .package(path: "../HmmKit"),
+        .package(path: "../Manifold")
     ],
     targets: [
         .target(
@@ -23,7 +24,9 @@ let package = Package(
                 .product(name: "HmmCommands", package: "HmmKit"),
                 .product(name: "HmmDocuments", package: "HmmKit"),
                 .product(name: "HmmPerception", package: "HmmKit"),
-                .product(name: "HmmTranscript", package: "HmmKit")
+                .product(name: "HmmTranscript", package: "HmmKit"),
+                // Booleans (C++ behind a C face; see Packages/Manifold/VENDORED.md).
+                .product(name: "ManifoldCpp", package: "Manifold")
             ],
             path: "Sources/LoweyCore",
             // Word → mouth shapes (from the CMU Pronouncing Dictionary, BSD; see LICENSES.md).
