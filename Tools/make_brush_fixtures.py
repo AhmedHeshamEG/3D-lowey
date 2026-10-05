@@ -3,7 +3,7 @@
 
     python Tools/make_brush_fixtures.py
 
-Writes Packages/LoweyCore/Tests/LoweyCoreTests/Fixtures/Brushes/:
+Writes Packages/LoweyCore/Tests/LoweyCoreTests/Fixtures/Brushes/ (and the .brushset to LoweyEngine's fixtures):
   Sample.brushset  Procreate: brushset.plist + two brush folders (Brush.archive keyed archives, a Shape.png and a
                    Grain.png of our own, and one tip that points at a Procreate bundled picture by name)
   Sample.abr       Photoshop 6.2: an 8BIMsamp section with one raw and one PackBits tip, an 8BIMdesc naming them
@@ -23,6 +23,8 @@ import zlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "Packages" / "LoweyCore" / "Tests" / "LoweyCoreTests" / "Fixtures" / "Brushes"
+# The renderer's golden test draws the same brush set.
+ENGINE_OUT = ROOT / "Packages" / "LoweyEngine" / "Tests" / "LoweyEngineTests" / "Fixtures" / "Brushes"
 
 
 def grey_png(width: int, height: int, value) -> bytes:
@@ -108,9 +110,18 @@ def brush_archive(settings: dict) -> bytes:
     return Archive().data(base)
 
 
+class FixedZip(zipfile.ZipFile):
+    """Entries with a fixed date, so the fixture is the same bytes every time it's made."""
+
+    def writestr(self, name, data, *args, **kwargs):  # type: ignore[override]
+        info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        super().writestr(info, data)
+
+
 def brushset() -> bytes:
     buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+    with FixedZip(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("brushset.plist", plistlib.dumps({"name": "Sample Set", "brushes": ["LEAF-0001", "PEN-0002"]},
                                                           fmt=plistlib.FMT_BINARY))
         archive.writestr("LEAF-0001/Brush.archive", brush_archive({
@@ -186,7 +197,9 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "Sample.brushset").write_bytes(brushset())
     (OUT / "Sample.abr").write_bytes(abr())
-    print("wrote", OUT)
+    ENGINE_OUT.mkdir(parents=True, exist_ok=True)
+    (ENGINE_OUT / "Sample.brushset").write_bytes((OUT / "Sample.brushset").read_bytes())
+    print("wrote", OUT, "and", ENGINE_OUT)
 
 
 if __name__ == "__main__":
