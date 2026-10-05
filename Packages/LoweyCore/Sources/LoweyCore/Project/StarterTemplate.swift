@@ -67,7 +67,8 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
         kind: .print, lookPresetID: LookPreset.clay.id, mood: .studio,
         viewpoint: Viewpoint(target: Vec3(0, 0.04, 0), yaw: 35, pitch: 30, distance: 0.6, fieldOfView: 40),
         workspace: ProjectWorkspace(template: .print, snap: SnapSettings(grid: true, gridSize: 0.01, rotationStep: 15, objectThreshold: 0.005),
-                                    showsGrid: true, shapeSize: 0.05, firstPanel: "model", units: .millimetre)
+                                    showsGrid: true, shapeSize: 0.05, firstPanel: "model", units: .millimetre,
+                                    printBed: PrintBed.standard.id)
     )
 
     /// Rooms and buildings: a quarter-metre grid, seen from above the floor.

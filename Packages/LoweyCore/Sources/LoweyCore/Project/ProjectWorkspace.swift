@@ -31,13 +31,19 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
     public var firstPanel: String?
     /// The unit lengths are shown and typed in (the scene is always in metres).
     public var units: LengthUnit
+    /// The 3D printer whose build volume the stage outlines (`PrintBed.presets`), nil for none.
+    public var printBed: String?
+    /// The section view's cut, nil when it's off.
+    public var section: SectionPlane?
+    /// Kept dimensions show on the stage.
+    public var showsDimensions: Bool
 
     public static let defaultTimelineHeight = 260.0
     public static let timelineHeightRange = 150.0 ... 900.0
 
     public init(template: StarterTemplate.Kind? = nil, timeline: TimelinePresence = .hidden, timelineHeight: Double = Self.defaultTimelineHeight,
                 snap: SnapSettings = SnapSettings(), showsGrid: Bool = true, shapeSize: Double = 1, firstPanel: String? = nil,
-                units: LengthUnit = .centimetre) {
+                units: LengthUnit = .centimetre, printBed: String? = nil, section: SectionPlane? = nil, showsDimensions: Bool = true) {
         schemaVersion = Self.schemaVersion
         self.template = template
         self.timeline = timeline
@@ -47,10 +53,13 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         self.shapeSize = shapeSize
         self.firstPanel = firstPanel
         self.units = units
+        self.printBed = printBed
+        self.section = section
+        self.showsDimensions = showsDimensions
     }
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, template, timeline, timelineHeight, snap, showsGrid, shapeSize, firstPanel, units
+        case schemaVersion, template, timeline, timelineHeight, snap, showsGrid, shapeSize, firstPanel, units, printBed, section, showsDimensions
     }
 
     /// Unknown or missing values fall back to the defaults: a damaged or future workspace never stops a project opening.
@@ -68,6 +77,9 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         shapeSize = size.isFinite && size > 0 ? min(size, 100) : defaults.shapeSize
         firstPanel = try? container.decodeIfPresent(String.self, forKey: .firstPanel)
         units = (try? container.decodeIfPresent(LengthUnit.self, forKey: .units)) ?? defaults.units
+        printBed = (try? container.decodeIfPresent(String.self, forKey: .printBed)).flatMap { PrintBed.preset($0)?.id }
+        section = try? container.decodeIfPresent(SectionPlane.self, forKey: .section)
+        showsDimensions = (try? container.decodeIfPresent(Bool.self, forKey: .showsDimensions)) ?? defaults.showsDimensions
     }
 }
 
