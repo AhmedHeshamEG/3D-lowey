@@ -31,6 +31,14 @@ public struct ExportMaterial: Hashable, Sendable {
     public var emissiveStrength: Double
     public var roughness: Double
     public var metallic: Double
+
+    public init(color: RGBA, emissive: RGBA? = nil, emissiveStrength: Double = 0, roughness: Double = 0.85, metallic: Double = 0) {
+        self.color = color
+        self.emissive = emissive
+        self.emissiveStrength = emissiveStrength
+        self.roughness = roughness
+        self.metallic = metallic
+    }
 }
 
 /// 3D export (glTF binary and USDZ) of the selection or the whole scene, written in pure Swift.

@@ -162,8 +162,9 @@ extension EditorModel {
             if !more.thinFaces.isEmpty { report.thinFaces.insert(-1) }
             report.thinnestWall = [report.thinnestWall, more.thinnestWall].compactMap(\.self).min()
         }
-        if let bed = precision.bed, let all = meshes.compactMap(\.bounds).reduce(nil as Bounds?, { $0.map { $0.union($1) } ?? $1 }) {
-            report.fitsBed = bed.fits(all)
+        let boxes = meshes.compactMap(\.bounds)
+        if let bed = precision.bed, let first = boxes.first {
+            report.fitsBed = bed.fits(boxes.dropFirst().reduce(first) { all, box in all.union(box) })
         }
         precision.printChecked = ids
         precision.printReport = report
@@ -199,7 +200,7 @@ extension EditorModel {
                 parts = try ModelingOperations.editableParts(of: model, ids: &ids)
             }
         } catch {
-            let message = (error as? CustomStringConvertible)?.description ?? error.localizedDescription
+            let message = String(describing: error)
             app.show(String.LocalizationValue(message), kind: .error)
             return
         }
