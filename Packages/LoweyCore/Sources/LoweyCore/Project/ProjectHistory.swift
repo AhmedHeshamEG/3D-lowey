@@ -27,7 +27,9 @@ public enum ProjectHistory {
         // 4 → 5 only adds object kinds (`mesh`, `sketch`): schema-4 commands read as they are.
         4: { $0 },
         // 5 → 6 only adds an object kind (`dimension`).
-        5: { $0 }
+        5: { $0 },
+        // 6 → 7 only adds optional brush fields and the `setBrushes` command.
+        6: { $0 }
     ]
     /// The first schema journals were written with (Maquette 0.1).
     public static let firstJournalSchema = 4

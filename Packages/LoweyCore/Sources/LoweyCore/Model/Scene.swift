@@ -222,11 +222,25 @@ public struct ProjectInfo: Codable, Hashable, Sendable, Identifiable {
     public var lastOpenedScene: SceneID?
     /// The project's own Looks ("My Look"), stored only when there are some.
     private var looks: [LookPreset]?
+    /// The brushes its strokes were drawn with, by key, stored only when there are some.
+    private var brushSet: [String: Brush]?
 
     /// The project's own Looks ("My Look" duplicates of the built-ins).
     public var customLooks: [LookPreset] {
         get { looks ?? [] }
         set { looks = newValue.isEmpty ? nil : newValue }
+    }
+
+    /// A frozen copy of every brush a stroke here uses, by `BrushKey` (so strokes look the same on any device and
+    /// whatever happens to the brush library).
+    public var brushes: [String: Brush] {
+        get { brushSet ?? [:] }
+        set { brushSet = newValue.isEmpty ? nil : newValue }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, created, modified, look, sceneOrder, sceneNames, lastOpenedScene, looks
+        case brushSet = "brushes"
     }
 
     public init(

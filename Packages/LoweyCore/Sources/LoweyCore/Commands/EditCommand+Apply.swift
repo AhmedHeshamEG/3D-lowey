@@ -77,6 +77,11 @@ public extension EditCommand {
             document.project.customLooks = looks
             return (.setCustomLooks(old), ChangeSet(objects: Set(document.scene.objects.keys), look: true))
 
+        case let .setBrushes(brushes):
+            let old = document.project.brushes
+            document.project.brushes = brushes
+            return (.setBrushes(old), ChangeSet(scene: true))
+
         case let .setTracks(edits):
             return try Self.applySetTracks(edits, in: &document)
 

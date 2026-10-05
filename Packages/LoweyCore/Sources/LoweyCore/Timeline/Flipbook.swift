@@ -53,23 +53,43 @@ public struct FlipStroke: Codable, Hashable, Sendable {
     public var color: ColorValue
     /// A closed shape filled with the colour (impact bursts, drops) instead of a line.
     public var filled: Bool
+    /// Per-point opacity from the brush's dynamics (nil = opaque).
+    public var alphas: [Double]?
+    /// The project brush it was drawn with (`ProjectInfo.brushes`; nil = Ink Pen).
+    public var brush: String?
+    /// The seed of the brush's jitter.
+    public var seed: UInt64?
 
-    public init(points: [Vec2], widths: [Double], color: ColorValue, filled: Bool = false) {
+    public init(points: [Vec2], widths: [Double], color: ColorValue, filled: Bool = false, alphas: [Double]? = nil, brush: String? = nil,
+                seed: UInt64? = nil) {
         self.points = points
         self.widths = widths.count == points.count ? widths : Array(repeating: widths.first ?? 0.004, count: points.count)
         self.color = color
         self.filled = filled
+        self.alphas = alphas.map { $0.count == points.count ? $0 : Array(repeating: $0.first ?? 1, count: points.count) }
+        self.brush = brush
+        self.seed = seed
     }
 
+    /// The same stroke (colour, brush, seed) over other points.
+    public func with(points: [Vec2], widths: [Double], alphas: [Double]) -> FlipStroke {
+        FlipStroke(points: points, widths: widths, color: color, filled: filled, alphas: self.alphas == nil ? nil : alphas, brush: brush,
+                   seed: seed)
+    }
+
+    /// Per-point opacity (1 where none is stored).
+    public var opacities: [Double] { alphas ?? Array(repeating: 1, count: points.count) }
+
     private enum CodingKeys: String, CodingKey {
-        case points, widths, color, filled
+        case points, widths, color, filled, alphas, brush, seed
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let points = try c.decode([[Double]].self, forKey: .points).map { Vec2($0.first ?? 0, $0.count > 1 ? $0[1] : 0) }
         try self.init(points: points, widths: c.decode([Double].self, forKey: .widths), color: c.decode(ColorValue.self, forKey: .color),
-                      filled: c.decodeIfPresent(Bool.self, forKey: .filled) ?? false)
+                      filled: c.decodeIfPresent(Bool.self, forKey: .filled) ?? false, alphas: c.decodeIfPresent([Double].self, forKey: .alphas),
+                      brush: c.decodeIfPresent(String.self, forKey: .brush), seed: c.decodeIfPresent(UInt64.self, forKey: .seed))
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -78,6 +98,9 @@ public struct FlipStroke: Codable, Hashable, Sendable {
         try c.encode(widths, forKey: .widths)
         try c.encode(color, forKey: .color)
         if filled { try c.encode(filled, forKey: .filled) }
+        try c.encodeIfPresent(alphas, forKey: .alphas)
+        try c.encodeIfPresent(brush, forKey: .brush)
+        try c.encodeIfPresent(seed, forKey: .seed)
     }
 }
 
@@ -246,18 +269,21 @@ public enum FlipbookEditing {
             }
             var points: [Vec2] = []
             var widths: [Double] = []
-            for (point, width) in zip(stroke.points, stroke.widths) {
+            var alphas: [Double] = []
+            for (index, point) in stroke.points.enumerated() {
                 if isErased(point) {
-                    if points.count >= 2 { kept.append(FlipStroke(points: points, widths: widths, color: stroke.color)) }
+                    if points.count >= 2 { kept.append(stroke.with(points: points, widths: widths, alphas: alphas)) }
                     points = []
                     widths = []
+                    alphas = []
                 } else {
                     points.append(point)
-                    widths.append(width)
+                    widths.append(stroke.widths[index])
+                    alphas.append(stroke.opacities[index])
                 }
             }
             if points.count >= 2 || (points.count == 1 && stroke.points.count == 1) {
-                kept.append(FlipStroke(points: points, widths: widths, color: stroke.color))
+                kept.append(stroke.with(points: points, widths: widths, alphas: alphas))
             }
         }
         result.frames[index].strokes = kept

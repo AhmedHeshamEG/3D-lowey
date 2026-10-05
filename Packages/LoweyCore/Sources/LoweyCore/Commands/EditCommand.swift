@@ -115,6 +115,8 @@ public indirect enum EditCommand: Hashable, Sendable {
     case setShadowPaint(ObjectID, [ShadowDab])
     /// Replace the project's own Looks ("My Look").
     case setCustomLooks([LookPreset])
+    /// The project's brushes (`ProjectInfo.brushes`): a stroke's first use of a brush adds its frozen copy.
+    case setBrushes([String: Brush])
     /// Insert, replace or remove flipbook tracks.
     case setFlipbooks([FlipbookEdit])
     /// Replace the whole scene with another state of it (restoring a version; the scene keeps its id).
@@ -149,6 +151,7 @@ public indirect enum EditCommand: Hashable, Sendable {
             return "Animate"
         case .setShadowPaint: return "Paint shadows"
         case .setCustomLooks: return "Edit looks"
+        case .setBrushes: return "Draw"
         case let .setFlipbooks(edits): return edits.allSatisfy { $0.track == nil } ? "Delete flipbook" : "Draw"
         case .replaceScene: return "Restore version"
         case let .batch(label, _): return label

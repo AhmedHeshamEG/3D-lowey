@@ -86,8 +86,10 @@ public enum InkMesher {
     /// The first `length` metres of a stroke (the last point interpolated).
     static func trimmed(_ stroke: DrawingRecipe.Stroke, to length: Double) -> DrawingRecipe.Stroke {
         guard stroke.points.count >= 2 else { return stroke }
+        let alphas = stroke.path.alphas
         var points = [stroke.points[0]]
         var widths = [stroke.widths[0]]
+        var kept = [alphas[0]]
         var travelled = 0.0
         for index in 1 ..< stroke.points.count {
             let segment = stroke.points[index].distance(to: stroke.points[index - 1])
@@ -95,11 +97,13 @@ public enum InkMesher {
                 let t = segment > 0 ? (length - travelled) / segment : 0
                 points.append(stroke.points[index - 1].lerp(to: stroke.points[index], t))
                 widths.append(stroke.widths[index - 1] + (stroke.widths[index] - stroke.widths[index - 1]) * t)
-                return DrawingRecipe.Stroke(points: points, widths: widths)
+                kept.append(alphas[index - 1] + (alphas[index] - alphas[index - 1]) * t)
+                return stroke.with(points: points, widths: widths, alphas: kept)
             }
             travelled += segment
             points.append(stroke.points[index])
             widths.append(stroke.widths[index])
+            kept.append(alphas[index])
         }
         return stroke
     }
@@ -121,12 +125,15 @@ public enum InkEditing {
         var result = recipe
         result.strokes = []
         for (strokeIndex, stroke) in recipe.strokes.enumerated() {
+            let allAlphas = stroke.path.alphas
             var points: [Vec3] = []
             var widths: [Double] = []
+            var alphas: [Double] = []
             func flush() {
-                if points.count >= 2 { result.strokes.append(DrawingRecipe.Stroke(points: points, widths: widths)) }
+                if points.count >= 2 { result.strokes.append(stroke.with(points: points, widths: widths, alphas: alphas)) }
                 points = []
                 widths = []
+                alphas = []
             }
             for pointIndex in stroke.points.indices {
                 if isErased(strokeIndex, pointIndex) {
@@ -134,6 +141,7 @@ public enum InkEditing {
                 } else {
                     points.append(stroke.points[pointIndex])
                     widths.append(stroke.widths[pointIndex])
+                    alphas.append(allAlphas[pointIndex])
                 }
             }
             flush()
@@ -154,7 +162,7 @@ public enum InkEditing {
 
     public static func moving(_ strokes: Set<Int>, by offset: Vec3, in recipe: DrawingRecipe) -> DrawingRecipe {
         updating(strokes, in: recipe) { stroke in
-            DrawingRecipe.Stroke(points: stroke.points.map { $0 + offset }, widths: stroke.widths)
+            stroke.with(points: stroke.points.map { $0 + offset }, widths: stroke.widths, alphas: stroke.alphas)
         }
     }
 
@@ -162,7 +170,8 @@ public enum InkEditing {
     public static func smoothing(_ strokes: Set<Int>, by amount: Double, in recipe: DrawingRecipe) -> DrawingRecipe {
         updating(strokes, in: recipe) { stroke in
             let smoothed = StrokeFilter.process(points: stroke.points, widths: stroke.widths, smoothing: amount, minSpacing: 0)
-            return DrawingRecipe.Stroke(points: smoothed.points, widths: smoothed.widths)
+            let alphas = smoothed.points.count == stroke.points.count ? stroke.alphas : nil
+            return stroke.with(points: smoothed.points, widths: smoothed.widths, alphas: alphas)
         }
     }
 
@@ -170,7 +179,7 @@ public enum InkEditing {
     public static func scalingWidths(_ strokes: Set<Int>, by factor: Double, in recipe: DrawingRecipe) -> DrawingRecipe {
         let factor = min(max(factor, 0.05), 20)
         return updating(strokes, in: recipe) { stroke in
-            DrawingRecipe.Stroke(points: stroke.points, widths: stroke.widths.map { min(max($0 * factor, 0.0005), 1) })
+            stroke.with(points: stroke.points, widths: stroke.widths.map { min(max($0 * factor, 0.0005), 1) }, alphas: stroke.alphas)
         }
     }
 
