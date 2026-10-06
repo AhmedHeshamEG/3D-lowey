@@ -61,9 +61,10 @@ public enum SceneExport {
     /// Meshes for blockout and drawn objects. Other kinds (library models, prefab instances) come
     /// from `extra`, which the render layer fills from the loaded entities. `painted` gives a painted object's paint
     /// mesh and texture (left out for printing, which wants the closed shape).
+    /// `posed` gives a rigged object's surface as its skeleton bends it (in its own space, with its materials).
     public static func meshes(
         _ ids: [ObjectID]?, in scene: Scene, look: Look, extra: (SceneObject, Transform) -> [ExportMesh] = { _, _ in [] },
-        painted: (SceneObject) -> PaintedExport? = { _ in nil }
+        painted: (SceneObject) -> PaintedExport? = { _ in nil }, posed: (SceneObject) -> [GLTFScene.LocalPart]? = { _ in nil }
     ) -> [ExportMesh] {
         let roots = ids ?? scene.roots
         var visited = Set<ObjectID>()
@@ -78,6 +79,12 @@ public enum SceneExport {
                         name: object.name, transform: world, mesh: paint.mesh, color: surface.color, emissive: surface.emissive,
                         emissiveStrength: surface.emissiveStrength, roughness: surface.roughness, metallic: surface.metallic, texture: paint.texture
                     ))
+                } else if let pieces = posed(object) {
+                    result += pieces.map { piece in
+                        ExportMesh(name: object.name, transform: world, mesh: piece.mesh, color: piece.material.color, emissive: piece.material.emissive,
+                                   emissiveStrength: piece.material.emissiveStrength, roughness: piece.material.roughness,
+                                   metallic: piece.material.metallic)
+                    }
                 } else if let data = localMesh(of: object, look: look), !data.isEmpty {
                     let surface = material(of: object, look: look)
                     result.append(ExportMesh(

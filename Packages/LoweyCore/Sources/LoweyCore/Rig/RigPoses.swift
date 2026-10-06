@@ -40,7 +40,7 @@ public enum RigPoses {
     }
 
     /// A drawing's strokes moved with its bones (nil when the weights no longer fit the strokes).
-    static func bend(_ recipe: DrawingRecipe, weights: SkinWeights, bind: [Transform], pose: [Transform]) -> DrawingRecipe? {
+    public static func bend(_ recipe: DrawingRecipe, weights: SkinWeights, bind: [Transform], pose: [Transform]) -> DrawingRecipe? {
         let points = recipe.strokes.flatMap(\.points)
         guard points.count == weights.count, !points.isEmpty else { return nil }
         let moved = Skinning.deform(points, weights: weights, bind: bind, pose: pose)

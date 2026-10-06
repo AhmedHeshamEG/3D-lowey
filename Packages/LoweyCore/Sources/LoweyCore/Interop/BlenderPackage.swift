@@ -21,8 +21,9 @@ public enum BlenderPackage {
     /// The package for a scene, as zip data.
     public static func archive(_ scene: Scene, look: Look, preset: LookPreset, render: Render = Render(),
                                parts: @escaping (SceneObject) -> [GLTFScene.LocalPart] = { _ in [] },
-                               painted: @escaping (SceneObject) -> PaintedExport? = { _ in nil }) -> Data {
-        let glb = GLTFScene.glb(nil, in: scene, look: look, parts: parts, painted: painted)
+                               painted: @escaping (SceneObject) -> PaintedExport? = { _ in nil },
+                               posed: @escaping (SceneObject) -> [GLTFScene.LocalPart]? = { _ in nil }) -> Data {
+        let glb = GLTFScene.glb(nil, in: scene, look: look, parts: parts, painted: painted, posed: posed)
         let json = (try? JSONSerialization.data(withJSONObject: settings(scene, look: look, preset: preset, render: render),
                                                 options: [.prettyPrinted, .sortedKeys])) ?? Data("{}".utf8)
         return ZipWriter.storedArchive([
