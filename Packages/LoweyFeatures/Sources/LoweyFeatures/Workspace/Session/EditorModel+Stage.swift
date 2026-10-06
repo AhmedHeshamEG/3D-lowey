@@ -158,7 +158,8 @@ extension EditorModel {
         if tool == .scatter, selection.isEmpty { app.show("Select what to scatter first (a tree, a rock…), then drag an area") }
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
         if tool != .ink { inkStrokes = [] }
-        if tool != .paint { colourPaint.picture = nil }
+        // Only when there is one: writing the observed paint settings would redraw every view that reads them.
+        if tool != .paint, colourPaint.picture != nil { colourPaint.picture = nil }
         if tool == .flipbook, flipbook.track == nil { flipbook.track = timeline.flipbooks.last?.id }
         modelToolChanged()
         refreshSelectionOverlay()
