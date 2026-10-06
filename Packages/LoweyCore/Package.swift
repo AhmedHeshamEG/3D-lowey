@@ -15,7 +15,8 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../HmmKit"),
-        .package(path: "../Manifold")
+        .package(path: "../Manifold"),
+        .package(path: "../XAtlas")
     ],
     targets: [
         .target(
@@ -26,7 +27,9 @@ let package = Package(
                 .product(name: "HmmPerception", package: "HmmKit"),
                 .product(name: "HmmTranscript", package: "HmmKit"),
                 // Booleans (C++ behind a C face; see Packages/Manifold/VENDORED.md).
-                .product(name: "ManifoldCpp", package: "Manifold")
+                .product(name: "ManifoldCpp", package: "Manifold"),
+                // Unwrapping models for painting (C++ behind a C face; see Packages/XAtlas/VENDORED.md).
+                .product(name: "XAtlasCpp", package: "XAtlas")
             ],
             path: "Sources/LoweyCore",
             // Word → mouth shapes (from the CMU Pronouncing Dictionary, BSD; see LICENSES.md).
