@@ -195,6 +195,12 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Clips | `[blob] Cast › section-Clips` |
 | Lip sync | `[blob] Cast › lip-sync` |
 | Face capture (front camera, iPhone) | `[blob] Cast › face-camera` |
+| Rig: draw a bone through a limb, tail or rope with the Pencil (anything: shapes, modelled parts, drawings, placed models) | `[cube] Cast › rig-draw-bone` |
+| Rig as a person: the front view, tap eight dots (or drag them), Rig | `[cube] Cast › rig-person` |
+| A rig's paint weights, fit the weights to a new shape, reset the pose, remove the rig | in Cast ▸ Rig once rigged |
+| The Rig tool's bar: draw a bone, paint weights (the bone, erase), done; the person rig's Rig and cancel | shown under the stage while Rig is on |
+| The weight brush's size and strength | the sidebar's two sliders while painting weights |
+| Pose any character by dragging its joints (IK); poses, mirror | the joints on the stage when a character is selected; Cast ▸ Poses |
 
 ## The inspector (beside the selection)
 
