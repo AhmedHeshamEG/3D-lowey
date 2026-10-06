@@ -47,6 +47,10 @@ final class RigRenderTests: XCTestCase {
         let posed = try await render(document)
         let still = try await render(rest)
         XCTAssertGreaterThan(GoldenImage().compare(posed, still).differentFraction, 0.01, "the pose reaches the picture")
+        // Exports carry the pose: the tail's tip is up over the back in the exported shape.
+        let posedObject = try XCTUnwrap(document.scene.objects[object.id])
+        let parts = try XCTUnwrap(ModelExport.posedParts(posedObject, pose: nil, look: Look(), catalog: catalog, models: models, file: { files[$0] }))
+        XCTAssertGreaterThan(parts.compactMap(\.mesh.bounds).map(\.max.y).max() ?? 0, 1.2, "the exported shape is the posed one")
         try GoldenImage().assertMatches(posed, named: "rig-drawn-tail")
     }
 

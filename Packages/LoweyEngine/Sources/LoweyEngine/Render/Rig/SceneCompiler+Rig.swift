@@ -22,7 +22,7 @@ extension SceneCompiler {
     }
 
     /// `source` skinned with the object's rig (`slice`: the part's vertices in the rig's merged surface), or nil when the
-    /// object has no rig whose weights fit.
+    /// object has no rig whose weights fit. In the weight view, its uvs carry the shown joint's weight instead.
     func riggedMesh(_ object: SceneObject, source: GPUMesh, key: String, slice: Range<Int>? = nil, input: RenderInput) -> GPUMesh? {
         guard let rig = object.rig, let file = rig.skin else { return nil }
         let range = slice ?? 0 ..< source.data.positions.count
@@ -30,10 +30,30 @@ extension SceneCompiler {
               slice != nil || loaded.count == source.data.positions.count else { return nil }
         let device = device
         let dabs = object.shadowDabs
+        let joints = Array(loaded.joints[range])
+        let weights = Array(loaded.weights[range])
+        if let view = input.weightView, view.object == object.id {
+            return meshes.mesh(.rigged("weights \(view.joint) \(key)", skin: file, dabs: [])) {
+                var data = source.data
+                let shown = SkinWeights(joints: joints, weights: weights)
+                data.uvs = data.positions.indices.map { SIMD2<Float>(min(max(shown.weight(of: view.joint, at: $0), 0.004), 0.996), 0.5) }
+                return GPUMesh(device: device, mesh: data, joints: joints, weights: weights, label: "\(object.name) weights")
+            }
+        }
         return meshes.mesh(.rigged(key, skin: file, dabs: dabs)) {
             GPUMesh(device: device, mesh: source.data, shadowBias: dabs.isEmpty ? [] : ShadowPaint.biases(for: source.data, dabs: dabs),
-                    joints: Array(loaded.joints[range]), weights: Array(loaded.weights[range]), label: "\(object.name) rigged")
+                    joints: joints, weights: weights, label: "\(object.name) rigged")
         }
+    }
+
+    /// The weight view's colours over a rigged mesh's uniforms (flat, so the colour reads as the number it is).
+    func weightUniforms(_ base: ObjectUniforms, object: SceneObject, input: RenderInput) -> (uniforms: ObjectUniforms, texture: MTLTexture?)? {
+        guard let view = input.weightView, view.object == object.id, let ramp = skins.ramp(device: device) else { return nil }
+        var uniforms = base
+        uniforms.baseColor = SIMD4<Float>(1, 1, 1, 1)
+        uniforms.emissive = .zero
+        uniforms.ids.z |= ObjectFlags.unlit.rawValue
+        return (uniforms, ramp)
     }
 
     /// Draws a surface skinned with its rig (flags, palette), its bounds grown to where the pose can take it.
@@ -64,12 +84,13 @@ extension SceneCompiler {
         guard object.rig?.skin != nil, !state.ghost, !model.parts.contains(where: \.isSkinned) else { return false }
         let total = model.parts.reduce(0) { $0 + $1.mesh.positions.count }
         guard let (rig, _) = rigWeights(object, input: input, vertexCount: total) else { return false }
-        if object.paint != nil {
+        if object.paint != nil, input.weightView?.object != object.id {
             // Painted too: the paint mesh over the parts as one surface, skinned (see `painted`).
             return paintedAsset(id, model: model, object: object, state: state, base: base, input: input, casts: casts, scene: &scene)
         }
         let palette = appendPalette(rig, object: object, input: input, scene: &scene)
         let tinted = object.color != nil || state.tint != nil
+        let weightView = weightUniforms(base, object: object, input: input)
         var start = 0
         let device = device
         for (index, part) in model.parts.enumerated() {
@@ -85,6 +106,10 @@ extension SceneCompiler {
                 if let textureIndex = material.baseColorTexture, model.textures.indices.contains(textureIndex) {
                     texture = textures.texture(model: id, index: textureIndex, texture: model.textures[textureIndex])
                 }
+            }
+            if let weightView {
+                uniforms = weightView.uniforms
+                texture = weightView.texture
             }
             addRigged(mesh, rig: rig, palette: palette, world: state.world.matrix, base: uniforms, texture: texture, casts: casts, scene: &scene)
         }
@@ -104,10 +129,31 @@ enum RigPalette {
     }
 }
 
-/// Decoded `.skin` files, by name (they never change: a new weighting is a new file).
+/// Decoded `.skin` files, by name (they never change: a new weighting is a new file), and the weight view's ramp.
 final class RigSkinCache {
     private var loaded: [String: SkinWeights] = [:]
     private var order: [String] = []
+    private var rampTexture: MTLTexture?
+
+    /// Blue (no weight) through cyan, green and yellow to red (all of it), 256 texels wide.
+    func ramp(device: MTLDevice) -> MTLTexture? {
+        if let rampTexture { return rampTexture }
+        let stops: [SIMD3<Float>] = [SIMD3(0.1, 0.2, 0.9), SIMD3(0.1, 0.8, 0.9), SIMD3(0.2, 0.85, 0.3), SIMD3(1, 0.85, 0.15), SIMD3(0.95, 0.15, 0.1)]
+        var bytes: [UInt8] = []
+        for texel in 0 ..< 256 {
+            let along = Float(texel) / 255 * Float(stops.count - 1)
+            let index = min(Int(along), stops.count - 2)
+            let colour = stops[index] + (stops[index + 1] - stops[index]) * (along - Float(index))
+            bytes += [UInt8(colour.x * 255), UInt8(colour.y * 255), UInt8(colour.z * 255), 255]
+        }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm_srgb, width: 256, height: 1, mipmapped: false)
+        descriptor.usage = .shaderRead
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
+        texture.replace(region: MTLRegionMake2D(0, 0, 256, 1), mipmapLevel: 0, withBytes: bytes, bytesPerRow: 256 * 4)
+        texture.label = "weight ramp"
+        rampTexture = texture
+        return texture
+    }
 
     func weights(_ name: String, read: (String) -> Data?) -> SkinWeights? {
         if let weights = loaded[name] { return weights }
