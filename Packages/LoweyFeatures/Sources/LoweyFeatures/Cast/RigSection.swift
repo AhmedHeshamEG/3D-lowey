@@ -69,7 +69,11 @@ struct RigOptionsBar: View {
     var body: some View {
         HStack(spacing: HmmSpacing.xs) {
             if let person = editor.rigging.person {
-                Text(person.next.map { "Tap \($0.title)" } ?? "Drag any dot, then Rig").font(.hmm(.body, weight: .semibold))
+                if let next = person.next {
+                    Text("Tap \(String(localized: String.LocalizationValue(next.title)))").font(.hmm(.body, weight: .semibold))
+                } else {
+                    Text("Drag any dot, then Rig").font(.hmm(.body, weight: .semibold))
+                }
                 HmmPillButton("Rig", systemName: "checkmark", prominent: person.next == nil) { editor.finishPersonRig() }
                     .disabled(person.next != nil)
                     .accessibilityIdentifier("rig-person-done")
@@ -99,9 +103,15 @@ struct RigOptionsBar: View {
                 Button(rig.skeleton.joints[index].name) { editor.rigging.joint = index }
             }
         } label: {
-            Label(editor.rigging.joint.flatMap { rig.skeleton.joints[safe: $0]?.name } ?? "Choose a bone", systemImage: "point.3.connected.trianglepath.dotted")
-                .font(.hmm(.body, weight: .semibold))
-                .foregroundStyle(theme.accent)
+            Group {
+                if let name = editor.rigging.joint.flatMap({ rig.skeleton.joints[safe: $0]?.name }) {
+                    Label(name, systemImage: "point.3.connected.trianglepath.dotted")
+                } else {
+                    Label("Choose a bone", systemImage: "point.3.connected.trianglepath.dotted")
+                }
+            }
+            .font(.hmm(.body, weight: .semibold))
+            .foregroundStyle(theme.accent)
         }
         .accessibilityIdentifier("rig-joint")
     }

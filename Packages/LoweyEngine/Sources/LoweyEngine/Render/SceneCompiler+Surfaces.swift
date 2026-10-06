@@ -46,7 +46,7 @@ extension SceneCompiler {
         let weightView = state.ghost ? nil : weightUniforms(base, object: object, input: input)
         if weightView == nil, let painted = painted(object, source: mesh, state: state, input: input) {
             addPainted(painted, object: object, world: world, base: base, casts: casts, input: input, scene: &scene)
-        } else if !state.ghost, let (rig, _) = rigWeights(object, input: input, vertexCount: mesh.data.positions.count),
+        } else if !state.ghost, let rig = rigWeights(object, input: input, vertexCount: mesh.data.positions.count)?.rig,
                   let skinned = riggedMesh(object, source: mesh, key: paints.fingerprint(of: mesh), input: input) {
             let palette = appendPalette(rig, object: object, input: input, scene: &scene)
             addRigged(skinned, rig: rig, palette: palette, world: world, base: weightView?.uniforms ?? base, texture: weightView?.texture,

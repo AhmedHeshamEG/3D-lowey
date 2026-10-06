@@ -12,7 +12,7 @@ extension EditorModel {
     func startPersonRig(_ id: ObjectID) {
         guard let object = baseScene.objects[id] else { return }
         if let blocker = rigBlocker(object) {
-            app.show(blocker)
+            app.show(String.LocalizationValue(blocker))
             return
         }
         if case .drawing = object.kind {
@@ -49,7 +49,7 @@ extension EditorModel {
     private func promptNextDot() {
         guard let person = rigging.person else { return }
         if let next = person.next {
-            app.show("Tap \(next.title)")
+            app.show("Tap \(String(localized: String.LocalizationValue(next.title)))")
         } else {
             app.show("Drag any dot to where it belongs, then tap Rig")
         }
@@ -102,8 +102,7 @@ extension EditorModel {
             return
         }
         rigging.person = nil
-        weigh(rig, on: object, label: "Rig \(object.name) as a person")
-        app.show("\(object.name) is rigged. Try a clip, or drag its hands and feet")
+        weigh(rig, on: object, label: "Rig \(object.name) as a person", done: "\(object.name) is rigged. Try a clip, or drag its hands and feet")
         tool = .select
         select(object.id)
     }

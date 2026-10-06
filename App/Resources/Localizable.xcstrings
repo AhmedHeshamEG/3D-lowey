@@ -2905,6 +2905,22 @@
         }
       }
     },
+    "Choose a bone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un osso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر عظمة"
+          }
+        }
+      }
+    },
     "Choose what to rig first": {
       "localizations": {
         "it": {
@@ -4953,6 +4969,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اسحب أي نقطة إلى مكانها، ثم اضغط تركيب"
+          }
+        }
+      }
+    },
+    "Drag any dot, then Rig": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trascina un punto qualsiasi, poi Arma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب أي نقطة، ثم اضغط تركيب"
           }
         }
       }

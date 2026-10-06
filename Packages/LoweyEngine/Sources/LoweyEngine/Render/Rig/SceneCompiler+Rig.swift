@@ -83,7 +83,7 @@ extension SceneCompiler {
                      casts: Bool, scene: inout RenderScene) -> Bool {
         guard object.rig?.skin != nil, !state.ghost, !model.parts.contains(where: \.isSkinned) else { return false }
         let total = model.parts.reduce(0) { $0 + $1.mesh.positions.count }
-        guard let (rig, _) = rigWeights(object, input: input, vertexCount: total) else { return false }
+        guard let rig = rigWeights(object, input: input, vertexCount: total)?.rig else { return false }
         if object.paint != nil, input.weightView?.object != object.id {
             // Painted too: the paint mesh over the parts as one surface, skinned (see `painted`).
             return paintedAsset(id, model: model, object: object, state: state, base: base, input: input, casts: casts, scene: &scene)

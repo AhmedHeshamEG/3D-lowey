@@ -67,7 +67,7 @@ extension EditorModel {
     func startRigging(_ id: ObjectID) {
         guard let object = baseScene.objects[id] else { return }
         if let blocker = rigBlocker(object) {
-            app.show(blocker)
+            app.show(String.LocalizationValue(blocker))
             return
         }
         rigging.target = id
@@ -112,12 +112,13 @@ extension EditorModel {
             let rig = try BoneStroke.addingChain(samples, to: rigFits(object) ? object.rig : nil, surface: surface)
             weigh(rig, on: object, label: object.rig == nil ? "Rig \(object.name)" : "Add a bone")
         } catch {
-            app.show(error.description)
+            app.show(String.LocalizationValue(error.description))
         }
     }
 
-    /// Works out the rig's weights (in the background: bone heat over a big model takes a moment), then stores it.
-    func weigh(_ rig: ObjectRig, on object: SceneObject, label: String) {
+    /// Works out the rig's weights (in the background: bone heat over a big model takes a moment), then stores it and
+    /// says `done` when there's something to say.
+    func weigh(_ rig: ObjectRig, on object: SceneObject, label: String, done: String.LocalizationValue? = nil) {
         let id = object.id
         let mesh: MeshData? = if case .drawing = object.kind {
             nil
@@ -141,6 +142,7 @@ extension EditorModel {
             }
             guard baseScene.objects[id] != nil else { return }
             perform(.batch(label, [.setRig(id, result.rig)]))
+            if let done { app.show(done) }
             if rigging.joint == nil || rigging.joint ?? 0 >= result.rig.skeleton.joints.count { rigging.joint = result.rig.skeleton.joints.count - 1 }
             HmmHaptics.play(.commit)
         }
