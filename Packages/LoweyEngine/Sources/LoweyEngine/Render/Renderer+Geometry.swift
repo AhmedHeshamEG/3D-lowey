@@ -64,6 +64,11 @@ extension LoweyRenderer {
         var native = frame
         native.viewport = SIMD4<Float>(Float(targets.width), Float(targets.height), 1 / Float(targets.width), 1 / Float(targets.height))
         encodePrepass(frame: native, ordered: ordered, gpu: gpu, targets: targets, ground: showsGround, commandBuffer: commandBuffer)
+        // The stroke under the Pencil lands now: after the prepass (it paints only what this frame sees), before shading.
+        if let live = request.livePaint, shot.destination === targets.finished {
+            encodeLivePaint(live, request: request, scene: scene, camera: shot.camera, viewProjection: native.viewProjection, targets: targets,
+                            commandBuffer: commandBuffer)
+        }
         encodeAO(frame: frame, targets: targets, look: gpu.looks[0], commandBuffer: commandBuffer)
         let groundColor = request.input.document.effectiveLook.ground.color.linear * frame.skyHorizon.w
         report.drawCalls += encodeShading(frame: &frame, ordered: ordered, gpu: gpu, targets: targets, ground: showsGround ? groundColor : nil,

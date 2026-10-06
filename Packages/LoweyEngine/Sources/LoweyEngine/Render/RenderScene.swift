@@ -54,6 +54,8 @@ public struct RenderInput {
     public var ghosts: [Ghost] = []
     /// Objects stretched along fast moves this frame (`Smear.smears`).
     public var smears: [ObjectID: Smear] = [:]
+    /// The project's paint files by name (`paint/<hash>.png`, `.uv` under assets): painted objects' tiles and unwraps.
+    public var paintFile: @Sendable (String) -> Data? = { _ in nil }
 
     public init(document: Document, time: Double = 0, poses: [ObjectID: [LoweyCore.Transform]] = [:], selection: Set<ObjectID> = [],
                 hidden: ObjectID? = nil, showsHelpers: Bool = false, mediaImage: @escaping (String) -> CGImage? = { _ in nil },
@@ -84,6 +86,8 @@ struct DrawItem {
     var hull: Float = 0
     /// Ink whose brush stamps show instead: in the prepass (picking, selection) and shadows, not shaded.
     var brushDrawn = false
+    /// The painted object this draw shows (its paint mesh and composite).
+    var painted: ObjectID?
 }
 
 /// An editor helper (light bulb, camera box, particle emitter): drawn only on the stage, picked by its sphere.

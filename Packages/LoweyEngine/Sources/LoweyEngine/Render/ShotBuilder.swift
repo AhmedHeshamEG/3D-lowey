@@ -12,6 +12,8 @@ public final class ShotBuilder {
     public let models: ModelLibrary
     /// Stills in the project's assets and decoded video frames, by key.
     public var mediaImage: (String) -> CGImage? = { _ in nil }
+    /// The project's paint files (painted objects' tiles and unwraps).
+    public var paintFile: @Sendable (String) -> Data? = { _ in nil }
     private var captionPages: [Framing: [CaptionPage]] = [:]
 
     public init(document: Document, catalog: AssetCatalog, models: ModelLibrary = .shared) {
@@ -59,6 +61,7 @@ public final class ShotBuilder {
         var input = RenderInput(document: evaluated, time: time, poses: animated.poses, mediaImage: mediaImage, catalog: catalog,
                                 lightBudget: 16)
         input.smears = Smear.smears(in: document, at: time)
+        input.paintFile = paintFile
         var request = FrameRequest(input: input, camera: camera, lens: mainID.flatMap { animated.scene.objects[$0] }.map(CameraLens.init),
                                    screen: ScreenEffects.state(at: time, effects: timeline.effects, fps: timeline.fps), frameIndex: frameIndex,
                                    renderScale: renderScale, transparent: transparent)

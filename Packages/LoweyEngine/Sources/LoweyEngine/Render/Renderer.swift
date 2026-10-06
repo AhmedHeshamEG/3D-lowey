@@ -26,6 +26,8 @@ public struct FrameRequest {
     public var editor: EditorScene?
     /// Director view framing guides.
     public var guides: FramingGuides?
+    /// The stroke being painted on a model (stage only).
+    public var livePaint: LivePaint?
 
     public init(input: RenderInput, camera: RenderCamera, lens: CameraLens? = nil, screen: ScreenState = ScreenState(), frameIndex: Int = 0,
                 renderScale: Float = 1, transparent: Bool = false, overlay: CGImage? = nil, editor: EditorScene? = nil,
@@ -92,6 +94,8 @@ public final class LoweyRenderer: SceneRendering {
     var modelOverlayCache: [(EditorOverlay, GPUMesh)] = []
     /// The brush engine's stamps (ink, flipbooks, the stroke being drawn).
     let stamper: BrushStamper
+    /// Painted objects' layers and composites, and the stroke being painted.
+    let paints: PaintTextures
     /// Flipbook layers by blend mode, and the scratch layer, at the output size.
     var flipbookTargets: [String: MTLTexture] = [:]
     /// The last frame, for picking.
@@ -103,7 +107,8 @@ public final class LoweyRenderer: SceneRendering {
         self.quality = quality
         textures = TextureStore(device: device.device)
         stamper = try BrushStamper(device: device.device)
-        compiler = SceneCompiler(device: device.device, meshes: meshes, textures: textures, models: models, stamper: stamper)
+        paints = PaintTextures(device: device)
+        compiler = SceneCompiler(device: device.device, meshes: meshes, textures: textures, models: models, stamper: stamper, paints: paints)
         upscaler = Upscaler(device: device)
         shadowMap = try device.makeTexture(RenderDevice.depthFormat, width: quality.shadowMapSize, height: quality.shadowMapSize,
                                            usage: [.renderTarget, .shaderRead], label: "sun shadows", arrayLength: 2)
@@ -123,6 +128,7 @@ public final class LoweyRenderer: SceneRendering {
         textures.removeAll()
         stamper.trim()
         flipbookTargets.removeAll()
+        paints.trim(keeping: 0)
     }
 
     func targets(width: Int, height: Int, scale: Float) throws -> FrameTargets {
@@ -135,7 +141,9 @@ public final class LoweyRenderer: SceneRendering {
 
     public func encode(_ request: FrameRequest, to output: MTLTexture, commandBuffer: MTLCommandBuffer) throws -> FrameReport {
         let targets = try targets(width: output.width, height: output.height, scale: request.renderScale)
+        paints.startFrame()
         var scene = compiler.compile(request.input, cameraPosition: request.camera.position)
+        paints.encodeUpdates(commandBuffer: commandBuffer)
         let slot = buffers.next(for: commandBuffer)
         let ordered = order(&scene, camera: request.camera)
         let gpu = try slot.fill(scene: scene, ordered: ordered)

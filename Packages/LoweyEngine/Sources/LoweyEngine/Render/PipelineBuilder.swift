@@ -143,6 +143,39 @@ struct PipelineBuilder {
         return try render(descriptor, name: "\(fragment) (\(target))")
     }
 
+    /// How a paint pass writes: laying paint on (premultiplied source-over), wiping it off, or replacing.
+    enum PaintWrite {
+        case over, erase, replace
+    }
+
+    /// A paint pass: the paint mesh at its uvs (`lw_paintVertex`), or a full-texture triangle (`lw_paintFullVertex`).
+    func paint(vertex: String = "lw_paintVertex", fragment: String, format: MTLPixelFormat = RenderDevice.layerFormat,
+               write: PaintWrite) throws -> MTLRenderPipelineState {
+        let descriptor = MTLRenderPipelineDescriptor()
+        descriptor.vertexFunction = try function(vertex)
+        descriptor.fragmentFunction = try function(fragment)
+        if vertex == "lw_paintVertex" { descriptor.vertexDescriptor = Self.vertexDescriptor(skinned: false) }
+        let color = descriptor.colorAttachments[0]
+        color?.pixelFormat = format
+        switch write {
+        case .over:
+            color?.isBlendingEnabled = true
+            color?.sourceRGBBlendFactor = .one
+            color?.destinationRGBBlendFactor = .oneMinusSourceAlpha
+            color?.sourceAlphaBlendFactor = .one
+            color?.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        case .erase:
+            color?.isBlendingEnabled = true
+            color?.sourceRGBBlendFactor = .zero
+            color?.destinationRGBBlendFactor = .oneMinusSourceAlpha
+            color?.sourceAlphaBlendFactor = .zero
+            color?.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        case .replace:
+            break
+        }
+        return try render(descriptor, name: "\(fragment) (\(write))")
+    }
+
     func compute(_ name: String) throws -> MTLComputePipelineState {
         do {
             return try device.makeComputePipelineState(function: function(name))
