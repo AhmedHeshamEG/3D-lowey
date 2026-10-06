@@ -65,9 +65,18 @@ final class LayoutTests: XCTestCase {
         walkInAProject(["", "blob"]) { $0.home != "Model" }
     }
 
+    /// Model's rows in two halves (the walk outgrew the per-test time on the simulator at M5).
     func testModelControlsAreReachable() {
-        walkInAProject([""]) { $0.home == "Model" }
+        let first = Set(Self.modelRows.prefix(Self.modelRows.count / 2))
+        walkInAProject([""]) { first.contains($0.control) }
     }
+
+    func testMoreModelControlsAreReachable() {
+        let second = Set(Self.modelRows.dropFirst(Self.modelRows.count / 2))
+        walkInAProject([""]) { second.contains($0.control) }
+    }
+
+    private static let modelRows = LayoutWalk.rows.filter { $0.home == "Model" && $0.precondition.isEmpty }.map(\.control)
 
     func testSelectionControlsAreReachable() {
         walkInAProject(["cube"])
