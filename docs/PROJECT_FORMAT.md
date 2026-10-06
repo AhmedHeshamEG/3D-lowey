@@ -5,7 +5,7 @@ surface of that package: power users, scripts and MCP clients may **read** any o
 (the laptop bridge), so undo and the history journal stay true; a file changed behind the app's back is overwritten at
 the next checkpoint.
 
-Format version: package **2**, document schema **7** (`LoweySchema.currentVersion`), journal **1**.
+Format version: package **2**, document schema **8** (`LoweySchema.currentVersion`), journal **1**.
 
 ```
 My film.maquette/                 (3D-lowey's .lowey packages open too, and are upgraded in place)
@@ -14,7 +14,8 @@ My film.maquette/                 (3D-lowey's .lowey packages open too, and are 
   scenes/<scene-id>.json          one scene each: objects, hierarchy, camera, timeline
   history/<scene-id>/             that scene's history journal (below)
   assets/                         library models the project carries (written by "Share as one file"), media,
-                                  and brushes/<hash>.png: the pictures of the brushes its strokes use
+                                  brushes/<hash>.png: the pictures of the brushes its strokes use, and
+                                  paint/<hash>.png, paint/<hash>.uv: painted objects' tiles and unwraps
   audio/                          voiceovers and sounds
   renders/                        exports kept with the project
   thumbnail.png, thumbnail-loop.gif   the Home card (a still, and the model turning once in its Look)
@@ -66,7 +67,7 @@ renamed one gets a migration.
 | Key | Type | Meaning |
 |---|---|---|
 | `id`, `name` | string | |
-| `objects` | {id: object} | Every object by id: `id`, `name`, `kind` (what it is: primitive, model, light, camera, text, drawing, mesh, sketch, character…; see below), `parent`, `children`, `properties` (typed values: `position`, `rotation`, `scale`, `color`, `visible`, …), and `shadowPaint` when painted. |
+| `objects` | {id: object} | Every object by id: `id`, `name`, `kind` (what it is: primitive, model, light, camera, text, drawing, mesh, sketch, character…; see below), `parent`, `children`, `properties` (typed values: `position`, `rotation`, `scale`, `color`, `visible`, …), `shadowPaint` when the Shadow Brush painted it, and `paint` when colour is painted on it (schema 8, below). |
 | `roots` | [string] | Top-level objects in outliner order. |
 | `look` | object? | The scene's own Look (absent: the project's). |
 | `activeCamera` | string? | The shot camera. |
@@ -183,6 +184,44 @@ widths are the smoothed path the brush stamps along (widths are radii).
 
 Schema 7 only added optional keys and the `setBrushes` journal command; files from schema 6 open unchanged, and
 Maquette 0.4 refuses schema 7.
+
+### Paint (schema 8)
+
+Colour painted on an object is its `paint`: a surface and layers, bottom first.
+
+```json
+"paint": {
+  "surface": {"size": 2048, "unwrap": "paint/1f3a…c2.uv", "mesh": "9b0e…41"},
+  "layers": [
+    {"id": "l1", "name": "Layer 1", "opacity": 1, "blend": "normal", "visible": true,
+     "tiles": {"3,1": "paint/77ac…08.png", "4,1": "paint/e2d1…9f.png"}}
+  ]
+}
+```
+
+- `surface.size`: pixels a side of every layer, a multiple of 256 (2048 for new paint).
+- `surface.unwrap`: where every corner of the mesh lies on the texture (below).
+- `surface.mesh`: the fingerprint (FNV-1a, 16 hex digits) of the mesh the unwrap was made for: the triangles the app
+  draws for the object, in its own space. When the object's shape changes (modelling, a bevel), the fingerprint no
+  longer matches and the app carries the paint onto the new shape by position, without changing the file; the next
+  stroke stores the carried paint.
+- `layers[]`: `id`, `name`, `opacity` (0–1), `blend` (`normal`, `multiply`, `screen`, `overlay`, `add`: the W3C
+  compositing formulas on the stored sRGB values), `visible`, and `tiles`: `"column,row"` (from the top left, 256
+  pixels each) to a PNG under `assets/`. A missing tile is transparent. Tiles are RGBA, straight alpha, sRGB.
+
+Every file is named by a hash of its bytes, so the same pixels are stored once and a stroke only adds the tiles it
+changed. Files stay as long as the history may need them (undo puts old names back).
+
+The `.uv` file is little-endian binary: `MQUV`, version (1), vertex count, index count (u32 each); then per vertex the
+mesh vertex it came from (u32), its position in the object's space (3 × f32) and its uv (2 × f32, 0–1, v down); then the
+triangles (u32 indices; triangle *t* is the mesh's triangle *t*). Placed models' surfaces are their parts as one mesh.
+
+Two journal commands change paint: `setPaint` (`{"op": "setPaint", "id", "paint"}`, the whole paint or none) and
+`paintTiles` (`{"op": "paintTiles", "id", "tiles": [{"layer", "tile", "file"}]}`, a stroke, a fill or a projected
+picture; a missing `file` clears the tile).
+
+Schema 8 only added the optional key and the two commands; files from schema 7 open unchanged, and Maquette 0.5
+refuses schema 8.
 
 ## workspace.json
 

@@ -35,9 +35,10 @@ flowchart TD
 
 | Module | Imports | What it holds | Tests |
 |---|---|---|---|
-| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush engine's arithmetic and brush import, the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
+| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold, XAtlas | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush engine's arithmetic and brush import, paint (layers, tiles, unwraps, compositing, carrying paint to a new shape, painted exports), the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
 | **Manifold** (`Packages/Manifold`) | the C++ standard library | Manifold 3.5.4 (Apache-2.0) as a C++17 target, single-threaded, and `ManifoldBridge.h`: boolean and validate in plain C, so Swift needs no C++ interop. `VENDORED.md` says how to update it | Linux and the iPad simulator (its own tests; LoweyCore's boolean tests) |
-| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2 (with the brush engine's stamps), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
+| **XAtlas** (`Packages/XAtlas`) | the C++ standard library | xatlas (MIT) as a single-threaded C++ target and `XAtlasBridge.h`: unwrap in plain C (`VENDORED.md`) | Linux (its own tests; LoweyCore's paint tests) |
+| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2 (with the brush engine's stamps and painted layers), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
 | **LoweyFeatures** | Core, Engine, SwiftUI, hmm-kit's Design / Bridge / Documents / Diagnostics | The editor. `Workspace/` is shared by every feature (app and editor models, the session API, controls); each other folder is one feature's views; `Shell/` composes them | iPad simulator: bridge security, editor flows |
 | **App** | Features, ActivityKit, BackgroundTasks | `LoweyApp`, the export Live Activity, the widget extension | UI smoke tests |
 
@@ -171,6 +172,38 @@ flowchart LR
   `Draw/BrushStudioView` + `BrushStudioPages`, `Draw/BrushAndGuideControls`. The sheet is `EditorSheet.brushes`.
 - **Latency**: `StageView.measureLatency` (touch timestamp → GPU completion + one refresh) into `StrokeLatency`;
   Diagnostics ▸ Apple Pencil, and the log every tenth stroke.
+
+## Painting on models (0.6)
+
+```mermaid
+flowchart LR
+    Pencil[StageGestures+Paint<br/>samples → BrushStroker dabs] --> Live[StageView.showLivePaint<br/>FrameRequest.livePaint]
+    Live --> Stroke[PaintTextures+Encode.encodeStroke<br/>after the prepass]
+    Stroke --> Stamp[stroke texture<br/>BrushStamper, screen space]
+    Stamp --> Project[Paint.metal lw_paintProject<br/>paint mesh at its uvs · ID buffer + depth test]
+    Project --> Layer[layer texture]
+    Layer --> Compose[lw_paintCompose per layer → lw_paintFinish<br/>straight alpha, chart edges pushed out]
+    Compose --> Shade[shading pass<br/>LW_FLAG_PAINTED: paint over the base colour]
+    Stroke -. stroke ends .-> Read[finishPaintStroke<br/>changed tiles read back]
+    Read --> Commit[EditorModel+Paint.commitPaintStroke<br/>PNG tiles → assets/paint · paintTiles]
+```
+
+- **Core `Paint/`**: `ObjectPaint` (surface, layers, tiles by name) on `SceneObject.paint`; `PaintUnwrap` (xatlas
+  through `XAtlasCpp`, the `.uv` file, the paint mesh over a source mesh); `RGBAImage` + `PNGCodec`; `PaintComposer`
+  (layers → composite, the W3C blend formulas); `PaintRaster` (coverage, dilation); `PaintTransfer` (bake a model's
+  colours, carry paint onto a new unwrap by closest point); `PaintSource` (the mesh the renderer draws for an object);
+  `PaintOperations` (prepare, tiles from a picture, fill, layer edits, merge down); `PaintExport` (current surface,
+  flattened texture). Commands: `setPaint`, `paintTiles` (D-153).
+- **Engine `Render/Paint/`**: `PaintTextures` (per object: layer textures filled from tiles, streamed a few a frame on
+  the stage; the composite; the stroke's "before" copy; tiles adopted after a stroke), `PaintTextures+Encode` (uploads,
+  coverage, compositing, the stroke pass, the read-back), `SceneCompiler+Paint` (the paint mesh and composite in place
+  of a painted object's mesh; paint carried onto a changed shape, `CarriedPaint`), `AssetPaint` (a model's parts as one
+  surface, its colours baked), `Renderer+Paint` and `StageView+Paint` (the live stroke and its read-back).
+  `Benchmark/PaintBenchmark` is Diagnostics' painting benchmark.
+- **Features**: `EditorModel+Paint` (getting ready, strokes committed in order, fill, eyedropper `PaintSampler`,
+  pictures, rebasing paint onto a changed shape), `EditorModel+PaintLayers`, `StageGestures+Paint`,
+  `Paint/ColourPaintSection` (with `PaintLayersSection`), `Paint/PaintOptionsBar` (and `PaintPictureOverlay`).
+  `RenderInput.paintFile` reads `assets/paint/…` wherever a frame is rendered (stage, monitor, exports, thumbnails).
 
 ## LoweyRender 2
 

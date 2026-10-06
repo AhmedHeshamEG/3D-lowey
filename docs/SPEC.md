@@ -15,11 +15,34 @@ reference and stays.
 | The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
 | Modelling II (bevel, round, inset, shell, mirror and live symmetry, array along a path, corner/edge/midpoint/face snapping, measure, section view, kept dimensions, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, the Blender package) | **0.4.** FBX isn't offered (D-133). |
-| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink and flipbooks draw with it; painting on models (M6) and the Schizzo board (M9) will. |
-| Painting on models | M6 |
+| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink, flipbooks and painting on models draw with it; the Schizzo board (M9) will. |
+| Painting on models: xatlas unwrap, Paint ▸ Colour (paint, erase, fill, eyedropper), layers, projection from the camera, textures in exports | **0.6.** Roughness, metal and glow painting come later; characters are painted once M7's skeletons arrive (D-162). |
 | One skeleton system, draw a bone, one-tap human rig, 2D puppets | M7. Today: 2.0's Cast (Blob, Puppet, Rigged). |
 | Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, 1.0 polish | M8 |
 | Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | Free updates after 1.0 |
+
+### Painting on models (0.6)
+
+- **Paint ▸ Colour** paints colour straight onto shapes, modelled parts, solid drawings and placed models with the
+  brush engine: the brush the tool holds (the same library and Brush Studio), the current colour (the palette or any
+  colour), size and opacity on the sidebar. Modes: Paint, Erase, Fill (the whole layer), Eyedropper (the painted colour
+  under the touch). Fingers move around the scene; the Pencil paints.
+- **Getting ready**: an object is laid flat for painting the first time (xatlas, D-154; "Paint <name>" or a first
+  stroke on it). Placed models keep their own uvs when they're clean and keep their colours as a first layer, "Model"
+  (D-155). Characters that move with a skeleton aren't painted until M7 (D-162).
+- **Strokes land where you see them**: each frame projects the stroke from the camera onto the texels the camera sees,
+  through the frame's own ID buffer, so paint never goes behind something or round the back (D-152). The stroke under
+  the Pencil is the stroke that's kept.
+- **Layers** (up to 16 per object): show or hide, choose the one the Pencil paints on, opacity, blend (Normal,
+  Multiply, Screen, Overlay, Add), add, duplicate, merge down, move, clear, rename, delete; remove all paint. Paint lies
+  over the object's own colour (D-156).
+- **Project a picture**: choose one from Photos or Files, place it over the model with your fingers, Project: it lands
+  on what the camera sees, in the current layer (D-159).
+- **Nothing is lost**: tiles are files named by their content and every stroke, fill, picture and layer change is one
+  undo step (D-153). Modelling a painted object afterwards carries its paint onto the new shape (D-157).
+- **Exports**: glTF, the Blender package, USDZ and OBJ carry the paint as a texture; STL and 3MF keep the closed shape
+  (D-163).
+- **Performance**: Diagnostics ▸ Run the painting benchmark paints a 50k-triangle model for 20 seconds (D-161).
 
 ### Brushes and drawing guides (0.5)
 

@@ -3,6 +3,20 @@
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
 phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
 
+## Left from M6 (Maquette 0.6)
+
+- [ ] The device checklist in the "Maquette 0.6 — M6" PR (painting feel with the Pencil, strokes landing only on what
+      the camera sees, layers, fill and the eyedropper, a projected picture, painting a placed Kit model, undo after
+      relaunch, the painting benchmark at Tier A and as Tier B, an exported glTF and USDZ opened elsewhere).
+- [ ] Roughness, metal and glow painting (CONTEXT §10.4 "later"): today paint is colour only.
+- [ ] Painting characters (skinned models) with M7's skeletons. (D-162)
+- [ ] Paint files no history refers to any more are kept: a cleanup when old versions are pruned.
+- [ ] Every painted object keeps its layers on the GPU while it's drawn (16 MB a layer at 2048); objects not being
+      painted could keep only their composite.
+- [ ] A soft brush on a curved surface stamps in screen space: its dabs stretch slightly where the surface turns away
+      (faded by the facing falloff, D-152).
+- [ ] The eyedropper finds the closest triangle by a scan of the surface (fine at 50k triangles, slow far beyond).
+
 ## Left from M5 (Maquette 0.5)
 
 - [ ] The device checklist in the "Maquette 0.5 — M5" PR (drawing feel with every built-in brush, prediction, tilt
@@ -85,7 +99,7 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
   future time-lapse of them starts there.
 - **The load meter's scene costs are estimates** until the device benchmarks calibrate them (D-97).
 - **The brush outline's line gets thicker with the brush.** It's the gizmo's ring mesh scaled (the Shadow Brush's
-  resize outline); a ring with a constant line width comes with painting on models (M6), which draws its own.
+  resize outline), for every brush tool including Paint ▸ Colour.
 
 - **A script loop that never calls the API can't be stopped.** The time limit is checked at every `lowey` / `scene`
   call; JavaScriptCore has no public execution time limit on iOS. A pure `while (true) {}` keeps its worker thread

@@ -1146,3 +1146,91 @@ kept appearing while working and read as nagging, not help. Settings ▸ Stage g
 load meter still measures and dynamic scale still lowers the preview, so nothing about smoothness itself changes, and
 the benchmark and the Performance HUD stay in Diagnostics. *Rejected:* removing the meter (it still feeds dynamic scale
 and the benchmark); raising its thresholds (they're uncalibrated until the device JSONs arrive, D-97).
+
+**D-152 — A paint stroke is projected from the camera through the frame's own ID buffer.** The brush engine stamps the
+stroke on the screen exactly as a flipbook stroke (D-144), then a pass draws the object's paint mesh flat in its
+texture (each vertex at its uv) and every texel looks itself up on the screen: it takes the stroke's colour only where
+the frame's ID buffer shows this object and its depth is the surface seen there, faded on grazing faces. It runs in the
+frame that shows it, after the prepass and before shading, so the paint appears with no frame of delay and never lands
+behind something or round the back. The same pass projects a picture (D-159) and, with another blend state, erases.
+*Rejected:* dabs as 3D spheres around the surface point (no tip shapes or grain, and they paint through thin parts);
+painting the screen image onto the texture only when the stroke ends (nothing to see while painting).
+
+**D-153 — Paint is stored as content-named tiles; a stroke is one `paintTiles` command.** A layer is 256-pixel tiles,
+each a PNG under `assets/paint/` named by a hash of its bytes; the document holds only names. When a stroke ends, its
+layer is read back with the layer as it was before it, the tiles that differ are encoded (ImageIO), written, and one
+`paintTiles` command swaps their names, so the journal line is a few hundred bytes and undo is a name swap. The GPU
+adopts the tiles it already holds (nothing is decoded again); undo loads only the tiles that changed back. Strokes
+commit strictly in the order they were painted. Layer edits (add, delete, move, opacity, blend, name) are one
+`setPaint`. Schema 8. *Rejected:* recording strokes and replaying them (replay costs grow with every stroke, and GPU
+results aren't a stable file format); one PNG per layer per stroke (megabytes per stroke in the history); tiles inside
+`project.json`.
+
+**D-154 — xatlas, vendored with a C face; the unwrap is stored in the project.** xatlas (MIT, `Packages/XAtlas`) lays
+a mesh flat into one square atlas with padded charts, single-threaded so the same mesh unwraps the same way. Like
+Manifold (D-115) it's C++ behind a small C header, so no Swift module needs C++ interop and Linux CI tests it. The
+result is a small binary `.uv` file (source vertex, position and uv per unwrap vertex, then the triangles) the paint
+names, so paint never moves even if xatlas changes. A primitive is unwrapped at its stretch (a 4 m box gets four
+times the pixels along its length). *Rejected:* unwrapping when a project opens (an xatlas update would scramble old
+paint); Swift C++ interop (D-115's reasons).
+
+**D-155 — Models keep their own uvs when they're clean; their colours become the first layer.** A placed model's parts
+are painted as one surface. Its own uvs are kept when every one lies in 0…1 and no two triangles cover the same
+pixels (checked on a 256 grid); otherwise (the Kit's shared colour maps, most of all) it's unwrapped. Either way its
+colours (material colour times its texture) are baked into a first layer, "Model", with "Layer 1" above for the paint,
+so erasing reveals the model as it was. *Rejected:* painting over each part's own texture through its own uvs (the
+Kit's parts share one small palette texture: painting one place would paint every place that uses that colour); a
+second uv channel in the vertex format (every pipeline changes for one feature).
+
+**D-156 — Paint lies over the object's colour.** The composite is straight alpha: where nothing is painted the object's
+own colour (and Look, glow, Shadow Brush) shows, so changing its colour still works under unpainted areas. Layers
+composite in the stored sRGB values with the W3C formulas (Procreate's), on the GPU for the stage and on the CPU for
+exports with the same maths. The composite is pushed four texels past every chart's edge so filtering never reaches
+an empty texel (no seams). Exports flatten the paint over the object's colour into an opaque texture. *Rejected:*
+multiplying the texture over the colour (paint could never be lighter than the object); dilating every layer (the
+dilation would be stored and grow with edits).
+
+**D-157 — When the shape changes under paint, the paint follows it.** The paint names the fingerprint of the mesh it
+was made for. When the object is modelled (or bevelled) afterwards, the stage carries every layer onto a fresh unwrap
+of the new shape by position (each texel takes the closest point of the old surface within 3 % of the object's size),
+off the main thread, and draws that; exports do the same at once. The document doesn't change until you paint on it
+again: the first stroke stores the carried paint as one step ("Carry paint"), then you paint. Undoing the modelling
+brings the original paint back untouched. *Rejected:* clearing paint when the shape changes (law 5); carrying it inside
+the modelling command (every modelling path would need to know about paint).
+
+**D-158 — Homes for painting (LAYOUT.md).** Paint ▸ Colour is the Paint panel's first tool, beside the Shadow Brush and
+Scatter: the mode (Paint, Erase, Fill, Eyedropper), the brush row (the same library sheet, its own held brush), the
+palette and any colour, the object being painted, its layers and a picture to project. The sidebar's sliders are the
+brush's size and opacity; the options bar under the stage repeats the mode and names the layer. A stroke paints the
+object it starts on (a first stroke on an unpainted object gets it ready instead, as "Paint <name>" does). Fingers
+navigate, the Pencil paints. *Rejected:* a Layers button in the corner clusters (the layout freezes at 1.0 and layers
+belong to the tool); one stroke painting every object it crosses (layers are per object: which one would it be on?).
+
+**D-159 — Projection painting is a picture placed over the stage.** Choose a picture (Photos or Files), place it with
+the fingers over the model (it's see-through), then Project: it goes through D-152's pass into the current layer, at
+the sidebar's opacity, landing on what the camera sees. *Rejected:* projecting the stage's rendered image (that bakes
+lighting into paint); a stencil fixed to the camera while you orbit (a second gesture grammar on the stage).
+
+**D-160 — Fill fills the layer; the eyedropper takes the paint's colour.** Fill sets every tile of the current layer to
+the colour (one file for all of them): what isn't seen on the model is never drawn, so the whole layer is the honest
+"fill this object". The eyedropper takes the composited paint under the touch, else the object's colour, and makes it
+the current colour. *Rejected:* flood fill by colour (regions cross chart seams, so a fill would stop at invisible
+edges); picking the lit colour from the screen (light and shadow would end up in the paint).
+
+**D-161 — The painting benchmark is the performance gate.** Diagnostics ▸ Run the painting benchmark: a generated
+sphere of 50 880 triangles, placed as a model and laid flat, is painted by a scripted Pencil for 20 seconds (a new
+stroke every 1.5 s, the whole stroke re-stamped and projected each frame, the object composited each frame) against
+the Night Market's pass rule. It writes `benchmark-paint-<device>-<version>.json`. CI runs it offscreen for 24 frames
+to prove it works; the device run is the gate (CONTEXT §6). *Rejected:* timing a painting UI test on the simulator
+(its GPU says nothing about an iPad's).
+
+**D-162 — Characters are painted once M7's skeletons arrive.** A model whose parts move with a skeleton isn't offered
+for painting, with a sentence saying why. *Rejected:* painting skinned models in their rest pose (the projection must
+see the posed surface, and M7 rebuilds skinning for every character type).
+
+**D-163 — Painted objects export their texture.** glTF (and the Blender package) and USDZ carry the paint mesh with the
+flattened texture (`baseColorTexture`; a `UsdUVTexture` with v flipped for USD); OBJ writes `vt`, `map_Kd` and the PNG
+beside it. STL and 3MF keep the closed shape (a printer takes the geometry). The Blender script's toon material keeps a
+painted image: the ramp shades in grey and multiplies it. CI validates the painted glTF with the Khronos validator and
+renders it, and a Blender package of it, in Blender 4.2 and 5.2, checking the paint's colour. *Rejected:* textures
+only in glTF (USDZ is what Quick Look and architects' clients open).
