@@ -75,6 +75,7 @@ final class PaintExportTests: XCTestCase {
         XCTAssertNotEqual(PaintMesh.fingerprint(source), cube.paint?.surface.mesh, "the shape changed under the paint")
         let export = try XCTUnwrap(painted(files, look: look)(cube))
         XCTAssertEqual(export.mesh.triangleCount, source.triangleCount)
+        XCTAssertEqual(try XCTUnwrap(export.mesh.bounds).size.y, 1, accuracy: 1e-3, "in the object's space, like the plain cube")
         let texture = try PNGCodec.decode(export.texture)
         var red = 0, total = 0
         let coverage = try PaintRaster.coverage(XCTUnwrap(PaintUnwrap.unwrap(source)), size: texture.width)

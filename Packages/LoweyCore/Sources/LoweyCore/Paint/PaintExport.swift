@@ -38,7 +38,11 @@ public enum PaintExport {
     public static func painted(_ object: SceneObject, source: MeshData?, base: RGBA, file: (String) -> Data?,
                                encode: (RGBAImage) -> Data = PNGCodec.encode) -> PaintedExport? {
         guard let paint = object.paint, paint.showsPaint, let source, let (unwrap, layers) = current(paint, source: source, file: file),
-              let mesh = unwrap.mesh(over: source) else { return nil }
+              var mesh = unwrap.mesh(over: source) else { return nil }
+        if let factor = PaintSource.toObjectSpace(of: object) {
+            mesh.positions = mesh.positions.map { $0 * factor }
+            mesh.normals = mesh.normals.map { normalize3($0 / factor, fallback: SIMD3<Float>(0, 1, 0)) }
+        }
         var texture = PaintComposer.composite(paint) { layers[$0.id] ?? .clear(width: paint.surface.size, height: paint.surface.size) }
         PaintRaster.dilate(&texture, coverage: PaintRaster.coverage(unwrap, size: paint.surface.size))
         return PaintedExport(mesh: mesh, texture: encode(PaintComposer.flattened(texture, over: RGBA(base.r, base.g, base.b, 1))))

@@ -22,6 +22,16 @@ public enum PaintSource {
         }
     }
 
+    /// What brings the mesh into the object's own space when it isn't there already: a bevelled shape is built at its
+    /// size, so its scale comes out (as the renderer does).
+    public static func toObjectSpace(of object: SceneObject) -> SIMD3<Float>? {
+        guard case let .primitive(shape) = object.kind, BevelSpec(object) != nil, BevelSpec.applies(to: shape) else { return nil }
+        let scale = object.transform.scale
+        let size = SIMD3<Float>(Float(scale.x), Float(scale.y), Float(scale.z))
+        return SIMD3<Float>(1 / max(abs(size.x), 1e-4), 1 / max(abs(size.y), 1e-4), 1 / max(abs(size.z), 1e-4))
+            * SIMD3<Float>(size.x < 0 ? -1 : 1, size.y < 0 ? -1 : 1, size.z < 0 ? -1 : 1)
+    }
+
     /// How much the renderer stretches the mesh (a scaled primitive), so the unwrap gives each side the pixels it
     /// shows. Bevelled shapes are built at their size already.
     public static func stretch(of object: SceneObject) -> SIMD3<Float> {
