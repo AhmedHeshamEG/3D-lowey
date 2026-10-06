@@ -23,12 +23,14 @@ struct CastPanel: View {
                 }
                 castList
                 if let character = currentCharacter { CharacterSections(editor: editor, character: character) }
+                RigSection(editor: editor)
             }
         }
     }
 
     private var currentCharacter: ObjectID? {
-        editor.selectedPuppet ?? editor.selectedCharacter?.object.id ?? editor.selection.first.flatMap { editor.isBlob($0) ? $0 : nil }
+        editor.selectedPuppet ?? editor.selectedCharacter?.object.id
+            ?? editor.selection.first.flatMap { editor.isBlob($0) || editor.baseScene.objects[$0]?.rig != nil ? $0 : nil }
     }
 
     private var castList: some View {
@@ -69,7 +71,9 @@ struct CharacterSections: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HmmSpacing.m) {
             if editor.isBlob(character) { ExpressionTriggers(editor: editor, character: character) }
-            if PoseLibrary.character(of: character, in: editor.baseScene) == character { PoseSection(editor: editor, character: character) }
+            if PoseLibrary.character(of: character, in: editor.baseScene, rigs: editor.libraryRigs()) == character {
+                PoseSection(editor: editor, character: character)
+            }
             ClipsSection(editor: editor, character: character)
             FaceSection(editor: editor, character: character)
             if editor.castType(of: character) == .puppet {
