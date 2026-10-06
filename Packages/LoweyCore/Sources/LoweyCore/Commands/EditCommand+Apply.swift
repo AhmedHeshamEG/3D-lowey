@@ -74,9 +74,8 @@ public extension EditCommand {
             document.scene.timeline = timeline
             return (.setTimeline(old), ChangeSet(objects: Set(timeline.tracks.map(\.target) + old.tracks.map(\.target)), scene: true))
 
-        case let .setShadowPaint(id, dabs):
-            let old = try Self.replaceField(\.shadowDabs, of: id, to: dabs, in: &document)
-            return (.setShadowPaint(id, old), ChangeSet(objects: [id]))
+        case .setShadowPaint, .setPaint, .paintTiles:
+            return try applyPaint(to: &document)
 
         case let .setCustomLooks(looks):
             let old = document.project.customLooks
@@ -105,6 +104,37 @@ public extension EditCommand {
             }
             return (.batch(label, inverses.reversed()), changes)
         }
+    }
+
+    /// Painting on surfaces: the Shadow Brush's dabs, colour layers, tiles.
+    private func applyPaint(to document: inout Document) throws -> Applied {
+        switch self {
+        case let .setShadowPaint(id, dabs):
+            let old = try Self.replaceField(\.shadowDabs, of: id, to: dabs, in: &document)
+            return (.setShadowPaint(id, old), ChangeSet(objects: [id]))
+        case let .setPaint(id, paint):
+            let old = try Self.replaceField(\.paint, of: id, to: paint, in: &document)
+            return (.setPaint(id, old), ChangeSet(objects: [id]))
+        case let .paintTiles(id, changes):
+            return try Self.applyPaintTiles(changes, of: id, in: &document)
+        default:
+            throw CommandError.empty
+        }
+    }
+
+    /// Sets tiles of an object's layers; the inverse puts the old files back (in reverse, so repeated tiles undo right).
+    private static func applyPaintTiles(_ changes: [PaintTileChange], of id: ObjectID, in document: inout Document) throws -> Applied {
+        guard var object = document.scene.objects[id] else { throw CommandError.objectNotFound(id) }
+        guard var paint = object.paint else { throw CommandError.empty }
+        var inverse: [PaintTileChange] = []
+        for change in changes {
+            guard let layer = paint.layerIndex(change.layer), let tile = PaintTileIndex(key: change.tile) else { throw CommandError.empty }
+            inverse.append(PaintTileChange(layer: change.layer, tile: tile, file: paint.layers[layer][tile]))
+            paint.layers[layer][tile] = change.file
+        }
+        object.paint = paint
+        document.scene.objects[id] = object
+        return (.paintTiles(id, inverse.reversed()), ChangeSet(objects: [id]))
     }
 
     /// Sets one field of an object and returns the old value.
