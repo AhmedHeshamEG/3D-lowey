@@ -70,7 +70,7 @@ final class PaintRenderTests: XCTestCase {
         XCTAssertGreaterThan(onStroke.b, onStroke.r + 0.2, "the stroke shows on the cube in the frame that drew it")
         let readback = try XCTUnwrap(frames.renderer.paintStrokeReadback())
         readback.commandBuffer.commit()
-        readback.commandBuffer.waitUntilCompleted()
+        await readback.commandBuffer.completed()
         let tiles = PaintPixels.changedTiles(after: readback.bytes(readback.after), before: readback.bytes(readback.before), size: readback.size)
         XCTAssertFalse(tiles.isEmpty, "the stroke changed tiles")
         XCTAssertLessThan(tiles.count, 8, "only the tiles under the stroke (of 16)")
@@ -92,7 +92,7 @@ final class PaintRenderTests: XCTestCase {
         _ = try await frames.render(request, width: 640, height: 360)
         let readback = try XCTUnwrap(frames.renderer.paintStrokeReadback())
         readback.commandBuffer.commit()
-        readback.commandBuffer.waitUntilCompleted()
+        await readback.commandBuffer.completed()
         XCTAssertTrue(PaintPixels.changedTiles(after: readback.bytes(readback.after), before: readback.bytes(readback.before), size: readback.size).isEmpty,
                       "the sky isn't the cube")
     }
