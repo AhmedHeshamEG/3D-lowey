@@ -14,6 +14,7 @@ struct DiagnosticsSheet: View {
     @State private var runningBenchmark = false
     @State private var runningHomeBenchmark = false
     @State private var benchmarkTier = PreviewQuality.current.tier
+    @State private var benchmarkKind = BenchmarkKind.market
     @State private var reports: [URL] = []
     @Environment(\.hmmTheme) private var theme
 
@@ -28,6 +29,7 @@ struct DiagnosticsSheet: View {
             HStack(spacing: HmmSpacing.xs) {
                 HmmPillButton("Run the benchmark", systemName: "speedometer", prominent: true) {
                     benchmarkTier = PreviewQuality.current.tier
+                    benchmarkKind = .market
                     runningBenchmark = true
                 }
                 .accessibilityIdentifier("run-benchmark")
@@ -35,11 +37,19 @@ struct DiagnosticsSheet: View {
                     // How a recent A-chip iPad will feel: the Tier B preview on this iPad.
                     HmmPillButton("Run as Tier B", systemName: "speedometer") {
                         benchmarkTier = .b
+                        benchmarkKind = .market
                         runningBenchmark = true
                     }
                     .accessibilityIdentifier("run-benchmark-tier-b")
                 }
             }
+            Hint("Painting, 20 s: a scripted Pencil paints a model of 50 000 triangles. Same pass rule.")
+            HmmPillButton("Run the painting benchmark", systemName: "paintbrush.pointed") {
+                benchmarkTier = PreviewQuality.current.tier
+                benchmarkKind = .paint
+                runningBenchmark = true
+            }
+            .accessibilityIdentifier("run-paint-benchmark")
             Hint("Home, 20 s: a hundred projects turning in their cards while the gallery scrolls down and back. Same pass rule.")
             HmmPillButton("Run the Home benchmark", systemName: "square.grid.2x2") { runningHomeBenchmark = true }
                 .accessibilityIdentifier("run-home-benchmark")
@@ -71,7 +81,7 @@ struct DiagnosticsSheet: View {
             HomeBenchmarkView(diagnostics: app.diagnostics)
         }
         .fullScreenCover(isPresented: $runningBenchmark, onDismiss: loadReports) {
-            BenchmarkRunView(diagnostics: app.diagnostics, tier: benchmarkTier)
+            BenchmarkRunView(diagnostics: app.diagnostics, tier: benchmarkTier, kind: benchmarkKind)
         }
         .sheet(isPresented: Binding(get: { !sharing.isEmpty }, set: { if !$0 { sharing = [] } })) { ShareSheet(items: sharing) }
     }

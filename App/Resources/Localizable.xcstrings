@@ -12081,6 +12081,22 @@
         }
       }
     },
+    "Painting, 20 s: a scripted Pencil paints a model of 50 000 triangles. Same pass rule.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pittura, 20 s: una Pencil automatica dipinge un modello di 50 000 triangoli. Stessa regola per superarlo."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطلاء، 20 ث: قلم مبرمج يطلي نموذجًا من 50 000 مثلث. قاعدة النجاح نفسها."
+          }
+        }
+      }
+    },
     "Pair a laptop": {
       "localizations": {
         "it": {
@@ -14429,6 +14445,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تشغيل اختبار أداء الرئيسية"
+          }
+        }
+      }
+    },
+    "Run the painting benchmark": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia il benchmark di pittura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّل اختبار أداء الطلاء"
           }
         }
       }

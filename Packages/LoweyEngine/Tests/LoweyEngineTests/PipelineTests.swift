@@ -29,6 +29,22 @@ final class PipelineTests: XCTestCase {
         add(attachment)
     }
 
+    /// M6's gate on the device: painting a 50k-triangle model. Here: it prepares, paints every frame and reports.
+    func testThePaintingBenchmarkPaintsAndWritesItsReport() async throws {
+        let benchmark = PaintBenchmark(models: ModelLibrary(), duration: 1)
+        try await benchmark.prepare()
+        XCTAssertNotNil(benchmark.builder.document.scene.objects[PaintBenchmarkScene.objectID]?.paint, "the model is ready to paint")
+        try await benchmark.runOffscreen(frames: 24, width: 1280, height: 720, device: RenderDevice.sharedDevice())
+        let report = benchmark.report(appVersion: "test", device: "Simulator", system: "iOS")
+        XCTAssertEqual(report.frames, 24)
+        XCTAssertGreaterThanOrEqual(report.sceneFacts["triangles"] ?? 0, 50000, "the 50k-triangle model is drawn painted")
+        let url = try PaintBenchmark.write(report, to: FileManager.default.temporaryDirectory.appendingPathComponent("benchmarks"))
+        XCTAssertEqual(url.lastPathComponent, "benchmark-paint-Simulator-test.json")
+        let attachment = XCTAttachment(contentsOfFile: url)
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     func testBenchmarkStageFramesHideTheEditorLayer() {
         let benchmark = MarketBenchmark(models: ModelLibrary(), duration: 1)
         let frame = benchmark.frame(size: CGSize(width: 1180, height: 820), renderScale: 0.8)

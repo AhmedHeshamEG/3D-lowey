@@ -264,6 +264,19 @@ final class PaintTests: XCTestCase {
         XCTAssertNil(PaintOperations.mergeDown("l1", in: paint, object: "a") { _ in .clear(width: 1, height: 1) }, "nothing under the bottom layer")
     }
 
+    func testThePaintingBenchmarkScene() {
+        XCTAssertEqual(PaintBenchmarkScene.sphere().triangleCount, 50880, "about fifty thousand triangles")
+        XCTAssertEqual(PaintBenchmarkScene.model().triangleCount, 50880)
+        let document = PaintBenchmarkScene.document()
+        XCTAssertEqual(document.scene.objects[PaintBenchmarkScene.objectID]?.kind, .asset(PaintBenchmarkScene.assetID))
+        XCTAssertNotNil(document.scene.activeCamera)
+        let early = PaintBenchmarkScene.pencil(at: 0.5), next = PaintBenchmarkScene.pencil(at: 1.6)
+        XCTAssertEqual(early.stroke, 0)
+        XCTAssertEqual(next.stroke, 1, "a new stroke every 1.5 s")
+        XCTAssertEqual(early.samples.count, 120)
+        XCTAssertTrue(early.samples.allSatisfy { (0.1 ... 0.9).contains($0.point.x) && (0.1 ... 0.9).contains($0.point.y) }, "on the model")
+    }
+
     func testBakeAndCarryPaintOntoANewShape() throws {
         let old = PrimitiveMesh.make(.sphere, shading: .smooth)
         let oldUnwrap = try PaintUnwrap.unwrap(old)

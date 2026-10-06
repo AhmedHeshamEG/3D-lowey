@@ -33,6 +33,14 @@ final class PaintRenderTests: XCTestCase {
         return (document, files)
     }
 
+    /// Commits the read-back and waits for the GPU.
+    private func finish(_ readback: PaintTextures.StrokeReadback) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            readback.commandBuffer.addCompletedHandler { _ in continuation.resume() }
+            readback.commandBuffer.commit()
+        }
+    }
+
     private func request(_ document: Document, files: [String: Data]) -> (ShotBuilder, FrameRequest) {
         let builder = ShotBuilder(document: document, catalog: .empty, models: ModelLibrary())
         builder.paintFile = { files[$0] }
@@ -69,8 +77,7 @@ final class PaintRenderTests: XCTestCase {
         let onStroke = ImageChecks.rgb(image, x: 0.5, y: 0.5)
         XCTAssertGreaterThan(onStroke.b, onStroke.r + 0.2, "the stroke shows on the cube in the frame that drew it")
         let readback = try XCTUnwrap(frames.renderer.paintStrokeReadback())
-        readback.commandBuffer.commit()
-        await readback.commandBuffer.completed()
+        await finish(readback)
         let tiles = PaintPixels.changedTiles(after: readback.bytes(readback.after), before: readback.bytes(readback.before), size: readback.size)
         XCTAssertFalse(tiles.isEmpty, "the stroke changed tiles")
         XCTAssertLessThan(tiles.count, 8, "only the tiles under the stroke (of 16)")
@@ -91,8 +98,7 @@ final class PaintRenderTests: XCTestCase {
                                       color: RGBA(0, 0, 0, 1), erases: false, pixelsPerPoint: 1)
         _ = try await frames.render(request, width: 640, height: 360)
         let readback = try XCTUnwrap(frames.renderer.paintStrokeReadback())
-        readback.commandBuffer.commit()
-        await readback.commandBuffer.completed()
+        await finish(readback)
         XCTAssertTrue(PaintPixels.changedTiles(after: readback.bytes(readback.after), before: readback.bytes(readback.before), size: readback.size).isEmpty,
                       "the sky isn't the cube")
     }

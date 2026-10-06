@@ -82,7 +82,9 @@ extension EditorModel {
 
     /// A placed model's surface: its own uvs when they're clean, its colours baked into "Model", "Layer 1" on top.
     nonisolated static func paintableModel(_ model: ImportedModel, merged: MeshData) -> (paint: ObjectPaint, files: PaintOperations.Files)? {
-        guard var (paint, unwrap, files) = try? PaintOperations.prepare(mesh: merged, keepOwnUVs: true) else { return nil }
+        guard let prepared = try? PaintOperations.prepare(mesh: merged, keepOwnUVs: true) else { return nil }
+        var paint = prepared.paint, files = prepared.files
+        let unwrap = prepared.unwrap
         let baked = AssetPaint.bake(model, merged: merged, unwrap: unwrap, size: paint.surface.size)
         var base = PaintLayer(id: "model", name: "Model")
         for (index, tile) in PaintComposer.tiles(of: baked, surface: paint.surface) {

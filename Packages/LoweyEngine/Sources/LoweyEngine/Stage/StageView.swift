@@ -339,7 +339,7 @@ extension StageView: MTKViewDelegate {
         commandBuffer.label = "Stage"
         frame.request.camera = frame.shotCamera ?? camera
         frame.request.renderScale = dynamicScale.scale
-        frame.request.livePaint = livePaint
+        if let livePaint { frame.request.livePaint = livePaint }
         if frame.request.editor == nil { frame.request.editor = editorScene(showsSelection: true) }
         do {
             lastReport = try signposts.interval("Encode frame") { try renderer.encode(frame.request, to: drawable.texture, commandBuffer: commandBuffer) }

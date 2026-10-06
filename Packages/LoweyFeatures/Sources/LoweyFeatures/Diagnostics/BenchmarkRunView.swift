@@ -5,12 +5,18 @@ import LoweyEngine
 import SwiftUI
 import UIKit
 
-/// The benchmark, full screen: the Night Market plays on its own stage for 20 seconds, every presented frame is
-/// recorded, then the report is written and shown.
+/// The stage benchmarks: the Night Market playing, or a model being painted.
+enum BenchmarkKind {
+    case market, paint
+}
+
+/// A benchmark, full screen: the Night Market plays (or a scripted Pencil paints a big model) on its own stage for 20
+/// seconds, every presented frame is recorded, then the report is written and shown.
 struct BenchmarkRunView: View {
     let diagnostics: DiagnosticsCenter
     /// The preview tier to run with (Tier B on any iPad shows how a recent A-chip iPad will feel).
     var tier: DeviceTier = PreviewQuality.current.tier
+    var kind: BenchmarkKind = .market
     @State private var report: BenchmarkReport?
     @State private var file: URL?
     @State private var failed: String?
@@ -22,11 +28,12 @@ struct BenchmarkRunView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             if report == nil, failed == nil {
-                BenchmarkStage(tier: tier) { result in
+                BenchmarkStage(tier: tier, kind: kind) { result in
                     switch result {
                     case let .success(made):
                         report = made
-                        file = try? MarketBenchmark.write(made, to: diagnostics.benchmarksFolder)
+                        file = try? kind == .paint ? PaintBenchmark.write(made, to: diagnostics.benchmarksFolder)
+                            : MarketBenchmark.write(made, to: diagnostics.benchmarksFolder)
                         diagnostics.log("Benchmark: p95 \(String(format: "%.2f", made.p95)) ms, passed \(made.passed)")
                     case let .failure(error):
                         failed = String(describing: error)
@@ -78,6 +85,7 @@ struct BenchmarkRunView: View {
 /// The benchmark's own stage view.
 private struct BenchmarkStage: UIViewRepresentable {
     let tier: DeviceTier
+    let kind: BenchmarkKind
     let finished: (Result<BenchmarkReport, Error>) -> Void
 
     func makeCoordinator() -> Holder { Holder() }
@@ -86,7 +94,8 @@ private struct BenchmarkStage: UIViewRepresentable {
         do {
             let stage = try StageView(device: RenderDevice.sharedDevice(), quality: PreviewQuality(tier: tier))
             let fps = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.maximumFramesPerSecond ?? 60
-            let benchmark = MarketBenchmark(tier: tier, budget: 1 / Double(max(fps, 30)))
+            let budget = 1 / Double(max(fps, 30))
+            let benchmark: StageBenchmark = kind == .paint ? PaintBenchmark(tier: tier, budget: budget) : MarketBenchmark(tier: tier, budget: budget)
             context.coordinator.benchmark = benchmark
             stage.showsGrid = false
             stage.frameSource = { stage in
@@ -103,7 +112,15 @@ private struct BenchmarkStage: UIViewRepresentable {
                 finished(.success(benchmark.report(appVersion: AppIdentity.shortVersion, device: DiagnosticsCenter.deviceModel,
                                                    system: "iPadOS \(UIDevice.current.systemVersion)")))
             }
-            stage.isContinuous = true
+            Task { @MainActor in
+                // A painted model is laid flat first; the run starts once it's ready.
+                do {
+                    try await benchmark.prepare()
+                    stage.isContinuous = true
+                } catch {
+                    finished(.failure(error))
+                }
+            }
             return stage
         } catch {
             Task { @MainActor in finished(.failure(error)) }
@@ -114,7 +131,7 @@ private struct BenchmarkStage: UIViewRepresentable {
     func updateUIView(_: UIView, context _: Context) {}
 
     final class Holder {
-        var benchmark: MarketBenchmark?
+        var benchmark: StageBenchmark?
         var done = false
     }
 }
