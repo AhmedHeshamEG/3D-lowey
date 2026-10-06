@@ -5,7 +5,7 @@ surface of that package: power users, scripts and MCP clients may **read** any o
 (the laptop bridge), so undo and the history journal stay true; a file changed behind the app's back is overwritten at
 the next checkpoint.
 
-Format version: package **2**, document schema **8** (`LoweySchema.currentVersion`), journal **1**.
+Format version: package **2**, document schema **9** (`LoweySchema.currentVersion`), journal **1**.
 
 ```
 My film.maquette/                 (3D-lowey's .lowey packages open too, and are upgraded in place)
@@ -15,7 +15,8 @@ My film.maquette/                 (3D-lowey's .lowey packages open too, and are 
   history/<scene-id>/             that scene's history journal (below)
   assets/                         library models the project carries (written by "Share as one file"), media,
                                   brushes/<hash>.png: the pictures of the brushes its strokes use, and
-                                  paint/<hash>.png, paint/<hash>.uv: painted objects' tiles and unwraps
+                                  paint/<hash>.png, paint/<hash>.uv: painted objects' tiles and unwraps,
+                                  rigs/<hash>.skin: rigged objects' weights
   audio/                          voiceovers and sounds
   renders/                        exports kept with the project
   thumbnail.png, thumbnail-loop.gif   the Home card (a still, and the model turning once in its Look)
@@ -67,7 +68,7 @@ renamed one gets a migration.
 | Key | Type | Meaning |
 |---|---|---|
 | `id`, `name` | string | |
-| `objects` | {id: object} | Every object by id: `id`, `name`, `kind` (what it is: primitive, model, light, camera, text, drawing, mesh, sketch, character…; see below), `parent`, `children`, `properties` (typed values: `position`, `rotation`, `scale`, `color`, `visible`, …), `shadowPaint` when the Shadow Brush painted it, and `paint` when colour is painted on it (schema 8, below). |
+| `objects` | {id: object} | Every object by id: `id`, `name`, `kind` (what it is: primitive, model, light, camera, text, drawing, mesh, sketch, character…; see below), `parent`, `children`, `properties` (typed values: `position`, `rotation`, `scale`, `color`, `visible`, …), `shadowPaint` when the Shadow Brush painted it, `paint` when colour is painted on it (schema 8, below), and `rig` when it has a drawn skeleton (schema 9, below). |
 | `roots` | [string] | Top-level objects in outliner order. |
 | `look` | object? | The scene's own Look (absent: the project's). |
 | `activeCamera` | string? | The shot camera. |
@@ -222,6 +223,49 @@ picture; a missing `file` clears the tile).
 
 Schema 8 only added the optional key and the two commands; files from schema 7 open unchanged, and Maquette 0.5
 refuses schema 8.
+
+### Rigs (schema 9)
+
+A skeleton drawn into an object (drawn bones, "Rig as a person", a 2D drawn puppet) is its `rig`:
+
+```json
+"rig": {
+  "skeleton": {"joints": [
+    {"name": "root", "parent": null, "rest": {"position": [0, 0.5, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]}},
+    {"name": "j1", "parent": 0, "rest": {"position": [0.44, 0.12, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]}}
+  ]},
+  "standard": "custom",
+  "tips": {"head": [0, 1.8, 0]},
+  "skin": "rigs/5c1e…a0.skin",
+  "surface": "9b0e…41"
+}
+```
+
+- `skeleton.joints[]`: parents first; `rest` is the joint's place relative to its parent, with no turn of its own (a
+  drawn joint is a point; its bone runs to its child). Positions are in the rig's space: the object's own space, except
+  bevelled shapes, whose triangles are built at their size (the object's scale comes out).
+- `standard`: `humanoid` after "Rig as a person" (joint names are the humanoid bones: `hips`, `spine`, `chest`, `neck`,
+  `head`, `leftShoulder`, `leftUpperArm`, …, `rightToes`), so humanoid clips play on it; `custom` for drawn chains
+  (`root`, `j1`, `j2`, …).
+- `tips`: where a leaf joint's bone ends (the top of the head, the fingertips, the toes).
+- `skin`: the weights of a solid, a file under `assets/` named by a hash of its bytes; `points` instead holds a
+  drawing's weights inline (`{"joints": [four per stroke point], "weights": [four per stroke point]}`, the drawing's
+  points in stroke order).
+- `surface`: the fingerprint of the surface the weights were made for (as `paint.surface.mesh`; for a drawing, of its
+  points). When it no longer matches, the app offers to fit the weights to the new shape.
+
+The `.skin` file is little-endian binary: `MQSK`, version (1), vertex count (u32 each); then per vertex four joint
+indices (u16), then per vertex four weights (f32, adding up to 1). Vertices are the triangles' corners the app draws for
+the object, in order; a placed model's are its parts' in order, as one surface.
+
+The pose is in the object's properties: `bone.<joint name>` is a joint's turn relative to its parent (a quaternion,
+`{"quat": [x, y, z, w]}`), keyed by the timeline like any property. Imported rigged models use the same keys with their
+own joint names. A clip playing on the character sets the joints it moves; a `bone.` turn overrides the clip for that
+joint.
+
+One journal command changes rigs: `setRig` (`{"op": "setRig", "id", "rig"}`, the whole rig or none; its file is written
+first). Schema 9 only added the optional key and the command; files from schema 8 open unchanged, and Maquette 0.6
+refuses schema 9.
 
 ## workspace.json
 

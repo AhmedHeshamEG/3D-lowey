@@ -1234,3 +1234,98 @@ beside it. STL and 3MF keep the closed shape (a printer takes the geometry). The
 painted image: the ramp shades in grey and multiplies it. CI validates the painted glTF with the Khronos validator and
 renders it, and a Blender package of it, in Blender 4.2 and 5.2, checking the paint's colour. *Rejected:* textures
 only in glTF (USDZ is what Quick Look and architects' clients open).
+
+## Maquette 0.7 — M7, rigging
+
+**D-164 — One skeleton system: one door, three bodies.** `CharacterRig` gives every character the same skeleton
+(joints, parents, rest pose, a standard and its bone map), its current local pose and the property changes that turn its
+joints. A built Puppet's joints are its part objects (their `rotation`), a drawn rig's and an imported Rigged model's are
+`bone.<joint>` turns on the character, a Blob's are its two mitten hands (its reach dials; its rubber-hose arms follow).
+Dragging joints, IK, the pose library and clips go through that door, so a feature written once works on every kind.
+Bone turns are ordinary properties: keyed by the timeline, coalesced while dragging, one line in the journal. A turn
+overrides the clip for that joint. *Rejected:* converting Puppets to bones (their parts are rigid pieces made by the
+builder, and 2.0 projects store their poses on the parts); one property holding the whole pose (it couldn't be keyed a
+joint at a time, and a drag would rewrite every joint's history).
+
+**D-165 — A drawn skeleton lives on the object; solid weights in a file, drawings' inline.** `SceneObject.rig`
+(`ObjectRig`): the joints in the rig's space (the vertices the renderer draws: the object's space, bevelled shapes at
+their size), each joint a point with no turn of its own, the standard, the leaf tips, and the weights. A solid's
+weights (four joints a vertex) are a `.skin` file named by its content under `assets/rigs/`, so `setRig` is a few
+hundred bytes in the journal however big the model is; a drawing's few hundred points keep theirs inline. The surface's
+fingerprint is kept with them, so a reshaped object offers "Fit the weights to the new shape". Schema 9, with no-op
+migrations. *Rejected:* weights inside `project.json` (megabytes per command); a separate skeleton object beside the
+model (duplicate, delete, group and the library would have to keep the pair together).
+
+**D-166 — Draw a bone: down the middle of what the stroke crosses.** Each Pencil sample's ray enters the surface and
+leaves it again; the midpoint is the limb's middle there (a drawing's samples land on its plane). The centreline is
+smoothed and cut into 2–8 bones by its length against the part's thickness. The end nearer the existing bones (or, on a
+first chain, the rest of the body) is the base; a first chain gets a `root` joint in the middle of the body that isn't
+the limb, so the body holds still while the limb bends; later chains hang from the bone they start on. *Rejected:*
+bones on the surface where the Pencil touched (a limb would bend around its skin, not its middle); a fixed number of
+bones (a tail and a finger need different counts).
+
+**D-167 — Weights by bone heat.** Baran & Popović (2007): each bone heats the vertices for which it is the nearest
+bone that can be seen (a BVH answers "can it be seen"), the heat diffuses over the surface (cotangent Laplacian, vertices
+at the same place welded so seams don't block it), and each joint's weights are one preconditioned conjugate-gradient
+solve; the four heaviest are kept. Weights fall off smoothly across a joint, and parts that only touch (an arm against
+the body, a tail beside a leg) don't drag each other, because heat doesn't cross what can't be seen. It runs off the
+main thread (seconds on a big model) and is pure Swift in Core, tested on Linux: a drawn tail on an imported model
+bends as a smooth curve, keeps its thickness, and matches a recorded golden pose. *Rejected:* weights by distance to the
+nearest bone (a tail drags the leg beside it); voxel/geodesic binding (needs a closed solid, which models from other
+apps often aren't).
+
+**D-168 — Rig as a person by eight taps (spike failed; fallback taken).** The spike rendered five Kit humanoids from
+the front on CI's iPad simulator and asked Vision's body-pose model (`VNDetectHumanBodyPoseRequest`) for their joints:
+the request can't be set up there (Vision error 9), on the simulator's GPU or forced to its CPU, so whether it finds the
+joints of a stylised 3D model can't be checked before shipping it. The fallback ships: the stage turns to the model's
+front and the person taps the top of the head, the chin, a shoulder, an elbow, a wrist, a hip, a knee and an ankle (the
+other side is mirrored across the model's middle); any dot can be dragged; Rig. Each dot's ray finds the middle of the
+limb it crosses; spine, chest and neck are spaced between hips and shoulders; feet get toes; head, hands and toes get
+tips. The skeleton follows the humanoid standard, and its arms are turned out to a T-pose for retargeting exactly as
+built Puppets' are (`TPose`), so every built-in and humanoid library clip plays on it: the Kit astronaut walks with the
+built-in Walk, its feet taking turns in front (Core check and a golden image). *Rejected:* shipping Vision unchecked
+(law 8, and the spike rule); a template pose snapped to the model's bounds (people aren't the same proportions).
+
+**D-169 — 2D drawn puppets bend their strokes.** A drawing's weights are bone heat over its stroke points, chained
+along each stroke and to the nearest point of every stroke it touches (so a drawn figure holds together). The animator
+moves the points (linear blend skinning, on the CPU), so the brush engine stamps the bent strokes and picking, onion
+skins and every export see the bent drawing; solid drawings (tubes, extrusions) bend the same way through their
+strokes. *Rejected:* GPU-skinning the ink ribbon (the brush stamps are made from the path, not the ribbon); a separate
+2D puppet object type (a drawing on a plane in the scene already is one).
+
+**D-170 — Pose by dragging, IK by default.** Every joint of a drawn or imported skeleton is a handle: dragging it bends
+the chain from where that chain begins (the joint hanging from the root or a fork) to it, by FABRIK on the joints'
+positions, then each joint turned to point where its child went. A humanoid's handles are its hands, feet and head; a
+straight limb bends toward its pole (elbows back, knees forward). The joints show for drawn rigs and rigged models in
+every timeline mode (dragging them is the only way to pose them); Puppets and Blobs keep 2.0's rule (Keyframe and
+Perform, so a drag in Compose still moves the character). *Rejected:* analytic two-bone IK for every chain (it can't
+bend a tail of eight bones); CCD (it turns the joints nearest the end most, so a dragged tail hooks at its tip).
+
+**D-171 — While rigging or painting, a rigged object stands as it was made.** With the Rig tool on, or Paint ▸ Colour
+working on a rigged object, the stage shows it without its turned joints and clips: bones, weights and paint land on
+the surface as it was made, which is where they're stored. Painting projects onto the rest surface (D-152), so painting
+a posed object would put the paint where it was, not where it's seen. Imported skinned models still aren't painted
+(their parts move with their own skeleton; D-162 stands for them). *Rejected:* a skinned projection pass (a second
+vertex path through every paint pipeline, for a case the rest pose answers).
+
+**D-172 — Weights are painted with the brush engine and shown by a twin mesh.** Paint weights strokes with the
+airbrush through `BrushStroker` (spacing, pressure); each dab finds the surface under it and adds the chosen bone's
+weight within its radius (Erase takes it away and hands it to the vertex's other bones in proportion); a stroke is one
+`setRig` with a new file. While painting, the object is drawn by a twin of its skinned mesh whose uvs hold that bone's
+weight, textured with a blue-to-red ramp and unlit: no shader or vertex format changes. *Rejected:* a weight colour
+attribute in the vertex format (every pipeline changes for one view); updating the file on every dab (weights are
+re-encoded once a stroke).
+
+**D-173 — Exports carry the pose.** A rigged object leaves as it is posed: glTF and the Blender package (the scene as
+edited) with its joints as turned by hand, USDZ, OBJ, STL and 3MF (the scene as shown) as posed at the playhead, so a
+posed character can be printed. A painted rigged object's paint lies on the bent surface. Skinning is done on the CPU
+by the same `Skinning` the drawings use. *Rejected for now:* writing the skeleton into glTF as a skin with its keys
+(an armature in Blender: BACKLOG), because bevelled shapes and scaled objects need their rig space carried over
+exactly.
+
+**D-174 — Homes for rigging (LAYOUT.md).** Rigging is making a character, so it lives in Cast: a Rig section (Draw a
+bone, Rig as a person; once rigged, Paint weights, Fit the weights, Reset the pose, Remove the rig). Drawing bones,
+painting weights and placing a person's dots use a Rig tool on the stage with its options bar under the stage and the
+sidebar's sliders (size and strength) while painting weights, like Paint ▸ Colour. Joints are dragged on the stage with
+the Select tool. A rigged object joins the cast as a "Drawn rig". No new button in the clusters. *Rejected:* a sixth
+making tool (the ≤ 5 rule); rigging inside Model (Model makes shapes; a skeleton is what turns one into a character).

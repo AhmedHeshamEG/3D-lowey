@@ -35,10 +35,11 @@ flowchart TD
 
 | Module | Imports | What it holds | Tests |
 |---|---|---|---|
-| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold, XAtlas | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush engine's arithmetic and brush import, paint (layers, tiles, unwraps, compositing, carrying paint to a new shape, painted exports), the glTF reader, rigs and retargeting, blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
+| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold, XAtlas | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush engine's arithmetic and brush import, paint (layers, tiles, unwraps, compositing, carrying paint to a new shape, painted exports), the glTF reader, rigs and retargeting, the one skeleton system (drawn
+rigs, bone heat, IK chains, the person rig), blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
 | **Manifold** (`Packages/Manifold`) | the C++ standard library | Manifold 3.5.4 (Apache-2.0) as a C++17 target, single-threaded, and `ManifoldBridge.h`: boolean and validate in plain C, so Swift needs no C++ interop. `VENDORED.md` says how to update it | Linux and the iPad simulator (its own tests; LoweyCore's boolean tests) |
 | **XAtlas** (`Packages/XAtlas`) | the C++ standard library | xatlas (MIT) as a single-threaded C++ target and `XAtlasBridge.h`: unwrap in plain C (`VENDORED.md`) | Linux (its own tests; LoweyCore's paint tests) |
-| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2 (with the brush engine's stamps and painted layers), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
+| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2 (with the brush engine's stamps, painted layers and drawn rigs skinned on the GPU), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
 | **LoweyFeatures** | Core, Engine, SwiftUI, hmm-kit's Design / Bridge / Documents / Diagnostics | The editor. `Workspace/` is shared by every feature (app and editor models, the session API, controls); each other folder is one feature's views; `Shell/` composes them | iPad simulator: bridge security, editor flows |
 | **App** | Features, ActivityKit, BackgroundTasks | `LoweyApp`, the export Live Activity, the widget extension | UI smoke tests |
 
@@ -204,6 +205,42 @@ flowchart LR
   pictures, rebasing paint onto a changed shape), `EditorModel+PaintLayers`, `StageGestures+Paint`,
   `Paint/ColourPaintSection` (with `PaintLayersSection`), `Paint/PaintOptionsBar` (and `PaintPictureOverlay`).
   `RenderInput.paintFile` reads `assets/paint/…` wherever a frame is rendered (stage, monitor, exports, thumbnails).
+
+## Rigging (0.7)
+
+```mermaid
+flowchart LR
+    Stroke[StageGestures+Rig<br/>Pencil samples] --> Rays[EditorModel+Rig.drawBone<br/>rays in the rig's space]
+    Rays --> Line[BoneStroke.centreline<br/>TriangleBVH: entry/exit midpoints]
+    Line --> Chain[BoneStroke.addingChain<br/>ObjectRig]
+    Dots[EditorModel+PersonRig<br/>eight taps, mirrored] --> Human[HumanRig.rig]
+    Chain & Human --> Heat[BoneHeat.weights<br/>off the main thread]
+    Heat --> Set[setRig + rigs/hash.skin]
+    Set --> Anim[Animator → RigPoses<br/>clips, then bone turns]
+    Anim --> GPU[SceneCompiler+Rig<br/>skinned twin + joint palette]
+    Anim --> Bend[drawings: strokes bent on the CPU]
+    Drag[IK handles] --> CR[CharacterRig + ChainIK] --> Turns[bone.joint / part rotations]
+```
+
+- **Core `Rig/`**: `ObjectRig` (the skeleton in the rig's space, standard, tips, the `.skin` file or a drawing's inline
+  `SkinWeights`, the surface fingerprint) on `SceneObject.rig`; `PropertyKey.boneTurn` (`bone.<joint>`, keyable);
+  `TriangleBVH` (rays and segments against a surface); `BoneStroke` (centreline, chains, removing a joint);
+  `BoneHeat` (welded cotangent Laplacian, nearest visible bone, a PCG solve per joint); `RigOperations` (the surface a
+  rig bends, weights stored as a file or inline, fits) and `WeightPaint`; `HumanRig` (the dots, the template, mirroring,
+  the humanoid skeleton) and `TPose`; `CharacterRig` (the one door: Puppet joint objects, bones, the Blob) and `ChainIK`
+  (FABRIK); `RigPoses` (the animator's step: clip pose, then bone turns; drawings bent), `Skinning` (CPU linear blend)
+  and `RigSpace`. `IKHandles` and `PoseLibrary` (`Character/`) work through `CharacterRig`. `RigSamples` is the tailed
+  creature the checks bend. Command: `setRig` (D-165).
+- **Engine `Render/Rig/`**: `SceneCompiler+Rig` (the skinned twin of the mesh the object draws, a placed model's parts
+  each with their slice of the weights, the joint palette `pose × rest⁻¹`, bounds grown to the pose, the weight view's
+  twin and ramp), `RigSkinCache`; `SceneCompiler+Paint` skins a rigged object's paint mesh through the unwrap's source
+  vertices. `ModelExport.posedParts` bakes the pose for every 3D format (D-173). `RenderInput.weightView` is the stage's
+  Paint weights view.
+- **Features**: `EditorModel+Rig` (what can be rigged, drawing a bone, weighing in the background, fitting, removing,
+  resetting, painting weights, the bones on the stage), `EditorModel+PersonRig`, `RigTypes` (`RigSettings`,
+  `PersonRigging`), `StageGestures+Rig`, `Cast/RigSection` (the section, `RigOptionsBar`, `PersonDotMarks`).
+  `EditorModel+Poses` drags any character's joints through `IKHandles`; `restingRigTarget` shows the object being
+  rigged or painted in its rest pose (D-171).
 
 ## LoweyRender 2
 

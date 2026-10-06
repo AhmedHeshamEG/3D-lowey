@@ -4,6 +4,12 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.7** (phase M7): **rigging**. Draw a bone through a limb, a tail or a rope with the Pencil and the model bends
+there: shapes, modelled parts, drawings and placed models, with the weights worked out by bone heat (or painted by
+hand). Rig a human-like model as a person with eight taps and every built-in clip plays on it. Drag any character's
+joints to pose it (IK), keep its poses, and export or print it as posed. Blobs, Puppets, imported rigs and drawn rigs
+share one skeleton system.
+
 **0.6** (phase M6): **painting on models**. Paint ▸ Colour paints straight onto shapes, modelled parts and placed
 models with the brush engine: paint, erase, fill and the eyedropper, layers with opacity and blend modes, and pictures
 projected from the camera. Strokes land only where the camera sees the model, every stroke is one undo step, and the

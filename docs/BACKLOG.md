@@ -3,13 +3,30 @@
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
 phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
 
+## Left from M7 (Maquette 0.7)
+
+- [ ] The device checklist in the "Maquette 0.7 — M7" PR (drawing bones with the Pencil on a placed model, a modelled
+      part and a drawing; how fast the weights arrive on a big model; posing by dragging joints; painting weights and
+      the weight view; rigging a person by the eight taps; a clip on the person rig; exporting a posed character and
+      printing it).
+- [ ] Apple's body-pose model placing the person rig's dots: the spike couldn't run it on CI (D-168); try it on the
+      iPad, and ship it only with a device check of its own.
+- [ ] glTF and the Blender package carry rigs as their posed shape, not as a skeleton with weights and keys (an
+      armature in Blender). (D-173)
+- [ ] Painting imported skinned characters (their own skeleton): still refused. (D-171, D-162)
+- [ ] Weights update when a weight stroke ends, not under the brush as it moves. (D-172)
+- [ ] Onion-skin ghosts of a rigged solid show it unposed.
+- [ ] A drawn bone can't be removed on its own yet (Remove the rig takes them all; undo takes back the last one).
+- [ ] The MCP bridge can't draw bones or rig a person yet (Scene Script v3 knows Puppets and clips).
+
 ## Left from M6 (Maquette 0.6)
 
 - [ ] The device checklist in the "Maquette 0.6 — M6" PR (painting feel with the Pencil, strokes landing only on what
       the camera sees, layers, fill and the eyedropper, a projected picture, painting a placed Kit model, undo after
       relaunch, the painting benchmark at Tier A and as Tier B, an exported glTF and USDZ opened elsewhere).
 - [ ] Roughness, metal and glow painting (CONTEXT §10.4 "later"): today paint is colour only.
-- [ ] Painting characters (skinned models) with M7's skeletons. (D-162)
+- [x] Painting characters with M7's skeletons: drawn rigs are painted in their rest pose (D-171); imported skins
+      are in "Left from M7".
 - [ ] Paint files no history refers to any more are kept: a cleanup when old versions are pruned.
 - [ ] Every painted object keeps its layers on the GPU while it's drawn (16 MB a layer at 2048); objects not being
       painted could keep only their composite.

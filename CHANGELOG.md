@@ -3,6 +3,24 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.7] — Maquette — rigging (phase M7)
+
+- **Cast ▸ Rig ▸ Draw a bone**: draw through a limb, a tail or a rope with the Pencil and it bends there. Works on
+  shapes, modelled parts, drawings and placed models; more strokes add more bones.
+- The weights are worked out for you (bone heat): smooth bends at every joint, and parts that only touch don't drag
+  each other. Prefer to paint them? **Paint weights** shows a bone's weight in colour and paints it with the brush.
+- **Rig as a person**: tap eight dots on the model's front (the other side is mirrored), drag any of them, Rig. Every
+  built-in clip (Idle, Walk, Run, Talk, Wave, Point, Type, Nod, Shrug, Celebrate) plays on it.
+- **2D drawn puppets**: draw bones on a drawing's plane and its strokes bend with them.
+- **Pose by dragging**: select any character (Blob, Puppet, Rigged or one you rigged) and drag its joints; the limb or
+  chain follows. Keys land at the playhead in Keyframe mode; Reset the pose puts it back. The pose library works on every
+  kind of character.
+- **One skeleton system** underneath: Blobs, Puppets, imported Rigged models and drawn rigs pose, key and play clips the
+  same way.
+- Rigged objects can be painted (they stand as they were made while you paint them).
+- **Exports carry the pose**: glTF and the Blender package as you posed it, USDZ, OBJ, STL and 3MF as posed at the
+  playhead, so a posed character can be printed.
+
 ## [0.6] — Maquette — painting on models (phase M6)
 
 - **Paint ▸ Colour**: paint colour straight onto shapes, modelled parts, solid drawings and placed models with any brush
