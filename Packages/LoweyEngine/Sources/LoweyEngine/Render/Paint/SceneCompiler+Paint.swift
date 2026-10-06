@@ -10,7 +10,7 @@ import simd
 /// shape by position (off the main thread on the stage; until then the object shows unpainted).
 extension SceneCompiler {
     /// The paint mesh and composite for an object drawn with `source`, or nil when it has no paint (or isn't ready).
-    func painted(_ object: SceneObject, source: GPUMesh, state: Inherited, input: RenderInput) -> (mesh: GPUMesh, texture: MTLTexture)? {
+    func painted(_ object: SceneObject, source: GPUMesh, state: Inherited, input: RenderInput) -> PaintedSurface? {
         guard let paint = object.paint, !state.ghost else { return nil }
         let file = input.paintFile
         let fingerprint = paints.fingerprint(of: source)
@@ -20,7 +20,7 @@ extension SceneCompiler {
             guard let mesh = meshes.mesh(.paintSurface(paint.surface.unwrap, mesh: fingerprint, dabs: dabs), make: {
                 Self.paintMesh(unwrap, over: source.data, dabs: dabs, device: device, label: object.name)
             }), let texture = paints.texture(for: object.id, paint: paint, unwrap: paint.surface.unwrap, mesh: mesh, file: file) else { return nil }
-            return (mesh, texture)
+            return PaintedSurface(mesh: mesh, texture: texture, unwrap: unwrap, key: paint.surface.unwrap)
         }
         var hasher = Hasher()
         hasher.combine(paint)
@@ -33,7 +33,7 @@ extension SceneCompiler {
             }),
             let texture = paints.texture(for: object.id, paint: paint, unwrap: key, mesh: mesh, pictures: carried.layers, file: file)
         else { return nil }
-        return (mesh, texture)
+        return PaintedSurface(mesh: mesh, texture: texture, unwrap: carried.unwrap, key: key)
     }
 
     static func paintMesh(_ unwrap: PaintUnwrap, over source: MeshData, dabs: [ShadowDab], device: MTLDevice, label: String) -> GPUMesh? {
@@ -41,11 +41,26 @@ extension SceneCompiler {
         return GPUMesh(device: device, mesh: mesh, shadowBias: ShadowPaint.biases(for: mesh, dabs: dabs), label: "\(label) paint")
     }
 
-    /// Draws a painted surface: its paint mesh, the composite over the object's colour.
-    func addPainted(_ painted: (mesh: GPUMesh, texture: MTLTexture), object: SceneObject, world: simd_float4x4, base: ObjectUniforms,
-                    casts: Bool, scene: inout RenderScene) {
+    /// Draws a painted surface: its paint mesh, the composite over the object's colour. A rigged object's paint mesh
+    /// is skinned too: each of its vertices takes the weights of the vertex it was made from.
+    func addPainted(_ painted: PaintedSurface, object: SceneObject, world: simd_float4x4, base: ObjectUniforms, casts: Bool, input: RenderInput,
+                    scene: inout RenderScene) {
         var uniforms = base
         uniforms.ids.z |= ObjectFlags.painted.rawValue
+        if let rig = object.rig, let file = rig.skin, let weights = skins.weights(file, read: input.paintFile),
+           painted.unwrap.source.allSatisfy({ Int($0) < weights.count }) {
+            let device = device
+            let source = painted.unwrap.source.map(Int.init)
+            if let skinned = meshes.mesh(.rigged("paint \(painted.key)", skin: file, dabs: object.shadowDabs), make: {
+                GPUMesh(device: device, mesh: painted.mesh.data, joints: source.map { weights.joints[$0] }, weights: source.map { weights.weights[$0] },
+                        label: "\(object.name) paint rigged")
+            }) {
+                let palette = appendPalette(rig, object: object, input: input, scene: &scene)
+                addRigged(skinned, rig: rig, palette: palette, world: world, base: uniforms, texture: painted.texture, casts: casts, scene: &scene)
+                scene.items[scene.items.count - 1].painted = object.id
+                return
+            }
+        }
         add(painted.mesh, world: world, uniforms: uniforms, texture: painted.texture, castsShadow: casts, scene: &scene)
         scene.items[scene.items.count - 1].painted = object.id
     }
@@ -61,9 +76,17 @@ extension SceneCompiler {
             let painted = painted(object, source: source, state: state, input: input) else { return false }
         var uniforms = base
         if object.color == nil, state.tint == nil { uniforms.baseColor = SIMD4<Float>(1, 1, 1, base.baseColor.w) }
-        addPainted(painted, object: object, world: state.world.matrix, base: uniforms, casts: casts, scene: &scene)
+        addPainted(painted, object: object, world: state.world.matrix, base: uniforms, casts: casts, input: input, scene: &scene)
         return true
     }
+}
+
+/// A painted surface ready to draw: the paint mesh, the composite, the unwrap it was made with (and its key).
+struct PaintedSurface {
+    var mesh: GPUMesh
+    var texture: MTLTexture
+    var unwrap: PaintUnwrap
+    var key: String
 }
 
 /// Placed models as one paintable surface, and their own colours baked into a first layer.
