@@ -58,7 +58,8 @@ final class PaintRenderTests: XCTestCase {
         XCTAssertTrue(frames.renderer.lastScene?.items.contains { $0.painted == "cube" } == true)
         // Without its files the cube is drawn as it is: no paint, not a crash.
         let (_, bare) = self.request(document, files: [:])
-        let plain = try await frames.image(bare, width: 640, height: 360)
+        // (A fresh renderer: tiles are named by their content, so one that has them keeps them.)
+        let plain = try await FrameRenderer(device: device, models: ModelLibrary()).image(bare, width: 640, height: 360)
         let unpainted = ImageChecks.rgb(plain, x: 0.5, y: 0.5)
         XCTAssertLessThan(abs(unpainted.r - unpainted.g), 0.1, "its own colour")
     }

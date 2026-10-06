@@ -89,7 +89,7 @@ final class LayoutTests: XCTestCase {
 
     func testTheMakingToolsSplitIntoDrawAndPaint() {
         XCTAssertEqual(StageTool.allCases.filter(\.draws), [.ink, .draw, .flipbook])
-        XCTAssertEqual(StageTool.allCases.filter(\.paintsSurfaces), [.shadowBrush, .scatter])
+        XCTAssertEqual(StageTool.allCases.filter(\.paintsSurfaces), [.shadowBrush, .scatter, .paint])
         XCTAssertTrue(StageTool.allCases.filter { $0.draws || $0.paintsSurfaces }.allSatisfy { $0 != .select && $0 != .lasso })
         XCTAssertFalse(ClusterPanel.model.isLeading)
         XCTAssertTrue(ClusterPanel.select.isLeading)
