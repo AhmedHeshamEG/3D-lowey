@@ -62,6 +62,9 @@ public enum Animator {
                     poses[track.target] = pose
                     animated.insert(track.target)
                 }
+            } else if let pose = RigPoses.clipPose(track, object: object, rigs: rigs, at: sampleTime, world: world, target: target) {
+                poses[track.target] = pose
+                animated.insert(track.target)
             } else if object[.rigStandard] != nil, let puppet = PuppetRig.build(track.target, in: document.scene),
                       let pose = ClipMixer.pose(track: track, character: puppet.rig, rigs: rigs, at: sampleTime, world: world, targetPosition: target) {
                 // Built characters: the pose moves their joint objects.
@@ -69,6 +72,8 @@ public enum Animator {
                 animated.insert(track.target)
             }
         }
+        // Skeletons posed by hand (`bone.<joint>`) over their clips; drawn puppets bend their strokes.
+        RigPoses.apply(to: &scene, poses: &poses, rigs: rigs, animated: &animated)
         // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
         FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
         // Blobs: their clips (dials, lift, lean), then the cartoon face (springy, squash & stretch, auto blink).

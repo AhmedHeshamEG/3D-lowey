@@ -117,6 +117,8 @@ public indirect enum EditCommand: Hashable, Sendable {
     case setPaint(ObjectID, ObjectPaint?)
     /// Set tiles of an object's paint layers: one stroke, fill or picture (the tiles' files are written first).
     case paintTiles(ObjectID, [PaintTileChange])
+    /// Replace an object's drawn skeleton and its weights (nil removes it; the weights' file is written first).
+    case setRig(ObjectID, ObjectRig?)
     /// Replace the project's own Looks ("My Look").
     case setCustomLooks([LookPreset])
     /// The project's brushes (`ProjectInfo.brushes`): a stroke's first use of a brush adds its frozen copy.
@@ -156,6 +158,7 @@ public indirect enum EditCommand: Hashable, Sendable {
         case .setShadowPaint: return "Paint shadows"
         case .setPaint: return "Paint layers"
         case .paintTiles: return "Paint"
+        case .setRig: return "Rig"
         case .setCustomLooks: return "Edit looks"
         case .setBrushes: return "Draw"
         case let .setFlipbooks(edits): return edits.allSatisfy { $0.track == nil } ? "Delete flipbook" : "Draw"

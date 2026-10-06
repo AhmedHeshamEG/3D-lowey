@@ -31,7 +31,9 @@ public enum ProjectHistory {
         // 6 → 7 only adds optional brush fields and the `setBrushes` command.
         6: { $0 },
         // 7 → 8 only adds the optional paint field and the `setPaint` and `paintTiles` commands.
-        7: { $0 }
+        7: { $0 },
+        // 8 â†’ 9 only adds the optional rig field and the `setRig` command.
+        8: { $0 }
     ]
     /// The first schema journals were written with (Maquette 0.1).
     public static let firstJournalSchema = 4
