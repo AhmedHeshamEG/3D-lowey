@@ -47,6 +47,10 @@ extension StageGestures {
             editor.preparePaint(object.id)
             return nil
         }
+        guard editor.paintFitsShape(object) else {
+            editor.rebasePaint(object.id)
+            return nil
+        }
         guard layer.visible else {
             editor.app.show("This layer is hidden")
             return nil

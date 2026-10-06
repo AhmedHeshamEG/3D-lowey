@@ -2217,6 +2217,22 @@
         }
       }
     },
+    "Bringing the paint onto the new shape": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porto la pittura sulla nuova forma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُنقل الطلاء إلى الشكل الجديد"
+          }
+        }
+      }
+    },
     "Bristles": {
       "localizations": {
         "it": {
@@ -18533,6 +18549,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "حُفظت النسخة الأخرى كنسخة"
+          }
+        }
+      }
+    },
+    "The paint couldn't be brought onto the new shape": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile portare la pittura sulla nuova forma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر نقل الطلاء إلى الشكل الجديد"
           }
         }
       }

@@ -108,6 +108,70 @@ extension EditorModel {
         }.value
     }
 
+    // MARK: A changed shape
+
+    /// The mesh an object's paint lies on now (a placed model's parts as one).
+    func paintSource(of object: SceneObject) -> MeshData? {
+        if let mesh = PaintSource.mesh(of: object) { return mesh }
+        guard let id = object.kind.assetID, let asset = library.catalog.manifest.asset(id),
+              let model = library.models.model(asset, catalog: library.catalog) else { return nil }
+        return AssetPaint.mergedMesh(model)
+    }
+
+    /// Whether the paint was made for the shape the object has now. When it wasn't (it was modelled after painting),
+    /// the stage shows it carried onto the new shape; painting on stores that first (`rebasePaint`).
+    func paintFitsShape(_ object: SceneObject) -> Bool {
+        guard let paint = object.paint, let source = paintSource(of: object) else { return true }
+        return PaintMesh.fingerprint(source) == paint.surface.mesh
+    }
+
+    /// Stores the paint carried onto the object's new shape, every layer, as one step; painting continues on it.
+    func rebasePaint(_ id: ObjectID) {
+        guard let object = baseScene.objects[id], let paint = object.paint, let source = paintSource(of: object),
+              !colourPaint.preparing.contains(id) else { return }
+        colourPaint.preparing.insert(id)
+        app.show("Bringing the paint onto the new shape")
+        let file = paintFiles
+        let folder = assetsFolder
+        Task {
+            let made = await Task.detached(priority: .userInitiated) { Self.rebased(paint, source: source, file: file) }.value
+            colourPaint.preparing.remove(id)
+            guard let made else {
+                app.show("The paint couldn't be brought onto the new shape", kind: .error)
+                return
+            }
+            do {
+                try await Self.write(made.files, to: folder)
+            } catch {
+                app.show("Couldn't save the painting's files: \(error.localizedDescription)", kind: .error)
+                return
+            }
+            guard baseScene.objects[id]?.paint == paint else { return }
+            perform(.batch("Carry paint", [.setPaint(id, made.paint)]))
+        }
+    }
+
+    /// The paint on a fresh unwrap of `source`, each layer carried by position, and its files.
+    nonisolated static func rebased(_ paint: ObjectPaint, source: MeshData, file: (String) -> Data?) -> (paint: ObjectPaint, files: PaintOperations.Files)? {
+        guard let (unwrap, layers) = PaintExport.current(paint, source: source, file: file) else { return nil }
+        let data = unwrap.data
+        let name = PaintFiles.unwrapName(for: data)
+        var files: PaintOperations.Files = [name: data]
+        var rebased = paint
+        rebased.surface = PaintSurface(size: paint.surface.size, unwrap: name, mesh: PaintMesh.fingerprint(source))
+        for index in rebased.layers.indices {
+            let picture = layers[rebased.layers[index].id] ?? .clear(width: paint.surface.size, height: paint.surface.size)
+            rebased.layers[index].tiles = [:]
+            for (tile, image) in PaintComposer.tiles(of: picture, surface: rebased.surface) {
+                let png = PaintPixels.png(image)
+                let tileName = PaintFiles.tileName(for: png)
+                files[tileName] = png
+                rebased.layers[index][tile] = tileName
+            }
+        }
+        return (rebased, files)
+    }
+
     // MARK: Strokes
 
     /// A finished stroke's tiles become files, then one `paintTiles` command. Strokes commit strictly in the order they
@@ -139,7 +203,7 @@ extension EditorModel {
 
     /// The path the paint brush makes of samples (stage points), its size and opacity folded in.
     func paintPath(_ samples: [BrushInput<Vec2>]) -> BrushPath<Vec2> {
-        BrushStroker.path(samples, brush: currentBrush(for: .paint), size: colourPaint.size, opacity: colourPaint.opacity, minimumSpacing: 1.5)
+        BrushStroker.path(samples, brush: currentBrush(for: .paint), size: colourPaint.size / 2, opacity: colourPaint.opacity, minimumSpacing: 1.5)
     }
 
     /// The colour painted (sRGB).
@@ -181,6 +245,10 @@ extension EditorModel {
     /// Projects the placed picture from the camera onto the target's layer, then commits it like a stroke.
     func projectPicture() {
         guard let picture = colourPaint.picture, let stage, let object = paintTarget, let layer = paintLayer(of: object) else { return }
+        guard paintFitsShape(object) else {
+            rebasePaint(object.id)
+            return
+        }
         paintStrokes += 1
         let color = RGBA(1, 1, 1, colourPaint.opacity)
         stage.showLivePaint(LivePaint(object: object.id, layer: layer.id, stroke: paintStrokes, source: .picture(picture.image, rect: picture.rect),
