@@ -26,12 +26,15 @@ extension AppModel {
     /// package as a GIF. Cards only play it while they're on screen.
     func drawCard(_ job: EditorModel.CardJob) async {
         let catalog = library.catalog
+        let assets = job.projectURL.appendingPathComponent(ProjectLayout.assetsFolder)
+        let paintFile: @Sendable (String) -> Data? = { name in try? Data(contentsOf: assets.appendingPathComponent(name)) }
         guard let still = try? await thumbnailer.still(job.document, viewpoint: job.viewpoint, width: 640, height: 360, catalog: catalog,
-                                                       models: library.models) else { return }
+                                                       models: library.models, paintFile: paintFile) else { return }
         let image = UIImage(cgImage: still)
         if let png = image.pngData() { try? projectStore.writeThumbnail(png, for: job.projectURL) }
         setThumbnail(image, for: job.document.project.id)
-        let turntable = await (try? thumbnailer.turntable(job.document, pitch: job.viewpoint.pitch, catalog: catalog, models: library.models)) ?? []
+        let turntable = await (try? thumbnailer.turntable(job.document, pitch: job.viewpoint.pitch, catalog: catalog, models: library.models,
+                                                          paintFile: paintFile)) ?? []
         let loopURL = job.projectURL.appendingPathComponent(Thumbnailer.loopFile)
         if turntable.count > 1 {
             try? Thumbnailer.writeLoop(turntable, to: loopURL)

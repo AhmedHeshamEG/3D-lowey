@@ -21,8 +21,9 @@ final class Thumbnailer {
 
     /// One frame of a document from a viewpoint (the stage's view).
     func still(_ document: Document, viewpoint: Viewpoint, width: Int, height: Int, catalog: AssetCatalog = .empty,
-               models: ModelLibrary = .shared) async throws -> CGImage {
-        let input = RenderInput(document: document, catalog: catalog)
+               models: ModelLibrary = .shared, paintFile: @escaping @Sendable (String) -> Data? = { _ in nil }) async throws -> CGImage {
+        var input = RenderInput(document: document, catalog: catalog)
+        input.paintFile = paintFile
         let request = FrameRequest(input: input, camera: RenderCamera(viewpoint: viewpoint))
         return try await renderer(models: models).image(request, width: width, height: height)
     }
@@ -30,7 +31,7 @@ final class Thumbnailer {
     /// The scene slowly turning in its Look, one full turn around everything in it from the work view's height (the
     /// Home card plays it while it's on screen). Empty when there's nothing to turn.
     func turntable(_ document: Document, pitch: Double, catalog: AssetCatalog, models: ModelLibrary = .shared, frames: Int = 48,
-                   longSide: Int = 480) async throws -> [CGImage] {
+                   longSide: Int = 480, paintFile: @escaping @Sendable (String) -> Data? = { _ in nil }) async throws -> [CGImage] {
         let evaluated = Animator.evaluate(document, at: 0)
         let scene = evaluated.scene
         guard let bounds = SceneBounds(library: catalog.manifest).worldBounds(of: scene.roots, in: scene) else { return [] }
@@ -45,7 +46,8 @@ final class Thumbnailer {
         for index in 0 ..< max(frames, 1) {
             let viewpoint = Viewpoint(target: bounds.center, yaw: start + Double(index) * 360 / Double(max(frames, 1)),
                                       pitch: min(max(pitch, 8), 40), distance: distance, fieldOfView: fieldOfView)
-            let input = RenderInput(document: still, poses: evaluated.poses, catalog: catalog)
+            var input = RenderInput(document: still, poses: evaluated.poses, catalog: catalog)
+            input.paintFile = paintFile
             let request = FrameRequest(input: input, camera: RenderCamera(viewpoint: viewpoint))
             try await images.append(renderer(models: models).image(request, width: size.width, height: size.height))
         }

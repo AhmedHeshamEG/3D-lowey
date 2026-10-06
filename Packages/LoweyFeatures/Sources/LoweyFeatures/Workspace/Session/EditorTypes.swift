@@ -20,6 +20,8 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case scatter
     /// Model ▸ Shape: pick faces, edges and corners, push/pull, sketch on surfaces (`ModelingState`).
     case model
+    /// Paint ▸ Colour: colour painted on models with the brush engine (`ColourPaintSettings`).
+    case paint
 
     public var id: String { rawValue }
 
@@ -33,6 +35,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .flipbook: "Flipbook"
         case .scatter: "Scatter"
         case .model: "Shape"
+        case .paint: "Colour"
         }
     }
 
@@ -46,17 +49,18 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .flipbook: "book.pages"
         case .scatter: "circle.hexagongrid"
         case .model: "cube.transparent"
+        case .paint: "paintbrush.pointed"
         }
     }
 
     /// Tools where the Pencil (and, if allowed, a finger) paints instead of navigating.
-    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook }
+    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook || self == .paint }
 
     /// The Draw tools (top right: Draw).
     public var draws: Bool { self == .ink || self == .draw || self == .flipbook }
 
     /// The Paint tools (top right: Paint): on objects and over the ground.
-    public var paintsSurfaces: Bool { self == .shadowBrush || self == .scatter }
+    public var paintsSurfaces: Bool { self == .shadowBrush || self == .scatter || self == .paint }
 
     /// Tools that draw on a guide surface.
     public var usesGuide: Bool { self == .ink || self == .draw }

@@ -18,6 +18,7 @@ extension EditorModel {
             return FileManager.default.fileExists(atPath: url.path) ? url : nil
         }
         exporter.stillImage = { name in UIImage(contentsOfFile: assets.appendingPathComponent(name).path)?.cgImage }
+        exporter.paintFile = paintFiles
         return exporter
     }
 

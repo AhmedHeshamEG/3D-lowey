@@ -93,8 +93,7 @@ public enum AssetPaint {
             guard triangle < parts.count else { return nil }
             let part = model.parts[parts[triangle]]
             let material = model.materials.indices.contains(part.material) ? model.materials[part.material] : ImportedMaterial()
-            var color = material.baseColor
-            color.a = 1
+            var color = RGBA(material.baseColor.r, material.baseColor.g, material.baseColor.b, 1)
             if let index = material.baseColorTexture, let image = textures[index], merged.uvs.count == merged.positions.count {
                 let corners = (Int(merged.indices[triangle * 3]), Int(merged.indices[triangle * 3 + 1]), Int(merged.indices[triangle * 3 + 2]))
                 let uv = merged.uvs[corners.0] * weights.x + merged.uvs[corners.1] * weights.y + merged.uvs[corners.2] * weights.z

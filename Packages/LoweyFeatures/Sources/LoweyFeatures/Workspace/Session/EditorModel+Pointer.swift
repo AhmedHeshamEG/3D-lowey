@@ -36,6 +36,7 @@ extension EditorModel {
         case .ink: ink.mode == .erase ? ink.eraserRadius : max(ink.width * 2000, 1)
         case .flipbook: flipbook.mode == .erase ? flipbook.eraserRadius : flipbook.width
         case .shadowBrush: max(10, shadowBrush.radius * 120)
+        case .paint: colourPaint.size / 2
         default: 6
         }
     }

@@ -224,6 +224,15 @@ final class PaintTextures {
         }
     }
 
+    /// Every layer loads again from its tiles (and no stroke is in progress).
+    func forget() {
+        for surface in surfaces.values {
+            surface.layers.removeAll()
+            surface.needsCompose = true
+        }
+        stroke = nil
+    }
+
     /// Frees surfaces not drawn lately (and everything under memory pressure).
     func trim(keeping recent: UInt64 = 600) {
         let limit = clock > recent ? clock - recent : 0
@@ -239,7 +248,7 @@ final class PaintTextures {
 }
 
 /// Pixels between PNG tiles, RGBA pictures and the GPU's premultiplied layers.
-enum PaintPixels {
+public enum PaintPixels {
     static let side = PaintSurface.tileSize
 
     /// A tile's PNG as premultiplied RGBA8 (the colours as stored, no colour conversion).
@@ -284,7 +293,7 @@ enum PaintPixels {
     }
 
     /// A tile's PNG for the project, compressed (ImageIO).
-    static func png(_ image: RGBAImage) -> Data {
+    public static func png(_ image: RGBAImage) -> Data {
         let data = NSMutableData()
         guard let provider = CGDataProvider(data: Data(image.pixels) as CFData),
               let space = CGColorSpace(name: CGColorSpace.sRGB),

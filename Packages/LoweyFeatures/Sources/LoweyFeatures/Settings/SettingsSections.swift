@@ -74,6 +74,14 @@ struct AcknowledgementsView: View {
                     + "this list of conditions and the following disclaimer are kept. THIS SOFTWARE IS PROVIDED BY CARNEGIE MELLON UNIVERSITY \"AS IS\" "
                     + "AND ANY EXPRESSED OR IMPLIED WARRANTIES ARE DISCLAIMED.")
                     .font(.hmm(.footnote))
+                Text("Manifold").font(.hmm(.headline, weight: .semibold))
+                Text("Booleans on solids (union, subtract, intersect). Copyright The Manifold Authors. Apache License 2.0.")
+                    .font(.hmm(.footnote))
+                Text("xatlas").font(.hmm(.headline, weight: .semibold))
+                Text("Lays models flat so they can be painted. Copyright (c) 2018-2020 Jonathan Young; thekla_atlas copyright (c) 2013 Thekla, Inc "
+                    + "and NVIDIA Corporation. MIT License: permission is granted, free of charge, to use, copy, modify and distribute it, provided "
+                    + "the copyright and permission notices are kept. It is provided \"as is\", without warranty of any kind.")
+                    .font(.hmm(.footnote))
                 Text("The Kit").font(.hmm(.headline, weight: .semibold))
                 Text("The models in the Library's Sets come from Kenney (kenney.nl: Furniture, Food, Nature, City, Car, Space, Survival and "
                     + "Mini Market kits) and Quaternius (quaternius.com: Sci-Fi Essentials, Universal Base Characters, Universal Animation "

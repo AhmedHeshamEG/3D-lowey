@@ -21,6 +21,11 @@ public extension LoweyRenderer {
         set { paints.onNeedsFrame = newValue }
     }
 
+    /// Drops every painted layer the GPU holds (they load again from the document's tiles): a cancelled stroke.
+    func forgetPaint() {
+        paints.forget()
+    }
+
     /// The tiles a stroke wrote are in its layer already: the document's next state needs no decoding.
     func adoptPaint(object: ObjectID, layer: String, changes: [PaintTileChange]) {
         paints.adopt(object: object, layer: layer, changes: changes)

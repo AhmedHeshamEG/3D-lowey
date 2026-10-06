@@ -11,6 +11,7 @@ extension EditorModel {
         guard size.width > 1, size.height > 1 else { return nil }
         let builder = ShotBuilder(document: displayDocument, catalog: library.catalog, models: library.models)
         builder.mediaImage = { [weak self] key in self?.mediaImage(key) }
+        builder.paintFile = paintFiles
         let framing: Framing = size.width >= size.height ? .landscape : .portrait
         let request = builder.request(at: time, framing: framing, size: size, frameIndex: timeline.frame(for: time), animated: displayed)
         return StageFrame(request: request, shotCamera: request.camera)

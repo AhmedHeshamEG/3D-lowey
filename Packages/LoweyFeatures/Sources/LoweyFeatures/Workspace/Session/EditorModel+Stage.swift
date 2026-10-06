@@ -39,6 +39,7 @@ extension EditorModel {
                                 catalog: library.catalog, lightBudget: 16)
         if !isPlaying { input.ghosts = onionGhosts() }
         input.smears = smears()
+        input.paintFile = paintFiles
         var request = FrameRequest(input: input, camera: stage.camera, frameIndex: timeline.frame(for: time))
         if let director {
             request.lens = displayed.scene.objects[director.id].map(CameraLens.init)

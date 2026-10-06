@@ -75,7 +75,11 @@ struct BrushLibrarySheet: View {
 
     /// Which tool the chosen brush is for.
     private var subtitle: String {
-        editor.brushTool == .ink ? "For ink" : "For flipbooks"
+        switch editor.brushTool {
+        case .ink: "For ink"
+        case .flipbook: "For flipbooks"
+        case .paint: "For painting"
+        }
     }
 
     static let importTypes: [UTType] = BrushFileImport.fileExtensions.compactMap { UTType(filenameExtension: $0) }
@@ -152,29 +156,5 @@ struct BrushLibrarySheet: View {
         case let .set(id): brushes.renameSet(id, to: renaming.name)
         }
         self.renaming = nil
-    }
-}
-
-/// A brush drawing its sample stroke (drawn by the brush engine, cached by the brush model).
-struct BrushPreviewImage: View {
-    let brushes: BrushModel
-    let brush: Brush
-    let width: Double
-    let height: Double
-    let color: RGBA
-    @Environment(\.displayScale) private var displayScale
-
-    var body: some View {
-        // Reading the revision redraws the picture when a brush changes.
-        let revision = brushes.revision
-        Group {
-            if revision >= 0, let image = brushes.preview(brush, width: width, height: height, color: color, scale: displayScale) {
-                Image(decorative: image, scale: displayScale)
-            } else {
-                Color.clear
-            }
-        }
-        .frame(width: width, height: height)
-        .accessibilityHidden(true)
     }
 }
