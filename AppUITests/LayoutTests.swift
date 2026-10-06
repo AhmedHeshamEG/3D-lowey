@@ -16,8 +16,8 @@ final class LayoutTests: XCTestCase {
         app.launch()
     }
 
-    /// A plain wait: panels that render pictures (Look's swatches, the Kit's tiles) keep the app busy for a moment,
-    /// and querying the UI tree then can time out.
+    /// A plain wait: panels that render pictures (Look's swatches, Model's shape and Kit tiles) keep the app busy for a
+    /// moment, and querying the UI tree then can time out.
     private func settle(_ seconds: TimeInterval) {
         _ = XCTWaiter.wait(for: [XCTestExpectation(description: "settle")], timeout: seconds)
     }
@@ -124,7 +124,7 @@ final class LayoutTests: XCTestCase {
     private func walk(_ row: LayoutWalk.Row) {
         for step in row.steps.dropLast() {
             XCTAssertTrue(tap(step), "\(row.home) › \(row.control): \(step) isn't there")
-            if panels.contains(step) || step.hasPrefix("model-") { settle(step == "Look" ? 3 : 1) }
+            if panels.contains(step) || step.hasPrefix("model-") { settle(step == "Look" || step == "Model" ? 3 : 1) }
         }
         if let last = row.steps.last {
             XCTAssertTrue(element(last).waitForExistence(timeout: 5), "\(row.home) › \(row.control): \(last) isn't reachable")
