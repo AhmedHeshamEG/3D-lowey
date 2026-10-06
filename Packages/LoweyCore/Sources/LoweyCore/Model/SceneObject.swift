@@ -214,6 +214,8 @@ public struct SceneObject: Codable, Hashable, Sendable, Identifiable {
     public var properties: [PropertyKey: PropertyValue]
     /// Shadow Brush dabs (nil = none; see `shadowDabs`).
     public var shadowPaint: [ShadowDab]?
+    /// Colour painted on the surface (nil = none; `ObjectPaint`).
+    public var paint: ObjectPaint?
 
     public init(
         id: ObjectID,

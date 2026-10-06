@@ -8,7 +8,7 @@ import UIKit
 
 /// The drawing tools that hold a brush.
 enum BrushTool: String, CaseIterable, Sendable {
-    case ink, flipbook
+    case ink, flipbook, paint
 }
 
 /// The brushes on this iPad (CONTEXT §10.3): the library with its sets, edits and imports, the brush each drawing

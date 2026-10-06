@@ -38,8 +38,10 @@ public final class StageView: MTKView {
     public private(set) var guide: GuideSurface?
     private var strokePreview: (MeshData, RGBA)?
     private var liveStroke: LiveBrushStroke?
+    /// The stroke being painted on a model (drawn into its layer by the frame; `StageView+Paint`).
+    var livePaint: LivePaint?
     /// The timestamp of the newest real sample in `liveStroke` (latency is measured from it to the frame showing it).
-    private var liveStrokeTouch: TimeInterval?
+    var liveStrokeTouch: TimeInterval?
     /// Touch-to-photon latency of the strokes drawn here (median and 95th percentile in Diagnostics).
     public private(set) var strokeLatency = StrokeLatency()
     private var screenGuide: ScreenGuide?
@@ -75,6 +77,10 @@ public final class StageView: MTKView {
         enableSetNeedsDisplay = true
         isMultipleTouchEnabled = true
         setViewpoint(.default)
+        renderer.streamsPaint = true
+        renderer.onNeedsFrame = { [weak self] in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.redraw() } }
+        }
     }
 
     @available(*, unavailable)
@@ -333,6 +339,7 @@ extension StageView: MTKViewDelegate {
         commandBuffer.label = "Stage"
         frame.request.camera = frame.shotCamera ?? camera
         frame.request.renderScale = dynamicScale.scale
+        if let livePaint { frame.request.livePaint = livePaint }
         if frame.request.editor == nil { frame.request.editor = editorScene(showsSelection: true) }
         do {
             lastReport = try signposts.interval("Encode frame") { try renderer.encode(frame.request, to: drawable.texture, commandBuffer: commandBuffer) }
@@ -340,6 +347,10 @@ extension StageView: MTKViewDelegate {
             return
         }
         measureLatency(commandBuffer)
+        if renderer.wantsAnotherFrame {
+            // Paint tiles still streaming in: another frame brings the next ones.
+            DispatchQueue.main.async { [weak self] in MainActor.assumeIsolated { self?.redraw() } }
+        }
         commandBuffer.present(drawable)
         lastEncodeTime = CACurrentMediaTime() - start
         commandBuffer.addCompletedHandler { [weak self] buffer in

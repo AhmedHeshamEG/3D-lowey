@@ -5,13 +5,13 @@ import Foundation
 extension EditCommand: Codable {
     private enum Key: String, CodingKey {
         case op, fragment, parent, index, ids, entries, changes, id, name, kind, look, scope, camera, timeline, label, commands, tracks
-        case dabs, looks, flipbooks, scene, brushes
+        case dabs, looks, flipbooks, scene, brushes, paint, tiles
     }
 
     private enum Op: String, Codable {
         case insert, delete, restore, setProperties, rename, setKind, reparent, setLook, renameScene
         case setActiveCamera, setTimeline, setTracks, batch, setShadowPaint, setCustomLooks, setFlipbooks, replaceScene
-        case setBrushes
+        case setBrushes, setPaint, paintTiles
     }
 
     public init(from decoder: Decoder) throws {
@@ -50,6 +50,10 @@ extension EditCommand: Codable {
             self = try .batch(c.decode(String.self, forKey: .label), c.decode([EditCommand].self, forKey: .commands))
         case .setShadowPaint, .setCustomLooks, .setFlipbooks, .replaceScene, .setBrushes:
             self = try Self.decodeWholeValue(op, from: c)
+        case .setPaint:
+            self = try .setPaint(c.decode(ObjectID.self, forKey: .id), c.decodeIfPresent(ObjectPaint.self, forKey: .paint))
+        case .paintTiles:
+            self = try .paintTiles(c.decode(ObjectID.self, forKey: .id), c.decode([PaintTileChange].self, forKey: .tiles))
         }
     }
 
@@ -119,6 +123,14 @@ extension EditCommand: Codable {
             try c.encode(commands, forKey: .commands)
         case .setShadowPaint, .setCustomLooks, .setFlipbooks, .replaceScene, .setBrushes:
             try encodeWholeValue(into: &c)
+        case let .setPaint(id, paint):
+            try c.encode(Op.setPaint, forKey: .op)
+            try c.encode(id, forKey: .id)
+            try c.encodeIfPresent(paint, forKey: .paint)
+        case let .paintTiles(id, changes):
+            try c.encode(Op.paintTiles, forKey: .op)
+            try c.encode(id, forKey: .id)
+            try c.encode(changes, forKey: .tiles)
         }
     }
 

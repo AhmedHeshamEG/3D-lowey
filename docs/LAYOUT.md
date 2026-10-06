@@ -166,6 +166,14 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 
 | Control | Walk |
 |---|---|
+| Colour: paint, erase, fill and the eyedropper on models | `Paint › tool-paint › paint-pick` |
+| The brush painting uses (opens the brush library) | `Paint › tool-paint › brush-paint` |
+| Paint the chosen object (it's laid flat for painting first; a stroke on it does the same) | `[cube] Paint › tool-paint › paint-start` |
+| Layers: show or hide, the one the Pencil paints on, its opacity and blend, add a layer | `[cube] Paint › tool-paint › paint-start › paint-layer-add` |
+| A layer's menu: duplicate, merge down, move up or down, clear, rename, delete; remove all paint | `[cube] Paint › tool-paint › paint-layer-menu` |
+| Project a picture: from Photos or Files, placed with the fingers, Project from the options bar | Paint ▸ Colour on a painted object |
+| Paint, erase, fill, eyedropper, the layer painted on, done (options bar) | shown under the stage while Colour is on |
+| Size and opacity of the paint brush | the sidebar's two sliders while Colour is on |
 | Shadow Brush: push shadow in, pull light out | `Paint › tool-shadow-brush › Push shadow in` |
 | Shadow presets | `Paint › tool-shadow-brush › section-Presets` |
 | Scatter copies of the selection on the ground | `Paint › tool-scatter` |

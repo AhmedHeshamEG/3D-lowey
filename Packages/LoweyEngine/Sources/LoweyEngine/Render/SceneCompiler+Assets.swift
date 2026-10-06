@@ -17,6 +17,7 @@ extension SceneCompiler {
             placeholder(base: base, world: state.world.matrix, color: color, scene: &scene)
             return
         }
+        if paintedAsset(id, model: model, object: object, state: state, base: base, input: input, casts: casts, scene: &scene) { return }
         let tinted = object.color != nil || state.tint != nil
         var jointOffset: UInt32 = 0
         if let skin = model.skin, model.parts.contains(where: \.isSkinned) {

@@ -65,15 +65,19 @@ def swift(found: list[tuple[str, str, str, list[str]]]) -> str:
         "        let steps: [String]",
         "    }",
         "",
-        "    static let rows: [Row] = [",
+        "    static let rows = layoutWalkRows",
+        "}",
+        "",
+        "/// The rows, outside the enum so its body stays short however many rows LAYOUT.md holds.",
+        "private let layoutWalkRows: [LayoutWalk.Row] = [",
     ]
     for index, (section, control, pre, steps) in enumerate(found):
         lines += [
-            f"        Row(home: {literal(section)}, precondition: {literal(pre)},",
-            f"            control: {literal(control)},",
-            f"            steps: [{', '.join(literal(step) for step in steps)}])" + ("," if index < len(found) - 1 else ""),
+            f"    LayoutWalk.Row(home: {literal(section)}, precondition: {literal(pre)},",
+            f"                   control: {literal(control)},",
+            f"                   steps: [{', '.join(literal(step) for step in steps)}])" + ("," if index < len(found) - 1 else ""),
         ]
-    lines += ["    ]", "}", ""]
+    lines += ["]", ""]
     return "\n".join(lines)
 
 

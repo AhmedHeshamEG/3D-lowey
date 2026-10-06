@@ -39,6 +39,7 @@ extension EditorModel {
                                 catalog: library.catalog, lightBudget: 16)
         if !isPlaying { input.ghosts = onionGhosts() }
         input.smears = smears()
+        input.paintFile = paintFiles
         var request = FrameRequest(input: input, camera: stage.camera, frameIndex: timeline.frame(for: time))
         if let director {
             request.lens = displayed.scene.objects[director.id].map(CameraLens.init)
@@ -157,6 +158,8 @@ extension EditorModel {
         if tool == .scatter, selection.isEmpty { app.show("Select what to scatter first (a tree, a rock…), then drag an area") }
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
         if tool != .ink { inkStrokes = [] }
+        // Only when there is one: writing the observed paint settings would redraw every view that reads them.
+        if tool != .paint, colourPaint.picture != nil { colourPaint.picture = nil }
         if tool == .flipbook, flipbook.track == nil { flipbook.track = timeline.flipbooks.last?.id }
         modelToolChanged()
         refreshSelectionOverlay()

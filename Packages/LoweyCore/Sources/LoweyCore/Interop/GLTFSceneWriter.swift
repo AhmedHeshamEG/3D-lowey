@@ -19,9 +19,11 @@ public enum GLTFScene {
 
     /// A GLB of the objects (and everything under them; the whole scene when nil). `parts` supplies the shapes Core
     /// can't make itself (library models, prefabs), in the object's own space.
+    /// `painted` gives a painted object's paint mesh and texture.
     public static func glb(_ ids: [ObjectID]?, in scene: Scene, look: Look, parts: @escaping (SceneObject) -> [LocalPart] = { _ in [] },
-                           generator: String = "Maquette") -> Data {
+                           painted: @escaping (SceneObject) -> PaintedExport? = { _ in nil }, generator: String = "Maquette") -> Data {
         var writer = GLTFSceneWriter(scene: scene, look: look, parts: parts)
+        writer.painted = painted
         for root in ids ?? scene.roots {
             if let node = writer.addNode(root, isRoot: true) { writer.roots.append(node) }
         }
@@ -37,11 +39,14 @@ struct GLTFSceneWriter {
     let scene: Scene
     let look: Look
     let parts: (SceneObject) -> [GLTFScene.LocalPart]
+    var painted: (SceneObject) -> PaintedExport? = { _ in nil }
     var binary = Data()
     var bufferViews: [[String: Any]] = []
     var accessors: [[String: Any]] = []
     var meshes: [[String: Any]] = []
     var materials: [[String: Any]] = []
+    var images: [[String: Any]] = []
+    var textures: [[String: Any]] = []
     var nodes: [[String: Any]] = []
     var cameras: [[String: Any]] = []
     var lights: [[String: Any]] = []
@@ -104,7 +109,10 @@ struct GLTFSceneWriter {
 
     mutating func addMesh(for object: SceneObject) -> Int? {
         var pieces: [GLTFScene.LocalPart] = []
-        if let mesh = SceneExport.localMesh(of: object, look: look), !mesh.isEmpty {
+        if let paint = painted(object) {
+            pieces = [GLTFScene.LocalPart(name: object.name, mesh: paint.mesh,
+                                          material: SceneExport.material(of: object, look: look).painted(paint.texture))]
+        } else if let mesh = SceneExport.localMesh(of: object, look: look), !mesh.isEmpty {
             pieces = [GLTFScene.LocalPart(name: object.name, mesh: mesh, material: SceneExport.material(of: object, look: look))]
         } else if object.kind.hasSurface {
             pieces = parts(object).filter { !$0.mesh.isEmpty }
@@ -155,12 +163,29 @@ struct GLTFSceneWriter {
             ]
         ]
         if surface.color.a < 1 { material["alphaMode"] = "BLEND" }
+        if let texture = surface.texture {
+            var pbr = material["pbrMetallicRoughness"] as? [String: Any] ?? [:]
+            pbr["baseColorTexture"] = ["index": addTexture(texture)]
+            material["pbrMetallicRoughness"] = pbr
+        }
         if let emissive = surface.emissive, surface.emissiveStrength > 0 {
             let strength = min(surface.emissiveStrength, 1)
             material["emissiveFactor"] = [linear(emissive.r) * strength, linear(emissive.g) * strength, linear(emissive.b) * strength]
         }
         materials.append(material)
         return materials.count - 1
+    }
+
+    /// A PNG in the buffer as an image, with a repeating linear sampler.
+    mutating func addTexture(_ png: Data) -> Int {
+        while binary.count % 4 != 0 {
+            binary.append(0)
+        }
+        bufferViews.append(["buffer": 0, "byteOffset": binary.count, "byteLength": png.count])
+        binary.append(png)
+        images.append(["bufferView": bufferViews.count - 1, "mimeType": "image/png"])
+        textures.append(["source": images.count - 1, "sampler": 0])
+        return textures.count - 1
     }
 
     mutating func addCamera(_ object: SceneObject) -> Int {
@@ -300,6 +325,12 @@ struct GLTFSceneWriter {
         ]
         if !meshes.isEmpty { json["meshes"] = meshes }
         if !materials.isEmpty { json["materials"] = materials }
+        if !textures.isEmpty {
+            json["images"] = images
+            json["textures"] = textures
+            // Linear filtering with mipmaps, repeating (the paint's charts sit inside 0…1 with padding).
+            json["samplers"] = [["magFilter": 9729, "minFilter": 9987, "wrapS": 10497, "wrapT": 10497]]
+        }
         if !cameras.isEmpty { json["cameras"] = cameras }
         if !animations.isEmpty { json["animations"] = animations }
         if !lights.isEmpty {

@@ -4,6 +4,11 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.6** (phase M6): **painting on models**. Paint ▸ Colour paints straight onto shapes, modelled parts and placed
+models with the brush engine: paint, erase, fill and the eyedropper, layers with opacity and blend modes, and pictures
+projected from the camera. Strokes land only where the camera sees the model, every stroke is one undo step, and the
+paint follows the shape if you model it afterwards. glTF, USDZ, OBJ and the Blender package carry the paint as a texture.
+
 **0.5** (phase M5): **brushes and drawing guides**. One brush engine draws ink and flipbooks: ten brushes, Brush
 Studio with a pad to try every setting, your own pictures as tips and grains, Procreate (`.brushset`, `.brush`) and
 Photoshop (`.abr`) brushes imported, sets shared as files. Strokes keep the brush they were drawn with. Drawing guides:

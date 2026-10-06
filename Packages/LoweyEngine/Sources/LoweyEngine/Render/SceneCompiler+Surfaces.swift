@@ -13,7 +13,7 @@ extension SceneCompiler {
         let casts = object[.castsShadow]?.boolValue ?? true
         switch object.kind {
         case let .primitive(shape):
-            compilePrimitive(shape, object: object, state: state, base: base, casts: casts, scene: &scene)
+            compilePrimitive(shape, object: object, state: state, base: base, casts: casts, input: input, scene: &scene)
         case let .drawing(recipe) where recipe.style == .ink:
             compileInk(recipe, object: object, state: state, base: base, casts: object[.castsShadow]?.boolValue ?? false, input: input,
                        scene: &scene)
@@ -21,11 +21,11 @@ extension SceneCompiler {
             if let mesh = mesh(.drawing(recipe), dabs: object.shadowDabs, label: object.name, make: {
                 DrawingMesher.mesh(for: recipe).shaded(.smooth)
             }) {
-                add(mesh, world: world, uniforms: base, castsShadow: casts, scene: &scene)
+                addSurface(mesh, object: object, state: state, world: world, base: base, casts: casts, input: input, scene: &scene)
             }
         case let .mesh(editable):
             if let mesh = mesh(.editable(editable), dabs: object.shadowDabs, label: object.name, make: { editable.renderMesh() }) {
-                add(mesh, world: world, uniforms: base, castsShadow: casts, scene: &scene)
+                addSurface(mesh, object: object, state: state, world: world, base: base, casts: casts, input: input, scene: &scene)
             }
         case let .text(recipe):
             compileText(recipe, object: object, world: world, base: base, casts: casts, scene: &scene)
@@ -37,6 +37,16 @@ extension SceneCompiler {
             compileCard(recipe, object: object, world: world, base: base, input: input, casts: casts, scene: &scene)
         default:
             break
+        }
+    }
+
+    /// A surface as drawn, or its paint mesh with the paint's composite when it's painted.
+    func addSurface(_ mesh: GPUMesh, object: SceneObject, state: Inherited, world: simd_float4x4, base: ObjectUniforms, casts: Bool,
+                    input: RenderInput, scene: inout RenderScene) {
+        if let painted = painted(object, source: mesh, state: state, input: input) {
+            addPainted(painted, object: object, world: world, base: base, casts: casts, scene: &scene)
+        } else {
+            add(mesh, world: world, uniforms: base, castsShadow: casts, scene: &scene)
         }
     }
 
@@ -55,7 +65,7 @@ extension SceneCompiler {
     // MARK: Primitives
 
     func compilePrimitive(_ shape: PrimitiveShape, object: SceneObject, state: Inherited, base: ObjectUniforms, casts: Bool,
-                          scene: inout RenderScene) {
+                          input: RenderInput, scene: inout RenderScene) {
         let scale = object.transform.scale
         if let bevel = BevelSpec(object), BevelSpec.applies(to: shape) {
             // Built at the object's own size so the bevel stays round; its scale is taken out of the matrix.
@@ -68,13 +78,15 @@ extension SceneCompiler {
             }) else { return }
             let signs = SIMD3<Float>(scale.x < 0 ? -1 : 1, scale.y < 0 ? -1 : 1, scale.z < 0 ? -1 : 1)
             let unscale = simd_float4x4(diagonal: SIMD4<Float>(signs / simd_max(size, SIMD3<Float>(repeating: 1e-4)), 1))
-            add(mesh, world: state.world.matrix * unscale, uniforms: base, castsShadow: casts, scene: &scene)
+            addSurface(mesh, object: object, state: state, world: state.world.matrix * unscale, base: base, casts: casts, input: input,
+                       scene: &scene)
             return
         }
         guard let mesh = mesh(.primitive(shape, faceted: false), dabs: object.shadowDabs, label: shape.rawValue, make: {
             PrimitiveMesh.make(shape, shading: .smooth)
         }) else { return }
-        add(mesh, world: state.world.matrix, uniforms: base, castsShadow: casts && shape != .plane, scene: &scene)
+        addSurface(mesh, object: object, state: state, world: state.world.matrix, base: base, casts: casts && shape != .plane, input: input,
+                   scene: &scene)
     }
 
     // MARK: Text

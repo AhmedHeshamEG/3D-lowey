@@ -39,15 +39,29 @@ public enum ModelExportFormat: String, CaseIterable, Sendable, Identifiable, Cod
 /// library models use their loaded parts (geometry and colours, textures not carried over).
 @MainActor
 public enum ModelExport {
-    /// The meshes as placed in the world (USDZ, OBJ, STL, 3MF).
-    public static func meshes(_ ids: [ObjectID]?, scene: CoreScene, look: Look, catalog: AssetCatalog,
-                              models: ModelLibrary = .shared) -> [ExportMesh] {
-        SceneExport.meshes(ids, in: scene, look: look) { object, world in
+    /// The meshes as placed in the world (USDZ, OBJ, STL, 3MF); `painted` gives painted objects their paint mesh and
+    /// texture (left out for printing).
+    public static func meshes(_ ids: [ObjectID]?, scene: CoreScene, look: Look, catalog: AssetCatalog, models: ModelLibrary = .shared,
+                              painted: (SceneObject) -> PaintedExport? = { _ in nil }) -> [ExportMesh] {
+        SceneExport.meshes(ids, in: scene, look: look, extra: { object, world in
             localParts(object, look: look, catalog: catalog, models: models).map { part in
                 ExportMesh(name: object.name, transform: world, mesh: part.mesh, color: part.material.color, emissive: part.material.emissive,
                            emissiveStrength: part.material.emissiveStrength, roughness: part.material.roughness, metallic: part.material.metallic)
             }
+        }, painted: painted)
+    }
+
+    /// A painted object's paint mesh and texture (its shape from Core, or a placed model's parts as one).
+    public static func painted(_ object: SceneObject, look: Look, catalog: AssetCatalog, models: ModelLibrary = .shared,
+                               file: (String) -> Data?) -> PaintedExport? {
+        guard object.paint != nil else { return nil }
+        var source = PaintSource.mesh(of: object)
+        var base = object.color?.resolved(in: look.palette) ?? .blockout
+        if source == nil, let id = object.kind.assetID, let asset = catalog.manifest.asset(id), let model = models.model(asset, catalog: catalog) {
+            source = AssetPaint.mergedMesh(model)
+            if object.color == nil { base = .white }
         }
+        return PaintExport.painted(object, source: source, base: base, file: file, encode: PaintPixels.png)
     }
 
     /// A library model's or a prefab's pieces in the object's own space (the glTF scene keeps them under their node).
@@ -77,19 +91,23 @@ public enum ModelExport {
     }
 
     /// The files of one export, named after `name`: one file, or an OBJ with its materials.
+    /// `paintFile` reads the project's paint files: painted objects carry their texture (glTF, Blender, USDZ, OBJ).
     public static func files(_ format: ModelExportFormat, ids: [ObjectID]?, scene: CoreScene, look: Look, preset: LookPreset,
-                             catalog: AssetCatalog, models: ModelLibrary = .shared, name: String) -> [(name: String, data: Data)] {
+                             catalog: AssetCatalog, models: ModelLibrary = .shared, name: String,
+                             paintFile: @escaping (String) -> Data? = { _ in nil }) -> [(name: String, data: Data)] {
         let parts: (SceneObject) -> [GLTFScene.LocalPart] = { localParts($0, look: look, catalog: catalog, models: models) }
+        let paintOf: (SceneObject) -> PaintedExport? = { Self.painted($0, look: look, catalog: catalog, models: models, file: paintFile) }
         switch format {
         case .glb:
-            return [("\(name).glb", GLTFScene.glb(ids, in: scene, look: look, parts: parts))]
+            return [("\(name).glb", GLTFScene.glb(ids, in: scene, look: look, parts: parts, painted: paintOf))]
         case .blender:
             let selected = ids.map { scene.restricted(to: $0) } ?? scene
-            return [("\(name) for Blender.zip", BlenderPackage.archive(selected, look: look, preset: preset, parts: parts))]
+            return [("\(name) for Blender.zip", BlenderPackage.archive(selected, look: look, preset: preset, parts: parts, painted: paintOf))]
         default:
             break
         }
-        let meshes = meshes(ids, scene: scene, look: look, catalog: catalog, models: models)
+        let carriesColour = format == .usdz || format == .obj
+        let meshes = meshes(ids, scene: scene, look: look, catalog: catalog, models: models, painted: carriesColour ? paintOf : { _ in nil })
         guard !meshes.isEmpty else { return [] }
         switch format {
         case .usdz: return [("\(name).usdz", SceneExport.usdz(meshes))]
@@ -97,7 +115,7 @@ public enum ModelExport {
         case .threeMF: return [("\(name).3mf", ThreeMFFile.data(meshes))]
         case .obj:
             let (obj, mtl) = OBJFile.text(meshes, materialFile: "\(name).mtl")
-            return [("\(name).obj", Data(obj.utf8)), ("\(name).mtl", Data(mtl.utf8))]
+            return [("\(name).obj", Data(obj.utf8)), ("\(name).mtl", Data(mtl.utf8))] + OBJFile.textures(meshes)
         case .glb, .blender: return []
         }
     }

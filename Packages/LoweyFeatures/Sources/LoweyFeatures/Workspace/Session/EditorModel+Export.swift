@@ -122,6 +122,7 @@ extension EditorModel {
             return FileManager.default.fileExists(atPath: url.path) ? url : nil
         }
         exporter.stillImage = { name in UIImage(contentsOfFile: assets.appendingPathComponent(name).path)?.cgImage }
+        exporter.paintFile = paintFiles
         let gpuInBackground = BackgroundExport.backgroundGPU
         exporter.canRender = { gpuInBackground || UIApplication.shared.applicationState != .background }
         return exporter
@@ -169,7 +170,7 @@ extension EditorModel {
         // The scene as edited for the timeline's keys (glTF, Blender); as shown for the rest.
         let source = format == .glb || format == .blender ? baseScene : displayed.scene
         let files = ModelExport.files(format, ids: ids, scene: source, look: look, preset: lookPreset, catalog: library.catalog, models: library.models,
-                                      name: name)
+                                      name: name, paintFile: paintFiles)
         guard !files.isEmpty else {
             app.show("Nothing to export")
             return []

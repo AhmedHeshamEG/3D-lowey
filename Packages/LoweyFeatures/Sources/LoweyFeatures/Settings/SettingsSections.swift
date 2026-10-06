@@ -10,6 +10,7 @@ struct PreferencesForm: View {
     @AppStorage(AppSettings.sidebarOnRight) private var sidebarOnRight = false
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
     @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
+    @AppStorage(AppSettings.showsLoadChip) private var showsLoadChip = false
     @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
     @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
     @AppStorage(AppSettings.joystickSpeed) private var joystickSpeed = 1.0
@@ -26,6 +27,8 @@ struct PreferencesForm: View {
         Section("Stage") {
             Toggle("Pencil hover preview", isOn: $pencilHover)
             Toggle("Always full resolution", isOn: $fullResolution)
+            Toggle("Smoothness warnings", isOn: $showsLoadChip)
+                .accessibilityIdentifier("settings-load-chip")
             LabeledSlider(title: "Moving around (orbit, pan, zoom)", value: navigationSpeed, range: AppSettings.navigationSpeedRange,
                           format: { String(format: "%.2g×", $0) }) { navigationSpeed = $0 }
             Toggle("Joystick under a selection", isOn: $showsJoystick)
@@ -70,6 +73,14 @@ struct AcknowledgementsView: View {
                     + "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the copyright notice, "
                     + "this list of conditions and the following disclaimer are kept. THIS SOFTWARE IS PROVIDED BY CARNEGIE MELLON UNIVERSITY \"AS IS\" "
                     + "AND ANY EXPRESSED OR IMPLIED WARRANTIES ARE DISCLAIMED.")
+                    .font(.hmm(.footnote))
+                Text("Manifold").font(.hmm(.headline, weight: .semibold))
+                Text("Booleans on solids (union, subtract, intersect). Copyright The Manifold Authors. Apache License 2.0.")
+                    .font(.hmm(.footnote))
+                Text("xatlas").font(.hmm(.headline, weight: .semibold))
+                Text("Lays models flat so they can be painted. Copyright (c) 2018-2020 Jonathan Young; thekla_atlas copyright (c) 2013 Thekla, Inc "
+                    + "and NVIDIA Corporation. MIT License: permission is granted, free of charge, to use, copy, modify and distribute it, provided "
+                    + "the copyright and permission notices are kept. It is provided \"as is\", without warranty of any kind.")
                     .font(.hmm(.footnote))
                 Text("The Kit").font(.hmm(.headline, weight: .semibold))
                 Text("The models in the Library's Sets come from Kenney (kenney.nl: Furniture, Food, Nature, City, Car, Space, Survival and "

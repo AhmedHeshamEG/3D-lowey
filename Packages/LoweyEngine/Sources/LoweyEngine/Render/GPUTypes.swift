@@ -114,6 +114,8 @@ struct ObjectFlags: OptionSet {
     static let ink = ObjectFlags(rawValue: 64)
     /// An onion-skin ghost (CPU side only: ghosts never reach the ID buffer).
     static let ghost = ObjectFlags(rawValue: 128)
+    /// Painted colour (the albedo texture) lies over the base colour (shading only; past the ID buffer's 8 bits).
+    static let painted = ObjectFlags(rawValue: 256)
 }
 
 /// Buffer indices, as in LoweyCommon.h.

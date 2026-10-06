@@ -20,8 +20,9 @@ public enum BlenderPackage {
 
     /// The package for a scene, as zip data.
     public static func archive(_ scene: Scene, look: Look, preset: LookPreset, render: Render = Render(),
-                               parts: @escaping (SceneObject) -> [GLTFScene.LocalPart] = { _ in [] }) -> Data {
-        let glb = GLTFScene.glb(nil, in: scene, look: look, parts: parts)
+                               parts: @escaping (SceneObject) -> [GLTFScene.LocalPart] = { _ in [] },
+                               painted: @escaping (SceneObject) -> PaintedExport? = { _ in nil }) -> Data {
+        let glb = GLTFScene.glb(nil, in: scene, look: look, parts: parts, painted: painted)
         let json = (try? JSONSerialization.data(withJSONObject: settings(scene, look: look, preset: preset, render: render),
                                                 options: [.prettyPrinted, .sortedKeys])) ?? Data("{}".utf8)
         return ZipWriter.storedArchive([
@@ -141,6 +142,10 @@ enum BlenderScript {
         if principled is None or output is None:
             return
         base = principled.inputs["Base Color"].default_value[:]
+        # Painted objects: the image under Base Color keeps its colours; the ramp shades it in grey.
+        painted = principled.inputs["Base Color"].links[0].from_socket if principled.inputs["Base Color"].links else None
+        if painted is not None:
+            base = (1, 1, 1, 1)
         diffuse = nodes.new("ShaderNodeBsdfDiffuse")
         diffuse.inputs["Color"].default_value = (1, 1, 1, 1)
         to_rgb = nodes.new("ShaderNodeShaderToRGB")
@@ -157,7 +162,14 @@ enum BlenderScript {
         emission = nodes.new("ShaderNodeEmission")
         links.new(diffuse.outputs["BSDF"], to_rgb.inputs["Shader"])
         links.new(to_rgb.outputs["Color"], ramp.inputs["Fac"])
-        links.new(ramp.outputs["Color"], emission.inputs["Color"])
+        if painted is not None:
+            multiply = nodes.new("ShaderNodeVectorMath")
+            multiply.operation = "MULTIPLY"
+            links.new(ramp.outputs["Color"], multiply.inputs[0])
+            links.new(painted, multiply.inputs[1])
+            links.new(multiply.outputs["Vector"], emission.inputs["Color"])
+        else:
+            links.new(ramp.outputs["Color"], emission.inputs["Color"])
         links.new(emission.outputs["Emission"], output.inputs["Surface"])
 
 

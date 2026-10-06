@@ -14,6 +14,8 @@ final class SceneCompiler {
     let models: ModelLibrary
     /// Ink strokes' stamps.
     let stamper: BrushStamper
+    /// Painted objects' textures.
+    let paints: PaintTextures
     /// The camera of the frame being compiled (ink strokes turn to face it).
     var eye = SIMD3<Float>.zero
     /// The smear of the object being compiled (and its parts), applied on top of its world matrix.
@@ -21,12 +23,13 @@ final class SceneCompiler {
     /// The outline width of the character part being compiled.
     var activeHull: Float = 0
 
-    init(device: MTLDevice, meshes: MeshCache, textures: TextureStore, models: ModelLibrary, stamper: BrushStamper) {
+    init(device: MTLDevice, meshes: MeshCache, textures: TextureStore, models: ModelLibrary, stamper: BrushStamper, paints: PaintTextures) {
         self.device = device
         self.meshes = meshes
         self.textures = textures
         self.models = models
         self.stamper = stamper
+        self.paints = paints
     }
 
     /// What an object passes down to its children.

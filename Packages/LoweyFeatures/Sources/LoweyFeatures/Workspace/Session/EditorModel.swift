@@ -64,6 +64,7 @@ final class EditorModel {
     var shadowBrush = ShadowBrushSettings()
     var ink = InkSettings()
     var flipbook = FlipbookSettings()
+    var colourPaint = ColourPaintSettings()
     /// The drawing tool the brush library chooses a brush for.
     var brushTool: BrushTool = .ink
     /// The drawing guide over the frame (flipbooks) and on the guide plane (ink); kept in `workspace.json`.
@@ -213,6 +214,9 @@ final class EditorModel {
     /// Shapes shown instead of the document's while a push/pull is dragged (committed as one command on release).
     @ObservationIgnored var kindOverride: [ObjectID: ObjectKind] = [:]
     @ObservationIgnored var performChannels = Set<PerformChannel>()
+    /// Painted strokes commit one after another (`EditorModel+Paint`); each stroke gets a number.
+    @ObservationIgnored var paintCommits: Task<Void, Never>?
+    @ObservationIgnored var paintStrokes = 0
     @ObservationIgnored var performTouching = false
     @ObservationIgnored var virtualCamera: VirtualCameraController?
     @ObservationIgnored var exportTask: Task<Void, Never>?

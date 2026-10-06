@@ -3,6 +3,25 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.6] — Maquette — painting on models (phase M6)
+
+- **Paint ▸ Colour**: paint colour straight onto shapes, modelled parts, solid drawings and placed models with any brush
+  in the library, in the current colour, at the sidebar's size and opacity. Paint, erase, fill a layer, take a colour
+  with the eyedropper. Fingers move around; the Pencil paints.
+- A stroke lands exactly where the camera sees the model, in the frame that shows it: never behind something, never
+  round the back.
+- **Layers** on every painted object: show and hide, opacity, blend modes (Normal, Multiply, Screen, Overlay, Add),
+  add, duplicate, merge down, move, clear, rename, delete.
+- **Project a picture** from Photos or Files onto a model: place it over the stage, then Project.
+- Models are laid flat for painting by xatlas the first time; placed models keep their own colours as a first layer.
+- Every stroke, fill and layer change is one undo step and survives closing the app; modelling a painted object
+  carries its paint onto the new shape.
+- **Exports** carry the paint: glTF and the Blender package, USDZ (Quick Look) and OBJ with its texture.
+- Diagnostics: the painting benchmark (a scripted Pencil paints a 50k-triangle model for 20 seconds).
+- Settings ▸ Licences credits xatlas and Manifold.
+- **Smoothness warnings are off by default.** The chip that says a scene is close to what the iPad keeps smooth only
+  shows when Settings ▸ Stage ▸ Smoothness warnings is on. The stage still adapts its resolution to stay smooth.
+
 ## [0.5] — Maquette — brushes & drawing guides (phase M5)
 
 - **One brush engine** for ink and flipbooks: a tip and a grain stamped along the stroke, with StreamLine, spacing,

@@ -81,6 +81,10 @@ indirect enum MeshKey: Hashable {
     case picture(width: Int32, height: Int32)
     case asset(AssetID, part: Int)
     case painted(MeshKey, dabs: [ShadowDab])
+    /// A painted surface: the unwrap (file or carried key) over the mesh with this fingerprint.
+    case paintSurface(String, mesh: String, dabs: [ShadowDab])
+    /// A placed model's parts as one mesh (painting).
+    case assetPaint(AssetID)
     /// Ink ribbons facing an eye (object-local, centimetres) with a reveal (per mille).
     case ink(DrawingRecipe, eye: SIMD3<Int32>, reveal: Int32)
 

@@ -137,6 +137,7 @@ struct Pipelines {
     let brushFill: MTLRenderPipelineState
     let brushFillEditor: MTLRenderPipelineState
     let brushCompose: MTLRenderPipelineState
+    let paint: PaintPipelines
     let ssao: MTLComputePipelineState
     let lines: MTLComputePipelineState
     let bloomPrefilter: MTLComputePipelineState
@@ -174,6 +175,7 @@ struct Pipelines {
         brushFill = try builder.brush(.layer, vertex: "lw_brushFillVertex", fragment: "lw_brushFillFragment")
         brushFillEditor = try builder.brush(.editor, vertex: "lw_brushFillVertex", fragment: "lw_brushFillFragment")
         brushCompose = try builder.brush(.layer, vertex: "lw_brushLayerVertex", fragment: "lw_brushLayerFragment")
+        paint = try PaintPipelines(builder)
         ssao = try builder.compute("lw_ssao")
         lines = try builder.compute("lw_lines")
         bloomPrefilter = try builder.compute("lw_bloomPrefilter")

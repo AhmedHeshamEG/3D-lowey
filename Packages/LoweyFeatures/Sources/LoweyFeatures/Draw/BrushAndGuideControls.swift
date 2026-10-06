@@ -2,39 +2,6 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// The brush a drawing tool holds, drawing its sample stroke; tap for the brush library.
-struct BrushRow: View {
-    @Bindable var editor: EditorModel
-    let tool: BrushTool
-    @Environment(\.hmmTheme) private var theme
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let brush = editor.currentBrush(for: tool)
-        Button {
-            editor.brushTool = tool
-            editor.sheet = .brushes
-        } label: {
-            HStack(spacing: HmmSpacing.s) {
-                BrushPreviewImage(brushes: editor.app.brushes, brush: brush, width: 120, height: 36,
-                                  color: colorScheme == .dark ? RGBA(0.93, 0.93, 0.94) : RGBA(0.11, 0.11, 0.12))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Brush").font(.hmm(.footnote)).foregroundStyle(theme.text2)
-                    Text(brush.name).font(.hmm(.body, weight: .semibold)).foregroundStyle(theme.text).lineLimit(1)
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").foregroundStyle(theme.text3)
-            }
-            .padding(HmmSpacing.xs)
-            .background(theme.surface2, in: RoundedRectangle(cornerRadius: HmmRadius.control, style: .continuous))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Brush: \(brush.name)")
-        .accessibilityIdentifier("brush-\(tool.rawValue)")
-    }
-}
-
 /// A drawing guide's controls: which guide, Drawing Assist, and the guide's own settings. Flipbooks get every kind
 /// on the frame; ink gets the ones that make sense on a 3D plane (the stage already draws in real perspective).
 struct DrawingGuideControls: View {

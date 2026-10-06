@@ -10,9 +10,11 @@ public struct ExportMesh: Hashable, Sendable {
     public var emissiveStrength: Double
     public var roughness: Double
     public var metallic: Double
+    /// Painted colour (an opaque PNG over the mesh's uvs); `color` multiplies it, so it's white then.
+    public var texture: Data?
 
     public init(name: String, transform: Transform, mesh: MeshData, color: RGBA, emissive: RGBA? = nil, emissiveStrength: Double = 0,
-                roughness: Double = 0.85, metallic: Double = 0) {
+                roughness: Double = 0.85, metallic: Double = 0, texture: Data? = nil) {
         self.name = name
         self.transform = transform
         self.mesh = mesh
@@ -21,6 +23,7 @@ public struct ExportMesh: Hashable, Sendable {
         self.emissiveStrength = emissiveStrength
         self.roughness = roughness
         self.metallic = metallic
+        self.texture = texture
     }
 }
 
@@ -31,22 +34,36 @@ public struct ExportMaterial: Hashable, Sendable {
     public var emissiveStrength: Double
     public var roughness: Double
     public var metallic: Double
+    /// Painted colour (an opaque PNG); `color` multiplies it.
+    public var texture: Data?
 
-    public init(color: RGBA, emissive: RGBA? = nil, emissiveStrength: Double = 0, roughness: Double = 0.85, metallic: Double = 0) {
+    public init(color: RGBA, emissive: RGBA? = nil, emissiveStrength: Double = 0, roughness: Double = 0.85, metallic: Double = 0,
+                texture: Data? = nil) {
         self.color = color
         self.emissive = emissive
         self.emissiveStrength = emissiveStrength
         self.roughness = roughness
         self.metallic = metallic
+        self.texture = texture
+    }
+
+    /// The material over a painted texture: white (the texture carries the colour), the rest as it was.
+    public func painted(_ texture: Data) -> ExportMaterial {
+        var material = self
+        material.color = RGBA(1, 1, 1, color.a)
+        material.texture = texture
+        return material
     }
 }
 
 /// 3D export (glTF binary and USDZ) of the selection or the whole scene, written in pure Swift.
 public enum SceneExport {
     /// Meshes for blockout and drawn objects. Other kinds (library models, prefab instances) come
-    /// from `extra`, which the render layer fills from the loaded entities.
+    /// from `extra`, which the render layer fills from the loaded entities. `painted` gives a painted object's paint
+    /// mesh and texture (left out for printing, which wants the closed shape).
     public static func meshes(
-        _ ids: [ObjectID]?, in scene: Scene, look: Look, extra: (SceneObject, Transform) -> [ExportMesh] = { _, _ in [] }
+        _ ids: [ObjectID]?, in scene: Scene, look: Look, extra: (SceneObject, Transform) -> [ExportMesh] = { _, _ in [] },
+        painted: (SceneObject) -> PaintedExport? = { _ in nil }
     ) -> [ExportMesh] {
         let roots = ids ?? scene.roots
         var visited = Set<ObjectID>()
@@ -55,7 +72,13 @@ public enum SceneExport {
             for id in scene.subtree(of: root) where visited.insert(id).inserted {
                 guard let object = scene.objects[id], scene.isEffectivelyVisible(id) else { continue }
                 let world = scene.worldTransform(of: id)
-                if let data = localMesh(of: object, look: look), !data.isEmpty {
+                if let paint = painted(object) {
+                    let surface = material(of: object, look: look).painted(paint.texture)
+                    result.append(ExportMesh(
+                        name: object.name, transform: world, mesh: paint.mesh, color: surface.color, emissive: surface.emissive,
+                        emissiveStrength: surface.emissiveStrength, roughness: surface.roughness, metallic: surface.metallic, texture: paint.texture
+                    ))
+                } else if let data = localMesh(of: object, look: look), !data.isEmpty {
                     let surface = material(of: object, look: look)
                     result.append(ExportMesh(
                         name: object.name, transform: world, mesh: data, color: surface.color, emissive: surface.emissive,

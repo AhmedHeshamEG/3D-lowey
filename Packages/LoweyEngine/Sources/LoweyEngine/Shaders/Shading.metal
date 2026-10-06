@@ -169,7 +169,12 @@ static inline SurfaceInput lw_surfaceInput(SurfaceVaryings in, constant ObjectUn
     if ((object.ids.z & LW_FLAG_TEXTURED) != 0u) {
         float4 texel = albedo.sample(lw_linearSampler, in.uv);
         if (look.model.y > 0.5) { texel.rgb = floor(texel.rgb * 6.0 + 0.5) / 6.0; }
-        base *= texel;
+        // Painted: the paint lies over the object's own colour; a model's texture multiplies it.
+        if ((object.ids.z & LW_FLAG_PAINTED) != 0u) {
+            base.rgb = mix(base.rgb, texel.rgb, texel.a);
+        } else {
+            base *= texel;
+        }
     }
     s.base = base.rgb;
     s.alpha = base.a;
@@ -203,7 +208,10 @@ fragment ShadeOut lw_shade(SurfaceVaryings in [[stage_in]], bool frontFacing [[f
     ShadeOut out;
     if ((object.ids.z & LW_FLAG_UNLIT) != 0u) {
         float4 base = object.baseColor;
-        if ((object.ids.z & LW_FLAG_TEXTURED) != 0u) { base *= albedo.sample(lw_linearSampler, in.uv); }
+        if ((object.ids.z & LW_FLAG_TEXTURED) != 0u) {
+            float4 texel = albedo.sample(lw_linearSampler, in.uv);
+            if ((object.ids.z & LW_FLAG_PAINTED) != 0u) { base.rgb = mix(base.rgb, texel.rgb, texel.a); } else { base *= texel; }
+        }
         out.color = float4(base.rgb + object.emissive.rgb, base.a);
         out.light = 1.0;
         return out;

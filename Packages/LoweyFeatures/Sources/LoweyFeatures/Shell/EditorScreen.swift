@@ -13,6 +13,7 @@ struct EditorScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.preferredPencilSqueezeAction) private var squeezeAction
     @AppStorage(AppSettings.showsPerformanceHUD) private var showsHUD = false
+    @AppStorage(AppSettings.showsLoadChip) private var showsLoadChip = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -71,6 +72,12 @@ struct EditorScreen: View {
             // Overlays sit on 3D positions and frame coordinates: they never mirror.
             StageOverlayView(editor: editor)
                 .environment(\.layoutDirection, .leftToRight)
+            // A picture being placed to project: in the stage's own points, like the stage.
+            if editor.tool == .paint, editor.colourPaint.picture != nil {
+                PaintPictureOverlay(editor: editor)
+                    .ignoresSafeArea(edges: [.top, .horizontal])
+                    .environment(\.layoutDirection, .leftToRight)
+            }
             if editor.chromeHidden {
                 ChromeRestoreButton(editor: editor)
             } else {
@@ -80,7 +87,7 @@ struct EditorScreen: View {
             }
             if editor.faceActive { FacePreviewPanel(editor: editor, monitor: editor.faceMonitor) }
             if showsHUD { PerformanceHUDOverlay(monitor: editor.performance) }
-            if !editor.chromeHidden {
+            if showsLoadChip, !editor.chromeHidden {
                 LoadChip(editor: editor)
                     .frame(maxHeight: .infinity, alignment: .bottom)
                     .padding(.bottom, HmmSpacing.m)

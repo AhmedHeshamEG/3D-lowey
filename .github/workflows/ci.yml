@@ -50,18 +50,21 @@ jobs:
             core:
               - 'Packages/LoweyCore/**'
               - 'Packages/HmmKit/**'
+              - 'Packages/XAtlas/**'
               - '.swiftlint.yml'
               - '.swiftformat'
               - '.github/workflows/ci.yml'
             engine:
               - 'Packages/LoweyEngine/**'
               - 'Packages/LoweyCore/Sources/**'
+              - 'Packages/XAtlas/Sources/**'
               - 'Packages/HmmKit/Sources/**'
               - '.github/workflows/ci.yml'
             features:
               - 'Packages/LoweyFeatures/**'
               - 'Packages/LoweyEngine/Sources/**'
               - 'Packages/LoweyCore/Sources/**'
+              - 'Packages/XAtlas/Sources/**'
               - 'Packages/HmmKit/Sources/**'
               - 'App/**'
               - 'AppUITests/**'
@@ -124,8 +127,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: Packages/LoweyCore/.build
-          key: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}-${{ github.sha }}
-          restore-keys: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift') }}-
+          key: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift', 'Packages/XAtlas/Package.swift') }}-${{ github.sha }}
+          restore-keys: core-build-${{ hashFiles('Packages/LoweyCore/Package.swift', 'Packages/HmmKit/Package.swift', 'Packages/XAtlas/Package.swift') }}-
       - name: Test (journal, save → load round trips, package upgrades, Look system, geometry)
         working-directory: Packages/LoweyCore
         # Serial: parallel runs corrupt the coverage profile.
@@ -143,14 +146,14 @@ jobs:
         run: |
           PROFILE=$(dirname "$(swift test --show-codecov-path)")/default.profdata
           BINARY=$(find .build -name 'LoweyCorePackageTests.xctest' -type f | head -1)
-          llvm-cov report "$BINARY" -instr-profile="$PROFILE" -ignore-filename-regex='Tests|\.build|HmmKit' | tee coverage.txt
+          llvm-cov report "$BINARY" -instr-profile="$PROFILE" -ignore-filename-regex='Tests|\.build|HmmKit|XAtlas' | tee coverage.txt
           COVERAGE=$(grep TOTAL coverage.txt | awk '{print $10}' | tr -d '%')
           echo "Line coverage: $COVERAGE%"
           echo "### LoweyCore line coverage: ${COVERAGE}%" >> "$GITHUB_STEP_SUMMARY"
           awk -v c="$COVERAGE" 'BEGIN { exit !(c >= 80) }'
 
   interop:
-    name: Print files (slicer check) + Blender package (Blender ${{ matrix.blender }})
+    name: Print files (slicer check) + Blender package + painted glTF (Blender ${{ matrix.blender }})
     needs: core-tests
     runs-on: ubuntu-latest
     strategy:
@@ -184,11 +187,31 @@ jobs:
           grep -q "MAQUETTE: rendered" blender.log
           test -s renders/check.png
           ls *.blend
+      - name: The painted glTF passes the Khronos glTF Validator
+        if: matrix.blender == '5.2.1'
+        run: |
+          npm install --no-save --silent gltf-validator@2.0.0-dev.3.10
+          node Tools/validate_gltf.mjs acceptance/painted/painted.glb
+      - name: The painted glTF shows its paint in Blender
+        run: |
+          set -o pipefail
+          "$GITHUB_WORKSPACE/blender-${{ matrix.blender }}-linux-x64/blender" -b --factory-startup --python-exit-code 1             --python Tools/check_painted_render.py -- acceptance/painted/painted.glb acceptance/painted/render.png 2>&1             | tee painted.log | grep -E "MAQUETTE|Error|Traceback" || true
+          grep -q "MAQUETTE: paint shows" painted.log
+      - name: A painted Blender package builds and renders
+        working-directory: acceptance/painted-blender
+        run: |
+          set -o pipefail
+          "$GITHUB_WORKSPACE/blender-${{ matrix.blender }}-linux-x64/blender" -b --factory-startup --python setup_maquette.py -- --check 2>&1             | tee blender.log | grep -E "MAQUETTE|Error|Traceback" || true
+          grep -q "MAQUETTE: rendered" blender.log
+          test -s renders/check.png
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: blender-check-${{ matrix.blender }}
-          path: acceptance/blender-package/renders
+          path: |
+            acceptance/blender-package/renders
+            acceptance/painted-blender/renders
+            acceptance/painted/render.png
           retention-days: 7
 
   tools:

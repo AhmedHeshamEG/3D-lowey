@@ -85,6 +85,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     var snapped: (shape: QuickShape.Result, anchor: CGPoint, pressure: Double)?
     /// The Shadow Brush's target and its world mesh (raycast on the CPU for every sample).
     var brushTarget: (id: ObjectID, mesh: MeshData)?
+    /// Paint ▸ Colour: the object and layer the stroke paints, and the stroke's number.
+    var paintStroke: (object: ObjectID, layer: String, number: Int)?
     /// Ink ▸ Erase / Select: the Pencil's path, and where a drag of picked strokes was last.
     var inkPath: [CGPoint] = []
     var inkDragLast: CGPoint?
@@ -199,6 +201,10 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         }
         if editor.tool == .model, !editor.pickActive {
             editor.modelTap(at: point)
+            return
+        }
+        if editor.tool == .paint, !editor.pickActive {
+            editor.paintTap(at: point)
             return
         }
         let picked = stage.pickObject(at: point)

@@ -2,8 +2,8 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Paint: on objects and over the ground. The Shadow Brush paints where an object's toon shadow falls; Scatter paints
-/// copies of the selection across the ground. Colour painting on models joins them with the brush engine.
+/// Paint: on objects and over the ground. Colour paints straight onto models with the brush engine; the Shadow Brush
+/// paints where an object's toon shadow falls; Scatter paints copies of the selection across the ground.
 struct PaintPanel: View {
     @Bindable var editor: EditorModel
 
@@ -11,6 +11,8 @@ struct PaintPanel: View {
         HmmPanel("Paint", width: 360, sizing: HmmPanelSizing(id: "paint"), close: { editor.openPanel = nil }) {
             VStack(alignment: .leading, spacing: HmmSpacing.m) {
                 HStack(spacing: HmmSpacing.xs) {
+                    ChoiceChip(title: "Colour", systemName: "paintbrush.pointed", isOn: editor.tool == .paint) { editor.tool = .paint }
+                        .accessibilityIdentifier("tool-paint")
                     ChoiceChip(title: "Shadow Brush", systemName: "circle.lefthalf.striped.horizontal", isOn: editor.tool == .shadowBrush) {
                         editor.tool = .shadowBrush
                     }
@@ -18,10 +20,14 @@ struct PaintPanel: View {
                     ChoiceChip(title: "Scatter", systemName: "circle.hexagongrid", isOn: editor.tool == .scatter) { editor.tool = .scatter }
                         .accessibilityIdentifier("tool-scatter")
                 }
-                if editor.tool == .scatter { scatter } else { shadowBrush }
+                switch editor.tool {
+                case .scatter: scatter
+                case .shadowBrush: shadowBrush
+                default: ColourPaintSection(editor: editor)
+                }
             }
         }
-        .onAppear { if !editor.tool.paintsSurfaces { editor.tool = .shadowBrush } }
+        .onAppear { if !editor.tool.paintsSurfaces { editor.tool = .paint } }
     }
 
     @ViewBuilder private var scatter: some View {

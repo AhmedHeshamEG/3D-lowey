@@ -44,6 +44,10 @@ struct EditorSidebar: View {
             return (HmmSidebarSlider("Width", value: $editor.draw.width, in: 0.005 ... 0.4, format: { "\(Int(($0 * 100).rounded())) cm" },
                                      onEditingChanged: editor.setBrushResizing),
                     HmmSidebarSlider("Smoothing", value: $editor.draw.smoothing, in: 0 ... 1))
+        case .paint:
+            return (HmmSidebarSlider("Size", value: $editor.colourPaint.size, in: 1 ... 120, format: { "\(Int($0.rounded())) pt" },
+                                     onEditingChanged: editor.setBrushResizing),
+                    HmmSidebarSlider("Opacity", value: $editor.colourPaint.opacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" }))
         case .shadowBrush:
             return (HmmSidebarSlider("Brush size", value: $editor.shadowBrush.radius, in: 0.02 ... 1, format: { "\(Int(($0 * 100).rounded())) cm" },
                                      onEditingChanged: editor.setBrushResizing),
@@ -75,6 +79,7 @@ struct ToolOptionsBar: View {
         case .flipbook: FlipbookOptionsBar(editor: editor)
         case .draw: DrawOptionsBar(editor: editor)
         case .shadowBrush: ShadowBrushOptionsBar(editor: editor)
+        case .paint: PaintOptionsBar(editor: editor)
         case .scatter: ScatterOptionsBar(editor: editor)
         case .model: ModelOptionsBar(editor: editor)
         case .select, .lasso: EmptyView()

@@ -33,6 +33,12 @@ public final class ExportSession {
     public var mediaURL: (String) -> URL? = { _ in nil }
     /// Stills in the project's assets.
     public var stillImage: (String) -> CGImage? = { _ in nil }
+    /// Painted objects' files in the project's assets.
+    public var paintFile: @Sendable (String) -> Data? {
+        get { builder.paintFile }
+        set { builder.paintFile = newValue }
+    }
+
     /// Whether the GPU may be used now (iOS suspends GPU work in the background: the export waits instead).
     public var canRender: () -> Bool = { true }
     public var onWaiting: (Bool) -> Void = { _ in }

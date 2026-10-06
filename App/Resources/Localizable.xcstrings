@@ -913,6 +913,34 @@
         }
       }
     },
+    "Add a layer": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi un livello"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف طبقة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi un livello"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف طبقة"
+          }
+        }
+      }
+    },
     "Add Marker": {
       "localizations": {
         "it": {
@@ -1261,6 +1289,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "ساعة من العمل، %@"
+          }
+        }
+      }
+    },
+    "An object holds up to %@ layers": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un oggetto può avere fino a %@ livelli"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحمل الجسم حتى %@ طبقة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un oggetto può avere fino a %@ livelli"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحمل الجسم حتى %@ طبقة"
           }
         }
       }
@@ -2081,6 +2137,22 @@
         }
       }
     },
+    "Booleans on solids (union, subtract, intersect). Copyright The Manifold Authors. Apache License 2.0.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operazioni booleane sui solidi (unione, sottrazione, intersezione). Copyright The Manifold Authors. Apache License 2.0."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العمليات المنطقية على المجسمات (اتحاد، طرح، تقاطع). Copyright The Manifold Authors. Apache License 2.0."
+          }
+        }
+      }
+    },
     "Both change any time from the Look button.": {
       "localizations": {
         "it": {
@@ -2141,6 +2213,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الجسر مفعّل (هذه الشبكة المحلية فقط)"
+          }
+        }
+      }
+    },
+    "Bringing the paint onto the new shape": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porto la pittura sulla nuova forma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُنقل الطلاء إلى الشكل الجديد"
           }
         }
       }
@@ -2797,6 +2885,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "نظيف"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Svuota"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Svuota"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح"
           }
         }
       }
@@ -3633,6 +3749,118 @@
         }
       }
     },
+    "Couldn't save the fill: %@": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare il riempimento: %@"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ التعبئة: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare il riempimento: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ التعبئة: %@"
+          }
+        }
+      }
+    },
+    "Couldn't save the merged layer: %@": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare il livello unito: %@"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ الطبقة المدمجة: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare il livello unito: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ الطبقة المدمجة: %@"
+          }
+        }
+      }
+    },
+    "Couldn't save the painting's files: %@": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare i file della pittura: %@"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ ملفات الطلاء: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare i file della pittura: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ ملفات الطلاء: %@"
+          }
+        }
+      }
+    },
+    "Couldn't save the stroke: %@": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare il tratto: %@"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ الضربة: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare il tratto: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ الضربة: %@"
+          }
+        }
+      }
+    },
     "Couldn't save the version: %@": {
       "localizations": {
         "it": {
@@ -4081,6 +4309,34 @@
         }
       }
     },
+    "Delete layer": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina livello"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احذف الطبقة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina livello"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احذف الطبقة"
+          }
+        }
+      }
+    },
     "Delete set": {
       "localizations": {
         "it": {
@@ -4365,6 +4621,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "إنهاء النمذجة"
+          }
+        }
+      }
+    },
+    "Done painting": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine pittura"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتهيت من الطلاء"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine pittura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتهيت من الطلاء"
           }
         }
       }
@@ -5809,6 +6093,34 @@
         }
       }
     },
+    "Eyedropper": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contagocce"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القطّارة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contagocce"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القطّارة"
+          }
+        }
+      }
+    },
     "Face capture failed: %@": {
       "localizations": {
         "it": {
@@ -6013,6 +6325,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "تبقى القدمان على الأرض"
+          }
+        }
+      }
+    },
+    "Files": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات"
+          }
+        }
+      }
+    },
+    "Fill": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riempi"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعبئة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riempi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعبئة"
           }
         }
       }
@@ -6593,6 +6961,34 @@
         }
       }
     },
+    "For painting": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per dipingere"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للطلاء"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per dipingere"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للطلاء"
+          }
+        }
+      }
+    },
     "Forget": {
       "localizations": {
         "it": {
@@ -6973,6 +7369,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإيماءات"
+          }
+        }
+      }
+    },
+    "Getting %@ ready to paint": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparo %@ per dipingere"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُجهَّز %@ للطلاء"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparo %@ per dipingere"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُجهَّز %@ للطلاء"
           }
         }
       }
@@ -8593,6 +9017,106 @@
         }
       }
     },
+    "Layer": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livello"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطبقة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livello"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطبقة"
+          }
+        }
+      }
+    },
+    "Layer opacity": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opacità del livello"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عتامة الطبقة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opacità del livello"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عتامة الطبقة"
+          }
+        }
+      }
+    },
+    "Layers": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livelli"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطبقات"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livelli"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطبقات"
+          }
+        }
+      }
+    },
+    "Lays models flat so they can be painted. Copyright (c) 2018-2020 Jonathan Young; thekla_atlas copyright (c) 2013 Thekla, Inc ": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distende i modelli per poterli dipingere. Copyright (c) 2018-2020 Jonathan Young; thekla_atlas copyright (c) 2013 Thekla, Inc "
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبسط النماذج لتُطلى. Copyright (c) 2018-2020 Jonathan Young; thekla_atlas copyright (c) 2013 Thekla, Inc "
+          }
+        }
+      }
+    },
     "Left and right": {
       "localizations": {
         "it": {
@@ -9313,6 +9837,22 @@
         }
       }
     },
+    "Manifold": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manifold"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manifold"
+          }
+        }
+      }
+    },
     "Maquette": {
       "localizations": {
         "it": {
@@ -9469,6 +10009,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "لقطة متوسطة"
+          }
+        }
+      }
+    },
+    "Merge down": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unisci sotto"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادمج مع ما تحتها"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unisci sotto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادمج مع ما تحتها"
           }
         }
       }
@@ -9825,6 +10393,34 @@
         }
       }
     },
+    "Move down": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sposta giù"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقل للأسفل"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sposta giù"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقل للأسفل"
+          }
+        }
+      }
+    },
     "Move in hierarchy": {
       "localizations": {
         "it": {
@@ -9949,6 +10545,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "نقل إلى المستوى الأعلى"
+          }
+        }
+      }
+    },
+    "Move up": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sposta su"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقل للأعلى"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sposta su"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقل للأعلى"
           }
         }
       }
@@ -11201,6 +11825,34 @@
         }
       }
     },
+    "Or start a stroke on it with the Pencil.": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oppure inizia un tratto sopra con la Pencil."
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو ابدأ ضربة عليه بالقلم."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oppure inizia un tratto sopra con la Pencil."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو ابدأ ضربة عليه بالقلم."
+          }
+        }
+      }
+    },
     "Orbit": {
       "localizations": {
         "it": {
@@ -11281,6 +11933,34 @@
         }
       }
     },
+    "Overlay": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sovrapponi"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تراكب"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sovrapponi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تراكب"
+          }
+        }
+      }
+    },
     "Overshoot": {
       "localizations": {
         "it": {
@@ -11309,6 +11989,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "التلوين"
+          }
+        }
+      }
+    },
+    "Paint %@": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipingi %@"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اطلِ %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipingi %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اطلِ %@"
+          }
+        }
+      }
+    },
+    "Paint layers": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livelli di pittura"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طبقات الطلاء"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livelli di pittura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طبقات الطلاء"
           }
         }
       }
@@ -11357,6 +12093,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "رسم الظلال"
+          }
+        }
+      }
+    },
+    "Painting, 20 s: a scripted Pencil paints a model of 50 000 triangles. Same pass rule.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pittura, 20 s: una Pencil automatica dipinge un modello di 50 000 triangoli. Stessa regola per superarlo."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطلاء، 20 ث: قلم مبرمج يطلي نموذجًا من 50 000 مثلث. قاعدة النجاح نفسها."
           }
         }
       }
@@ -11681,6 +12433,34 @@
         }
       }
     },
+    "Photos": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور"
+          }
+        }
+      }
+    },
     "Pick": {
       "localizations": {
         "it": {
@@ -11793,6 +12573,62 @@
         }
       }
     },
+    "Picked a colour": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colore preso"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُخذ اللون"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colore preso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُخذ اللون"
+          }
+        }
+      }
+    },
+    "Picture to project": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagine da proiettare"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة للإسقاط"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagine da proiettare"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة للإسقاط"
+          }
+        }
+      }
+    },
     "Pill": {
       "localizations": {
         "it": {
@@ -11805,6 +12641,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "كبسولة"
+          }
+        }
+      }
+    },
+    "Place it over the model with your fingers, then Project: it lands on what the camera sees.": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posizionala sul modello con le dita, poi Proietta: finisce su ciò che vede la camera."
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضعها فوق النموذج بأصابعك ثم اضغط إسقاط: تقع على ما تراه الكاميرا."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posizionala sul modello con le dita, poi Proietta: finisce su ciò che vede la camera."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضعها فوق النموذج بأصابعك ثم اضغط إسقاط: تقع على ما تراه الكاميرا."
           }
         }
       }
@@ -12225,6 +13089,34 @@
         }
       }
     },
+    "Project a picture": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proietta un'immagine"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسقِط صورة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proietta un'immagine"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسقِط صورة"
+          }
+        }
+      }
+    },
     "Project file": {
       "localizations": {
         "it": {
@@ -12397,6 +13289,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "دفع الظل"
+          }
+        }
+      }
+    },
+    "Put the picture away": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Togli l'immagine"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أبعِد الصورة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Togli l'immagine"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أبعِد الصورة"
           }
         }
       }
@@ -12801,6 +13721,34 @@
         }
       }
     },
+    "Remove all paint": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Togli tutta la pittura"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزل كل الطلاء"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Togli tutta la pittura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزل كل الطلاء"
+          }
+        }
+      }
+    },
     "Remove from library": {
       "localizations": {
         "it": {
@@ -12877,6 +13825,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "إعادة التسمية والوسوم"
+          }
+        }
+      }
+    },
+    "Rename layer": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina livello"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعد تسمية الطبقة"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina livello"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعد تسمية الطبقة"
           }
         }
       }
@@ -13485,6 +14461,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تشغيل اختبار أداء الرئيسية"
+          }
+        }
+      }
+    },
+    "Run the painting benchmark": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia il benchmark di pittura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّل اختبار أداء الطلاء"
           }
         }
       }
@@ -15089,6 +16081,34 @@
         }
       }
     },
+    "Size and opacity are the sidebar's sliders. Fingers move around; the Pencil paints.": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dimensione e opacità sono i cursori della barra laterale. Le dita si muovono nella scena; la Pencil dipinge."
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحجم والعتامة هما منزلقا الشريط الجانبي. الأصابع تتنقّل في المشهد؛ القلم يطلي."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dimensione e opacità sono i cursori della barra laterale. Le dita si muovono nella scena; la Pencil dipinge."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحجم والعتامة هما منزلقا الشريط الجانبي. الأصابع تتنقّل في المشهد؛ القلم يطلي."
+          }
+        }
+      }
+    },
     "Size variety": {
       "localizations": {
         "it": {
@@ -15261,6 +16281,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "التنعيم"
+          }
+        }
+      }
+    },
+    "Smoothness warnings": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisi di fluidità"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنبيهات السلاسة"
           }
         }
       }
@@ -16721,6 +17757,34 @@
         }
       }
     },
+    "Tap a shape, a modelled part or a placed model to paint it.": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca una forma, una parte modellata o un modello inserito per dipingerlo."
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على شكل أو جزء منمذج أو نموذج موضوع لتطليه."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca una forma, una parte modellata o un modello inserito per dipingerlo."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على شكل أو جزء منمذج أو نموذج موضوع لتطليه."
+          }
+        }
+      }
+    },
     "Tap a sound in the timeline to edit it.": {
       "localizations": {
         "it": {
@@ -17489,6 +18553,22 @@
         }
       }
     },
+    "The paint couldn't be brought onto the new shape": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile portare la pittura sulla nuova forma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر نقل الطلاء إلى الشكل الجديد"
+          }
+        }
+      }
+    },
     "The scene's Look": {
       "localizations": {
         "it": {
@@ -17857,6 +18937,34 @@
         }
       }
     },
+    "This can't be painted (try a shape, a modelled part or a placed model)": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo non si può dipingere (prova una forma, una parte modellata o un modello inserito)"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن طلاء هذا (جرّب شكلًا أو جزءًا منمذجًا أو نموذجًا موضوعًا)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo non si può dipingere (prova una forma, una parte modellata o un modello inserito)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن طلاء هذا (جرّب شكلًا أو جزءًا منمذجًا أو نموذجًا موضوعًا)"
+          }
+        }
+      }
+    },
     "This iPad": {
       "localizations": {
         "it": {
@@ -17905,6 +19013,34 @@
         }
       }
     },
+    "This layer is hidden": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo livello è nascosto"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الطبقة مخفية"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo livello è nascosto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الطبقة مخفية"
+          }
+        }
+      }
+    },
     "This model has no clips. Import clips made for the same skeleton (Mixamo, Quaternius…) and they play here.": {
       "localizations": {
         "it": {
@@ -17917,6 +19053,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا مقاطع لهذا النموذج. استورد مقاطع مصنوعة للهيكل نفسه (Mixamo، Quaternius…) وستعمل هنا."
+          }
+        }
+      }
+    },
+    "This model hasn't loaded yet": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo modello non è ancora caricato"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُحمَّل هذا النموذج بعد"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo modello non è ancora caricato"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُحمَّل هذا النموذج بعد"
+          }
+        }
+      }
+    },
+    "This model moves with a skeleton: painting on characters arrives with rigging": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo modello si muove con uno scheletro: la pittura sui personaggi arriva con il rigging"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتحرك هذا النموذج بهيكل عظمي: يأتي طلاء الشخصيات مع التحريك بالعظام"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo modello si muove con uno scheletro: la pittura sui personaggi arriva con il rigging"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتحرك هذا النموذج بهيكل عظمي: يأتي طلاء الشخصيات مع التحريك بالعظام"
           }
         }
       }
@@ -17965,6 +19157,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا المشهد أكثر مما يحافظ هذا الآيباد على سلاسته"
+          }
+        }
+      }
+    },
+    "This shape couldn't be laid flat for painting": {
+      "localizations": {
+        "paint-it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile distendere questa forma per dipingerla"
+          }
+        },
+        "paint-ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر بسط هذا الشكل للطلاء"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile distendere questa forma per dipingerla"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر بسط هذا الشكل للطلاء"
           }
         }
       }
@@ -19629,6 +20849,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اكتبه بدءًا من رأس التشغيل"
+          }
+        }
+      }
+    },
+    "xatlas": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xatlas"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xatlas"
           }
         }
       }
