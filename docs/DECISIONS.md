@@ -1329,3 +1329,11 @@ painting weights and placing a person's dots use a Rig tool on the stage with it
 sidebar's sliders (size and strength) while painting weights, like Paint ▸ Colour. Joints are dragged on the stage with
 the Select tool. A rigged object joins the cast as a "Drawn rig". No new button in the clusters. *Rejected:* a sixth
 making tool (the ≤ 5 rule); rigging inside Model (Model makes shapes; a skeleton is what turns one into a character).
+
+**D-175 — The thirty-second block is timed on CI against 45 seconds.** The M3 acceptance ("a 40 × 20 × 10 mm block
+with a 6 mm hole in under 30 s of taps") is about a person on an iPad. On CI's shared simulator every XCUITest tap
+costs the runner a second or more, and the same taps took 32–38 s on the M5, M6 and M7 merges while passing on their
+PRs. The test still times only the taps and attaches the number to every run; it fails past 45 s, which catches a real
+slowdown (an extra step, a stalled command), and the 30 s goes on the device checklist. *Rejected:* re-running main
+until a fast runner comes along (it hides real slowdowns the same way); dropping the timing (it's the point of the
+test).

@@ -274,7 +274,9 @@ extension EditorModel {
     func libraryRigs() -> [AssetID: RigAsset] {
         var result = rigs()
         for object in baseScene.objects.values {
-            guard let id = object.kind.assetID, result[id] == nil, let rig = library.models.rig(id) else { continue }
+            // Only models the library knows are rigged: most placed models aren't, and this runs on every redraw.
+            guard let id = object.kind.assetID, result[id] == nil, library.manifest.asset(id)?.rig.isRigged == true,
+                  let rig = library.models.rig(id) else { continue }
             result[id] = rig
         }
         return result
