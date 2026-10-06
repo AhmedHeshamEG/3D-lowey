@@ -3,6 +3,11 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.6] — Maquette — painting on models (phase M6)
+
+- **Smoothness warnings are off by default.** The chip that says a scene is close to what the iPad keeps smooth only
+  shows when Settings ▸ Stage ▸ Smoothness warnings is on. The stage still adapts its resolution to stay smooth.
+
 ## [0.5] — Maquette — brushes & drawing guides (phase M5)
 
 - **One brush engine** for ink and flipbooks: a tip and a grain stamped along the stroke, with StreamLine, spacing,

@@ -243,7 +243,7 @@ Starter templates are Core's `StarterTemplate`: a Look and Mood to suggest, a st
 `DynamicScale` moves in and the sun's shadow-map size; the frame budget comes from the screen's refresh. Exports,
 stills and thumbnails always render `.full`. `PerformanceMonitor` feeds hmm-kit's `LoadMeter` with each frame's work
 (GPU time, CPU encode time) and the scene's cost (`SceneCost`); the `LoadChip` appears only near the limit, with the
-fixes that help.
+fixes that help, and only when Settings ▸ Stage ▸ Smoothness warnings is on (`AppSettings.showsLoadChip`, off by default).
 
 ## Export
 

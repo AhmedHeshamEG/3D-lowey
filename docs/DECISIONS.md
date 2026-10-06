@@ -1140,3 +1140,9 @@ Draw ▸ Flipbook; tapping it opens the brush library sheet, and Brush Studio op
 drawing guides are a section of the same pages. Diagnostics gains Apple Pencil. No new button anywhere in the frozen
 layout; Paint (M6) opens the same sheet for its own tool. *Rejected:* a brush button in the sidebar (the sidebar holds
 the two context sliders and undo); a Brushes item in Actions (brushes belong to the tool that draws).
+
+**D-151 — The load chip is off by default.** Device note after 0.5: the "close to what this iPad keeps smooth" chip
+kept appearing while working and read as nagging, not help. Settings ▸ Stage gains *Smoothness warnings* (off); the
+load meter still measures and dynamic scale still lowers the preview, so nothing about smoothness itself changes, and
+the benchmark and the Performance HUD stay in Diagnostics. *Rejected:* removing the meter (it still feeds dynamic scale
+and the benchmark); raising its thresholds (they're uncalibrated until the device JSONs arrive, D-97).

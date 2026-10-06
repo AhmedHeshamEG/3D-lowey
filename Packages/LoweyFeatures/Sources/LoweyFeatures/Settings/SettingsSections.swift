@@ -10,6 +10,7 @@ struct PreferencesForm: View {
     @AppStorage(AppSettings.sidebarOnRight) private var sidebarOnRight = false
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
     @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
+    @AppStorage(AppSettings.showsLoadChip) private var showsLoadChip = false
     @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
     @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
     @AppStorage(AppSettings.joystickSpeed) private var joystickSpeed = 1.0
@@ -26,6 +27,8 @@ struct PreferencesForm: View {
         Section("Stage") {
             Toggle("Pencil hover preview", isOn: $pencilHover)
             Toggle("Always full resolution", isOn: $fullResolution)
+            Toggle("Smoothness warnings", isOn: $showsLoadChip)
+                .accessibilityIdentifier("settings-load-chip")
             LabeledSlider(title: "Moving around (orbit, pan, zoom)", value: navigationSpeed, range: AppSettings.navigationSpeedRange,
                           format: { String(format: "%.2g×", $0) }) { navigationSpeed = $0 }
             Toggle("Joystick under a selection", isOn: $showsJoystick)

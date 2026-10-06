@@ -15265,6 +15265,22 @@
         }
       }
     },
+    "Smoothness warnings": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisi di fluidità"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنبيهات السلاسة"
+          }
+        }
+      }
+    },
     "Snap keys, cuts and the playhead to spoken words": {
       "localizations": {
         "it": {
