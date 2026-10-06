@@ -16,10 +16,36 @@ reference and stays.
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
 | Modelling II (bevel, round, inset, shell, mirror and live symmetry, array along a path, corner/edge/midpoint/face snapping, measure, section view, kept dimensions, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, the Blender package) | **0.4.** FBX isn't offered (D-133). |
 | One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink, flipbooks and painting on models draw with it; the Schizzo board (M9) will. |
-| Painting on models: xatlas unwrap, Paint ▸ Colour (paint, erase, fill, eyedropper), layers, projection from the camera, textures in exports | **0.6.** Roughness, metal and glow painting come later; characters are painted once M7's skeletons arrive (D-162). |
-| One skeleton system, draw a bone, one-tap human rig, 2D puppets | M7. Today: 2.0's Cast (Blob, Puppet, Rigged). |
+| Painting on models: xatlas unwrap, Paint ▸ Colour (paint, erase, fill, eyedropper), layers, projection from the camera, textures in exports | **0.6.** Roughness, metal and glow painting come later; objects with drawn skeletons are painted in their rest pose, imported skins not yet (D-171). |
+| One skeleton system, draw a bone (bone-heat weights, weight painting), rig as a person, 2D drawn puppets, pose by dragging with IK, pose library, built-in clips on any humanoid | **0.7.** The person rig is placed by eight taps: Apple's body-pose model can't be checked on CI (D-168). |
 | Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, 1.0 polish | M8 |
 | Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | Free updates after 1.0 |
+
+### Rigging (0.7)
+
+- **One skeleton system** for every character (D-164): built Puppets (a joint per part), drawn rigs and imported
+  Rigged models (`bone.<joint>` turns on the character), and the Blob (its mitten hands). Posing by dragging, IK, the
+  pose library and clips all go through it.
+- **Cast ▸ Rig ▸ Draw a bone**: a Pencil stroke through a limb, a tail or a rope on anything that has a surface
+  (shapes, modelled parts, drawings, placed models) becomes a chain of bones down its middle; the first chain gets a
+  root in the rest of the body, later ones hang from the bone they start on (D-165, D-166). The weights are worked
+  out by **bone heat** (D-167): the surface bends smoothly across each joint and parts that only touch don't drag each
+  other. Modelling the shape afterwards keeps the bones; **Fit the weights to the new shape** works them out again.
+- **Paint weights** (optional): choose a bone and paint its weight with the brush (size and strength on the sidebar,
+  Erase to take it away); the object shows that bone's weight in colour while you paint (D-172).
+- **Rig as a person**: the stage turns to the model's front; tap the top of the head, the chin, a shoulder, an
+  elbow, a wrist, a hip, a knee and an ankle (the other side is mirrored), drag any dot, then Rig. The joints sit in
+  the middle of the limbs and follow the humanoid standard, so every built-in clip (Idle, Walk, Run, Talk, Wave, Point,
+  Type, Nod, Shrug, Celebrate) and any humanoid clip from the library plays on it (D-168).
+- **2D drawn puppets**: a drawing on a plane (ink or a solid stroke) takes bones drawn on its plane; its strokes bend
+  with them, so the brush, picking and every export see the bent drawing (D-169).
+- **Pose by dragging, IK by default**: select a character and drag any joint; the chain from its base follows
+  (FABRIK), a humanoid's elbows bend back and its knees forward (D-170). In Keyframe mode the turns are keyed at the
+  playhead like any property; **Reset the pose** puts every joint back. The pose library saves, applies and mirrors
+  the poses of every character type.
+- While the Rig tool is on, or a rigged object is being painted, the object stands as it was made (D-171).
+- **Exports** carry the pose: glTF and the Blender package the pose as edited, USDZ, OBJ, STL and 3MF the pose at the
+  playhead (print a posed character); painted rigged objects keep their paint on the bent surface (D-173).
 
 ### Painting on models (0.6)
 
@@ -29,7 +55,7 @@ reference and stays.
   under the touch). Fingers move around the scene; the Pencil paints.
 - **Getting ready**: an object is laid flat for painting the first time (xatlas, D-154; "Paint <name>" or a first
   stroke on it). Placed models keep their own uvs when they're clean and keep their colours as a first layer, "Model"
-  (D-155). Characters that move with a skeleton aren't painted until M7 (D-162).
+  (D-155). Objects with drawn skeletons are painted as they were made; imported skinned characters aren't yet (D-171).
 - **Strokes land where you see them**: each frame projects the stroke from the camera onto the texels the camera sees,
   through the frame's own ID buffer, so paint never goes behind something or round the back (D-152). The stroke under
   the Pencil is the stroke that's kept.
@@ -283,7 +309,8 @@ One **Cast** panel and one set of verbs for every kind of character:
 - **Puppet**: a humanoid of rigid parts with a builder.
 - **Rigged**: imported glTF skins with rig classification, retargeting, IK and a clip mixer.
 - Built-in clips on all three: Idle, Walk, Run, Talk, Wave, Point, Type, Nod, Shrug, Celebrate. A pose library with
-  mirror; IK handles (two-bone limbs, blob hands).
+  mirror; IK handles (two-bone limbs, blob hands). Maquette 0.7 puts all of them, and drawn rigs, on one skeleton
+  system (Rigging, above).
 - Lip sync from word timings (English dictionary plus rules, Arabic, Italian), face capture with the front camera or
   an iPhone companion, rest pose, hands through body tracking.
 

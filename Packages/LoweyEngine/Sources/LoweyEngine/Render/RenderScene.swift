@@ -54,8 +54,10 @@ public struct RenderInput {
     public var ghosts: [Ghost] = []
     /// Objects stretched along fast moves this frame (`Smear.smears`).
     public var smears: [ObjectID: Smear] = [:]
-    /// The project's paint files by name (`paint/<hash>.png`, `.uv` under assets): painted objects' tiles and unwraps.
+    /// The project's files under assets by name: painted objects' tiles and unwraps (`paint/…`), rigs' weights (`rigs/…`).
     public var paintFile: @Sendable (String) -> Data? = { _ in nil }
+    /// Cast ▸ Rig ▸ Paint weights: one rigged object drawn in the colours of one joint's weight (stage only).
+    public var weightView: WeightView?
 
     public init(document: Document, time: Double = 0, poses: [ObjectID: [LoweyCore.Transform]] = [:], selection: Set<ObjectID> = [],
                 hidden: ObjectID? = nil, showsHelpers: Bool = false, mediaImage: @escaping (String) -> CGImage? = { _ in nil },
@@ -69,6 +71,17 @@ public struct RenderInput {
         self.mediaImage = mediaImage
         self.catalog = catalog
         self.lightBudget = lightBudget
+    }
+}
+
+/// A rigged object shown by how much one joint moves each part of it: blue none, through green and yellow, red all.
+public struct WeightView: Hashable, Sendable {
+    public var object: ObjectID
+    public var joint: Int
+
+    public init(object: ObjectID, joint: Int) {
+        self.object = object
+        self.joint = joint
     }
 }
 

@@ -216,6 +216,8 @@ public struct SceneObject: Codable, Hashable, Sendable, Identifiable {
     public var shadowPaint: [ShadowDab]?
     /// Colour painted on the surface (nil = none; `ObjectPaint`).
     public var paint: ObjectPaint?
+    /// A skeleton drawn into the object and the weights that bend its surface (nil = none; `ObjectRig`).
+    public var rig: ObjectRig?
 
     public init(
         id: ObjectID,

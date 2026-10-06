@@ -43,8 +43,14 @@ extension SceneCompiler {
     /// A surface as drawn, or its paint mesh with the paint's composite when it's painted.
     func addSurface(_ mesh: GPUMesh, object: SceneObject, state: Inherited, world: simd_float4x4, base: ObjectUniforms, casts: Bool,
                     input: RenderInput, scene: inout RenderScene) {
-        if let painted = painted(object, source: mesh, state: state, input: input) {
-            addPainted(painted, object: object, world: world, base: base, casts: casts, scene: &scene)
+        let weightView = state.ghost ? nil : weightUniforms(base, object: object, input: input)
+        if weightView == nil, let painted = painted(object, source: mesh, state: state, input: input) {
+            addPainted(painted, object: object, world: world, base: base, casts: casts, input: input, scene: &scene)
+        } else if !state.ghost, let rig = rigWeights(object, input: input, vertexCount: mesh.data.positions.count)?.rig,
+                  let skinned = riggedMesh(object, source: mesh, key: paints.fingerprint(of: mesh), input: input) {
+            let palette = appendPalette(rig, object: object, input: input, scene: &scene)
+            addRigged(skinned, rig: rig, palette: palette, world: world, base: weightView?.uniforms ?? base, texture: weightView?.texture,
+                      casts: casts, scene: &scene)
         } else {
             add(mesh, world: world, uniforms: base, castsShadow: casts, scene: &scene)
         }

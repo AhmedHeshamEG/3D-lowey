@@ -20,6 +20,10 @@ extension StageGestures {
             colourStroke(recognizer, editor: editor, stage: stage)
             return
         }
+        if editor.tool == .rig {
+            rigStroke(recognizer, editor: editor, stage: stage)
+            return
+        }
         if editor.tool == .ink, editor.ink.mode != .draw {
             inkEditStroke(recognizer, editor: editor, stage: stage)
             return

@@ -65,6 +65,22 @@
         }
       }
     },
+    "%@ is rigged. Try a clip, or drag its hands and feet": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ha lo scheletro. Prova una clip, o trascina mani e piedi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصبح لـ %@ هيكل عظمي. جرّب مقطعًا، أو اسحب يديه وقدميه"
+          }
+        }
+      }
+    },
     "%@ isn't audio %@ can read": {
       "localizations": {
         "it": {
@@ -221,6 +237,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld إطار/ث"
+          }
+        }
+      }
+    },
+    "%lld joints. Select it and drag its joints on the stage to pose it; keys land at the playhead in Keyframe.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld articolazioni. Selezionalo e trascina le articolazioni sulla scena per metterlo in posa; in Keyframe le chiavi cadono sulla testina."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مفصل. حدّده واسحب مفاصله على المسرح لتضعه في وضعية؛ في وضع الإطارات المفتاحية تُضاف المفاتيح عند رأس التشغيل."
           }
         }
       }
@@ -577,6 +609,38 @@
         }
       }
     },
+    "a hip": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un'anca"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورك"
+          }
+        }
+      }
+    },
+    "a knee": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un ginocchio"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ركبة"
+          }
+        }
+      }
+    },
     "A laptop paired with the bridge": {
       "localizations": {
         "it": {
@@ -605,6 +669,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "يقترن الحاسوب المحمول مرة واحدة برمز يعمل لمرة واحدة، ويحتفظ برمز مميز محفوظ هنا في سلسلة المفاتيح."
+          }
+        }
+      }
+    },
+    "a shoulder": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "una spalla"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كتف"
+          }
+        }
+      }
+    },
+    "a wrist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un polso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معصم"
           }
         }
       }
@@ -1257,6 +1353,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "الكمية"
+          }
+        }
+      }
+    },
+    "an ankle": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "una caviglia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كاحل"
+          }
+        }
+      }
+    },
+    "an elbow": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un gomito"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرفق"
           }
         }
       }
@@ -2777,6 +2905,38 @@
         }
       }
     },
+    "Choose a bone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un osso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر عظمة"
+          }
+        }
+      }
+    },
+    "Choose what to rig first": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima scegli cosa armare"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر ما تريد تركيب هيكله أولًا"
+          }
+        }
+      }
+    },
     "Choose which version to keep. Keeping both saves the other one as a copy.": {
       "localizations": {
         "it": {
@@ -3025,6 +3185,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المقاطع"
+          }
+        }
+      }
+    },
+    "Clips play on people: rig it as a person to use them. Drag its joints to pose these bones.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le clip funzionano sulle persone: armalo come persona per usarle. Trascina le articolazioni per mettere in posa queste ossa."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المقاطع تعمل على الأشخاص: ركّب له هيكل شخص لتستخدمها. اسحب مفاصله لتحريك هذه العظام."
           }
         }
       }
@@ -3829,6 +4005,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر حفظ ملفات الطلاء: %@"
+          }
+        }
+      }
+    },
+    "Couldn't save the rig's weights: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare i pesi dello scheletro: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ أوزان الهيكل: %@"
           }
         }
       }
@@ -4669,6 +4861,22 @@
         }
       }
     },
+    "Done rigging": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine armatura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء تركيب الهيكل"
+          }
+        }
+      }
+    },
     "Done scattering": {
       "localizations": {
         "it": {
@@ -4749,6 +4957,38 @@
         }
       }
     },
+    "Drag any dot to where it belongs, then tap Rig": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trascina ogni punto al suo posto, poi tocca Arma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب أي نقطة إلى مكانها، ثم اضغط تركيب"
+          }
+        }
+      }
+    },
+    "Drag any dot, then Rig": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trascina un punto qualsiasi, poi Arma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب أي نقطة، ثم اضغط تركيب"
+          }
+        }
+      }
+    },
     "Drag it in the frame, pinch to size it, twist to turn it.": {
       "localizations": {
         "it": {
@@ -4825,6 +5065,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "رسم"
+          }
+        }
+      }
+    },
+    "Draw a bone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna un osso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم عظمة"
+          }
+        }
+      }
+    },
+    "Draw a bone with the Pencil, through the part that should bend": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna un osso con la Pencil, attraverso la parte che deve piegarsi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم عظمة بالقلم عبر الجزء الذي يجب أن ينثني"
           }
         }
       }
@@ -4925,6 +5197,38 @@
         }
       }
     },
+    "Draw the bones of a drawing with the Pencil": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna le ossa di un disegno con la Pencil"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم عظام الرسمة بالقلم"
+          }
+        }
+      }
+    },
+    "Draw through a limb, tail or rope with the Pencil: it bends there. A human-like model can be rigged as a person.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna con la Pencil attraverso un arto, una coda o una corda: si piegherà lì. Un modello simile a una persona si può armare come persona."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم بالقلم عبر طرف أو ذيل أو حبل: سينثني هناك. ويمكن تركيب هيكل شخص لنموذج يشبه الإنسان."
+          }
+        }
+      }
+    },
     "Draw with a finger too": {
       "localizations": {
         "it": {
@@ -4985,6 +5289,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تأثيرات مرسومة"
+          }
+        }
+      }
+    },
+    "Drawn rig": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scheletro disegnato"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هيكل مرسوم"
           }
         }
       }
@@ -6477,6 +6797,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "ضغط ثابت"
+          }
+        }
+      }
+    },
+    "Fit the weights": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adatta i pesi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملاءمة الأوزان"
+          }
+        }
+      }
+    },
+    "Fit the weights to the new shape": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adatta i pesi alla nuova forma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لاءم الأوزان مع الشكل الجديد"
           }
         }
       }
@@ -12097,6 +12449,22 @@
         }
       }
     },
+    "Paint weights": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipingi i pesi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم الأوزان"
+          }
+        }
+      }
+    },
     "Painting, 20 s: a scripted Pencil paints a model of 50 000 triangles. Same pass rule.": {
       "localizations": {
         "it": {
@@ -12641,6 +13009,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "كبسولة"
+          }
+        }
+      }
+    },
+    "Place every dot first": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima posiziona tutti i punti"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضع كل النقاط أولًا"
           }
         }
       }
@@ -13781,6 +14165,22 @@
         }
       }
     },
+    "Remove the rig": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi lo scheletro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة الهيكل"
+          }
+        }
+      }
+    },
     "Remove this cut": {
       "localizations": {
         "it": {
@@ -14001,6 +14401,22 @@
         }
       }
     },
+    "Reset the pose": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azzera la posa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة ضبط الوضعية"
+          }
+        }
+      }
+    },
     "Resize %@": {
       "localizations": {
         "it": {
@@ -14157,6 +14573,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "شريط"
+          }
+        }
+      }
+    },
+    "Rig": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arma"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تركيب"
+          }
+        }
+      }
+    },
+    "Rig %@ as a person": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arma %@ come persona"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ركّب هيكل شخص لـ %@"
+          }
+        }
+      }
+    },
+    "Rig as a person": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arma come persona"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ركّب هيكل شخص"
           }
         }
       }
@@ -17725,6 +18189,22 @@
         }
       }
     },
+    "Tap %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط %@"
+          }
+        }
+      }
+    },
     "Tap a face and drag it. Tap the number to type an exact size, like 25 or 2*12.": {
       "localizations": {
         "it": {
@@ -18377,6 +18857,22 @@
         }
       }
     },
+    "the chin": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "il mento"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذقن"
+          }
+        }
+      }
+    },
     "The Director view looks through the shot camera. It's flying over the island now.": {
       "localizations": {
         "it": {
@@ -18745,6 +19241,22 @@
         }
       }
     },
+    "the top of the head": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la cima della testa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قمة الرأس"
+          }
+        }
+      }
+    },
     "The very last change couldn't be read back. Everything before it is here.": {
       "localizations": {
         "it": {
@@ -18965,6 +19477,22 @@
         }
       }
     },
+    "This can't be rigged": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo non si può armare"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن تركيب هيكل لهذا"
+          }
+        }
+      }
+    },
     "This iPad": {
       "localizations": {
         "it": {
@@ -19109,6 +19637,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "يتحرك هذا النموذج بهيكل عظمي: يأتي طلاء الشخصيات مع التحريك بالعظام"
+          }
+        }
+      }
+    },
+    "This model moves with its own skeleton, so it can't be painted yet": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo modello si muove con il suo scheletro, quindi non si può ancora dipingere"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا النموذج يتحرك بهيكله الخاص، لذا لا يمكن تلوينه بعد"
           }
         }
       }
@@ -20833,6 +21377,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "كلمات وصور"
+          }
+        }
+      }
+    },
+    "Working out how it bends…": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calcolo di come si piega…"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ حساب كيف ينثني…"
           }
         }
       }

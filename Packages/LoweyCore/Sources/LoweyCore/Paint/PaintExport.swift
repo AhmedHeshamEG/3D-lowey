@@ -35,10 +35,12 @@ public enum PaintExport {
     }
 
     /// The export of a painted object (nil when it has no paint that shows, or its files are missing).
-    public static func painted(_ object: SceneObject, source: MeshData?, base: RGBA, file: (String) -> Data?,
+    /// `posed` is the same surface bent by the object's rig, when it has one: the paint goes where the surface went.
+    public static func painted(_ object: SceneObject, source: MeshData?, base: RGBA, file: (String) -> Data?, posed: MeshData? = nil,
                                encode: (RGBAImage) -> Data = PNGCodec.encode) -> PaintedExport? {
         guard let paint = object.paint, paint.showsPaint, let source, let (unwrap, layers) = current(paint, source: source, file: file),
-              var mesh = unwrap.mesh(over: source) else { return nil }
+              var mesh = unwrap.mesh(over: posed.flatMap { $0.positions.count == source.positions.count ? $0 : nil } ?? source)
+        else { return nil }
         if let factor = PaintSource.toObjectSpace(of: object) {
             mesh.positions = mesh.positions.map { $0 * factor }
             mesh.normals = mesh.normals.map { normalize3($0 / factor, fallback: SIMD3<Float>(0, 1, 0)) }

@@ -74,7 +74,7 @@ public extension EditCommand {
             document.scene.timeline = timeline
             return (.setTimeline(old), ChangeSet(objects: Set(timeline.tracks.map(\.target) + old.tracks.map(\.target)), scene: true))
 
-        case .setShadowPaint, .setPaint, .paintTiles:
+        case .setShadowPaint, .setPaint, .paintTiles, .setRig:
             return try applyPaint(to: &document)
 
         case let .setCustomLooks(looks):
@@ -106,9 +106,12 @@ public extension EditCommand {
         }
     }
 
-    /// Painting on surfaces: the Shadow Brush's dabs, colour layers, tiles.
+    /// What lies on and in a surface: the Shadow Brush's dabs, colour layers, tiles, and the rig that bends it.
     private func applyPaint(to document: inout Document) throws -> Applied {
         switch self {
+        case let .setRig(id, rig):
+            let old = try Self.replaceField(\.rig, of: id, to: rig, in: &document)
+            return (.setRig(id, old), ChangeSet(objects: [id]))
         case let .setShadowPaint(id, dabs):
             let old = try Self.replaceField(\.shadowDabs, of: id, to: dabs, in: &document)
             return (.setShadowPaint(id, old), ChangeSet(objects: [id]))

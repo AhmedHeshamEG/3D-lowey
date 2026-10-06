@@ -12,7 +12,9 @@ struct ClipsSection: View {
     var body: some View {
         PanelSection("Clips") {
             let clips = availableClips
-            if clips.isEmpty {
+            if clips.isEmpty, editor.baseScene.objects[character]?.rig != nil {
+                Hint("Clips play on people: rig it as a person to use them. Drag its joints to pose these bones.")
+            } else if clips.isEmpty {
                 Hint("This model has no clips. Import clips made for the same skeleton (Mixamo, Quaternius…) and they play here.")
             } else {
                 Menu {
@@ -46,6 +48,8 @@ struct ClipsSection: View {
 
     private var availableClips: [ClipRef] {
         if let (_, asset) = editor.selectedCharacter { return editor.availableClips(for: asset) }
+        // A drawn rig plays humanoid clips once it's rigged as a person.
+        if let rig = editor.baseScene.objects[character]?.rig { return rig.standard == .humanoid ? editor.puppetClips() : [] }
         // A Blob plays the built-in clips (written for its dials); a built character any humanoid clip.
         if editor.isBlob(character) { return BuiltinClips.names.map { ClipRef(asset: BuiltinClips.assetID, name: $0) } }
         return editor.puppetClips()

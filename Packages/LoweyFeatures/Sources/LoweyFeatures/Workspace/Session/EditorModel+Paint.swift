@@ -65,7 +65,7 @@ extension EditorModel {
                 return nil
             }
             guard let merged = AssetPaint.mergedMesh(model) else {
-                app.show("This model moves with a skeleton: painting on characters arrives with rigging", kind: .error)
+                app.show("This model moves with its own skeleton, so it can't be painted yet", kind: .error)
                 return nil
             }
             return await Task.detached(priority: .userInitiated) { Self.paintableModel(model, merged: merged) }.value

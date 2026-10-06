@@ -41,7 +41,8 @@ public enum LoweySchema {
     /// 6: Maquette 0.4's `dimension` objects and the `symmetry` property.
     /// 7: Maquette 0.5's brushes: strokes name a brush, projects keep the brushes they use, the `setBrushes` command.
     /// 8: Maquette 0.6's paint: objects' `paint` (surface and layers), the `setPaint` and `paintTiles` commands.
-    public static let currentVersion = 8
+    /// 9: Maquette 0.7's rigs: objects' `rig` (a drawn skeleton and its weights), `bone.<joint>` properties, `setRig`.
+    public static let currentVersion = 9
 
     public static let migrations: [Migration] = [
         Migration(kind: .scene, from: 0, transform: liftSceneV0),
@@ -71,7 +72,11 @@ public enum LoweySchema {
         // 7 → 8 adds an optional paint field; nothing older changes shape.
         Migration(kind: .scene, from: 7) { $0 },
         Migration(kind: .project, from: 7) { $0 },
-        Migration(kind: .library, from: 7) { $0 }
+        Migration(kind: .library, from: 7) { $0 },
+        // 8 â†’ 9 adds an optional rig field; nothing older changes shape.
+        Migration(kind: .scene, from: 8) { $0 },
+        Migration(kind: .project, from: 8) { $0 },
+        Migration(kind: .library, from: 8) { $0 }
     ]
 
     /// The render style a 1.x look maps to.

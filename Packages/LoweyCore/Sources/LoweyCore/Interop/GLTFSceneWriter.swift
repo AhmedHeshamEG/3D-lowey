@@ -20,10 +20,13 @@ public enum GLTFScene {
     /// A GLB of the objects (and everything under them; the whole scene when nil). `parts` supplies the shapes Core
     /// can't make itself (library models, prefabs), in the object's own space.
     /// `painted` gives a painted object's paint mesh and texture.
+    /// `posed` gives a rigged object's surface as its skeleton bends it.
     public static func glb(_ ids: [ObjectID]?, in scene: Scene, look: Look, parts: @escaping (SceneObject) -> [LocalPart] = { _ in [] },
-                           painted: @escaping (SceneObject) -> PaintedExport? = { _ in nil }, generator: String = "Maquette") -> Data {
+                           painted: @escaping (SceneObject) -> PaintedExport? = { _ in nil },
+                           posed: @escaping (SceneObject) -> [LocalPart]? = { _ in nil }, generator: String = "Maquette") -> Data {
         var writer = GLTFSceneWriter(scene: scene, look: look, parts: parts)
         writer.painted = painted
+        writer.posed = posed
         for root in ids ?? scene.roots {
             if let node = writer.addNode(root, isRoot: true) { writer.roots.append(node) }
         }
@@ -40,6 +43,7 @@ struct GLTFSceneWriter {
     let look: Look
     let parts: (SceneObject) -> [GLTFScene.LocalPart]
     var painted: (SceneObject) -> PaintedExport? = { _ in nil }
+    var posed: (SceneObject) -> [GLTFScene.LocalPart]? = { _ in nil }
     var binary = Data()
     var bufferViews: [[String: Any]] = []
     var accessors: [[String: Any]] = []
@@ -112,6 +116,8 @@ struct GLTFSceneWriter {
         if let paint = painted(object) {
             pieces = [GLTFScene.LocalPart(name: object.name, mesh: paint.mesh,
                                           material: SceneExport.material(of: object, look: look).painted(paint.texture))]
+        } else if let bent = posed(object) {
+            pieces = bent
         } else if let mesh = SceneExport.localMesh(of: object, look: look), !mesh.isEmpty {
             pieces = [GLTFScene.LocalPart(name: object.name, mesh: mesh, material: SceneExport.material(of: object, look: look))]
         } else if object.kind.hasSurface {

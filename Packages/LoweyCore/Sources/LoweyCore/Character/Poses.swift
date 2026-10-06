@@ -30,9 +30,13 @@ public enum PoseLibrary {
     /// The dials a pose keeps.
     public static let dialKeys: [PropertyKey] = PropertyKey.faceChannels + [.eyeWide, .eyeHappy, .browAngle, .squash]
 
-    /// The character an object belongs to: itself or its nearest ancestor that's a Blob or a built character.
-    public static func character(of id: ObjectID, in scene: Scene) -> ObjectID? {
-        ([id] + scene.ancestors(of: id)).first { scene.objects[$0]?[.rigStandard] != nil }
+    /// The character an object belongs to: itself or its nearest ancestor that has a skeleton (a Blob, a built
+    /// character, a drawn rig or a rigged model from the library).
+    public static func character(of id: ObjectID, in scene: Scene, rigs: [AssetID: RigAsset] = [:]) -> ObjectID? {
+        ([id] + scene.ancestors(of: id)).first { candidate in
+            guard let object = scene.objects[candidate] else { return false }
+            return object[.rigStandard] != nil || object.rig != nil || object.kind.assetID.map { rigs[$0] != nil } == true
+        }
     }
 
     public static func poses(of character: SceneObject) -> [CharacterPose] {
@@ -46,13 +50,21 @@ public enum PoseLibrary {
         return PropertyChange(object: character, key: .poseLibrary, value: poses.isEmpty ? nil : text.map(PropertyValue.string))
     }
 
-    /// The character's pose as it is in `scene` (the scene as shown: animation applied).
-    public static func capture(_ character: ObjectID, in scene: Scene, id: String, name: String) -> CharacterPose {
+    /// The character's pose as it is in `scene` (the scene as shown: animation applied). A skeleton of bones keeps
+    /// every joint's turn from `skeletonPose` (the animator's pose), so a pose taken while a clip plays is the pose seen.
+    public static func capture(_ character: ObjectID, in scene: Scene, id: String, name: String, skeletonPose: [Transform]? = nil,
+                               rigs: [AssetID: RigAsset] = [:]) -> CharacterPose {
         var pose = CharacterPose(id: id, name: name)
         if let root = scene.objects[character] {
             for key in dialKeys {
                 if let value = root[key] { pose.dials[key] = value }
             }
+        }
+        if let rig = CharacterRig.of(character, in: scene, rigs: rigs), rig.body == .bones {
+            for (joint, local) in zip(rig.skeleton.joints, rig.localPose(in: scene, pose: skeletonPose)) {
+                pose.joints[joint.name] = local.rotation
+            }
+            return pose
         }
         for joint in scene.subtree(of: character) {
             guard let object = scene.objects[joint], let bone = object[.bone]?.stringValue else { continue }
@@ -63,10 +75,16 @@ public enum PoseLibrary {
     }
 
     /// The changes that put the character in `pose` (dials missing from the pose go back to rest).
-    public static func applying(_ pose: CharacterPose, to character: ObjectID, in scene: Scene) -> [PropertyChange] {
+    public static func applying(_ pose: CharacterPose, to character: ObjectID, in scene: Scene, rigs: [AssetID: RigAsset] = [:]) -> [PropertyChange] {
         var changes = dialKeys.map { PropertyChange(object: character, key: $0, value: pose.dials[$0]) }
         if let root = scene.objects[character] {
             changes = changes.filter { root[$0.key] != $0.value }
+        }
+        if let rig = CharacterRig.of(character, in: scene, rigs: rigs), rig.body == .bones {
+            let turns = Dictionary(rig.skeleton.joints.indices.compactMap { index in
+                pose.joints[rig.skeleton.joints[index].name].map { (index, $0) }
+            }, uniquingKeysWith: { first, _ in first })
+            return changes + rig.changes(turning: turns)
         }
         for joint in scene.subtree(of: character) {
             guard let object = scene.objects[joint], let bone = object[.bone]?.stringValue, let rotation = pose.joints[bone] else { continue }

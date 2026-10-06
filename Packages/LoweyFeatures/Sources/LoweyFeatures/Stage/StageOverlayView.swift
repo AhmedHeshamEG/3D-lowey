@@ -133,7 +133,7 @@ private struct MotionPathMarks: View {
     }
 }
 
-/// A character's hands and feet you can drag (Keyframe and Perform modes).
+/// A character's joints you can drag: hands, feet, heads and chain tips large, the joints along a chain small.
 private struct IKHandleMarks: View {
     let editor: EditorModel
     @Environment(\.hmmTheme) private var theme
@@ -145,7 +145,7 @@ private struct IKHandleMarks: View {
             Circle()
                 .stroke(theme.accent, lineWidth: 2.5)
                 .background(Circle().fill(theme.accent.opacity(0.18)))
-                .frame(width: 26, height: 26)
+                .frame(width: item.handle.isEnd ? 26 : 16, height: item.handle.isEnd ? 26 : 16)
                 .position(item.point)
                 .accessibilityLabel(item.handle.name)
         }

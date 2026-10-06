@@ -48,6 +48,10 @@ struct EditorSidebar: View {
             return (HmmSidebarSlider("Size", value: $editor.colourPaint.size, in: 1 ... 120, format: { "\(Int($0.rounded())) pt" },
                                      onEditingChanged: editor.setBrushResizing),
                     HmmSidebarSlider("Opacity", value: $editor.colourPaint.opacity, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" }))
+        case .rig where editor.rigging.mode == .weights:
+            return (HmmSidebarSlider("Size", value: $editor.rigging.size, in: 4 ... 160, format: { "\(Int($0.rounded())) pt" },
+                                     onEditingChanged: editor.setBrushResizing),
+                    HmmSidebarSlider("Strength", value: $editor.rigging.strength, in: 0.05 ... 1, format: { "\(Int(($0 * 100).rounded())) %" }))
         case .shadowBrush:
             return (HmmSidebarSlider("Brush size", value: $editor.shadowBrush.radius, in: 0.02 ... 1, format: { "\(Int(($0 * 100).rounded())) cm" },
                                      onEditingChanged: editor.setBrushResizing),
@@ -82,6 +86,7 @@ struct ToolOptionsBar: View {
         case .paint: PaintOptionsBar(editor: editor)
         case .scatter: ScatterOptionsBar(editor: editor)
         case .model: ModelOptionsBar(editor: editor)
+        case .rig: RigOptionsBar(editor: editor)
         case .select, .lasso: EmptyView()
         }
     }

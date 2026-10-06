@@ -16,6 +16,8 @@ final class SceneCompiler {
     let stamper: BrushStamper
     /// Painted objects' textures.
     let paints: PaintTextures
+    /// Rigged objects' weights.
+    let skins = RigSkinCache()
     /// The camera of the frame being compiled (ink strokes turn to face it).
     var eye = SIMD3<Float>.zero
     /// The smear of the object being compiled (and its parts), applied on top of its world matrix.

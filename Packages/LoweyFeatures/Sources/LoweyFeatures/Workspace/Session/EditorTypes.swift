@@ -22,6 +22,8 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case model
     /// Paint ▸ Colour: colour painted on models with the brush engine (`ColourPaintSettings`).
     case paint
+    /// Cast ▸ Rig: bones drawn through an object, weights painted, the person rig's dots (`RigSettings`).
+    case rig
 
     public var id: String { rawValue }
 
@@ -36,6 +38,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .scatter: "Scatter"
         case .model: "Shape"
         case .paint: "Colour"
+        case .rig: "Rig"
         }
     }
 
@@ -50,11 +53,12 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
         case .scatter: "circle.hexagongrid"
         case .model: "cube.transparent"
         case .paint: "paintbrush.pointed"
+        case .rig: "figure.walk.motion"
         }
     }
 
     /// Tools where the Pencil (and, if allowed, a finger) paints instead of navigating.
-    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook || self == .paint }
+    public var paints: Bool { self == .ink || self == .draw || self == .shadowBrush || self == .flipbook || self == .paint || self == .rig }
 
     /// The Draw tools (top right: Draw).
     public var draws: Bool { self == .ink || self == .draw || self == .flipbook }

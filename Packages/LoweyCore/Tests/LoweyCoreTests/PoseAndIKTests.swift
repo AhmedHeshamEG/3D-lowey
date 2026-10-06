@@ -29,9 +29,13 @@ final class PoseAndIKTests: XCTestCase {
     func testTwoBoneIKReachesTheTarget() throws {
         let (scene, root) = puppet()
         let handles = IKHandles.handles(of: root, in: scene)
-        XCTAssertEqual(handles.map(\.name), ["Left hand", "Right hand", "Left foot", "Right foot"])
+        XCTAssertEqual(handles.map(\.name), ["Left hand", "Right hand", "Left foot", "Right foot", "Head"])
         let hand = try XCTUnwrap(handles.first)
-        guard case let .limb(upper, _, end) = hand.kind else { return XCTFail("a limb") }
+        guard case let .chain(joints) = hand.kind, case let .joints(objects)? = CharacterRig.of(root, in: scene)?.body else {
+            return XCTFail("a puppet's limb")
+        }
+        let upper = objects[joints[0]]
+        let end = objects[joints[2]]
         let shoulder = scene.worldTransform(of: upper).position
         let start = scene.worldTransform(of: end).position
         // Somewhere reachable: a bit up and forward of where the hand is.
@@ -54,8 +58,9 @@ final class PoseAndIKTests: XCTestCase {
         let root = build.fragment.roots[0]
         let handles = IKHandles.handles(of: root, in: scene)
         XCTAssertEqual(handles.count, 2)
-        let right = try XCTUnwrap(handles.first { $0.kind == .blobHand(left: false) })
-        let rest = scene.worldTransform(of: right.end).position
+        let right = try XCTUnwrap(handles.first { $0.name == "Right hand" })
+        guard case let .blobHand(false, hand) = right.kind else { return XCTFail("a Blob's right hand") }
+        let rest = scene.worldTransform(of: hand).position
         let scale = scene.worldTransform(of: root).scale.y
         let changes = IKHandles.solve(right, to: rest + Vec3(0, BlobRig.handReach.y * 0.5 * scale, 0), in: scene, rest: scene)
         XCTAssertEqual(changes.first { $0.key == .handRightY }?.value?.floatValue ?? 0, 0.5, accuracy: 1e-6)
