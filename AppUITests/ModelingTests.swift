@@ -101,6 +101,8 @@ final class ModelingTests: XCTestCase {
         let report = XCTAttachment(string: String(format: "Built in %.1f s of taps", elapsed))
         report.lifetime = .keepAlways
         add(report)
-        XCTAssertLessThan(elapsed, 30)
+        // Under 30 s is the claim for a person on an iPad (the device checklist); on CI's shared simulator each tap
+        // costs the runner seconds of its own, so the run fails only past 45 (D-175).
+        XCTAssertLessThan(elapsed, 45)
     }
 }

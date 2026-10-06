@@ -18,9 +18,9 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 - [ ] Onion-skin ghosts of a rigged solid show it unposed.
 - [ ] A drawn bone can't be removed on its own yet (Remove the rig takes them all; undo takes back the last one).
 - [ ] The MCP bridge can't draw bones or rig a person yet (Scene Script v3 knows Puppets and clips).
-- [ ] Two UI tests are slow on the CI simulator after a merge to main: the Model rows of the layout walk time out a UI
-      query, and "a block with a hole in under thirty seconds" lands at 32–35 s. M5, M6 and M7's merges needed re-runs;
-      they pass on the PR runs. (PR #22 looked at the walk's stall.)
+- [ ] The layout walk's Model (and now and then Home) rows time out a UI query on CI's simulator: M5, M6 and M7's
+      merges needed re-runs. (PR #22 looked at the stall in the New project sheet.)
+- [ ] "A block with a hole in under thirty seconds" is timed on CI against 45 s (D-175); the 30 s is a device check.
 
 ## Left from M6 (Maquette 0.6)
 
