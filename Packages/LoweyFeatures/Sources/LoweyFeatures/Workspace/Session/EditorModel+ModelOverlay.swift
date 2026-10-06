@@ -20,7 +20,7 @@ extension EditorModel {
     func refreshModelOverlay() {
         guard let stage else { return }
         guard tool == .model else {
-            stage.showModelOverlay([])
+            stage.showModelOverlay(tool == .rig ? rigOverlays(stage) : [])
             return
         }
         var overlays = sketchOverlays(stage) + measureOverlays(stage) + buildOverlays(stage)

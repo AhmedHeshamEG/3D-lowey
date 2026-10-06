@@ -40,6 +40,7 @@ extension EditorModel {
         if !isPlaying { input.ghosts = onionGhosts() }
         input.smears = smears()
         input.paintFile = paintFiles
+        input.weightView = weightView
         var request = FrameRequest(input: input, camera: stage.camera, frameIndex: timeline.frame(for: time))
         if let director {
             request.lens = displayed.scene.objects[director.id].map(CameraLens.init)
@@ -152,16 +153,20 @@ extension EditorModel {
         return ScreenGuide(lines: lines, color: RGBA(0.45, 0.75, 1))
     }
 
-    func toolChanged() {
+    func toolChanged(from oldTool: StageTool) {
         lassoPoints = []
         scatterPreview = nil
         if tool == .scatter, selection.isEmpty { app.show("Select what to scatter first (a tree, a rock…), then drag an area") }
         if tool == .shadowBrush { app.show("Paint on an object with the Pencil: shadows follow your strokes") }
         if tool != .ink { inkStrokes = [] }
+        if tool != .rig, rigging.person != nil { rigging.person = nil }
+        // The object being rigged (or painted) stands in its rest pose while that tool is on, and goes back to its pose after.
+        if tool == .rig || oldTool == .rig || tool == .paint || oldTool == .paint { refreshDisplay() }
         // Only when there is one: writing the observed paint settings would redraw every view that reads them.
         if tool != .paint, colourPaint.picture != nil { colourPaint.picture = nil }
         if tool == .flipbook, flipbook.track == nil { flipbook.track = timeline.flipbooks.last?.id }
         modelToolChanged()
+        if tool == .rig { refreshModelOverlay() }
         refreshSelectionOverlay()
         refreshGuide()
     }
@@ -173,6 +178,7 @@ extension EditorModel {
         if abs(viewYaw - viewpoint.yaw) > 1 { viewYaw = viewpoint.yaw }
         if tool.usesGuide { refreshGuide() }
         if tool == .model { modelCameraMoved() }
+        if tool == .rig { refreshModelOverlay() }
         if precision.bed != nil || precision.showsDimensions { refreshPrecisionOverlay() }
         if !selection.isEmpty { refreshSelectionScreenRect(after: 0.15) }
         viewpointSaveTask?.cancel()

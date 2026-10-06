@@ -207,6 +207,10 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
             editor.paintTap(at: point)
             return
         }
+        if editor.tool == .rig, editor.rigging.person != nil {
+            editor.personTap(at: point)
+            return
+        }
         let picked = stage.pickObject(at: point)
         if editor.pickActive {
             if let (id, _) = picked { editor.pick(object: id) }

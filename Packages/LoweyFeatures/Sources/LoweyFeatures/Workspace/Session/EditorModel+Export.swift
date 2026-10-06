@@ -168,9 +168,10 @@ extension EditorModel {
         let ids = selectionOnly && !selection.isEmpty ? selection : nil
         let name = ProjectStore.sanitize(ids.flatMap { $0.count == 1 ? displayed.scene.objects[$0[0]]?.name : nil } ?? baseScene.name)
         // The scene as edited for the timeline's keys (glTF, Blender); as shown for the rest.
-        let source = format == .glb || format == .blender ? baseScene : displayed.scene
+        let edited = format == .glb || format == .blender
+        let source = edited ? baseScene : displayed.scene
         let files = ModelExport.files(format, ids: ids, scene: source, look: look, preset: lookPreset, catalog: library.catalog, models: library.models,
-                                      name: name, paintFile: paintFiles)
+                                      name: name, paintFile: paintFiles, poses: edited ? [:] : displayed.poses)
         guard !files.isEmpty else {
             app.show("Nothing to export")
             return []

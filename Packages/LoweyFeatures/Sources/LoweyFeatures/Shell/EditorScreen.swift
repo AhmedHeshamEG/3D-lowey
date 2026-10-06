@@ -78,6 +78,12 @@ struct EditorScreen: View {
                     .ignoresSafeArea(edges: [.top, .horizontal])
                     .environment(\.layoutDirection, .leftToRight)
             }
+            // The person rig's dots: dragged in the stage's own points.
+            if editor.tool == .rig, editor.rigging.person != nil {
+                PersonDotMarks(editor: editor)
+                    .ignoresSafeArea(edges: [.top, .horizontal])
+                    .environment(\.layoutDirection, .leftToRight)
+            }
             if editor.chromeHidden {
                 ChromeRestoreButton(editor: editor)
             } else {

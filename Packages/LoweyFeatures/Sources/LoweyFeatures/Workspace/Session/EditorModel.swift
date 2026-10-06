@@ -43,7 +43,7 @@ final class EditorModel {
     // MARK: Tools & chrome
 
     var tool: StageTool = .select {
-        didSet { if tool != oldValue { toolChanged() } }
+        didSet { if tool != oldValue { toolChanged(from: oldValue) } }
     }
 
     var gizmoMode: GizmoMode = .move {
@@ -65,6 +65,16 @@ final class EditorModel {
     var ink = InkSettings()
     var flipbook = FlipbookSettings()
     var colourPaint = ColourPaintSettings()
+    /// Cast ▸ Rig: drawing bones, painting weights, the person rig's dots.
+    var rigging = RigSettings() {
+        didSet {
+            guard rigging.joint != oldValue.joint || rigging.mode != oldValue.mode || rigging.target != oldValue.target
+                || (rigging.person == nil) != (oldValue.person == nil) else { return }
+            refreshModelOverlay()
+            stage?.redraw()
+        }
+    }
+
     /// The drawing tool the brush library chooses a brush for.
     var brushTool: BrushTool = .ink
     /// The drawing guide over the frame (flipbooks) and on the guide plane (ink); kept in `workspace.json`.
@@ -363,6 +373,7 @@ final class EditorModel {
             validateModelPick()
             refreshModelOverlay()
         }
+        if tool == .rig { refreshModelOverlay() }
         refreshPrecisionOverlay()
         journalChanged()
         app.bridge.notify("scene", ["revision": String(session.revision)])

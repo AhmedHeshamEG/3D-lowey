@@ -17,6 +17,7 @@ extension EditorModel {
         guard let object = object ?? baseScene.objects[id] else { return nil }
         if object[.rigStandard]?.stringValue == "blob" { return .blob }
         if object[.rigStandard] != nil, object.kind == .group { return .puppet }
+        if object.rig != nil { return .drawn }
         if let asset = object.kind.assetID, library.manifest.asset(asset)?.rig.isRigged == true { return .rigged }
         return nil
     }
@@ -34,6 +35,11 @@ extension EditorModel {
     }
 
     func isBlob(_ id: ObjectID) -> Bool { castType(of: id) == .blob }
+
+    /// The character clips play on: a rigged model, a built puppet or a drawn rig in the selection.
+    var clipCharacter: ObjectID? {
+        selectedCharacter?.object.id ?? selectedPuppet ?? singleSelection.flatMap { $0.rig != nil ? $0.id : nil }
+    }
 
     func recipe(of character: ObjectID) -> CharacterRecipe? {
         guard let json = baseScene.objects[character]?[.characterRecipe]?.stringValue else { return nil }
@@ -128,7 +134,7 @@ extension EditorModel {
 
     /// Plays a clip from the playhead to the end (looping); it crossfades from what played before.
     func addClip(_ clip: ClipRef) {
-        guard let character = selectedCharacter?.object.id ?? selectedPuppet else { return }
+        guard let character = clipCharacter else { return }
         let duration = max(timeline.duration - time, 1)
         updateTimeline("Play \(clip.name)") { timeline in
             var track = timeline.clipTracks.first { $0.target == character } ?? ClipTrack(id: UUID().uuidString.lowercased(), target: character)
@@ -166,7 +172,7 @@ extension EditorModel {
     }
 
     func setIK(_ change: @escaping (inout IKSettings) -> Void) {
-        guard let character = selectedCharacter?.object.id ?? selectedPuppet else { return }
+        guard let character = clipCharacter else { return }
         updateTimeline("Character IK") { timeline in
             if let index = timeline.clipTracks.firstIndex(where: { $0.target == character }) { change(&timeline.clipTracks[index].ik) }
         }
@@ -253,15 +259,17 @@ extension EditorModel {
     }
 }
 
-/// The three kinds of character in the Cast panel.
+/// The kinds of character in the Cast panel: the house Blob, a built Puppet, a Rigged model from the library, and
+/// anything given drawn bones (or rigged as a person) in Cast ▸ Rig.
 enum CastType: String, CaseIterable, Sendable {
-    case blob, puppet, rigged
+    case blob, puppet, rigged, drawn
 
     var title: String {
         switch self {
         case .blob: "Blob"
         case .puppet: "Puppet"
         case .rigged: "Rigged"
+        case .drawn: "Drawn rig"
         }
     }
 
@@ -270,6 +278,7 @@ enum CastType: String, CaseIterable, Sendable {
         case .blob: "face.smiling"
         case .puppet: "figure.stand"
         case .rigged: "figure.walk"
+        case .drawn: "figure.walk.motion"
         }
     }
 }

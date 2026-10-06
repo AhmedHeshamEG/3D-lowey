@@ -33,9 +33,22 @@ extension EditorModel {
         return result
     }
 
+    /// While the Rig tool is on, the object being rigged stands as it was made: no turned joints, no clips (bones and
+    /// weights are drawn on the rest pose). So does a rigged object being painted (paint lands on the surface as made).
+    func restingRigTarget(_ document: Document) -> Document {
+        let target = tool == .rig ? rigging.target : (tool == .paint ? colourPaint.target ?? singleSelection?.id : nil)
+        guard let id = target, let object = document.scene.objects[id], object.rig != nil else { return document }
+        var resting = document
+        resting.scene.objects[id]?.properties = object.properties.filter { $0.key.boneJoint == nil }
+        resting.scene.timeline.tracks.removeAll { $0.target == id && $0.property.boneJoint != nil }
+        resting.scene.timeline.clipTracks.removeAll { $0.target == id }
+        return resting
+    }
+
     /// Evaluates the timeline at the playhead and redraws the stage.
     func refreshDisplay(_ changes: ChangeSet? = nil) {
-        var animated = Animator.evaluate(historyPreview ?? session.document, at: time, rigs: rigs(), overrides: propertyOverride)
+        var animated = Animator.evaluate(restingRigTarget(historyPreview ?? session.document), at: time, rigs: libraryRigs(),
+                                         overrides: propertyOverride)
         applyPerformOverrides(&animated)
         for (id, kind) in kindOverride where animated.scene.objects[id] != nil {
             animated.scene.objects[id]?.kind = kind
