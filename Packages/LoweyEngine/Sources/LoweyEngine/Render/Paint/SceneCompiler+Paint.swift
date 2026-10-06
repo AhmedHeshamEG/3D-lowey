@@ -53,10 +53,12 @@ extension SceneCompiler {
     /// A placed model with paint: its parts as one mesh (in the model's space, as the parts are drawn).
     func paintedAsset(_ id: AssetID, model: ImportedModel, object: SceneObject, state: Inherited, base: ObjectUniforms, input: RenderInput,
                       casts: Bool, scene: inout RenderScene) -> Bool {
-        guard object.paint != nil, !state.ghost, let merged = AssetPaint.mergedMesh(model) else { return false }
+        guard object.paint != nil, !state.ghost, !model.parts.contains(where: \.isSkinned) else { return false }
         let device = device
-        guard let source = meshes.mesh(.assetPaint(id), make: { GPUMesh(device: device, mesh: merged, label: "\(object.name) parts") }),
-              let painted = painted(object, source: source, state: state, input: input) else { return false }
+        guard let source = meshes.mesh(.assetPaint(id), make: {
+            AssetPaint.mergedMesh(model).flatMap { GPUMesh(device: device, mesh: $0, label: "\(object.name) parts") }
+        }),
+            let painted = painted(object, source: source, state: state, input: input) else { return false }
         var uniforms = base
         if object.color == nil, state.tint == nil { uniforms.baseColor = SIMD4<Float>(1, 1, 1, base.baseColor.w) }
         addPainted(painted, object: object, world: state.world.matrix, base: uniforms, casts: casts, scene: &scene)

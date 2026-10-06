@@ -25,8 +25,10 @@ final class PaintTextures {
     /// Work queued by this frame's compile: tile uploads, then coverage and compositing.
     var uploads: [Upload] = []
     var scratch: (MTLTexture, MTLTexture)?
-    /// The stroke being painted: its layer as it was before it (`PaintTextures+Stroke`).
+    /// The stroke being painted: its layer as it was before it (`PaintTextures+Encode`).
     var stroke: ActiveStroke?
+    /// The last stroke's "before" copy, kept for the next stroke (a layer's size: 16 MB at 2048).
+    var spareBefore: MTLTexture?
     var strokeTarget: MTLTexture?
     private var clock: UInt64 = 0
 
@@ -40,6 +42,8 @@ final class PaintTextures {
     final class Layer {
         let texture: MTLTexture
         var loaded: [String: String] = [:]
+        /// Just made: cleared once by a pass (not tile by tile) before its tiles arrive.
+        var needsClear = true
 
         init(texture: MTLTexture) {
             self.texture = texture
@@ -188,6 +192,12 @@ final class PaintTextures {
     }
 
     private func queueTiles(_ layer: PaintLayer, into texture: Layer, surface: PaintSurface, budget: inout Int, file: (String) -> Data?) {
+        if texture.needsClear, texture.loaded.isEmpty {
+            // A new layer is cleared in one pass (`encodeUpdates`): every tile starts transparent.
+            for index in surface.allTiles {
+                texture.loaded[index.key] = ""
+            }
+        }
         for index in surface.allTiles {
             let wanted = layer[index] ?? ""
             guard texture.loaded[index.key] != wanted else { continue }
@@ -314,7 +324,7 @@ final class CarriedPaint: Sendable {
         var layers: [String: RGBAImage]
     }
 
-    private let state = Mutex<(results: [ObjectID: Result], working: Set<String>)>(([:], []))
+    private let state = Mutex<(results: [ObjectID: Result], working: Set<String>, failed: Set<String>)>(([:], [], []))
 
     /// The carried paint for this key, or nil (and the work started) when it isn't made yet.
     func result(for object: ObjectID, key: String, paint: ObjectPaint, source: MeshData, file: @escaping @Sendable (String) -> Data?,
@@ -324,8 +334,13 @@ final class CarriedPaint: Sendable {
             return result
         }
         if let known { return known }
+        // Files that can't be read (or a shape that can't be laid flat) aren't tried again every frame.
+        guard !state.withLock({ $0.failed.contains(key) }) else { return nil }
         if synchronously {
-            guard let made = Self.make(key: key, paint: paint, source: source, file: file) else { return nil }
+            guard let made = Self.make(key: key, paint: paint, source: source, file: file) else {
+                state.withLock { _ = $0.failed.insert(key) }
+                return nil
+            }
             state.withLock { $0.results[object] = made }
             return made
         }
@@ -335,7 +350,7 @@ final class CarriedPaint: Sendable {
             let made = Self.make(key: key, paint: paint, source: source, file: file)
             state.withLock { current in
                 current.working.remove(key)
-                if let made { current.results[object] = made }
+                if let made { current.results[object] = made } else { current.failed.insert(key) }
             }
             if made != nil { ready() }
         }

@@ -9,6 +9,13 @@ extension PaintTextures {
 
     /// Copies the queued tiles into their layers, then rebuilds coverage and the composite of every surface that needs it.
     func encodeUpdates(commandBuffer: MTLCommandBuffer) {
+        for surface in surfaces.values {
+            for layer in surface.layers.values where layer.needsClear {
+                clear(layer.texture, commandBuffer: commandBuffer)
+                layer.needsClear = false
+                surface.needsCompose = true
+            }
+        }
         if !uploads.isEmpty, let blit = commandBuffer.makeBlitCommandEncoder() {
             blit.label = "Paint tiles"
             let side = PaintSurface.tileSize
@@ -177,7 +184,7 @@ extension PaintTextures {
     /// The layer as it was when this stroke began (copied once per stroke).
     private func beforeTexture(for live: LivePaint, layer: Layer, size: Int, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         if let stroke, stroke.id == live.stroke, stroke.object == live.object, stroke.layer == live.layer { return stroke.before }
-        let reuse = stroke.flatMap { $0.before.width == size ? $0.before : nil }
+        let reuse = (stroke?.before ?? spareBefore).flatMap { $0.width == size ? $0 : nil }
         guard let before = reuse ?? (try? device.makeTexture(RenderDevice.layerFormat, width: size, height: size,
                                                              usage: [.renderTarget, .shaderRead], label: "paint before stroke")),
             let blit = commandBuffer.makeBlitCommandEncoder() else { return nil }
@@ -250,6 +257,7 @@ extension PaintTextures {
     func strokeReadback(queue: MTLCommandQueue) -> StrokeReadback? {
         guard let stroke, let layer = surfaces[stroke.object]?.layers[stroke.layer] else { return nil }
         self.stroke = nil
+        spareBefore = stroke.before
         let size = layer.texture.width
         let length = size * size * 4
         guard let after = device.device.makeBuffer(length: length, options: .storageModeShared),
