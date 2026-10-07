@@ -128,7 +128,8 @@ public struct HmmHoldMenu {
     public extension View {
         /// Touch and hold for this thing's menu, in the one grammar (`HmmHoldMenu`).
         func hmmHoldMenu(_ menu: @autoclosure @escaping () -> HmmHoldMenu) -> some View {
-            contextMenu { HmmHoldMenuContent(menu()) }
+            // Fixed: the rows keep their order even when the menu opens upwards from the finger.
+            contextMenu { HmmHoldMenuContent(menu()) }.menuOrder(.fixed)
         }
     }
 #endif
@@ -190,7 +191,9 @@ public struct HmmHoldMenu {
             guard let view = interaction.view, let menu = menu(location) else { return nil }
             placeAnchor(in: view, at: location)
             let built = menu.uiMenu()
-            return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in built }
+            let configuration = UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in built }
+            configuration.preferredMenuElementOrder = .fixed
+            return configuration
         }
 
         public func contextMenuInteraction(_: UIContextMenuInteraction, configuration _: UIContextMenuConfiguration,
