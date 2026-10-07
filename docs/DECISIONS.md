@@ -1406,3 +1406,16 @@ with no crossfade between them, in one undo step. Duplicate, Rename, Copy and Pa
 placed from Cast, where its name comes from. *Rejected:* Reverse (the clip player has no negative speed; a stub
 otherwise).
 
+**D-183 — Pencil or hand is automatic.** Until an Apple Pencil has touched (or hovered over) the stage, a finger makes
+with every making tool: Ink, Draw, Flipbook, Paint ▸ Colour, the Shadow Brush, Rig. From the first Pencil
+touch (remembered on the device, `HmmPencilOrHand`) the Pencil makes and fingers only move the view. Settings ▸ Pencil
+or hand ▸ *Draw with a finger too* is the one switch; nothing is asked at first launch and Draw's own toggle is gone
+(no switch on the canvas). The Shadow Brush and the erasers used to be Pencil-only; they follow the same rule now, or
+someone without a Pencil could never use them. A finger that may make still has to move the view, so each touch is
+decided where it lands: on something the tool can make on (an object to paint, the guide to draw on) it makes;
+anywhere else it orbits, as it always has. Two fingers pan and pinch as before. Where the guide fills the screen (a
+plane facing the view, the flipbook's page) there is nowhere else, so while a finger makes a two-finger twist also
+turns the view. *Rejected:* asking at first launch (a decision wall, law 4); a Pencil/finger toggle on the stage; making
+two fingers orbit instead of pan for hand people (the same two fingers would do different things with and without a
+Pencil in the drawer).
+

@@ -9,6 +9,7 @@ struct PreferencesForm: View {
     @AppStorage(HmmHaptics.storageKey) private var haptics = true
     @AppStorage(AppSettings.sidebarOnRight) private var sidebarOnRight = false
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
+    @AppStorage(HmmPencilOrHand.fingersAlwaysMakeKey) private var fingersMake = false
     @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
     @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
     @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
@@ -22,6 +23,14 @@ struct PreferencesForm: View {
             }
             Toggle("Sidebar on the right (left-handed)", isOn: $sidebarOnRight)
             Toggle("Haptics", isOn: $haptics)
+        }
+        Section {
+            Toggle("Draw with a finger too", isOn: $fingersMake)
+                .accessibilityIdentifier("settings-fingers-make")
+        } header: {
+            Text("Pencil or hand")
+        } footer: {
+            Text("Until an Apple Pencil touches this iPad, one finger draws and two move the view. After that the Pencil draws and fingers move the view, unless this is on.")
         }
         Section("Stage") {
             Toggle("Pencil hover preview", isOn: $pencilHover)
@@ -114,7 +123,7 @@ struct GestureGuide: View {
             Item(symbol: "video", gesture: "Director view", result: "Fingers fly the shot camera: drag aims, two fingers move, pinch dollies, twist rolls")
         ]),
         ("Apple Pencil", [
-            Item(symbol: "pencil.tip", gesture: "Draw or Shadow Brush", result: "The Pencil paints; fingers keep moving the view"),
+            Item(symbol: "pencil.tip", gesture: "A drawing or painting tool", result: "The Pencil makes and fingers move the view; with no Pencil, one finger makes"),
             Item(symbol: "scribble", gesture: "Draw, then hold", result: "Snaps to a clean line, circle or rectangle"),
             Item(symbol: "pencil.and.outline", gesture: "Squeeze (Pencil Pro)", result: "Play / pause"),
             Item(symbol: "arrow.clockwise", gesture: "Barrel roll (Pencil Pro)", result: "Turns what you perform")

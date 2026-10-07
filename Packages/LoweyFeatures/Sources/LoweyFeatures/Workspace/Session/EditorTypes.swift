@@ -182,8 +182,6 @@ public struct DrawSettings: Equatable, Sendable {
     /// The guide moved along its normal.
     public var planeOffset: Double = 0
     public var guideSize: Double = 1.5
-    /// The Pencil draws and fingers navigate (off: a finger draws too).
-    public var pencilOnly = true
 
     public init() {}
 }

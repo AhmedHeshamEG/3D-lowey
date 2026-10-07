@@ -2,7 +2,7 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Draw: ink strokes, solid shapes on a guide, and flipbooks. The Pencil draws, fingers keep moving the view.
+/// Draw: ink strokes, solid shapes on a guide, and flipbooks. Pencil or hand is automatic (Settings ▸ Stage).
 struct DrawToolsPanel: View {
     @Bindable var editor: EditorModel
 
@@ -43,7 +43,6 @@ struct DrawToolsPanel: View {
                 LabeledSlider(title: "Depth", value: editor.draw.extrudeDepth, range: 0.02 ... 3) { editor.draw.extrudeDepth = $0 }
             }
             Toggle("Mirror", isOn: $editor.draw.mirror)
-            Toggle("Draw with a finger too", isOn: Binding(get: { !editor.draw.pencilOnly }, set: { editor.draw.pencilOnly = !$0 }))
             Hint("Width and smoothing are the sidebar's sliders. Draw, then hold: the stroke snaps to a clean line, circle or rectangle.")
         }
         .font(.hmm(.body))

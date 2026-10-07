@@ -27,7 +27,6 @@ struct StageHost: UIViewRepresentable {
     func updateUIView(_: UIView, context: Context) {
         // Touch routing follows the tool (the Pencil paints only with a painting tool).
         _ = editor.tool
-        _ = editor.draw.pencilOnly
         context.coordinator.gestures?.updateTouchTypes()
     }
 

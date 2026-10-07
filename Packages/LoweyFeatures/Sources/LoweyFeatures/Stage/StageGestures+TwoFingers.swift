@@ -5,7 +5,8 @@ import UIKit
 
 /// Two fingers: pan and pinch-zoom the view; on the selection, twist turns it and pinch sizes it; on a selected overlay,
 /// pinch and twist size and turn it; in the Director view they truck, dolly and roll the shot camera; while performing,
-/// they turn and size what you perform.
+/// they turn and size what you perform. While a finger makes (Pencil or hand), a twist also turns the view, for the
+/// guides that fill the screen and leave a finger nowhere to orbit from.
 extension StageGestures {
     /// Whether this two-finger gesture holds the selection (decided once, where the fingers first land).
     func onSelection(_ recognizer: UIGestureRecognizer) -> Bool {
@@ -114,6 +115,10 @@ extension StageGestures {
             if ended { editor.endGesture() } else { editor.rollCamera(by: Double(recognizer.rotation), gesture: twistKey) }
         } else if holdsSelection {
             twistSelection(recognizer, editor: editor)
+        } else if editor.tool.paints, pencilOrHand.fingerMakes, let stage, recognizer.state == .changed {
+            var viewpoint = stage.viewpoint
+            viewpoint.yaw += Double(recognizer.rotation) * 180 / .pi * navigationSpeed
+            stage.setViewpoint(viewpoint)
         }
     }
 
