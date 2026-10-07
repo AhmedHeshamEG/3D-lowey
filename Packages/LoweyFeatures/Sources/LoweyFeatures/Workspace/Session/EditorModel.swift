@@ -211,6 +211,8 @@ final class EditorModel {
     // MARK: Not observed
 
     @ObservationIgnored weak var stage: StageView?
+    /// What the silent load meter has done to the preview (`EditorModel+Load`).
+    @ObservationIgnored var adaptivePreview = AdaptivePreview(home: PreviewQuality.current.tier)
     @ObservationIgnored var displayed: AnimatedScene
     @ObservationIgnored var previousAnimated = Set<ObjectID>()
     @ObservationIgnored var operations = Operations()

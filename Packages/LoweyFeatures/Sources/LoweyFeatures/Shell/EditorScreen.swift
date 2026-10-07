@@ -13,7 +13,6 @@ struct EditorScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.preferredPencilSqueezeAction) private var squeezeAction
     @AppStorage(AppSettings.showsPerformanceHUD) private var showsHUD = false
-    @AppStorage(AppSettings.showsLoadChip) private var showsLoadChip = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -93,11 +92,6 @@ struct EditorScreen: View {
             }
             if editor.faceActive { FacePreviewPanel(editor: editor, monitor: editor.faceMonitor) }
             if showsHUD { PerformanceHUDOverlay(monitor: editor.performance) }
-            if showsLoadChip, !editor.chromeHidden {
-                LoadChip(editor: editor)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .padding(.bottom, HmmSpacing.m)
-            }
             if AppIdentity.isUITesting, !AppIdentity.isTakingScreenshots { DebugTrail(editor: editor) }
         }
         .clipped()

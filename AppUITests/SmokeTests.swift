@@ -97,6 +97,27 @@ final class SmokeTests: XCTestCase {
         shot("Diagnostics")
     }
 
+    /// Under load nothing is said on the canvas (CONTEXT §6): the preview lightens by itself and the numbers are in
+    /// Diagnostics.
+    func testNothingAppearsOnTheCanvasUnderLoad() {
+        launch(["-load-level", "over"])
+        newProject("Heavy")
+        tap("Model")
+        tap("add-cube")
+        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5))
+        for identifier in ["load-chip", "lighter-preview"] {
+            XCTAssertFalse(app.descendants(matching: .any)[identifier].firstMatch.exists, "\(identifier) is on the canvas")
+        }
+        let messages = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'smooth'"))
+        XCTAssertEqual(messages.count, 0, "a message about smoothness is on the canvas")
+        shot("Under load")
+        tap("Actions")
+        tap("Diagnostics")
+        XCTAssertTrue(app.descendants(matching: .any)["load-summary-lighter"].firstMatch.waitForExistence(timeout: 5),
+                      "the preview lightened by itself")
+        shot("Diagnostics under load")
+    }
+
     func testTourRunsToTheEnd() {
         launch(["-ui-testing-tour", "-ui-testing-sample"])
         XCTAssertTrue(app.descendants(matching: .any)["tour"].firstMatch.waitForExistence(timeout: 30))

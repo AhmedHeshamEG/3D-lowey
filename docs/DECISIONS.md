@@ -1337,3 +1337,17 @@ PRs. The test still times only the taps and attaches the number to every run; it
 slowdown (an extra step, a stalled command), and the 30 s goes on the device checklist. *Rejected:* re-running main
 until a fast runner comes along (it hides real slowdowns the same way); dropping the timing (it's the point of the
 test).
+
+## Maquette 0.8 — M8, fixes & touch
+
+**D-176 — The load meter is silent: the preview lightens by itself.** Device note: the "close to what this iPad keeps
+smooth" chip *"is what makes me feel it's not smooth"*, even off by default (D-151). The chip, its two buttons, its
+toasts and Settings ▸ Smoothness warnings are gone. The meter still measures; when it says near or over, the stage's
+render-scale range drops one tier (A → B → C), and after twenty calm seconds it goes one tier back. A recovery the load
+undoes within twenty seconds doubles the next wait (up to about five minutes), so a scene on the edge stays light
+instead of flickering between two previews. Only the render scale moves: the shadow map belongs to the renderer and
+rebuilding it mid-session would cost the hitch this is meant to avoid. *Always full resolution* is respected: someone
+who asked for it gets it. Diagnostics ▸ Smoothness has the percentage and the current scale. *Rejected:* a quieter
+chip (any message is the problem); lightening lines and shadows too (a visible pop; M15's smoothness pass can revisit
+with device numbers); overriding Always full resolution (it's the user's switch, law 7).
+

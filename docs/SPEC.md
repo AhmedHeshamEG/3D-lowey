@@ -116,9 +116,9 @@ All iPadOS 26 iPads. At launch Maquette reads the GPU family and memory: **Tier 
 quality; **Tier B** (recent A-chips) with a lighter render scale and shadows; **Tier C** (the oldest) lighter still.
 Tiers never remove features, and exports always render at full quality. The stage's frame budget is the screen's own
 refresh. Diagnostics shows the tier and runs the Night Market benchmark (and, on an M iPad, the same run with the
-Tier B preview). With **Smoothness warnings** on (Settings ▸ Stage; off by default), a calm chip appears at the
-bottom of the stage when a scene nears what the iPad keeps smooth, offering a lighter preview (or adaptive resolution,
-when Full-resolution stage is on). The stage keeps adapting its render scale either way.
+Tier B preview). When a scene nears what the iPad keeps smooth, **nothing is said on the stage** (0.8): the preview
+lightens by itself, one tier at a time, and comes back after a calm stretch. Diagnostics ▸ Smoothness shows how full the
+frame is and what the preview is doing. *Always full resolution* (Settings ▸ Stage) is the one thing that stops it.
 
 ### The canvas owns the screen (0.2)
 

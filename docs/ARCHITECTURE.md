@@ -312,8 +312,10 @@ Starter templates are Core's `StarterTemplate`: a Look and Mood to suggest, a st
 `DeviceTier` (hmm-kit, from the GPU family and memory) picks a `PreviewQuality` for the stage: the render-scale range
 `DynamicScale` moves in and the sun's shadow-map size; the frame budget comes from the screen's refresh. Exports,
 stills and thumbnails always render `.full`. `PerformanceMonitor` feeds hmm-kit's `LoadMeter` with each frame's work
-(GPU time, CPU encode time) and the scene's cost (`SceneCost`); the `LoadChip` appears only near the limit, with the
-fixes that help, and only when Settings ▸ Stage ▸ Smoothness warnings is on (`AppSettings.showsLoadChip`, off by default).
+(GPU time, CPU encode time) and the scene's cost (`SceneCost`). The meter is silent: near the limit
+`EditorModel.adaptPreview` moves the stage's render-scale range one tier lighter (Engine's `AdaptivePreview`: back after
+twenty calm seconds, longer when a recovery doesn't hold), and Diagnostics ▸ Smoothness shows the numbers
+(`EditorModel.loadSummary`). `-load-level over` puts a UI test's stage under load.
 
 ## Export
 
