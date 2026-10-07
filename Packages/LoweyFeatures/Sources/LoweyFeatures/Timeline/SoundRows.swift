@@ -171,7 +171,7 @@ struct EffectsRow: View {
                             })
                         .onTapGesture { editor.setTime(effect.start) }
                         .accessibilityAddTraits(.isButton)
-                        .contextMenu { Button("Delete", systemImage: "trash", role: .destructive) { editor.removeScreenEffect(effect.id) } }
+                        .hmmHoldMenu(HmmHoldMenu(delete: { editor.removeScreenEffect(effect.id) }))
                 }
             }
             .frame(width: width, alignment: .leading)

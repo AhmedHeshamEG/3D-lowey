@@ -53,7 +53,8 @@ struct LookPanel: View {
                             LookCard(preset: preset, selected: preset.id == look.presetID, mood: look.lightingPreset ?? .day)
                         }
                         .buttonStyle(.plain)
-                        .contextMenu { lookMenu(preset) }
+                        .hmmHoldMenu(HmmHoldMenu(duplicate: { editor.duplicateLook(preset) },
+                                                 delete: preset.isBuiltIn ? nil : { editor.deleteCustomLook(preset.id) }))
                     }
                 }
             }
@@ -62,14 +63,6 @@ struct LookPanel: View {
                     .accessibilityIdentifier("duplicate-look")
             }
             Hint("Touch and hold a Look for its options. Built-in Looks stay as they are; duplicate one to change it.")
-        }
-    }
-
-    @ViewBuilder
-    private func lookMenu(_ preset: LookPreset) -> some View {
-        Button("Duplicate as My Look", systemImage: "plus.square.on.square") { editor.duplicateLook(preset) }
-        if !preset.isBuiltIn {
-            Button("Delete", systemImage: "trash", role: .destructive) { editor.deleteCustomLook(preset.id) }
         }
     }
 

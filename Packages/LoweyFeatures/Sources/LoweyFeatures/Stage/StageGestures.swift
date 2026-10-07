@@ -23,6 +23,9 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     let pencilRoll = PencilRollRecognizer()
     let hover = UIHoverGestureRecognizer()
 
+    /// A finger held still on an object with the Select tool: its menu (CONTEXT §4.1). A finger that moves is a drag.
+    private lazy var holdMenu = HmmHoldMenuInteraction { [weak self] point in self?.editor?.stageHoldMenu(at: point) }
+
     /// What the current one-finger drag does.
     enum DragKind {
         case orbit
@@ -127,6 +130,7 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
             recognizer.delegate = self
             stage.addGestureRecognizer(recognizer)
         }
+        holdMenu.install(on: stage)
         updateTouchTypes()
     }
 
@@ -136,6 +140,8 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         let painting = editor.tool.paints
         let pencil = NSNumber(value: UITouch.TouchType.pencil.rawValue)
         let finger = NSNumber(value: UITouch.TouchType.direct.rawValue)
+        // With the Select tool a hold is the object's menu; the other tools keep hold-to-add.
+        longPress.isEnabled = editor.tool != .select
         stroke.isEnabled = painting
         if painting {
             let erasing = (editor.tool == .ink && editor.ink.mode != .draw) || (editor.tool == .flipbook && editor.flipbook.mode == .erase)
@@ -224,7 +230,7 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         editor?.frameSelection()
     }
 
-    /// Touch and hold: add to (or take out of) the selection.
+    /// Touch and hold with a tool other than Select: add to (or take out of) the selection, or the Model tool's pick.
     @objc private func handleLongPress(_ recognizer: UILongPressGestureRecognizer) {
         guard recognizer.state == .began, let editor, let stage else { return }
         if editor.tool == .model, editor.modeling.mode.pickMode != nil {

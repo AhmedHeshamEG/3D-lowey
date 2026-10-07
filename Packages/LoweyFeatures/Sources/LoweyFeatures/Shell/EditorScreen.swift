@@ -44,6 +44,7 @@ struct EditorScreen: View {
             if let state = editor.historyScrub { HistoryScrubberBar(editor: editor, state: state) }
         }
         .modifier(EditorSheets(editor: editor))
+        .modifier(ObjectRenameAlert(editor: editor))
         .background(EditorKeyboardShortcuts(editor: editor))
         .onPencilSqueeze { phase in
             guard case .ended = phase, squeezeAction != .ignore else { return }

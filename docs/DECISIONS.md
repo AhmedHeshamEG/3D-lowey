@@ -1378,3 +1378,31 @@ are the same) and the sphere tile is a shaded ball. *Rejected:* moving the solid
 Hesham knows; the smoke tests and LAYOUT.md say where they are); listing them on both pages (one home each, M2's rule);
 always opening Model on Add (remembering the page is right when you're modelling).
 
+**D-180 — One hold menu, built in one place.** Touch and hold any thing and the menu is `HmmHoldMenu` (hmm-kit 0.4.0):
+Duplicate · Rename · Copy · Paste, then one to three extras, then Delete in red. The four first rows and Delete are
+*always* there in the same places; a row the thing can't do is dimmed (a key can't be renamed, a card can't be copied).
+That keeps the hand's memory true (law 2) and is honest: a dimmed row promises nothing. Every menu the app had moved
+onto it (poses, brushes, Looks, library items, paint layers, the outliner, flipbook tracks, screen effects, timeline
+rows, cuts, palette swatches, Home's cards and stacks), and four new ones use it: objects on the stage, keys, clips and
+flipbook drawings. Scene things get theirs from one file (`Workspace/UI/HoldMenus.swift`), so an object has the same
+menu on the stage, in the outliner and on its timeline row. Where a menu had more than three extras they were folded:
+a card's are *Add to stack ▸*, *Share ▸*, *Archive* (Open went: a tap opens). *Rejected:* leaving out rows that don't
+apply (every menu a different shape); a fourth and fifth extra (it stops being a menu under a finger).
+
+**D-181 — On the stage a still finger opens the menu; a moving one drags.** With the Select tool, holding a finger (or
+the Pencil) still on an object opens its menu at the finger: a `UIContextMenuInteraction` on the stage view hung from
+an invisible point, so the stage doesn't lift or dim. If the finger moves first, the stage's own drag takes it. The
+held object becomes the selection unless it is already part of it (then the menu is about the whole selection).
+Touch-and-hold used to add to the selection; that is now the menu's first extra, **Add to the selection**, shown when
+other things were selected. The other tools keep hold-to-add and the Model tool's hold-to-pick, where a menu would be
+in the way. Keys and clips are drawn into one picture, so the timeline asks what is under the finger
+(`hmmHoldMenu(at:)`, listening from the window; the lanes' own taps, drags and box-select are untouched).
+*Rejected:* a "several" switch in Select (a mode to remember); a second finger to add (two fingers already navigate
+and undo).
+
+**D-182 — Clips split at the playhead.** The clip menu's extras are *Split at the playhead* and *Loop / Play once*.
+Splitting makes two segments from one: the second starts in the clip where the first stops (offset + elapsed × speed),
+with no crossfade between them, in one undo step. Duplicate, Rename, Copy and Paste are dimmed on a clip: a clip is
+placed from Cast, where its name comes from. *Rejected:* Reverse (the clip player has no negative speed; a stub
+otherwise).
+

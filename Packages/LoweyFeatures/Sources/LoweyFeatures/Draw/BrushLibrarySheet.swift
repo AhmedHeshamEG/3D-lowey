@@ -129,24 +129,24 @@ struct BrushLibrarySheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("brush-\(brush.id)")
-        .contextMenu { brushMenu(brush, in: set) }
+        .hmmHoldMenu(brushMenu(brush, in: set))
     }
 
-    @ViewBuilder private func brushMenu(_ brush: Brush, in set: BrushSet) -> some View {
-        Button("Edit in Brush Studio", systemImage: "slider.horizontal.3") { editing = brush.id }
-        Button("Duplicate", systemImage: "plus.square.on.square") { brushes.duplicate(brush.id) }
-        if brushes.library.resetTarget(brush.id) != nil {
-            Button("Reset", systemImage: "arrow.counterclockwise") { brushes.reset(brush.id) }
-        }
-        Button("Rename", systemImage: "pencil") { renaming = Renaming(target: .brush(brush.id), name: brush.name) }
-        Menu("Move to") {
-            ForEach(brushes.library.sets.filter { $0.id != set.id }) { other in
-                Button(other.name) { brushes.move(brush.id, to: other.id) }
-            }
-        }
-        if !brushes.library.isBuiltIn(brush.id) {
-            Button("Delete", systemImage: "trash", role: .destructive) { brushes.delete(brush.id) }
-        }
+    private func brushMenu(_ brush: Brush, in set: BrushSet) -> HmmHoldMenu {
+        let others = brushes.library.sets.filter { $0.id != set.id }
+        let extras = [
+            HmmHoldMenu.Item("Edit in Brush Studio", systemName: "slider.horizontal.3") { editing = brush.id },
+            HmmHoldMenu.Item("Reset", systemName: "arrow.counterclockwise", isEnabled: brushes.library.resetTarget(brush.id) != nil) {
+                brushes.reset(brush.id)
+            },
+            HmmHoldMenu.Item("Move to", systemName: "folder", isEnabled: !others.isEmpty, children: others.map { other in
+                HmmHoldMenu.Item(other.name, id: other.id, isVerbatim: true) { brushes.move(brush.id, to: other.id) }
+            })
+        ]
+        return HmmHoldMenu(duplicate: { brushes.duplicate(brush.id) },
+                           rename: { renaming = Renaming(target: .brush(brush.id), name: brush.name) },
+                           extras: extras,
+                           delete: brushes.library.isBuiltIn(brush.id) ? nil : { brushes.delete(brush.id) })
     }
 
     private func commitRename() {

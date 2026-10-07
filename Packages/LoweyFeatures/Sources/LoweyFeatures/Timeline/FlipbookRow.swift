@@ -3,13 +3,15 @@ import LoweyCore
 import SwiftUI
 
 /// A flipbook track: its drawings as cells as long as their holds (a looping track repeats them faded). Tap a cell to
-/// go to that drawing and draw into it; drag the cells to move the track in time; touch and hold for its menu.
+/// go to that drawing and draw into it; drag the cells to move the track in time; touch and hold a drawing or the
+/// track's name for its menu.
 struct FlipbookRow: View {
     let editor: EditorModel
     let layout: TimelineLayout
     let track: FlipbookTrack
     let width: CGFloat
     @State private var drag: Double?
+    @State private var newName: String?
     @Environment(\.hmmTheme) private var theme
 
     var body: some View {
@@ -24,12 +26,14 @@ struct FlipbookRow: View {
                     editor.tool = .flipbook
                 }
                 .accessibilityAddTraits(.isButton)
+                .hmmHoldMenu(trackMenu)
             ZStack(alignment: .leading) {
                 ForEach(cells, id: \.offset) { cell in
                     FlipbookCell(number: cell.isRepeat ? nil : cell.index + 1, width: cell.width, fill: fill(for: cell))
                         .offset(x: cell.x + shift)
                         .onTapGesture { editor.showFlipbookDrawing(cell.index, of: track.id) }
                         .accessibilityAddTraits(.isButton)
+                        .hmmHoldMenu(editor.holdMenu(forFlipbookDrawing: cell.index, of: track.id))
                 }
             }
             .frame(width: width, alignment: .leading)
@@ -43,22 +47,19 @@ struct FlipbookRow: View {
                     editor.updateFlipbook("Move flipbook") { $0.start = editor.timeline.snapped(start) }
                     drag = nil
                 })
-            .contextMenu {
-                Button("Draw into it", systemImage: "pencil.tip") {
-                    editor.flipbook.track = track.id
-                    editor.tool = .flipbook
-                }
-                Button(track.visible ? "Hide" : "Show", systemImage: track.visible ? "eye.slash" : "eye") {
-                    editor.flipbook.track = track.id
-                    editor.updateFlipbook(track.visible ? "Hide flipbook" : "Show flipbook") { $0.visible.toggle() }
-                }
-                Button("Delete", systemImage: "trash", role: .destructive) {
-                    editor.flipbook.track = track.id
-                    editor.deleteFlipbook()
-                }
-            }
         }
         .frame(height: TimelineLayout.rowHeight)
+        .alert("Rename", isPresented: Binding(get: { newName != nil }, set: { if !$0 { newName = nil } })) {
+            TextField("Name", text: Binding(get: { newName ?? "" }, set: { newName = $0 }))
+            Button("Rename") {
+                if let newName, !newName.isEmpty {
+                    editor.flipbook.track = track.id
+                    editor.updateFlipbook("Rename flipbook") { $0.name = newName }
+                }
+                newName = nil
+            }
+            Button("Cancel", role: .cancel) { newName = nil }
+        }
         .background(isActive ? theme.accent.opacity(0.08) : .clear)
         .opacity(track.visible ? 1 : 0.5)
         .accessibilityElement(children: .combine)
@@ -66,6 +67,23 @@ struct FlipbookRow: View {
     }
 
     private var isActive: Bool { editor.flipbook.track == track.id }
+
+    /// The whole track's menu, on its name.
+    private var trackMenu: HmmHoldMenu {
+        HmmHoldMenu(rename: { newName = track.name }, extras: [
+            HmmHoldMenu.Item("Draw into it", systemName: "pencil.tip") {
+                editor.flipbook.track = track.id
+                editor.tool = .flipbook
+            },
+            HmmHoldMenu.Item(track.visible ? "Hide" : "Show", systemName: track.visible ? "eye.slash" : "eye") {
+                editor.flipbook.track = track.id
+                editor.updateFlipbook(track.visible ? "Hide flipbook" : "Show flipbook") { $0.visible.toggle() }
+            }
+        ], delete: {
+            editor.flipbook.track = track.id
+            editor.deleteFlipbook()
+        })
+    }
 
     /// How far the cells follow a drag.
     private var shift: CGFloat {

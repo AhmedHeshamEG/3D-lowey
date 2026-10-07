@@ -184,9 +184,7 @@ struct PaletteRow: View {
                 .accessibilityLabel(swatch.name)
                 .accessibilityAddTraits(selected == index ? .isSelected : [])
                 .contextMenu {
-                    if let remove {
-                        Button("Remove from palette", systemImage: "trash", role: .destructive) { remove(index) }
-                    }
+                    if let remove { HmmHoldMenuContent(HmmHoldMenu(delete: { remove(index) })) }
                 }
             }
         }

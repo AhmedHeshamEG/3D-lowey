@@ -150,12 +150,20 @@ struct PaintLayersSection: View {
             editor.choosePaintLayer(layer.id, on: object.id)
             gesture = UUID().uuidString
         }
-        .contextMenu {
-            Button("Rename", systemImage: "pencil") { renaming = (layer.id, layer.name) }
-        }
+        .hmmHoldMenu(menu(for: layer))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
         .accessibilityIdentifier("paint-layer-\(layer.id)")
+    }
+
+    private func menu(for layer: PaintLayer) -> HmmHoldMenu {
+        let isLowest = (object.paint?.layerIndex(layer.id) ?? 0) == 0
+        return HmmHoldMenu(duplicate: { editor.duplicatePaintLayer(layer.id, of: object.id) }, rename: { renaming = (layer.id, layer.name) }, extras: [
+            HmmHoldMenu.Item("Merge down", systemName: "square.3.layers.3d.down.right", isEnabled: !isLowest) {
+                editor.mergePaintLayerDown(layer.id, of: object.id)
+            },
+            HmmHoldMenu.Item("Clear", systemName: "eraser") { editor.clearPaintLayer(layer.id, of: object.id) }
+        ], delete: { editor.deletePaintLayer(layer.id, of: object.id) })
     }
 
     private func actions(_ layer: PaintLayer, paint: ObjectPaint?) -> some View {

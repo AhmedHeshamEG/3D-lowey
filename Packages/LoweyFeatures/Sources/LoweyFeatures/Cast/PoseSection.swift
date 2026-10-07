@@ -19,17 +19,7 @@ struct PoseSection: View {
                 TileGrid(minimum: 96) {
                     ForEach(poses) { pose in
                         TileButton(title: pose.name, systemName: "figure.wave", identifier: "pose-\(pose.name)") { editor.applyPose(pose, to: character) }
-                            .contextMenu {
-                                Button("Apply mirrored", systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right") {
-                                    editor.applyPose(PoseLibrary.mirrored(pose), to: character)
-                                }
-                                Button("Save a mirrored copy", systemImage: "plus.square.on.square") { editor.saveMirrored(pose, of: character) }
-                                Button("Rename", systemImage: "pencil") {
-                                    name = pose.name
-                                    renaming = pose
-                                }
-                                Button("Delete", systemImage: "trash", role: .destructive) { editor.deletePose(pose.id, of: character) }
-                            }
+                            .hmmHoldMenu(menu(for: pose))
                     }
                 }
             }
@@ -50,5 +40,17 @@ struct PoseSection: View {
             }
             Button("Cancel", role: .cancel) { renaming = nil }
         }
+    }
+
+    private func menu(for pose: CharacterPose) -> HmmHoldMenu {
+        HmmHoldMenu(rename: {
+            name = pose.name
+            renaming = pose
+        }, extras: [
+            HmmHoldMenu.Item("Apply mirrored", systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right") {
+                editor.applyPose(PoseLibrary.mirrored(pose), to: character)
+            },
+            HmmHoldMenu.Item("Save a mirrored copy", systemName: "plus.square.on.square") { editor.saveMirrored(pose, of: character) }
+        ], delete: { editor.deletePose(pose.id, of: character) })
     }
 }

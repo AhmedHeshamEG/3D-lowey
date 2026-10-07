@@ -71,6 +71,60 @@ final class LayoutTests: XCTestCase {
         XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5), "a sphere landed on the stage")
     }
 
+    // MARK: One hold menu everywhere
+
+    /// The rows of the menu that's open, top to bottom.
+    private func openMenuRows() -> [String] {
+        let names = ["Duplicate", "Rename", "Copy", "Paste", "Delete"]
+        guard app.buttons["Duplicate"].firstMatch.waitForExistence(timeout: 5) else { return [] }
+        return names.map { app.buttons[$0].firstMatch }.filter(\.exists).sorted { $0.frame.minY < $1.frame.minY }.map(\.label)
+    }
+
+    private func closeMenu() {
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.97)).tap()
+        settle(1)
+    }
+
+    /// Touch and hold opens the same menu on every kind of thing: Duplicate, Rename, Copy, Paste first, Delete last
+    /// (CONTEXT §4.1). Walks a project's card, an object on the stage, the same object in the outliner, and a Look.
+    func testTheHoldMenuStartsTheSameOnEveryKindOfThing() {
+        let expected = ["Duplicate", "Rename", "Copy", "Paste", "Delete"]
+        newProject("Holding")
+        XCTAssertTrue(tap("Model"))
+        XCTAssertTrue(tap("add-cube"))
+        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5))
+        settle(1)
+
+        let stage = app.otherElements["stage"]
+        stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "an object on the stage")
+        shot("Hold menu on the stage")
+        closeMenu()
+
+        XCTAssertTrue(tap("Select"))
+        let row = app.staticTexts["Cube"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "the cube is in the outliner")
+        row.press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "an object in the outliner")
+        closeMenu()
+
+        XCTAssertTrue(tap("Look"))
+        let look = element("look-clay")
+        XCTAssertTrue(look.waitForExistence(timeout: 5))
+        look.press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "a Look")
+        closeMenu()
+        tap("Look")
+
+        XCTAssertTrue(tap("Home"))
+        let card = element("project-Holding")
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        card.press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "a project's card")
+        shot("Hold menu on a card")
+        closeMenu()
+    }
+
     // MARK: Every control has a home
 
     func testHomeControlsAreReachable() {

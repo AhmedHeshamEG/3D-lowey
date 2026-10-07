@@ -3,12 +3,10 @@ import LoweyCore
 import SwiftUI
 
 /// Select: tap or lasso, select similar or everything, and the outliner (the scene's hierarchy: tap to select,
-/// eye and lock, touch and hold to rename, move or delete).
+/// eye and lock, touch and hold for the object's menu).
 struct SelectPanel: View {
     @Bindable var editor: EditorModel
     @State private var expanded: Set<ObjectID> = []
-    @State private var renaming: ObjectID?
-    @State private var renameText = ""
 
     var body: some View {
         HmmPanel("Select", width: 340, sizing: HmmPanelSizing(id: "select"), close: { editor.openPanel = nil }) {
@@ -24,7 +22,7 @@ struct SelectPanel: View {
                     HmmPillButton("All", systemName: "checkmark.circle") { editor.selectAll() }
                     HmmPillButton("None", systemName: "xmark.circle") { editor.setSelection([]) }
                 }
-                Hint("Touch and hold an object on the stage to add it to the selection.")
+                Hint("Touch and hold an object for its menu. With something selected, Add to the selection is in it.")
                 HmmSectionHeader("Outliner · \(editor.scene.objects.count)")
                     .accessibilityIdentifier("outliner")
                 LazyVStack(alignment: .leading, spacing: 2) {
@@ -34,18 +32,10 @@ struct SelectPanel: View {
                                     toggleExpanded: { expanded.formSymmetricDifference([row.id]) },
                                     select: { editor.select(row.id) }, toggleVisible: { editor.toggleVisible(row.id) },
                                     toggleLock: { editor.toggleLock(row.id) })
-                            .contextMenu { menu(for: row.object) }
+                            .hmmHoldMenu(menu(for: row.object))
                     }
                 }
             }
-        }
-        .alert("Rename", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Name", text: $renameText)
-            Button("Rename") {
-                if let renaming { editor.rename(renaming, to: renameText) }
-                renaming = nil
-            }
-            Button("Cancel", role: .cancel) { renaming = nil }
         }
         .onChange(of: editor.selection) { _, selection in
             for id in selection {
@@ -70,33 +60,24 @@ struct SelectPanel: View {
         return result
     }
 
-    @ViewBuilder
-    private func menu(for object: SceneObject) -> some View {
-        Button("Rename", systemImage: "pencil") {
-            renameText = object.name
-            renaming = object.id
-        }
-        if object.parent != nil {
-            Button("Move to top level", systemImage: "arrow.up.left") { editor.reparent([object.id], to: nil) }
-        }
+    /// The object's menu, with the outliner's own extras: where it sits in the hierarchy (eye and lock are on the row).
+    private func menu(for object: SceneObject) -> HmmHoldMenu {
         let groups = editor.scene.orderedIDs().filter { id in
             editor.scene.objects[id]?.kind == .group && id != object.id && !editor.scene.isAncestor(object.id, of: id) && object.parent != id
         }
-        if !groups.isEmpty {
-            Menu("Move into…") {
-                ForEach(groups, id: \.self) { group in
-                    Button(editor.scene.objects[group]?.name ?? "Group") { editor.reparent([object.id], to: group) }
-                }
+        let extras = [
+            HmmHoldMenu.Item("Move to top level", systemName: "arrow.up.left", isEnabled: object.parent != nil) {
+                editor.reparent([object.id], to: nil)
+            },
+            HmmHoldMenu.Item("Move into…", systemName: "folder", isEnabled: !groups.isEmpty, children: groups.map { group in
+                HmmHoldMenu.Item(editor.scene.objects[group]?.name ?? "Group", id: group.raw, isVerbatim: true) { editor.reparent([object.id], to: group) }
+            }),
+            HmmHoldMenu.Item("Frame", systemName: "viewfinder") {
+                editor.select(object.id)
+                editor.frameSelection()
             }
-        }
-        Button("Frame", systemImage: "viewfinder") {
-            editor.select(object.id)
-            editor.frameSelection()
-        }
-        Button("Delete", systemImage: "trash", role: .destructive) {
-            editor.setSelection([object.id])
-            editor.deleteSelection()
-        }
+        ]
+        return editor.holdMenu(for: [object.id], extras: extras)
     }
 }
 
