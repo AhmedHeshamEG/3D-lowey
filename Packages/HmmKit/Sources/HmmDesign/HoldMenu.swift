@@ -164,13 +164,24 @@ public struct HmmHoldMenu {
     public final class HmmHoldMenuInteraction: NSObject, UIContextMenuInteractionDelegate {
         private let menu: @MainActor (CGPoint) -> HmmHoldMenu?
         private var anchor: UIView?
+        private var installed: UIContextMenuInteraction?
 
         public init(menu: @escaping @MainActor (CGPoint) -> HmmHoldMenu?) {
             self.menu = menu
         }
 
         public func install(on view: UIView) {
-            view.addInteraction(UIContextMenuInteraction(delegate: self))
+            uninstall()
+            let interaction = UIContextMenuInteraction(delegate: self)
+            view.addInteraction(interaction)
+            installed = interaction
+        }
+
+        public func uninstall() {
+            if let installed { installed.view?.removeInteraction(installed) }
+            installed = nil
+            anchor?.removeFromSuperview()
+            anchor = nil
         }
 
         public func contextMenuInteraction(_ interaction: UIContextMenuInteraction,
@@ -218,6 +229,61 @@ public struct HmmHoldMenu {
             parameters.backgroundColor = .clear
             parameters.shadowPath = UIBezierPath()
             return UITargetedPreview(view: anchor, parameters: parameters)
+        }
+    }
+#endif
+
+#if canImport(UIKit) && canImport(SwiftUI) && !os(watchOS) && !os(tvOS)
+    import SwiftUI
+
+    /// The hold menu over an area SwiftUI draws as one picture (a timeline's lanes, a board): what's under the finger
+    /// is known only by where the finger is. Lies behind the area, takes no touches itself, and listens from the
+    /// window, so the area's own taps and drags work as before.
+    public struct HmmHoldMenuArea: UIViewRepresentable {
+        private let menu: @MainActor (CGPoint) -> HmmHoldMenu?
+
+        public init(menu: @escaping @MainActor (CGPoint) -> HmmHoldMenu?) {
+            self.menu = menu
+        }
+
+        public func makeUIView(context _: Context) -> MarkerView {
+            let view = MarkerView()
+            view.menu = menu
+            view.isUserInteractionEnabled = false
+            return view
+        }
+
+        public func updateUIView(_ view: MarkerView, context _: Context) {
+            view.menu = menu
+        }
+
+        /// Marks the area's place on screen and moves the listener with its window.
+        public final class MarkerView: UIView {
+            var menu: (@MainActor (CGPoint) -> HmmHoldMenu?)?
+            private var interaction: HmmHoldMenuInteraction?
+
+            override public func didMoveToWindow() {
+                super.didMoveToWindow()
+                interaction?.uninstall()
+                interaction = nil
+                guard let window else { return }
+                let interaction = HmmHoldMenuInteraction { [weak self, weak window] point in
+                    guard let self, let window else { return nil }
+                    let local = convert(point, from: window)
+                    guard bounds.contains(local) else { return nil }
+                    return menu?(local)
+                }
+                interaction.install(on: window)
+                self.interaction = interaction
+            }
+        }
+    }
+
+    public extension View {
+        /// Touch and hold anywhere on this view for the menu of what's at that point (in this view's own
+        /// coordinates); nil where there's nothing with a menu.
+        func hmmHoldMenu(at menu: @escaping @MainActor (CGPoint) -> HmmHoldMenu?) -> some View {
+            background(HmmHoldMenuArea(menu: menu))
         }
     }
 #endif

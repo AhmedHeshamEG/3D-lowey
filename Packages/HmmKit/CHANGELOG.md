@@ -11,7 +11,7 @@ Built with Maquette 0.8.
 - **HmmDesign**: `HmmHoldMenu`, the hold menu's one grammar: Duplicate · Rename · Copy · Paste, one to three extras,
   Delete last in red; a row a thing can't do is dimmed, never missing. `hmmHoldMenu(_:)` puts it on any SwiftUI view,
   `uiMenu()` builds it for UIKit, and `HmmHoldMenuInteraction` opens it under a still finger on a canvas (a moving
-  finger stays a drag).
+  finger stays a drag); `hmmHoldMenu(at:)` does the same over an area SwiftUI draws as one picture.
 - **HmmDesign**: `HmmPencilOrHand`: one finger makes until an Apple Pencil has touched; from then on the Pencil makes
   and fingers move the view, with one switch to let fingers make too. Remembered in `UserDefaults`.
 - **HmmDesign**: `HmmColourWell`, and `HmmSidebar(accessory:)` to put it (or anything a tool needs) under the two
