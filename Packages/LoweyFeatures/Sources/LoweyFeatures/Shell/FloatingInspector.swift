@@ -4,7 +4,8 @@ import SwiftUI
 
 /// The inspector, floating beside the selection without covering it (HmmFloatingPlacement): it keeps its side while
 /// it fits, flips at the screen's edge, and glides over once the view settles. It stays inside the room the chrome
-/// leaves: below the corner clusters, clear of the sidebar, an open panel and the bottom row.
+/// leaves: below the corner clusters, clear of the sidebar, an open panel and the bottom row. With Settings ▸ Stage ▸
+/// Dock the inspector it stays at the side instead, wherever the selection is.
 struct FloatingInspector: View {
     let editor: EditorModel
     /// An open panel on the leading side, in screen space (the stage's space too: it fills the window from its corner).
@@ -12,6 +13,7 @@ struct FloatingInspector: View {
     let sidebarOnRight: Bool
     @State private var size: HmmPanelSize?
     @State private var side: HmmFloatingSide = .right
+    @AppStorage(AppSettings.inspectorDocked) private var docked = false
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -36,8 +38,8 @@ struct FloatingInspector: View {
 
     private func placement(in geometry: GeometryProxy) -> (frame: CGRect, side: HmmFloatingSide) {
         let room = Self.room(in: geometry.size, insets: geometry.safeAreaInsets, sidebarOnRight: sidebarOnRight, avoiding: avoiding)
-        guard let target = editor.selectionScreenRect else {
-            return (HmmFloatingPlacement.docked(panelSize, in: room, side: side), side)
+        guard !docked, let target = editor.selectionScreenRect else {
+            return (HmmFloatingPlacement.docked(panelSize, in: room, side: docked ? .right : side), docked ? .right : side)
         }
         let placed = HmmFloatingPlacement.place(panelSize, beside: target, in: room, current: side)
         return (placed.frame, placed.side)

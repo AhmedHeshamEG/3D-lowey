@@ -11,6 +11,7 @@ struct PreferencesForm: View {
     @AppStorage(AppSettings.pencilHoverPreview) private var pencilHover = false
     @AppStorage(HmmPencilOrHand.fingersAlwaysMakeKey) private var fingersMake = false
     @AppStorage(AppSettings.fullResolutionStage) private var fullResolution = false
+    @AppStorage(AppSettings.inspectorDocked) private var inspectorDocked = false
     @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
     @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
     @AppStorage(AppSettings.joystickSpeed) private var joystickSpeed = 1.0
@@ -37,6 +38,8 @@ struct PreferencesForm: View {
             Toggle("Always full resolution", isOn: $fullResolution)
             LabeledSlider(title: "Moving around (orbit, pan, zoom)", value: navigationSpeed, range: AppSettings.navigationSpeedRange,
                           format: { String(format: "%.2g×", $0) }) { navigationSpeed = $0 }
+            Toggle("Dock the inspector at the side", isOn: $inspectorDocked)
+                .accessibilityIdentifier("settings-inspector-docked")
             Toggle("Joystick under a selection", isOn: $showsJoystick)
                 .accessibilityIdentifier("settings-joystick")
             if showsJoystick {

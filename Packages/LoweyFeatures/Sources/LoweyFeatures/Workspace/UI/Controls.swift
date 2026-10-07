@@ -65,31 +65,47 @@ struct TileButton: View {
     var identifier: String?
     /// Drawn in place of the symbol, for the few things SF Symbols has no picture of.
     var glyph: AnyView?
+    /// A tile that switches something on and off shows when it's on (the accent marks the active thing).
+    var isOn = false
     let action: () -> Void
-    @Environment(\.hmmTheme) private var theme
 
     var body: some View {
         Button {
             HmmHaptics.play(.selection)
             action()
         } label: {
-            VStack(spacing: HmmSpacing.xxs) {
-                if let glyph {
-                    glyph.frame(height: 24)
-                } else {
-                    Image(systemName: systemName).symbolRenderingMode(.hierarchical).font(.system(size: 20, weight: .medium))
-                }
-                Text(LocalizedStringKey(title)).font(.hmm(.caption, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
-            }
-            .frame(maxWidth: .infinity, minHeight: 60)
-            .foregroundStyle(theme.text)
-            .background(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous).fill(theme.surface2.opacity(0.9)))
-            .contentShape(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous))
+            TileLabel(title: title, systemName: systemName, glyph: glyph, isOn: isOn)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
         .accessibilityIdentifier(identifier ?? title)
         .hoverEffect(.lift)
+    }
+}
+
+/// What a tile looks like (a `TileButton`'s label, or a `Menu`'s).
+struct TileLabel: View {
+    let title: String
+    let systemName: String
+    var glyph: AnyView?
+    var isOn = false
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        VStack(spacing: HmmSpacing.xxs) {
+            if let glyph {
+                glyph.frame(height: 24)
+            } else {
+                Image(systemName: systemName).symbolRenderingMode(.hierarchical).font(.system(size: 20, weight: .medium))
+            }
+            Text(LocalizedStringKey(title)).font(.hmm(.caption, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, minHeight: 60)
+        .foregroundStyle(isOn ? theme.accent : theme.text)
+        .background(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous).fill(theme.surface2.opacity(0.9)))
+        .overlay(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous).strokeBorder(theme.accent, lineWidth: isOn ? 2 : 0))
+        .contentShape(RoundedRectangle(cornerRadius: HmmRadius.card, style: .continuous))
     }
 }
 

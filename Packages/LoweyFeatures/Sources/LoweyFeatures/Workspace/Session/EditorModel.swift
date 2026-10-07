@@ -201,6 +201,8 @@ final class EditorModel {
     let faceMonitor = FaceMonitor()
     let performance = PerformanceMonitor()
     private(set) var displayRevision = 0
+    /// The Motion row's speed for the next motion tapped (`EditorModel+LoopMotion`).
+    var motionSpeed = 1.0
     /// The object a hold menu's Rename is about (`ObjectRenameAlert`).
     var renamingObject: ObjectID?
     /// The history scrubber, while it's open (`EditorModel+HistoryScrubber`).

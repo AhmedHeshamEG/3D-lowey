@@ -6,6 +6,8 @@ public enum AppSettings {
     public static let pencilHoverPreview = "pencilHoverPreview"
     /// Draw the stage at the screen's full pixel density and never lower the render scale (off: dynamic scale).
     public static let fullResolutionStage = "fullResolutionStage"
+    /// Off: the inspector floats beside the selection (the default). On: it stays docked at the side.
+    public static let inspectorDocked = "inspectorDocked"
     /// How fast the joystick moves, turns and sizes things (1 = normal).
     public static let joystickSpeed = "joystickSpeed"
     public static let joystickSpeedRange = 0.25 ... 3.0

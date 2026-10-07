@@ -24,6 +24,7 @@ struct InspectorPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: HmmSpacing.m) {
                     GizmoModeRow(editor: editor)
+                    MotionRow(editor: editor)
                     if let object = editor.singleSelection {
                         single(object)
                     } else {

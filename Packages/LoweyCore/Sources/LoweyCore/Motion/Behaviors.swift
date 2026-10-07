@@ -43,6 +43,10 @@ public enum BehaviorKind: Hashable, Sendable {
     case bob(height: Double, period: Double, tilt: Double)
     /// Continuous spin around a local axis.
     case spin(degreesPerSecond: Double, axis: Axis)
+    /// Hopping on the spot like a ball: up to `height` and back down once every `period` seconds.
+    case bounce(height: Double, period: Double)
+    /// Swinging like a pendulum around its own pivot: `angle` degrees each way, there and back every `period` seconds.
+    case swing(angle: Double, period: Double)
 
     public var title: String {
         switch self {
@@ -54,6 +58,8 @@ public enum BehaviorKind: Hashable, Sendable {
         case .windSway: "Wind sway"
         case .bob: "Bob on water"
         case .spin: "Spin"
+        case .bounce: "Bounce"
+        case .swing: "Swing"
         }
     }
 
@@ -67,7 +73,8 @@ public enum BehaviorKind: Hashable, Sendable {
         case .noise: [.position, .rotation]
         case .windSway: [.rotation]
         case .bob: [.position, .rotation]
-        case .spin: [.rotation]
+        case .spin, .swing: [.rotation]
+        case .bounce: [.position]
         }
     }
 }
@@ -109,6 +116,10 @@ extension BehaviorKind: Codable {
         case "spin":
             self = try .spin(degreesPerSecond: c.decode(Double.self, forKey: .degreesPerSecond),
                              axis: c.decodeIfPresent(Axis.self, forKey: .axis) ?? .y)
+        case "bounce":
+            self = try .bounce(height: c.decode(Double.self, forKey: .height), period: c.decodeIfPresent(Double.self, forKey: .period) ?? 1)
+        case "swing":
+            self = try .swing(angle: c.decode(Double.self, forKey: .angle), period: c.decodeIfPresent(Double.self, forKey: .period) ?? 2)
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: c, debugDescription: "Unknown behavior \(type)")
         }
@@ -156,6 +167,14 @@ extension BehaviorKind: Codable {
             try c.encode("spin", forKey: .type)
             try c.encode(speed, forKey: .degreesPerSecond)
             try c.encode(axis, forKey: .axis)
+        case let .bounce(height, period):
+            try c.encode("bounce", forKey: .type)
+            try c.encode(height, forKey: .height)
+            try c.encode(period, forKey: .period)
+        case let .swing(angle, period):
+            try c.encode("swing", forKey: .type)
+            try c.encode(angle, forKey: .angle)
+            try c.encode(period, forKey: .period)
         }
     }
 }
@@ -324,6 +343,14 @@ public enum BehaviorEvaluator {
             object.transform = transform
             scene.objects[behavior.target] = object
             return
+
+        case let .bounce(height, period):
+            world.position.y += hop(height: height, period: period, local: local)
+
+        case let .swing(angle, period):
+            object.transform.rotation = swung(object.transform.rotation, angle: angle, period: period, local: local)
+            scene.objects[behavior.target] = object
+            return
         }
         let localTransform = Transform.relative(world: world, toParent: parentWorld)
         object.transform = Transform(position: localTransform.position, rotation: localTransform.rotation, scale: object.transform.scale)
@@ -343,6 +370,20 @@ public enum BehaviorEvaluator {
     }
 
     /// Smooth random drift on top of the object's own (local) transform.
+    /// How high a bouncing thing is: one hop per period, a parabola from the ground to `height` and back (gravity's
+    /// own curve).
+    static func hop(height: Double, period: Double, local: Double) -> Double {
+        guard period > 0 else { return 0 }
+        let phase = local / period - (local / period).rounded(.down)
+        return height * 4 * phase * (1 - phase)
+    }
+
+    /// A pendulum about the thing's own pivot: `angle` degrees each way around its local z, there and back per period.
+    static func swung(_ rotation: Quat, angle: Double, period: Double, local: Double) -> Quat {
+        guard period > 0 else { return rotation }
+        return (rotation * Quat(angle: angle * sin(2 * .pi * local / period) * .pi / 180, axis: .unitZ)).normalized
+    }
+
     static func wobbled(_ transform: Transform, position: Vec3, rotation: Vec3, at x: Double, seed: UInt64) -> Transform {
         let offset = Vec3(
             position.x * Noise.fractal(x, seed: seed),

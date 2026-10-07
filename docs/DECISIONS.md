@@ -1419,3 +1419,21 @@ turns the view. *Rejected:* asking at first launch (a decision wall, law 4); a P
 two fingers orbit instead of pan for hand people (the same two fingers would do different things with and without a
 Pencil in the drawer).
 
+**D-184 — The Motion row: six looping motions are behaviours with one speed.** Tap a thing, tap Spin, Float, Bounce,
+Wiggle, Swing or Follow a path at the top of the inspector, and it moves on the stage straight away (playback starts;
+the timeline stays closed). A second tap stops it; several can run together. Each is a `Behavior` Core already
+evaluates deterministically (Float = bob, Wiggle = noise, Follow a path = followPath looping), plus two new kinds,
+`bounce` (a parabola per hop) and `swing` (a pendulum about the object's own pivot). Core's `LoopMotion` gives each
+its numbers and reads a behaviour back as (motion, speed), so one slider (0.25× to 4×) retimes whatever runs and nothing
+else is stored. **Make keyframes** bakes everything running on the selection in one step (`Simulation.bake` for several
+behaviours at once: baking one by one would bake the others into each). Follow a path takes the scene's drawn line
+(with several, the tile asks which); with none it says to draw one. Float, Spin, Wobble and the looping follow left
+the inspector's *Add a behaviour* menu (one home each); Sway, Orbit, Look at and a path followed once stay there.
+*Rejected:* writing keys at the tap (the loop would end at the timeline's end and couldn't be retimed with one slider);
+a new motion system beside behaviours (two ways to move a thing); adding the new kinds to Scene Script now (backlog:
+the MCP's sixteen tools are counted, R49).
+
+**D-185 — The inspector can be docked.** Beside the selection stays the default (D-105). Settings ▸ Stage ▸ *Dock the
+inspector at the side* keeps it at the trailing side whatever is selected, for people who'd rather it never moved.
+*Rejected:* a pin on the inspector itself (a control on every panel for something set once).
+
