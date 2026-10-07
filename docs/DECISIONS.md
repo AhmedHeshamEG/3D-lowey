@@ -1351,3 +1351,11 @@ who asked for it gets it. Diagnostics ▸ Smoothness has the percentage and the 
 chip (any message is the problem); lightening lines and shadows too (a visible pop; M15's smoothness pass can revisit
 with device numbers); overriding Always full resolution (it's the user's switch, law 7).
 
+**D-177 — Panels sit above all chrome.** Device note: Settings, reached through Actions, showed up beneath the
+brush-size sidebar. The sheet itself is the system's and can't be covered; what was covered is the panel that leads to
+it: `StageChrome` drew the clusters and their panels first and the sidebar and bottom row over them, so a tall panel
+(Actions, Look, Select, on the sidebar's side) had the sliders drawn through it. The order is now sidebar, bottom
+row, then clusters and panels. The panel's empty surroundings take no touches, so the sidebar works as before
+wherever no panel covers it. *Rejected:* moving the sidebar down or the panel sideways while a panel is open (things
+that move when you open something else; law 2); narrowing the panels.
+
