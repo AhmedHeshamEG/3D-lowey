@@ -1437,3 +1437,33 @@ the MCP's sixteen tools are counted, R49).
 inspector at the side* keeps it at the trailing side whatever is selected, for people who'd rather it never moved.
 *Rejected:* a pin on the inspector itself (a control on every panel for something set once).
 
+**D-186 — Draw a bone, redone: one depth through the part, joints at the bends, shown as it's drawn.** Device note
+on 0.7: *"it's not drawn correctly"*. Three things in D-166's centreline could put a chain where nobody drew it, and
+all three are replaced. (1) **Depth comes from the mesh, per stroke, not per sample.** Each sample's ray is cut into
+the stretches it spends inside the object (pieces pushed into each other count as one stretch; faces that don't say in
+and out consistently fall back to pairing hits). The stroke then takes one stretch per ray so that their middles make
+the shortest path in space, starting with the part in front (`CrossingPath`): a stroke along an arm stays in the arm
+even where the body is behind it. Where the part runs into something much thicker (more than 2.5× the stroke's usual
+thickness: a tail into a body), the point keeps the depth of the nearest sample where the part was on its own, so the
+chain runs straight in instead of rising to the body's skin or diving to its middle. (2) **Joints land where the stroke
+bends.** The centreline's corners are found by Ramer–Douglas–Peucker (tolerance: half the part's thickness, so a
+wobbly hand isn't a bend), and the usual number of bones (two to eight, about 1.4 thicknesses long) is shared between
+the stretches by length. A straight stroke is cut exactly as in 0.7. (3) **A live preview**: while the Pencil is down
+the stage shows the joints and bones the stroke would make, inside the object, every few samples (the surface's BVH is
+built once per stroke). **Drawing along a chain again replaces it** (`BoneStroke.redrawn`: bones within three quarters
+of a thickness of the stroke and pointing its way, and the unbranched run that carries straight on from them, when the
+stroke covers at least half): what hung from the old chain hangs from the nearest joint of the new one, keeping its
+names and places; the replaced joints' poses and keys go with them, in the same undo step. A person's skeleton is
+never taken for a redrawn chain. *Rejected:* the surface point under the tip pushed in by a fixed amount (wrong on
+every part that isn't that thick); asking "replace or add?" (a decision wall; the stroke already says which);
+replacing the whole rig on every stroke (a creature needs a tail and two arms).
+
+**D-187 — Rig is one place with three steps: Bones → Skin → Pose.** Device note: the rig tools felt unorganised (six
+buttons at once: draw, person, paint weights, reset pose, fit, remove). Cast ▸ Rig is now a row of three steps and,
+under it, only the step's own tools. **Bones**: Draw a bone, Rig as a person, Remove the rig. **Skin**: says the skin
+follows by itself, offers Paint weights (and Fit the weights when the shape changed). **Pose**: drag the joints (the
+Select tool), Reset the pose; saved poses stay in the Poses section below. Skin opens once bones exist and their
+weights have arrived; Pose opens once the skin fits. Nothing advances by itself: the next step lights up and you tap
+it. The bar under the stage shows the same three steps while the Rig tool is in the hand. *Rejected:* a wizard that
+moves on by itself (drawing a second bone would fight it); three separate sections (the old feeling, with headings).
+

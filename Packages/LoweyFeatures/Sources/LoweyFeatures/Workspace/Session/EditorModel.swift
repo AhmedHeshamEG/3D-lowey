@@ -69,7 +69,7 @@ final class EditorModel {
     var rigging = RigSettings() {
         didSet {
             guard rigging.joint != oldValue.joint || rigging.mode != oldValue.mode || rigging.target != oldValue.target
-                || (rigging.person == nil) != (oldValue.person == nil) else { return }
+                || rigging.preview != oldValue.preview || (rigging.person == nil) != (oldValue.person == nil) else { return }
             refreshModelOverlay()
             stage?.redraw()
         }
@@ -215,6 +215,8 @@ final class EditorModel {
     // MARK: Not observed
 
     @ObservationIgnored weak var stage: StageView?
+    /// The surface a bone is being drawn through, kept for the length of the stroke (`EditorModel+RigSteps`).
+    @ObservationIgnored var boneSurface: BoneSurface?
     /// What the silent load meter has done to the preview (`EditorModel+Load`).
     @ObservationIgnored var adaptivePreview = AdaptivePreview(home: PreviewQuality.current.tier)
     @ObservationIgnored var displayed: AnimatedScene

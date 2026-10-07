@@ -72,10 +72,11 @@ extension EditorModel {
         }
         rigging.target = id
         rigging.mode = .bone
+        rigging.step = .bones
         rigging.person = nil
         tool = .rig
         openPanel = nil
-        app.show("Draw a bone with the Pencil, through the part that should bend")
+        app.show("Draw a bone through the part that should bend")
     }
 
     /// A stroke on the stage (its points) becomes a chain of bones in the rig's object.
@@ -89,28 +90,18 @@ extension EditorModel {
             app.show("Choose what to rig first")
             return
         }
-        let frame = rigFrame(object.id)
-        let rays = worldRays.map { ray in
-            let origin = frame.inverseApply(to: ray.origin)
-            return Ray(origin: origin, direction: (frame.inverseApply(to: ray.origin + ray.direction) - origin).normalized)
+        defer { endBonePreview() }
+        guard let surface = boneSurface(of: object) else {
+            app.show("This model hasn't loaded yet")
+            return
         }
-        let samples: [BoneStroke.Sample]
-        let surface: [Vec3]
-        if case let .drawing(recipe) = object.kind {
-            let plane = RigOperations.drawingPlane(recipe)
-            samples = BoneStroke.onPlane(rays: rays, origin: plane.origin, normal: plane.normal)
-            surface = recipe.strokes.flatMap(\.points)
-        } else {
-            guard let mesh = paintSource(of: object) else {
-                app.show("This model hasn't loaded yet")
-                return
-            }
-            samples = BoneStroke.centreline(rays: rays, surface: TriangleBVH(mesh))
-            surface = mesh.positions.map { Vec3(Double($0.x), Double($0.y), Double($0.z)) }
-        }
+        let samples = boneSamples(worldRays, through: surface, of: object)
         do {
-            let rig = try BoneStroke.addingChain(samples, to: rigFits(object) ? object.rig : nil, surface: surface)
-            weigh(rig, on: object, label: object.rig == nil ? "Rig \(object.name)" : "Add a bone")
+            let rig = try BoneStroke.addingChain(samples, to: rigFits(object) ? object.rig : nil, surface: surface.points)
+            // Drawing along a chain again replaces it: what its joints held (poses, keys) goes with them.
+            let gone = object.rig.map { jointsGone(from: $0, in: rig) } ?? []
+            let label = object.rig == nil ? "Rig \(object.name)" : (gone.isEmpty ? "Add a bone" : "Redraw a bone")
+            weigh(rig, on: object, label: label, also: forgetting(gone, of: object))
         } catch {
             app.show(String.LocalizationValue(error.description))
         }
@@ -118,7 +109,7 @@ extension EditorModel {
 
     /// Works out the rig's weights (in the background: bone heat over a big model takes a moment), then stores it and
     /// says `done` when there's something to say.
-    func weigh(_ rig: ObjectRig, on object: SceneObject, label: String, done: String.LocalizationValue? = nil) {
+    func weigh(_ rig: ObjectRig, on object: SceneObject, label: String, also commands: [EditCommand] = [], done: String.LocalizationValue? = nil) {
         let id = object.id
         let mesh: MeshData? = if case .drawing = object.kind {
             nil
@@ -141,7 +132,7 @@ extension EditorModel {
                 return
             }
             guard baseScene.objects[id] != nil else { return }
-            perform(.batch(label, [.setRig(id, result.rig)]))
+            perform(.batch(label, [.setRig(id, result.rig)] + commands))
             if let done { app.show(done) }
             if rigging.joint == nil || rigging.joint ?? 0 >= result.rig.skeleton.joints.count { rigging.joint = result.rig.skeleton.joints.count - 1 }
             HmmHaptics.play(.commit)
@@ -245,7 +236,9 @@ extension EditorModel {
     /// The bones of the object being rigged, as it was made: a line along each bone and a dot at each joint, the bone
     /// whose weight is being painted in the accent colour. Drawn over everything, so bones inside the body show.
     func rigOverlays(_ stage: StageView) -> [EditorOverlay] {
-        guard rigging.person == nil, let object = rigTarget, let rig = object.rig, !rig.skeleton.isEmpty else { return [] }
+        guard rigging.person == nil, let object = rigTarget else { return [] }
+        let drawing = bonePreviewOverlays(stage)
+        guard let rig = object.rig, !rig.skeleton.isEmpty else { return drawing }
         let frame = rigFrame(object.id)
         let joints = rig.restPositions.map { frame.apply(to: $0) }
         let width = stage.worldPerPoint(at: joints[0]) * 2
@@ -267,7 +260,7 @@ extension EditorModel {
         var overlays = [EditorOverlay(mesh: lines, color: RGBA(1, 1, 1), opacity: 0.9, onTop: true),
                         EditorOverlay(mesh: dots, color: Self.modelAccent, onTop: true)]
         if !picked.isEmpty { overlays.append(EditorOverlay(mesh: picked, color: Self.modelAccent, onTop: true)) }
-        return overlays
+        return overlays + drawing
     }
 
     /// The library's rigged models in the scene (imported characters pose by their joints even without clips).

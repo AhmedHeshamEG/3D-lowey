@@ -2,8 +2,9 @@ import LoweyCore
 import LoweyEngine
 import UIKit
 
-/// The Pencil on Cast ▸ Rig: a stroke through a limb becomes a chain of bones (Draw a bone), or paints the chosen
-/// bone's weight (Paint weights). The stroke shows under the tip as it's drawn; it becomes one undo step when it ends.
+/// The Pencil on Cast ▸ Rig: a stroke through a limb becomes a chain of bones (Bones), or paints the chosen bone's
+/// weight (Skin). While a bone is drawn, the chain it will make shows inside the object, following the stroke; the
+/// stroke becomes one undo step when it ends.
 extension StageGestures {
     func rigStroke(_ recognizer: StrokeGestureRecognizer, editor: EditorModel, stage: StageView) {
         let samples = recognizer.samples
@@ -38,6 +39,10 @@ extension StageGestures {
         let brush = rigBrush(editor)
         let color = editor.rigging.mode == .bone ? RGBA(1, 0.722, 0.278) : (editor.rigging.erase ? RGBA(0.35, 0.45, 1) : RGBA(1, 0.3, 0.2))
         stage.showLiveStroke(LiveBrushStroke(stamps: .screen(BrushStroker.dabs(path, brush: brush, seed: 1)), brush: brush, color: color))
+        // The bones as they'll land, every few samples (each time, every sample looks through the object again).
+        if editor.rigging.mode == .bone, flipSamples.count >= 4, flipSamples.count % 3 == 0 || samples.count > 2 {
+            editor.previewBone(along: flipSamples.map { CGPoint(x: $0.point.x, y: $0.point.y) })
+        }
     }
 
     private func rigBrush(_ editor: EditorModel) -> Brush {
@@ -55,6 +60,7 @@ extension StageGestures {
             stage.showLiveStroke(nil)
             flipSamples = []
             consumedSamples = 0
+            editor.endBonePreview()
             editor.strokeEnded()
         }
         guard keep, !flipSamples.isEmpty else { return }

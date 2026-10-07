@@ -1,8 +1,33 @@
 import Foundation
 import LoweyCore
 
-/// Cast ▸ Rig (CONTEXT §10.5): what the Pencil does on the object being rigged, and the person rig being placed.
+/// Cast ▸ Rig (CONTEXT §10.5): the step rigging is at, what the Pencil does on the object being rigged, and the
+/// person rig being placed.
 public struct RigSettings: Equatable {
+    /// Rigging in three steps, in order: give it bones, let the skin follow them, pose it. Each step shows only its
+    /// own tools; a step opens once the one before it is done (`EditorModel.rigStepIsOpen`).
+    public enum Step: String, CaseIterable, Identifiable, Sendable {
+        case bones, skin, pose
+
+        public var id: String { rawValue }
+
+        public var title: String {
+            switch self {
+            case .bones: "Bones"
+            case .skin: "Skin"
+            case .pose: "Pose"
+            }
+        }
+
+        public var systemImage: String {
+            switch self {
+            case .bones: "point.topleft.down.to.point.bottomright.curvepath"
+            case .skin: "paintbrush.pointed"
+            case .pose: "figure.walk"
+            }
+        }
+    }
+
     public enum Mode: String, CaseIterable, Identifiable, Sendable {
         /// A stroke through a limb, tail or rope becomes a chain of bones.
         case bone
@@ -27,8 +52,12 @@ public struct RigSettings: Equatable {
     }
 
     public var mode: Mode = .bone
+    /// The step Cast ▸ Rig shows for the object being rigged.
+    public var step: Step = .bones
     /// The object being rigged.
     public var target: ObjectID?
+    /// The joints the stroke under the Pencil would make (the rig's space), shown while it's drawn.
+    public var preview: [Vec3] = []
     /// The joint whose weight the brush paints (skeleton index).
     public var joint: Int?
     /// The weight brush takes weight away instead.
