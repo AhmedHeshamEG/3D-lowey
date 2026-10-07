@@ -23,12 +23,14 @@ struct DiagnosticsSheet: View {
             Toggle("Performance HUD over the stage", isOn: $showsHUD).font(.hmm(.headline, weight: .semibold))
             Hint("Frame times against this screen's budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.")
             if let load = editor?.loadSummary {
+                let percent = "\(load.percent) %"
+                let scale = "\(load.scale) %"
                 HmmSectionHeader("Smoothness")
                 Group {
                     if load.lightened {
-                        Text("This scene uses \(load.percent) % of what this iPad keeps smooth. The preview is lighter for now, at \(load.scale) %.")
+                        Text("This scene uses \(percent) of what this iPad keeps smooth. The preview is lighter for now, at \(scale).")
                     } else {
-                        Text("This scene uses \(load.percent) % of what this iPad keeps smooth. The preview is at \(load.scale) %.")
+                        Text("This scene uses \(percent) of what this iPad keeps smooth. The preview is at \(scale).")
                     }
                 }
                 .font(.hmm(.footnote)).foregroundStyle(theme.text2)

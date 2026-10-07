@@ -211,8 +211,9 @@ flowchart LR
 ```mermaid
 flowchart LR
     Stroke[StageGestures+Rig<br/>Pencil samples] --> Rays[EditorModel+Rig.drawBone<br/>rays in the rig's space]
-    Rays --> Line[BoneStroke.centreline<br/>TriangleBVH: entry/exit midpoints]
-    Line --> Chain[BoneStroke.addingChain<br/>ObjectRig]
+    Rays --> Line[BoneStroke.centreline<br/>CrossingPath: one depth through the part]
+    Line --> Chain[BoneStroke.addingChain<br/>joints at the bends · a redrawn chain replaced]
+    Line -. while drawing .-> Preview[BoneStroke.preview<br/>bones on the stage]
     Dots[EditorModel+PersonRig<br/>eight taps, mirrored] --> Human[HumanRig.rig]
     Chain & Human --> Heat[BoneHeat.weights<br/>off the main thread]
     Heat --> Set[setRig + rigs/hash.skin]
@@ -224,7 +225,9 @@ flowchart LR
 
 - **Core `Rig/`**: `ObjectRig` (the skeleton in the rig's space, standard, tips, the `.skin` file or a drawing's inline
   `SkinWeights`, the surface fingerprint) on `SceneObject.rig`; `PropertyKey.boneTurn` (`bone.<joint>`, keyable);
-  `TriangleBVH` (rays and segments against a surface); `BoneStroke` (centreline, chains, removing a joint);
+  `TriangleBVH` (rays and segments against a surface, each crossing going in or out); `CrossingPath` (the stretches a
+  ray spends inside the object, and the one per ray that keeps a stroke at one depth); `BoneStroke` (centreline,
+  joints at the bends, the preview, chains, a chain drawn again, removing joints);
   `BoneHeat` (welded cotangent Laplacian, nearest visible bone, a PCG solve per joint); `RigOperations` (the surface a
   rig bends, weights stored as a file or inline, fits) and `WeightPaint`; `HumanRig` (the dots, the template, mirroring,
   the humanoid skeleton) and `TPose`; `CharacterRig` (the one door: Puppet joint objects, bones, the Blob) and `ChainIK`
@@ -237,10 +240,30 @@ flowchart LR
   vertices. `ModelExport.posedParts` bakes the pose for every 3D format (D-173). `RenderInput.weightView` is the stage's
   Paint weights view.
 - **Features**: `EditorModel+Rig` (what can be rigged, drawing a bone, weighing in the background, fitting, removing,
-  resetting, painting weights, the bones on the stage), `EditorModel+PersonRig`, `RigTypes` (`RigSettings`,
-  `PersonRigging`), `StageGestures+Rig`, `Cast/RigSection` (the section, `RigOptionsBar`, `PersonDotMarks`).
+  resetting, painting weights, the bones on the stage), `EditorModel+RigSteps` (Bones → Skin → Pose and when each
+  opens, the bone under the Pencil shown as it will land, forgetting the poses of replaced joints),
+  `EditorModel+PersonRig`, `RigTypes` (`RigSettings` with its `Step`, `PersonRigging`), `StageGestures+Rig`,
+  `Cast/RigSection` (the three steps, `RigStepRow`, `RigOptionsBar`, `PersonDotMarks`).
   `EditorModel+Poses` drags any character's joints through `IKHandles`; `restingRigTarget` shows the object being
   rigged or painted in its rest pose (D-171).
+
+## Touch (0.8)
+
+- **The hold menu** is hmm-kit's `HmmHoldMenu` (HmmDesign): the standard rows, up to three extras, Delete.
+  `hmmHoldMenu(_:)` puts it on a SwiftUI view; `HmmHoldMenuInteraction` puts it on a UIKit canvas (the stage: a
+  `UIContextMenuInteraction` hung from an invisible point under the finger, so nothing lifts); `hmmHoldMenu(at:)`
+  listens from the window for an area SwiftUI draws as one picture (the timeline's lanes). The menus of things in a
+  scene come from one file, `Workspace/UI/HoldMenus.swift` (`EditorModel.holdMenu(for:)`, `stageHoldMenu(at:)`,
+  `holdMenu(forKey:)`, `holdMenu(forClip:)`, `holdMenu(forFlipbookDrawing:of:)`); lists build theirs where their
+  state is. `ObjectRenameAlert` (on `EditorScreen`) is Rename for any object, wherever it was asked.
+- **Pencil or hand** is hmm-kit's `HmmPencilOrHand` in `UserDefaults`. `StageGestures` lets both the Pencil and
+  fingers reach the stroke recognizer with a making tool and decides each finger touch in `shouldReceive`:
+  `fingerMakes(at:)` (fingers may make, and there's an object or the guide under the finger) sends it to the stroke,
+  anything else to the orbit. `notePencil()` records the first Pencil touch or hover.
+- **The Motion row** (`Inspector/MotionRow`, `EditorModel+LoopMotion`) adds, retimes and bakes behaviours through
+  Core's `LoopMotion` (which motion a behaviour is and at what speed) and `Simulation.bake` for several at once.
+- **The colour well** is `SidebarColourWell` in the kit's `HmmSidebar(accessory:)`; `ColourChooser` is the one
+  palette-and-any-colour picker (also Paint ▸ Colour).
 
 ## LoweyRender 2
 
@@ -296,8 +319,8 @@ entitlement, on the device otherwise; `HmmConflictSheet` resolves conflicting ve
 docs/LAYOUT.md is the map; the Shell composes it. `RootView` shows Home (`TheaterView`) and presents the open project
 over it as a full-screen cover with the zoom transition from the card's picture. `EditorScreen` stacks the stage and
 the timeline by `EditorModel.timelinePresence` (hidden, transport, full; height and presence come from and go back to
-`workspace.json` through `EditorModel+Workspace`). `StageChrome` lays out the two clusters, the panel each opens, the
-sidebar and the bottom row; `FloatingInspector` places `InspectorPanel` with hmm-kit's `HmmFloatingPlacement`
+`workspace.json` through `EditorModel+Workspace`). `StageChrome` lays out the sidebar and the bottom row, then the two clusters and the panel each
+opens (last, so a panel is above all chrome); `FloatingInspector` places `InspectorPanel` with hmm-kit's `HmmFloatingPlacement`
 beside `EditorModel.selectionScreenRect` (the selection's box projected by the stage, refreshed on edits and after the
 camera settles: `EditorModel+Inspector`). Panels resize with hmm-kit's `hmmResizable`.
 

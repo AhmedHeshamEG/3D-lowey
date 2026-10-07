@@ -11,22 +11,54 @@ reference and stays.
 | Name, icon, bundle ids, `.maquette` projects | **0.1.** Temporary icon (2.0's cube in the studio neutrals) until the identity phase (S1). |
 | Nothing is ever lost: the history journal, undo after relaunch, versions, the History scrubber | **0.1.** [PROJECT_FORMAT.md](PROJECT_FORMAT.md) |
 | Apple Pencil: hover point at the tip in the stage's own pass, outline only while resizing | **0.1** |
-| Device tiers (A/B/C) and the hidden load meter | **0.1** |
+| Device tiers (A/B/C) and the load meter | **0.1**; silent since **0.8** |
 | The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
 | Modelling II (bevel, round, inset, shell, mirror and live symmetry, array along a path, corner/edge/midpoint/face snapping, measure, section view, kept dimensions, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, the Blender package) | **0.4.** FBX isn't offered (D-133). |
 | One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink, flipbooks and painting on models draw with it; the Schizzo board (M9) will. |
 | Painting on models: xatlas unwrap, Paint ▸ Colour (paint, erase, fill, eyedropper), layers, projection from the camera, textures in exports | **0.6.** Roughness, metal and glow painting come later; objects with drawn skeletons are painted in their rest pose, imported skins not yet (D-171). |
 | One skeleton system, draw a bone (bone-heat weights, weight painting), rig as a person, 2D drawn puppets, pose by dragging with IK, pose library, built-in clips on any humanoid | **0.7.** The person rig is placed by eight taps: Apple's body-pose model can't be checked on CI (D-168). |
-| Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, 1.0 polish | M8 |
-| Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | Free updates after 1.0 |
+| Fixes and touch: the silent load meter, one hold menu everywhere, Pencil or hand, the Motion row, the colour well, rigging in three steps with the bone redrawn | **0.8** |
+| Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | M9–M14: all in 1.0 (CONTEXT §10.10) |
+| The Pencil page, sketching that talks back, the flipbook's experience, waiting, the smoothness pass | M15 |
+| Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, Report a problem | M16 |
+
+### Fixes and touch (0.8)
+
+What Hesham bumped into on the iPad, and touching things feeling the same everywhere.
+
+- **Nothing is said on the stage under load** (D-176). The chip and its setting are gone. Near what the iPad keeps
+  smooth, the preview's render scale drops a tier by itself and comes back after twenty calm seconds (longer if it
+  doesn't hold). *Always full resolution* is the one thing that stops it. Diagnostics ▸ Smoothness has the numbers.
+- **Panels sit above all chrome** (D-177): a panel opened from a cluster covers the sidebar, never the reverse.
+- **A colour well on the sidebar** (D-178), under the two sliders, while Ink, a solid shape, Flipbook or Paint ▸ Colour
+  is the tool: the Look's palette and any colour, the same chooser as Paint.
+- **The sphere** (D-179): Model's second page is **Edit** (it was Shape, beside Add's Shapes), and the sphere's tile
+  is a ball.
+- **One hold menu everywhere** (D-180 to D-182): Duplicate · Rename · Copy · Paste, one to three extras, Delete in
+  red; a row a thing can't do is dimmed. On objects (on the stage with a still finger, in the outliner, on their
+  timeline row: Hide, Lock, Group, and Add to the selection when other things are selected), keys (easing, reverse,
+  mirror), clips (split at the playhead, loop), flipbook drawings (hold longer or shorter) and tracks, cuts, screen
+  effects, paint layers, brushes, Looks, library items, poses, palette colours, Home's cards and stacks.
+- **Pencil or hand, automatic** (D-183): a finger makes with every making tool until an Apple Pencil has touched the
+  stage; from then on the Pencil makes and fingers move the view. Settings ▸ Pencil or hand ▸ *Draw with a finger too*
+  overrides it. A finger that may make still orbits where there is nothing to make on; two fingers pan and pinch.
+- **The Motion row** (D-184), first thing in the inspector: Spin, Float, Bounce, Wiggle, Swing, Follow a path. One
+  tap and the thing moves on the stage (they loop; several can run together), one Speed slider, and **Make keyframes**
+  turns what's running into keys. The inspector can be **docked** at the side (Settings ▸ Stage, D-185).
+- **Rigging, redone** (D-186, D-187). Cast ▸ Rig is three steps in order, **Bones → Skin → Pose**, each showing only
+  its own tools; a step opens when the one before is done. A drawn bone takes its depth from the mesh for the whole
+  stroke (it stays in the part in front, and runs straight on where the part goes into the body), puts joints where
+  the stroke bends, and shows as bones inside the object while the Pencil is still down. Drawing along a chain again
+  replaces it, and what hung from it hangs from the new one.
 
 ### Rigging (0.7)
 
 - **One skeleton system** for every character (D-164): built Puppets (a joint per part), drawn rigs and imported
   Rigged models (`bone.<joint>` turns on the character), and the Blob (its mitten hands). Posing by dragging, IK, the
   pose library and clips all go through it.
-- **Cast ▸ Rig ▸ Draw a bone**: a Pencil stroke through a limb, a tail or a rope on anything that has a surface
+- **Cast ▸ Rig ▸ Draw a bone** (how the chain is found changed in 0.8, above): a Pencil stroke through a limb, a tail
+  or a rope on anything that has a surface
   (shapes, modelled parts, drawings, placed models) becomes a chain of bones down its middle; the first chain gets a
   root in the rest of the body, later ones hang from the bone they start on (D-165, D-166). The weights are worked
   out by **bone heat** (D-167): the surface bends smoothly across each joint and parts that only touch don't drag each

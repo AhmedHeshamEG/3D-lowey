@@ -3,6 +3,27 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.8] — Maquette — fixes and touch (phase M8)
+
+- **Nothing is said on the stage under load.** The "close to what this iPad keeps smooth" chip and its setting are
+  gone; the preview lightens by itself and comes back when there's room. The numbers are in Diagnostics ▸ Smoothness.
+- **One hold menu everywhere.** Touch and hold an object on the stage (a still finger; a moving one drags), a key, a
+  clip, a flipbook drawing, a layer, a brush, a Look, a card: Duplicate · Rename · Copy · Paste, then what fits the
+  thing, then Delete. Clips gained **Split at the playhead**. Adding to the selection is the menu's *Add to the
+  selection*.
+- **Pencil or hand, automatic.** With no Apple Pencil, a finger draws, paints and rigs; once a Pencil has touched,
+  it makes and fingers move the view. One switch in Settings ▸ Pencil or hand.
+- **Move it.** Six looping motions at the top of the inspector: Spin, Float, Bounce, Wiggle, Swing, Follow a path. One
+  tap and it moves, one Speed slider, **Make keyframes** when you want keys. Bounce and Swing are new.
+- **A colour well on the sidebar** while you draw or paint.
+- **Rigging in three steps**: Bones → Skin → Pose, each with only its own tools. A drawn bone runs through the middle
+  of the part it's drawn on (also where an arm lies in front of the body, or a tail goes into it), bends where the
+  stroke bends, shows as you draw it, and replaces a bone you draw again.
+- The sphere is findable: Model's second page is called **Edit**, and the sphere's tile looks like a ball.
+- Panels opened from the corners sit above the sidebar.
+- The inspector can be docked at the side (Settings ▸ Stage).
+- Projects are schema 10 (two new motion kinds); 0.7 projects open unchanged.
+
 ## [0.7] — Maquette — rigging (phase M7)
 
 - **Cast ▸ Rig ▸ Draw a bone**: draw through a limb, a tail or a rope with the Pencil and it bends there. Works on

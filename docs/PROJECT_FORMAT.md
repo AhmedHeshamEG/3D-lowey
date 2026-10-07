@@ -267,6 +267,24 @@ One journal command changes rigs: `setRig` (`{"op": "setRig", "id", "rig"}`, the
 first). Schema 9 only added the optional key and the command; files from schema 8 open unchanged, and Maquette 0.6
 refuses schema 9.
 
+## Looping motions (schema 10)
+
+A scene's timeline has `behaviors`: procedural motion evaluated at any time, each `{id, target, kind, start, end?,
+enabled}` with `kind` an object whose `type` says which. Maquette 0.8 adds two kinds:
+
+```json
+{"type": "bounce", "height": 0.4, "period": 1}
+{"type": "swing", "angle": 25, "period": 2}
+```
+
+`bounce` hops the object up to `height` metres and back down once every `period` seconds (a parabola per hop);
+`swing` turns it `angle` degrees each way around its own z axis, there and back every `period` seconds. The
+inspector's Motion row writes these and four older kinds with fixed numbers and one speed: `spin`
+(`degreesPerSecond` = 90 × speed), `bob` (`period` = 3 ÷ speed), `noise` (`frequency` = 1.2 × speed), `followPath`
+with `loop: true` (`duration` = 6 ÷ speed), `bounce` (`period` = 1 ÷ speed) and `swing` (`period` = 2 ÷ speed). Make
+keyframes replaces the behaviours with ordinary tracks. Schema 10 only added the two kinds; files from schema 9 open
+unchanged, and Maquette 0.7 refuses schema 10.
+
 ## workspace.json
 
 How the project shows when it opens. It isn't the project (it's never undone and isn't in the journal); it's

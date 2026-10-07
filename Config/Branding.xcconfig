@@ -3,5 +3,5 @@ APP_DISPLAY_NAME = Maquette
 
 // Marketing version for local builds; CI overrides it from the git tag (v1.0.0 → 1.0.0)
 // and sets the build number to the CI run number.
-MARKETING_VERSION = 0.7
+MARKETING_VERSION = 0.8
 CURRENT_PROJECT_VERSION = 1

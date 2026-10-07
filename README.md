@@ -4,6 +4,13 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.8** (phase M8): **fixes and touch**. Touch and hold anything (an object on the stage, a key, a clip, a layer, a
+brush, a card) and the same menu opens in the same order. Pencil or hand is automatic: a finger draws until an Apple
+Pencil has touched. Tap a thing, tap Spin, Float, Bounce, Wiggle, Swing or Follow a path, and it moves, no timeline
+needed. A colour well sits on the sidebar while you draw. Rigging is three steps (Bones, Skin, Pose), and a drawn bone
+runs through the middle of the part, bends where the stroke bends and shows as you draw it. Under load nothing is said
+on the stage any more: the preview lightens by itself.
+
 **0.7** (phase M7): **rigging**. Draw a bone through a limb, a tail or a rope with the Pencil and the model bends
 there: shapes, modelled parts, drawings and placed models, with the weights worked out by bone heat (or painted by
 hand). Rig a human-like model as a person with eight taps and every built-in clip plays on it. Drag any character's
@@ -40,7 +47,7 @@ searched and sorted. New projects start from a template (print, room, character,
 
 **0.1** (phase M1): **nothing is ever lost** (every change is recorded the moment it happens, undo survives closing
 the app, Actions ▸ History scrubs back through every step); the Pencil's hover point sits exactly under the tip; every
-iPad gets a preview tuned to it; a hidden load meter speaks up before frames drop.
+iPad gets a preview tuned to it; a hidden load meter watches the frames (silent since 0.8).
 
 **From 2.0.** A Metal renderer and five Looks (Ink, Comic, Sketch, Clay, Low-poly), a layout without modes, ink strokes
 and flipbooks, a Kit of about 350 real-size models, one Cast for every kind of character, and Claude as a director's
