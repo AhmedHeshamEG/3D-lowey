@@ -3,7 +3,8 @@ import LoweyCore
 import SwiftUI
 
 /// The left sidebar: two sliders that change with the context (drawing: width and smoothing; Shadow Brush: size and
-/// strength; Perform: filtering and sensitivity; otherwise snapping and navigation speed), Pick, undo and redo.
+/// strength; Perform: filtering and sensitivity; otherwise snapping and navigation speed), Pick, the colour well
+/// while a tool that puts colour down is in the hand, undo and redo.
 struct EditorSidebar: View {
     @Bindable var editor: EditorModel
     @AppStorage(AppSettings.navigationSpeed) private var navigationSpeed = 1.0
@@ -13,7 +14,8 @@ struct EditorSidebar: View {
         HmmSidebar(top: top, bottom: bottom, pickActive: editor.pickActive, pick: {
             editor.pickActive.toggle()
             if editor.pickActive { editor.app.show("Tap an object to take its colour into palette slot \(editor.pickSlot + 1)") }
-        }, canUndo: editor.canUndo, canRedo: editor.canRedo, undo: editor.undo, redo: editor.redo)
+        }, accessory: editor.tool.putsColourDown ? AnyView(SidebarColourWell(editor: editor)) : nil,
+        canUndo: editor.canUndo, canRedo: editor.canRedo, undo: editor.undo, redo: editor.redo)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("sidebar")
     }

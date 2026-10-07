@@ -66,6 +66,10 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     /// The Paint tools (top right: Paint): on objects and over the ground.
     public var paintsSurfaces: Bool { self == .shadowBrush || self == .scatter || self == .paint }
 
+    /// Tools whose strokes take the colour in the hand (the sidebar shows its colour well for them). The Shadow
+    /// Brush isn't one: it moves the Look's own shadow.
+    public var putsColourDown: Bool { self == .ink || self == .draw || self == .flipbook || self == .paint }
+
     /// Tools that draw on a guide surface.
     public var usesGuide: Bool { self == .ink || self == .draw }
 }

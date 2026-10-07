@@ -1359,3 +1359,13 @@ row, then clusters and panels. The panel's empty surroundings take no touches, s
 wherever no panel covers it. *Rejected:* moving the sidebar down or the panel sideways while a panel is open (things
 that move when you open something else; law 2); narrowing the panels.
 
+
+
+**D-178 — A colour well on the sidebar, for every tool that puts colour down.** Device note: colour couldn't be chosen
+while drawing (it lived in Look ▸ Palette and Paint ▸ Colour). The sidebar now shows the colour in the hand as a round
+well under the two sliders while Ink, Flipbook, Draw (solid shapes) or Paint ▸ Colour is the tool; a tap opens the same
+chooser Paint uses (the Look's palette + any colour), one `ColourChooser` for both. The kit's `HmmSidebar` gained an
+`accessory` slot for it (hmm-kit 0.4.0). The Shadow Brush has no well: it has no colour of its own, it pushes the
+Look's shadow in or out, and a well that changed nothing would be a stub (law 8). *Rejected:* a colour button in the
+tool's options bar (the bar is different per tool; the sidebar is the same place for all of them); a well that's always
+there (with Select in the hand it would look like it recolours the selection).

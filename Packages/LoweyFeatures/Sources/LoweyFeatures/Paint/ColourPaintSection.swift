@@ -23,10 +23,7 @@ struct ColourPaintSection: View {
             }
             BrushRow(editor: editor, tool: .paint)
             PanelSection("Colour") {
-                HStack(spacing: HmmSpacing.s) {
-                    PaletteRow(palette: editor.look.palette, selected: editor.currentColor.paletteSlot) { editor.currentColor = .palette($0) }
-                    ColorPicker("Any colour", selection: anyColour, supportsOpacity: false).labelsHidden()
-                }
+                ColourChooser(editor: editor)
             }
             target
             Hint("Size and opacity are the sidebar's sliders. Fingers move around; the Pencil paints.")
@@ -38,15 +35,6 @@ struct ColourPaintSection: View {
             defer { if access { url.stopAccessingSecurityScopedResource() } }
             if let image = UIImage(contentsOfFile: url.path)?.cgImage { place(image) }
         }
-    }
-
-    private var anyColour: Binding<Color> {
-        Binding(get: { editor.paintColor.color }, set: { value in
-            let resolved = UIColor(value).resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-            resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-            editor.currentColor = .rgba(RGBA(Double(red), Double(green), Double(blue)))
-        })
     }
 
     @ViewBuilder private var target: some View {
