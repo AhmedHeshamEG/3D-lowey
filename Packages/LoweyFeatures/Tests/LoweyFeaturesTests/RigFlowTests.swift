@@ -95,7 +95,8 @@ final class RigFlowTests: XCTestCase {
         // The same stroke a little to one side: the chain is replaced, not doubled.
         let again = stroke(across: cube.id, in: editor).map { Ray(origin: $0.origin + Vec3(0, 0, 0.04), direction: $0.direction) }
         editor.drawBone(rays: again)
-        for _ in 0 ..< 200 where editor.baseScene.objects[cube.id]?.rig == first {
+        // Bone heat on CI's simulator takes several seconds each time.
+        for _ in 0 ..< 900 where editor.baseScene.objects[cube.id]?.rig == first {
             try await Task.sleep(for: .milliseconds(50))
         }
         let second = try XCTUnwrap(editor.baseScene.objects[cube.id]?.rig)
