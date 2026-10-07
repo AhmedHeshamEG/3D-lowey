@@ -91,9 +91,15 @@ private struct ObjectLabel: View {
         .contentShape(Rectangle())
         .onTapGesture { editor.select(id) }
         .accessibilityAddTraits(.isButton)
-        .hmmHoldMenu(editor.holdMenu(for: [id], extras: isGroup ? [
+        .hmmHoldMenu(menu(isGroup: isGroup))
+    }
+
+    /// The object's menu; a group's extras are about what's inside it.
+    private func menu(isGroup: Bool) -> HmmHoldMenu {
+        guard isGroup else { return editor.holdMenu(for: [id]) }
+        return editor.holdMenu(for: [id], extras: [
             HmmHoldMenu.Item("Select everything inside", systemName: "square.stack.3d.up") { editor.setSelection(editor.baseScene.subtree(of: id)) }
-        ] : nil))
+        ])
     }
 }
 

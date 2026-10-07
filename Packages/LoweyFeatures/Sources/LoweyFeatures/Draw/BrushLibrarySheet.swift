@@ -146,7 +146,7 @@ struct BrushLibrarySheet: View {
         return HmmHoldMenu(duplicate: { brushes.duplicate(brush.id) },
                            rename: { renaming = Renaming(target: .brush(brush.id), name: brush.name) },
                            extras: extras,
-                           delete: brushes.library.isBuiltIn(brush.id) ? nil : { brushes.delete(brush.id) })
+                           delete: holdAction(if: !brushes.library.isBuiltIn(brush.id)) { brushes.delete(brush.id) })
     }
 
     private func commitRename() {

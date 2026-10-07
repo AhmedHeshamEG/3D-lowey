@@ -1101,6 +1101,7 @@
         }
       }
     },
+    "Add to the selection": {},
     "Added %lld brushes in “%@”": {
       "localizations": {
         "it": {
@@ -4737,6 +4738,7 @@
         }
       }
     },
+    "Dock the inspector at the side": {},
     "Dolly": {
       "localizations": {
         "it": {
@@ -5133,6 +5135,7 @@
         }
       }
     },
+    "Draw a line or a curve with Model ▸ Edit ▸ Sketch first": {},
     "Draw a line or a curve with Model ▸ Shape ▸ Sketch first": {
       "localizations": {
         "it": {
@@ -5149,6 +5152,7 @@
         }
       }
     },
+    "Draw a line with Draw first: that's the path to follow": {},
     "Draw half a profile: it spins into a vase, a trunk or a tower.": {
       "localizations": {
         "it": {
@@ -7233,6 +7237,8 @@
         }
       }
     },
+    "Follow a drawn path once": {},
+    "Follow a path": {},
     "Follow path": {
       "localizations": {
         "it": {
@@ -8281,6 +8287,8 @@
         }
       }
     },
+    "Hold longer": {},
+    "Hold shorter": {},
     "Home": {
       "localizations": {
         "it": {
@@ -10173,6 +10181,7 @@
         }
       }
     },
+    "Make keyframes": {},
     "Make things, top right": {
       "localizations": {
         "it": {
@@ -10805,6 +10814,7 @@
         }
       }
     },
+    "Move it": {},
     "Move out": {
       "localizations": {
         "it": {
@@ -11137,6 +11147,7 @@
         }
       }
     },
+    "Near the limit the preview lightens by itself and comes back when there's room. Exports always render at full quality.": {},
     "New": {
       "localizations": {
         "it": {
@@ -11889,6 +11900,7 @@
         }
       }
     },
+    "One finger draws until an Apple Pencil touches the screen. Then the Pencil draws and fingers move the view, unless this is on.": {},
     "One finger orbits, two pan and pinch. Double-tap something to frame it. Tap to select.": {
       "localizations": {
         "it": {
@@ -12705,6 +12717,7 @@
         }
       }
     },
+    "Pencil or hand": {},
     "Pencil roll": {
       "localizations": {
         "it": {
@@ -12877,6 +12890,7 @@
         }
       }
     },
+    "Pick a face first (Model ▸ Edit ▸ Face)": {},
     "Pick a face first (Model ▸ Shape ▸ Face)": {
       "localizations": {
         "it": {
@@ -16749,6 +16763,7 @@
         }
       }
     },
+    "Smoothness": {},
     "Smoothness warnings": {
       "localizations": {
         "it": {
@@ -17357,6 +17372,7 @@
         }
       }
     },
+    "Split at the playhead": {},
     "Spot": {
       "localizations": {
         "it": {
@@ -18045,6 +18061,7 @@
         }
       }
     },
+    "Swing": {},
     "Switch the timeline to Keyframe to drag hands and feet directly.": {
       "localizations": {
         "it": {
@@ -19705,6 +19722,8 @@
         }
       }
     },
+    "This scene uses %@ % of what this iPad keeps smooth. The preview is at %@ %.": {},
+    "This scene uses %@ % of what this iPad keeps smooth. The preview is lighter for now, at %@ %.": {},
     "This shape couldn't be laid flat for painting": {
       "localizations": {
         "paint-it": {
@@ -20069,6 +20088,7 @@
         }
       }
     },
+    "Touch and hold an object for its menu. With something selected, Add to the selection is in it.": {},
     "Touch and hold an object on the stage to add it to the selection.": {
       "localizations": {
         "it": {

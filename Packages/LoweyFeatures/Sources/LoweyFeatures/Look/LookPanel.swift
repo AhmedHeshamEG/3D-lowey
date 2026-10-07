@@ -54,7 +54,7 @@ struct LookPanel: View {
                         }
                         .buttonStyle(.plain)
                         .hmmHoldMenu(HmmHoldMenu(duplicate: { editor.duplicateLook(preset) },
-                                                 delete: preset.isBuiltIn ? nil : { editor.deleteCustomLook(preset.id) }))
+                                                 delete: holdAction(if: !preset.isBuiltIn) { editor.deleteCustomLook(preset.id) }))
                     }
                 }
             }

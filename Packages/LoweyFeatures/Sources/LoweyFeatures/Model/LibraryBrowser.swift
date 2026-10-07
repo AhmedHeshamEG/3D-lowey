@@ -116,7 +116,7 @@ struct LibraryBrowser: View {
             editName = item.name
             editTags = item.tags.joined(separator: ", ")
             editingItem = item
-        }, extras: extras, delete: item.isKit ? nil : { library.remove(item) })
+        }, extras: extras, delete: holdAction(if: !item.isKit) { library.remove(item) })
     }
 }
 

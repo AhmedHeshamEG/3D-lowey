@@ -2,6 +2,13 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
+/// A hold-menu row's action when the thing can do it; nil, a dimmed row, when it can't. (A closure and `nil` in a
+/// ternary is more than the type checker will work out for a main-actor action.)
+@MainActor
+func holdAction(if possible: Bool, _ action: @escaping @MainActor () -> Void) -> (@MainActor () -> Void)? {
+    possible ? action : nil
+}
+
 /// The hold menus of the things in a scene, in the one grammar (CONTEXT §4.1; the kit's `HmmHoldMenu`): Duplicate,
 /// Rename, Copy and Paste first, then what fits the thing, Delete last. An object has the same menu on the stage, in
 /// the outliner and on its timeline row.
@@ -10,9 +17,9 @@ extension EditorModel {
     func holdMenu(for ids: [ObjectID], extras custom: [HmmHoldMenu.Item]? = nil) -> HmmHoldMenu {
         let objects = ids.compactMap { scene.objects[$0] }
         return HmmHoldMenu(duplicate: on(ids) { $0.duplicateSelection() },
-                           rename: objects.count == 1 ? { [weak self] in self?.renamingObject = ids.first } : nil,
+                           rename: holdAction(if: objects.count == 1) { [weak self] in self?.renamingObject = ids.first },
                            copy: on(ids) { $0.copySelection() },
-                           paste: canPaste ? { [weak self] in self?.paste() } : nil,
+                           paste: holdAction(if: canPaste) { [weak self] in self?.paste() },
                            extras: custom ?? objectExtras(ids, objects),
                            delete: on(ids) { $0.deleteSelection() })
     }
@@ -43,7 +50,7 @@ extension EditorModel {
         })
         let several = selectedKeys.count > 1
         return HmmHoldMenu(copy: { [weak self] in self?.copyKeys() },
-                           paste: hasKeyClipboard ? { [weak self] in self?.pasteKeys() } : nil,
+                           paste: holdAction(if: hasKeyClipboard) { [weak self] in self?.pasteKeys() },
                            extras: [easing,
                                     HmmHoldMenu.Item("Reverse", systemName: "arrow.uturn.backward", isEnabled: several) { [weak self] in self?.reverseKeys() },
                                     HmmHoldMenu.Item("Mirror (there and back)", systemName: "arrow.left.and.right", isEnabled: several) { [weak self] in
