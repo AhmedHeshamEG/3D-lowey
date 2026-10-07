@@ -100,7 +100,8 @@ final class SmokeTests: XCTestCase {
     /// Under load nothing is said on the canvas (CONTEXT §6): the preview lightens by itself and the numbers are in
     /// Diagnostics.
     func testNothingAppearsOnTheCanvasUnderLoad() {
-        launch(["-load-level", "over"])
+        // As an M-series iPad, whatever the simulator is: there is a lighter preview to go to.
+        launch(["-load-level", "over", "-device-tier", "A"])
         newProject("Heavy")
         tap("Model")
         tap("add-cube")
