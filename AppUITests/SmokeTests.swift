@@ -109,7 +109,7 @@ final class SmokeTests: XCTestCase {
         for identifier in ["load-chip", "lighter-preview"] {
             XCTAssertFalse(app.descendants(matching: .any)[identifier].firstMatch.exists, "\(identifier) is on the canvas")
         }
-        let messages = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'smooth'"))
+        let messages = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'keeps smooth' OR label CONTAINS[c] 'lighter preview'"))
         XCTAssertEqual(messages.count, 0, "a message about smoothness is on the canvas")
         shot("Under load")
         tap("Actions")

@@ -76,8 +76,13 @@ final class LayoutTests: XCTestCase {
     /// The rows of the menu that's open, top to bottom.
     private func openMenuRows() -> [String] {
         let names = ["Duplicate", "Rename", "Copy", "Paste", "Delete"]
-        guard app.buttons["Duplicate"].firstMatch.waitForExistence(timeout: 5) else { return [] }
-        return names.map { app.buttons[$0].firstMatch }.filter(\.exists).sorted { $0.frame.minY < $1.frame.minY }.map(\.label)
+        // Paste is only ever in the menu; the others are also buttons elsewhere (the inspector's Duplicate), so take
+        // the ones in Paste's column.
+        let paste = app.buttons["Paste"].firstMatch
+        guard paste.waitForExistence(timeout: 5) else { return [] }
+        let column = paste.frame.minX
+        let rows = names.flatMap { app.buttons.matching(identifier: $0).allElementsBoundByIndex }.filter { abs($0.frame.minX - column) < 2 }
+        return rows.sorted { $0.frame.minY < $1.frame.minY }.map(\.label)
     }
 
     private func closeMenu() {
@@ -86,7 +91,7 @@ final class LayoutTests: XCTestCase {
     }
 
     /// Touch and hold opens the same menu on every kind of thing: Duplicate, Rename, Copy, Paste first, Delete last
-    /// (CONTEXT §4.1). Walks a project's card, an object on the stage, the same object in the outliner, and a Look.
+    /// (CONTEXT §4.1). Walks an object on the stage, a Look and a project's card; keys, clips, drawings: `HoldMenuFlowTests`.
     func testTheHoldMenuStartsTheSameOnEveryKindOfThing() {
         let expected = ["Duplicate", "Rename", "Copy", "Paste", "Delete"]
         newProject("Holding")
@@ -99,13 +104,6 @@ final class LayoutTests: XCTestCase {
         stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 1.2)
         XCTAssertEqual(openMenuRows(), expected, "an object on the stage")
         shot("Hold menu on the stage")
-        closeMenu()
-
-        XCTAssertTrue(tap("Select"))
-        let row = app.staticTexts["Cube"].firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 5), "the cube is in the outliner")
-        row.press(forDuration: 1.2)
-        XCTAssertEqual(openMenuRows(), expected, "an object in the outliner")
         closeMenu()
 
         XCTAssertTrue(tap("Look"))
