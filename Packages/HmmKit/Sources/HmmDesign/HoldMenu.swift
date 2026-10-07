@@ -12,6 +12,8 @@ import Foundation
 public struct HmmHoldMenu {
     /// One row.
     public struct Item: Identifiable {
+        /// The title, unless rows could share one (names in a submenu).
+        public var id: String
         public var title: String
         public var systemName: String
         public var isEnabled: Bool
@@ -22,10 +24,9 @@ public struct HmmHoldMenu {
         public var children: [Item]
         public var action: @MainActor () -> Void
 
-        public var id: String { title }
-
-        public init(_ title: String, systemName: String = "", isEnabled: Bool = true, isDestructive: Bool = false, isVerbatim: Bool = false,
-                    children: [Item] = [], action: @escaping @MainActor () -> Void = {}) {
+        public init(_ title: String, id: String? = nil, systemName: String = "", isEnabled: Bool = true, isDestructive: Bool = false,
+                    isVerbatim: Bool = false, children: [Item] = [], action: @escaping @MainActor () -> Void = {}) {
+            self.id = id ?? title
             self.title = title
             self.systemName = systemName
             self.isEnabled = isEnabled

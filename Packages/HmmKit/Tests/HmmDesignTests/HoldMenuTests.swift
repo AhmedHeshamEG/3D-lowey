@@ -43,6 +43,8 @@ final class HoldMenuTests: XCTestCase {
         menu.sections[2][0].action()
         XCTAssertEqual(ran, ["duplicate", "move", "delete"])
         XCTAssertTrue(menu.sections[1][0].children[0].isVerbatim)
+        XCTAssertEqual(HmmHoldMenu.Item("Group", id: "g2").id, "g2")
+        XCTAssertEqual(HmmHoldMenu.Item("Group").id, "Group")
     }
 }
 
