@@ -1366,3 +1366,15 @@ chooser Paint uses (the Look's palette + any colour), one `ColourChooser` for bo
 Look's shadow in or out, and a well that changed nothing would be a stub (law 8). *Rejected:* a colour button in the
 tool's options bar (the bar is different per tool; the sidebar is the same place for all of them); a well that's always
 there (with Select in the hand it would look like it recolours the selection).
+
+**D-179 — The sphere: Model's second page is called Edit, and the tile is a ball.** Device note: "Sphere missing on
+Shapes". It is where it has always been (Model ▸ Add ▸ Shapes, second tile) and the panel doesn't clip it at any size
+(the grid reflows; the new UI test checks all seven tiles are whole and tappable). What the code does show: the panel
+remembers its page, the page next to Add was called **Shape**, and it lists Line, Rectangle, Circle, Arc: someone
+looking for a sphere "under Shapes" lands there, finds a circle and no sphere. And on Add the sphere's tile was a flat
+disc (SF Symbols has no sphere) beside a cube, a cylinder and a cone drawn in 3D. So the page is now **Edit** (it
+sketches on, pushes, pulls, combines, mirrors and checks what's already there; nothing moved, its place and contents
+are the same) and the sphere tile is a shaded ball. *Rejected:* moving the solids onto that page (it moves things
+Hesham knows; the smoke tests and LAYOUT.md say where they are); listing them on both pages (one home each, M2's rule);
+always opening Model on Add (remembering the page is right when you're modelling).
+

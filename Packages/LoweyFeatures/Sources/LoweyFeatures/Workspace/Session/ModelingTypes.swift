@@ -174,7 +174,7 @@ struct PrecisionState: Equatable {
     var wallHeight = Architecture.wallHeight
     var wallThickness = Architecture.wallThickness
     var exportFormat: ModelExportFormat = .glb
-    /// The last printability check (Model ▸ Shape ▸ 3D print) and what it checked.
+    /// The last printability check (Model ▸ Edit ▸ 3D print) and what it checked.
     var printReport: PrintReport?
     var printChecked: [ObjectID] = []
 

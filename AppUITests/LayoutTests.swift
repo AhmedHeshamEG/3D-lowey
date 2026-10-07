@@ -51,6 +51,26 @@ final class LayoutTests: XCTestCase {
         XCTAssertTrue(app.otherElements["stage"].waitForExistence(timeout: 15))
     }
 
+    /// Model ▸ Add ▸ Shapes shows all seven shapes, each one whole inside the panel and tappable (device note: the
+    /// sphere couldn't be found).
+    func testAllSevenShapesAreVisible() {
+        newProject("Shapes")
+        XCTAssertTrue(tap("Model"))
+        XCTAssertTrue(tap("model-add"))
+        let window = app.windows.firstMatch.frame
+        for shape in ["cube", "sphere", "cylinder", "cone", "plane", "torus", "ramp"] {
+            let tile = element("add-\(shape)")
+            XCTAssertTrue(tile.waitForExistence(timeout: 5), "\(shape) is missing from Model ▸ Add")
+            XCTAssertTrue(tile.isHittable, "\(shape) can't be tapped")
+            XCTAssertTrue(window.contains(tile.frame), "\(shape) is cut off")
+            XCTAssertGreaterThan(tile.frame.width, 60, "\(shape) is squeezed")
+        }
+        XCTAssertEqual(element("add-sphere").label, "Sphere")
+        shot("Shapes")
+        XCTAssertTrue(tap("add-sphere"))
+        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5), "a sphere landed on the stage")
+    }
+
     // MARK: Every control has a home
 
     func testHomeControlsAreReachable() {

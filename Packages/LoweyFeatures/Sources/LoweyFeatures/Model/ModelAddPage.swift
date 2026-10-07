@@ -15,7 +15,8 @@ struct ModelAddPage: View {
             PanelSection("Shapes") {
                 TileGrid {
                     ForEach(PrimitiveShape.allCases, id: \.self) { shape in
-                        TileButton(title: shape.displayName, systemName: Self.icon(for: shape), identifier: "add-\(shape.rawValue)") {
+                        TileButton(title: shape.displayName, systemName: Self.icon(for: shape), identifier: "add-\(shape.rawValue)",
+                                   glyph: shape == .sphere ? AnyView(SphereGlyph()) : nil) {
                             place { editor.addPrimitive(shape) }
                         }
                     }

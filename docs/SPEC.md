@@ -153,7 +153,7 @@ At rest the stage holds at least 85% of the screen.
 
 ### Modelling I (0.3)
 
-Shapr3D's core loop, in **Model ▸ Shape**. Choosing a sketch shape or a pick mode closes the panel and puts the Model
+Shapr3D's core loop, in **Model ▸ Edit**. Choosing a sketch shape or a pick mode closes the panel and puts the Model
 tool's bar at the bottom of the stage (pick modes, sketch shapes, Done, grow / shrink / select similar, ✕).
 
 - **Sketch on any surface.** The first tap lands on the face under it (or the ground) and the shape lies on that
@@ -186,7 +186,7 @@ tool's bar at the bottom of the stage (pick modes, sketch shapes, Done, grow / s
   around each, the middle stays picked to push or pull), **Shell** the solid (walls of an exact thickness; picked faces
   are left open). Each runs at once at a size that suits the units (1 mm in a print project, 5 cm in a room); its size
   then floats beside it, and typing a new one does it again from the same pick.
-- **Mirror** (Model ▸ Shape): a mirror image across the picked face (it joins into one solid when it touches) or across
+- **Mirror** (Model ▸ Edit): a mirror image across the picked face (it joins into one solid when it touches) or across
   the world's middle (a twin on the other side). **Symmetry**: left and right, front and back, or top and bottom, per
   object; switching it on moves the pivot to the middle on that axis and makes the shape symmetric; every Model edit
   afterwards keeps the side it touched and the other side follows (a push/pull shows both faces moving).
@@ -201,7 +201,7 @@ tool's bar at the bottom of the stage (pick modes, sketch shapes, Done, grow / s
 - **Section view**: cut the stage across x, y or z through the middle of the selection, or along the picked face;
   slide where it cuts, keep the other side. Cut solids show their inside flat in their own colour. Exports are never
   cut.
-- **3D printing** (Model ▸ Shape ▸ 3D print): pick the printer (its build volume is outlined on the stage; Model to
+- **3D printing** (Model ▸ Edit ▸ 3D print): pick the printer (its build volume is outlined on the stage; Model to
   print starts with a 220 mm one), **Check for printing** (holes, tangled edges, inside-out faces, walls thinner than
   the printer prints, fitting the bed, the thinnest wall) and **Repair** (joins, turns and closes what it can). STL and
   3MF exports are millimetres with Z up, so parts stand on the bed in a slicer.

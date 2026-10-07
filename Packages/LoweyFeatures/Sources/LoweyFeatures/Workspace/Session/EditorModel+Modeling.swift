@@ -4,7 +4,7 @@ import HmmDesign
 import LoweyCore
 import LoweyEngine
 
-/// The Model tool (Model ▸ Shape): pick faces, edges and corners, booleans on solids, and the state the stage's marks
+/// The Model tool (Model ▸ Edit): pick faces, edges and corners, booleans on solids, and the state the stage's marks
 /// and floating numbers read. Sketching is `EditorModel+Sketching`, push/pull `EditorModel+PushPull`.
 extension EditorModel {
     /// Starts the Model tool in a mode (from the Shape page or the bottom bar).

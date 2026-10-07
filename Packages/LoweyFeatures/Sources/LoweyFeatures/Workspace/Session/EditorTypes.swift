@@ -18,7 +18,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case flipbook
     /// Drag on the ground to scatter copies of the selection.
     case scatter
-    /// Model ▸ Shape: pick faces, edges and corners, push/pull, sketch on surfaces (`ModelingState`).
+    /// Model ▸ Edit: pick faces, edges and corners, push/pull, sketch on surfaces (`ModelingState`).
     case model
     /// Paint ▸ Colour: colour painted on models with the brush engine (`ColourPaintSettings`).
     case paint
@@ -101,7 +101,7 @@ public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
     public var title: String {
         switch self {
         case .add: "Add"
-        case .shape: "Shape"
+        case .shape: "Edit"
         case .library: "Library"
         case .precision: "Precision"
         }

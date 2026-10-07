@@ -28,7 +28,7 @@ keep dimensions, cut the stage open with a section view; check a part for 3D pri
 animation), USDZ, OBJ, STL, 3MF, or a Blender package that rebuilds the scene for rendering on a computer; import STL
 and 3MF, and take placed models apart to edit them.
 
-**0.3** (phase M3): **modelling**. Model ▸ Shape sketches on any surface (lines, rectangles, circles, arcs, splines,
+**0.3** (phase M3): **modelling**. Model ▸ Edit sketches on any surface (lines, rectangles, circles, arcs, splines,
 offsets), pulls closed shapes into solids or cuts them into the face below, picks faces, edges and corners, pushes and
 pulls faces with the distance floating beside them, and combines solids with union, subtract and intersect. Every
 number on the stage takes an exact length (`25`, `2*12`, `1ft 6in`) in the project's units.

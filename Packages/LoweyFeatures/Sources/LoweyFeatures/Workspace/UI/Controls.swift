@@ -63,6 +63,8 @@ struct TileButton: View {
     let title: String
     let systemName: String
     var identifier: String?
+    /// Drawn in place of the symbol, for the few things SF Symbols has no picture of.
+    var glyph: AnyView?
     let action: () -> Void
     @Environment(\.hmmTheme) private var theme
 
@@ -72,7 +74,11 @@ struct TileButton: View {
             action()
         } label: {
             VStack(spacing: HmmSpacing.xxs) {
-                Image(systemName: systemName).symbolRenderingMode(.hierarchical).font(.system(size: 20, weight: .medium))
+                if let glyph {
+                    glyph.frame(height: 24)
+                } else {
+                    Image(systemName: systemName).symbolRenderingMode(.hierarchical).font(.system(size: 20, weight: .medium))
+                }
                 Text(LocalizedStringKey(title)).font(.hmm(.caption, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity, minHeight: 60)
@@ -84,6 +90,18 @@ struct TileButton: View {
         .accessibilityLabel(title)
         .accessibilityIdentifier(identifier ?? title)
         .hoverEffect(.lift)
+    }
+}
+
+/// A ball, shaded. SF Symbols has no sphere, and a flat disc beside a cube, a cylinder and a cone reads as a circle.
+struct SphereGlyph: View {
+    @Environment(\.hmmTheme) private var theme
+
+    var body: some View {
+        Circle()
+            .fill(RadialGradient(colors: [theme.text, theme.text.opacity(0.4)], center: UnitPoint(x: 0.34, y: 0.3), startRadius: 1, endRadius: 17))
+            .frame(width: 22, height: 22)
+            .accessibilityHidden(true)
     }
 }
 
