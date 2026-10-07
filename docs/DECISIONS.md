@@ -380,7 +380,6 @@ overlays stay for graphics that belong to the frame (transparent Manim). Card te
 **D85 — Timeline rows scroll under our own gesture.** A SwiftUI `ScrollView` loses its pan to a `DragGesture` on its
 content (iPadOS 18+), and the lanes need that drag. The lanes decide once per drag: keys, box, time or rows.
 
-
 **D86 — The bridge keeps the app alive with silent audio.** iOS suspends a background app within seconds; a VPN-style
 status icon needs a Network Extension (paid developer account), and Live Activities don't show on iPad. The app is
 sideloaded, so it uses the audio background mode: while the bridge is on and the app is away it plays silence mixed with
@@ -1358,8 +1357,6 @@ it: `StageChrome` drew the clusters and their panels first and the sidebar and b
 row, then clusters and panels. The panel's empty surroundings take no touches, so the sidebar works as before
 wherever no panel covers it. *Rejected:* moving the sidebar down or the panel sideways while a panel is open (things
 that move when you open something else; law 2); narrowing the panels.
-
-
 
 **D-178 — A colour well on the sidebar, for every tool that puts colour down.** Device note: colour couldn't be chosen
 while drawing (it lived in Look ▸ Palette and Paint ▸ Colour). The sidebar now shows the colour in the hand as a round
