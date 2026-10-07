@@ -68,11 +68,22 @@ public struct TriangleBVH: Sendable {
     /// Every distance along the ray (within `limit`) where it crosses a triangle, nearest first.
     public func hits(origin: Vec3, direction: Vec3, limit: Double = .infinity) -> [Double] {
         var result: [Double] = []
-        visit(origin: origin.float3, direction: direction.float3, limit: Float(min(limit, 1e30))) { t in
+        visit(origin: origin.float3, direction: direction.float3, limit: Float(min(limit, 1e30))) { t, _ in
             result.append(Double(t))
             return false
         }
         return result.sorted()
+    }
+
+    /// Every crossing of the ray with a triangle, nearest first, and whether the ray goes into the surface there (it
+    /// meets the triangle's front, which winds counter-clockwise) or comes out of it.
+    public func crossings(origin: Vec3, direction: Vec3) -> [(distance: Double, entering: Bool)] {
+        var result: [(distance: Double, entering: Bool)] = []
+        visit(origin: origin.float3, direction: direction.float3, limit: 1e30) { t, entering in
+            result.append((Double(t), entering))
+            return false
+        }
+        return result.sorted { $0.distance < $1.distance }
     }
 
     /// Whether the open segment from `a` to `b` crosses the surface (its ends, within `margin`, don't count).
@@ -81,7 +92,7 @@ public struct TriangleBVH: Sendable {
         guard length > 2 * margin else { return false }
         let direction = (b - a) / length
         var blocked = false
-        visit(origin: a.float3, direction: direction.float3, limit: Float(length - margin)) { t in
+        visit(origin: a.float3, direction: direction.float3, limit: Float(length - margin)) { t, _ in
             if Double(t) > margin {
                 blocked = true
                 return true
@@ -91,8 +102,9 @@ public struct TriangleBVH: Sendable {
         return blocked
     }
 
-    /// Calls `found` with each crossing distance; `found` returns true to stop.
-    private func visit(origin: SIMD3<Float>, direction: SIMD3<Float>, limit: Float, found: (Float) -> Bool) {
+    /// Calls `found` with each crossing's distance and whether the ray meets the triangle's front there; `found`
+    /// returns true to stop.
+    private func visit(origin: SIMD3<Float>, direction: SIMD3<Float>, limit: Float, found: (Float, Bool) -> Bool) {
         guard !nodes.isEmpty else { return }
         func safe(_ value: Float) -> Float { abs(value) < 1e-20 ? (value < 0 ? -1e-20 : 1e-20) : value }
         let inverse = SIMD3<Float>(1 / safe(direction.x), 1 / safe(direction.y), 1 / safe(direction.z))
@@ -102,7 +114,7 @@ public struct TriangleBVH: Sendable {
             guard Self.slab(node.low, node.high, origin: origin, inverse: inverse, limit: limit) else { continue }
             if node.size > 0 {
                 for tri in Int(node.start) ..< Int(node.start + node.size) {
-                    if let t = intersect(triangles[tri], origin: origin, direction: direction), t <= limit, found(t) { return }
+                    if let hit = intersect(triangles[tri], origin: origin, direction: direction), hit.t <= limit, found(hit.t, hit.front) { return }
                 }
             } else {
                 stack.append(node.start)
@@ -121,7 +133,7 @@ public struct TriangleBVH: Sendable {
         return enter <= exit * 1.000_01 + 1e-6
     }
 
-    private func intersect(_ tri: SIMD3<UInt32>, origin: SIMD3<Float>, direction: SIMD3<Float>) -> Float? {
+    private func intersect(_ tri: SIMD3<UInt32>, origin: SIMD3<Float>, direction: SIMD3<Float>) -> (t: Float, front: Bool)? {
         let a = positions[Int(tri.x)]
         let edge1 = positions[Int(tri.y)] - a
         let edge2 = positions[Int(tri.z)] - a
@@ -136,6 +148,7 @@ public struct TriangleBVH: Sendable {
         let v = dot3(direction, q) * inverse
         guard v >= 0, u + v <= 1 else { return nil }
         let t = dot3(edge2, q) * inverse
-        return t > 0 ? t : nil
+        // determinant = -direction · normal: positive when the ray runs against the normal, into the front.
+        return t > 0 ? (t, determinant > 0) : nil
     }
 }
