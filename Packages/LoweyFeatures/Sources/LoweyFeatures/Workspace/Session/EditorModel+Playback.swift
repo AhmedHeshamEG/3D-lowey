@@ -48,7 +48,7 @@ extension EditorModel {
     /// Evaluates the timeline at the playhead and redraws the stage.
     func refreshDisplay(_ changes: ChangeSet? = nil) {
         var animated = Animator.evaluate(restingRigTarget(historyPreview ?? session.document), at: time, rigs: libraryRigs(),
-                                         overrides: propertyOverride)
+                                         overrides: propertyOverride, live: livePast())
         applyPerformOverrides(&animated)
         for (id, kind) in kindOverride where animated.scene.objects[id] != nil {
             animated.scene.objects[id]?.kind = kind

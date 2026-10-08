@@ -37,7 +37,7 @@ extension EditorModel {
             cancelPerform()
             return
         }
-        guard !performTargets.isEmpty || virtualCameraActive || faceActive else {
+        guard !performTargets.isEmpty || virtualCameraActive || faceActive || live.voiceOn else {
             app.show(directorView ? "Select what to perform, or fly the shot camera" : "Select what to perform first")
             return
         }
@@ -45,7 +45,8 @@ extension EditorModel {
         takes = [:]
         performChannels = []
         performOverride = [:]
-        if !faceActive { propertyOverride = [:] }
+        clearTriggers()
+        if !faceActive, !live.voiceOn { propertyOverride = [:] }
         Task { @MainActor in
             for count in [3, 2, 1] {
                 performPhase = .countdown(count)
@@ -65,6 +66,7 @@ extension EditorModel {
         performOverride = [:]
         propertyOverride = [:]
         performTouching = false
+        clearTriggers()
         if isPlaying {
             isPlaying = false
             clock.stop()
@@ -81,10 +83,12 @@ extension EditorModel {
         performOverride = [:]
         propertyOverride = [:]
         performTouching = false
+        clearTriggers()
         var ids = IDFactory.random
-        if let command = PerformBaker.command(for: recorded, fps: timeline.fps, smoothing: performSettings.smoothing, timeline: timeline, ids: &ids) {
+        if let command = TakeComp.recording(recorded, fps: timeline.fps, smoothing: performSettings.smoothing, timeline: timeline, ids: &ids) {
             perform(command)
-            app.show("Performance recorded")
+            live.selectedTake = timeline.takes.last?.id
+            app.show(timeline.takes.count > 1 ? "Take \(timeline.takes.count) recorded. Earlier takes are kept" : "Performance recorded")
         } else {
             refreshDisplay()
             app.show("Nothing was performed. Touch and move while it plays")

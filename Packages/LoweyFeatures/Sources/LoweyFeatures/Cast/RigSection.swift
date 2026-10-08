@@ -71,6 +71,7 @@ struct RigSection: View {
         Hint("Drag its joints on the stage. In Keyframe, keys land at the playhead. Saved poses are below.")
         HmmPillButton("Reset the pose", systemName: "arrow.uturn.backward") { editor.resetPose(object.id) }
             .accessibilityIdentifier("rig-reset-pose")
+        DangleControl(editor: editor, character: object.id)
     }
 }
 

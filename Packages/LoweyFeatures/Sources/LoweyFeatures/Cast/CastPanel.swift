@@ -23,6 +23,7 @@ struct CastPanel: View {
                 }
                 castList
                 if let character = currentCharacter { CharacterSections(editor: editor, character: character) }
+                PartSection(editor: editor)
                 RigSection(editor: editor)
             }
         }
@@ -76,6 +77,8 @@ struct CharacterSections: View {
             }
             ClipsSection(editor: editor, character: character)
             FaceSection(editor: editor, character: character)
+            TriggersSection(editor: editor, character: character)
+            LifeSection(editor: editor, character: character)
             if editor.castType(of: character) == .puppet {
                 HmmPillButton("Edit this puppet", systemName: "person.crop.circle") {
                     editor.characterBuilderTarget = character
@@ -117,6 +120,12 @@ struct FaceSection: View {
             HmmPillButton(editor.wordSelection == nil ? "Lip sync to the voiceover" : "Lip sync these words", systemName: "mouth",
                           prominent: !editor.words.isEmpty) { editor.lipSync(character) }
                 .accessibilityIdentifier("lip-sync")
+            HStack(spacing: HmmSpacing.xs) {
+                HmmPillButton(editor.live.voiceOn ? "Stop the microphone" : "Mouth from the microphone",
+                              systemName: editor.live.voiceOn ? "mic.slash.fill" : "mic.fill") { editor.toggleVoice() }
+                    .accessibilityIdentifier("voice-live")
+                if editor.live.voiceOn { VoiceLevel(meter: editor.live.meter) }
+            }
             if editor.faceActive {
                 Text(editor.faceStatus ?? "Face on").font(.hmm(.body, weight: .semibold))
                 HStack(spacing: HmmSpacing.xs) {
@@ -124,7 +133,7 @@ struct FaceSection: View {
                     HmmPillButton("Stop", systemName: "stop.fill") { editor.stopFaceCapture() }
                 }
                 Toggle("Mirror", isOn: Binding(get: { editor.facePerformer.mirror }, set: { editor.facePerformer.mirror = $0 }))
-                Hint("Your face and hands drive the character live. Record in Perform to capture a take.")
+                Hint("Your face and hands drive the character live. Record in Perform to capture a take; every take is kept.")
             } else {
                 HStack(spacing: HmmSpacing.xs) {
                     HmmPillButton("Front camera", systemName: "camera.fill") { editor.startFaceCapture(useIPhone: false) }

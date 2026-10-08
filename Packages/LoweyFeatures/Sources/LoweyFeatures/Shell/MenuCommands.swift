@@ -90,6 +90,16 @@ public struct LoweyMenuCommands: Commands {
             Button("Keys After the Playhead") { editor?.selectKeys(.afterPlayhead) }.keyboardShortcut(.rightArrow, modifiers: [.command, .shift])
             Button("Keys at the Playhead") { editor?.selectKeys(.atPlayhead) }
         }
+        CommandMenu("Perform") {
+            Button(editor?.live.voiceOn == true ? "Stop the Microphone" : "Mouth from the Microphone") { editor?.toggleVoice() }
+                .keyboardShortcut("m", modifiers: [.command, .option])
+            Divider()
+            ForEach(TriggerDeck.keys, id: \.self) { key in
+                Button("Trigger \(key)") { editor?.fireTriggerKey(key) }
+                    .keyboardShortcut(KeyEquivalent(Character(key)), modifiers: [])
+                    .disabled(board != nil || editor?.hasTrigger(key: key) != true)
+            }
+        }
     }
 
     private func undo() {

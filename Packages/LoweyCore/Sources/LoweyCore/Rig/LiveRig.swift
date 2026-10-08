@@ -44,6 +44,11 @@ public enum LiveRig {
             return
         case .bones:
             state.poses[rig.character] = local
+            // The scene as shown says the same as the pose, so anything that reads the joints' turns from the object
+            // (posing again on top, exports, the next drag) starts from what is seen.
+            for (joint, rotation) in turns where rig.skeleton.joints.indices.contains(joint) {
+                state.scene.objects[rig.character]?[.boneTurn(rig.skeleton.joints[joint].name)] = .quat(rotation.normalized)
+            }
         case .joints:
             for change in rig.changes(turning: turns) {
                 guard case let .quat(rotation)? = change.value else { continue }

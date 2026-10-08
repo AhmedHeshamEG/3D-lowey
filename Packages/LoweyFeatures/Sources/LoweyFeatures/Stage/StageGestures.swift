@@ -246,6 +246,11 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
             editor.modelTap(at: point)
             return
         }
+        if editor.tool == .select, !editor.pickActive, let handle = editor.ikHandle(at: point) {
+            editor.chooseJoint(of: handle)
+            HmmHaptics.play(.selection)
+            return
+        }
         if editor.tool == .paint, !editor.pickActive {
             editor.paintTap(at: point)
             return

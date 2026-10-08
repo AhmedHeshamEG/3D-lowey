@@ -225,7 +225,7 @@ extension EditorModel {
 
     /// Continuous drawing while something moves by itself (playback, a performance, face or iPad camera).
     func updateStageClock() {
-        stage?.isContinuous = isPlaying || performPhase != .idle || faceActive || virtualCameraActive
+        stage?.isContinuous = isPlaying || performPhase != .idle || faceActive || live.voiceOn || virtualCameraActive
     }
 
     // MARK: Pictures in the shot

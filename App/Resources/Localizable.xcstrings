@@ -689,6 +689,38 @@
         }
       }
     },
+    "A part of the face": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una parte del viso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من الوجه"
+          }
+        }
+      }
+    },
+    "A saved pose": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una posa salvata"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعية محفوظة"
+          }
+        }
+      }
+    },
     "A sheet for planning in every project. Off: it leaves Actions and pinned pictures are put away. Nothing is deleted.": {
       "localizations": {
         "it": {
@@ -717,6 +749,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "كتف"
+          }
+        }
+      }
+    },
+    "A swap": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uno scambio"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبديل"
+          }
+        }
+      }
+    },
+    "A swap needs at least two things to take turns": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per uno scambio servono almeno due cose che si alternano"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التبديل يحتاج شيئين على الأقل يتناوبان"
           }
         }
       }
@@ -1085,6 +1149,38 @@
         }
       }
     },
+    "Add a swap": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi uno scambio"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تبديلًا"
+          }
+        }
+      }
+    },
+    "Add a trigger": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi un trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف زرّ تشغيل"
+          }
+        }
+      }
+    },
     "Add Marker": {
       "localizations": {
         "it": {
@@ -1325,6 +1421,22 @@
         }
       }
     },
+    "Allow the microphone in Settings to perform with your voice": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consenti il microfono in Impostazioni per recitare con la voce"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسمح بالميكروفون من الإعدادات لتؤدّي بصوتك"
+          }
+        }
+      }
+    },
     "Allow the microphone in Settings to record a voiceover": {
       "localizations": {
         "it": {
@@ -1465,6 +1577,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "مسرح فارغ، جاهز لأي شيء."
+          }
+        }
+      }
+    },
+    "An expression": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un'espressione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعبير"
           }
         }
       }
@@ -2249,6 +2377,22 @@
         }
       }
     },
+    "Blinks on its own": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sbatte le palpebre da solo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يرمش من تلقاء نفسه"
+          }
+        }
+      }
+    },
     "Blob": {
       "localizations": {
         "it": {
@@ -2377,6 +2521,22 @@
         }
       }
     },
+    "Bone: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osso: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العظمة: %@"
+          }
+        }
+      }
+    },
     "Bones": {
       "localizations": {
         "it": {
@@ -2453,6 +2613,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "صندوق"
+          }
+        }
+      }
+    },
+    "Breathes": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respira"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتنفّس"
           }
         }
       }
@@ -3065,6 +3241,22 @@
         }
       }
     },
+    "Choose the bone that is its head": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli l'osso che fa da testa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر العظمة التي هي رأسه"
+          }
+        }
+      }
+    },
     "Choose what to rig first": {
       "localizations": {
         "it": {
@@ -3409,6 +3601,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لقطة قريبة"
+          }
+        }
+      }
+    },
+    "Closed (M, B, P)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiusa (M, B, P)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مغلق (م، ب)"
           }
         }
       }
@@ -4485,6 +4693,22 @@
         }
       }
     },
+    "Dangle": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciondola"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تدلٍّ"
+          }
+        }
+      }
+    },
     "Dark": {
       "localizations": {
         "it": {
@@ -4765,6 +4989,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "حذف المسار"
+          }
+        }
+      }
+    },
+    "Delete trigger": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina il trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احذف زرّ التشغيل"
           }
         }
       }
@@ -8217,6 +8457,22 @@
         }
       }
     },
+    "Go to its start": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vai al suo inizio"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اذهب إلى بدايتها"
+          }
+        }
+      }
+    },
     "Goes off at %@": {
       "localizations": {
         "it": {
@@ -8533,6 +8789,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "دائرية صلبة"
+          }
+        }
+      }
+    },
+    "Head: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testa: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرأس: %@"
           }
         }
       }
@@ -9273,6 +9545,38 @@
         }
       }
     },
+    "It rides its bone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue il suo osso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتبع عظمته"
+          }
+        }
+      }
+    },
+    "It will move with the nearest bone. An eye, a brow or a mouth can then follow your face.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si muoverà con l'osso più vicino. Un occhio, un sopracciglio o una bocca potranno poi seguire il tuo viso."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيتحرّك مع أقرب عظمة. بعدها يمكن لعين أو حاجب أو فم أن يتبع وجهك."
+          }
+        }
+      }
+    },
     "It's bigger than the printer's build volume.": {
       "localizations": {
         "it": {
@@ -9285,6 +9589,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إنه أكبر من حجم الطباعة في الطابعة."
+          }
+        }
+      }
+    },
+    "It's part of %@ now and moves with its bones": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora fa parte di %@ e si muove con le sue ossa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صار جزءًا من %@ ويتحرّك مع عظامه"
           }
         }
       }
@@ -9333,6 +9653,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تُحذف مشاهده ومخرجاته. تبقى عناصر المكتبة في مكتبتك."
+          }
+        }
+      }
+    },
+    "Jaw": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mandibola"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفكّ"
           }
         }
       }
@@ -9605,6 +9941,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "وضع مفتاح للتحديد"
+          }
+        }
+      }
+    },
+    "Keyboard key": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasto della tastiera"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتاح لوحة المفاتيح"
           }
         }
       }
@@ -9933,6 +10285,54 @@
         }
       }
     },
+    "Left brow": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sopracciglio sinistro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحاجب الأيسر"
+          }
+        }
+      }
+    },
+    "Left eye": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Occhio sinistro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العين اليسرى"
+          }
+        }
+      }
+    },
+    "Left pupil": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pupilla sinistra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البؤبؤ الأيسر"
+          }
+        }
+      }
+    },
     "Left third": {
       "localizations": {
         "it": {
@@ -10025,6 +10425,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "التراخيص"
+          }
+        }
+      }
+    },
+    "Life": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vita"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحياة"
           }
         }
       }
@@ -10297,6 +10713,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تصبح الخطوط أنابيب مستديرة."
+          }
+        }
+      }
+    },
+    "Lip bite (F, V)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Labbro morso (F, V)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عضّ الشفة (ف)"
           }
         }
       }
@@ -10653,6 +11085,22 @@
         }
       }
     },
+    "Make it part of": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendilo parte di"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اجعله جزءًا من"
+          }
+        }
+      }
+    },
     "Make keyframes": {
       "localizations": {
         "it": {
@@ -10917,6 +11365,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "أمتار، شبكة 25 سم، والمنظر من الأعلى."
+          }
+        }
+      }
+    },
+    "Microphone level": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Livello del microfono"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستوى الميكروفون"
           }
         }
       }
@@ -11221,6 +11685,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "مسار الحركة"
+          }
+        }
+      }
+    },
+    "Mouth": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bocca"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفم"
+          }
+        }
+      }
+    },
+    "Mouth at rest": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bocca a riposo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفم في راحته"
+          }
+        }
+      }
+    },
+    "Mouth from the microphone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bocca dal microfono"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفم من الميكروفون"
+          }
+        }
+      }
+    },
+    "Mouth from the Microphone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bocca dal microfono"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفم من الميكروفون"
           }
         }
       }
@@ -11921,6 +12449,22 @@
         }
       }
     },
+    "No key": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun tasto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بلا مفتاح"
+          }
+        }
+      }
+    },
     "No loop": {
       "localizations": {
         "it": {
@@ -12173,6 +12717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُؤدَّ شيء. المس وحرّك أثناء التشغيل"
+          }
+        }
+      }
+    },
+    "Nothing: it just rides the bone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niente: segue soltanto l'osso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء: يتبع العظمة فقط"
           }
         }
       }
@@ -12513,6 +13073,38 @@
         }
       }
     },
+    "One mouth of a set (they take turns)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una bocca di una serie (si alternano)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فم من مجموعة (تتناوب)"
+          }
+        }
+      }
+    },
+    "One tap puts it in an expression or a pose, or swaps what it holds. While a take records, triggers are performed with everything else.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un tocco gli dà un'espressione o una posa, oppure scambia ciò che tiene. Mentre si registra una ripresa, i trigger si recitano insieme a tutto il resto."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لمسة واحدة تعطيه تعبيرًا أو وضعية، أو تبدّل ما يحمله. أثناء تسجيل اللقطة تُؤدّى أزرار التشغيل مع كل شيء آخر."
+          }
+        }
+      }
+    },
     "Ones": {
       "localizations": {
         "it": {
@@ -12593,6 +13185,22 @@
         }
       }
     },
+    "Only while held": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo mentre è premuto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فقط أثناء الضغط"
+          }
+        }
+      }
+    },
     "Opacity": {
       "localizations": {
         "it": {
@@ -12621,6 +13229,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح"
+          }
+        }
+      }
+    },
+    "Open (EH)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperta (E)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتوح (إي)"
           }
         }
       }
@@ -13181,6 +13805,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "حبيبات الورق"
+          }
+        }
+      }
+    },
+    "Part": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parte"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء"
           }
         }
       }
@@ -14253,6 +14893,22 @@
         }
       }
     },
+    "Puckered (OO)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cuore (U)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مضموم (أو)"
+          }
+        }
+      }
+    },
     "Pull light out": {
       "localizations": {
         "it": {
@@ -15057,6 +15713,22 @@
         }
       }
     },
+    "Rename trigger": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina il trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعد تسمية زرّ التشغيل"
+          }
+        }
+      }
+    },
     "Rendering": {
       "localizations": {
         "it": {
@@ -15393,6 +16065,54 @@
         }
       }
     },
+    "Right brow": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sopracciglio destro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحاجب الأيمن"
+          }
+        }
+      }
+    },
+    "Right eye": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Occhio destro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العين اليمنى"
+          }
+        }
+      }
+    },
+    "Right pupil": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pupilla destra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البؤبؤ الأيمن"
+          }
+        }
+      }
+    },
     "Right third": {
       "localizations": {
         "it": {
@@ -15549,6 +16269,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تدوير"
+          }
+        }
+      }
+    },
+    "Round (OH)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonda (O)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدوّر (أوه)"
           }
         }
       }
@@ -18493,6 +19229,22 @@
         }
       }
     },
+    "Stay on when let go": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta attivo al rilascio"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبقى بعد الإفلات"
+          }
+        }
+      }
+    },
     "Step": {
       "localizations": {
         "it": {
@@ -18617,6 +19369,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "إيقاف التتبّع"
+          }
+        }
+      }
+    },
+    "Stop the microphone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ferma il microfono"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوقف الميكروفون"
+          }
+        }
+      }
+    },
+    "Stop the Microphone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ferma il microfono"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوقف الميكروفون"
           }
         }
       }
@@ -19085,6 +19869,54 @@
         }
       }
     },
+    "Take %lld recorded. Earlier takes are kept": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripresa %lld registrata. Le riprese precedenti restano"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سُجّلت اللقطة %lld. اللقطات السابقة محفوظة"
+          }
+        }
+      }
+    },
+    "Take it off": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staccalo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افصله"
+          }
+        }
+      }
+    },
+    "Take name": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome della ripresa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم اللقطة"
+          }
+        }
+      }
+    },
     "Take the tour": {
       "localizations": {
         "it": {
@@ -19097,6 +19929,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابدأ الجولة"
+          }
+        }
+      }
+    },
+    "Takes": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprese"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللقطات"
           }
         }
       }
@@ -19609,6 +20457,22 @@
         }
       }
     },
+    "Teeth (EE, S)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denti (I, S)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسنان (إي، س)"
+          }
+        }
+      }
+    },
     "Text": {
       "localizations": {
         "it": {
@@ -19785,6 +20649,38 @@
         }
       }
     },
+    "That take wasn't performed there": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quella ripresa non è stata recitata lì"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تلك اللقطة لم تُؤدَّ هناك"
+          }
+        }
+      }
+    },
+    "That trigger has nothing to show any more": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quel trigger non ha più niente da mostrare"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد لهذا الزرّ ما يُظهره"
+          }
+        }
+      }
+    },
     "That would turn the shape inside out": {
       "localizations": {
         "it": {
@@ -19797,6 +20693,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "سينقلب الشكل من الداخل إلى الخارج"
+          }
+        }
+      }
+    },
+    "The %lld things inside it take turns": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le %lld cose al suo interno si alternano"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأشياء الـ%lld التي بداخله تتناوب"
           }
         }
       }
@@ -19897,6 +20809,22 @@
         }
       }
     },
+    "The head bone turns with your face. A person's rig knows its own.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'osso della testa gira con il tuo viso. Il rig di una persona conosce già il suo."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عظمة الرأس تدور مع وجهك. هيكل الشخص يعرف رأسه."
+          }
+        }
+      }
+    },
     "The joystick is in Settings ▸ Stage when you want it back": {
       "localizations": {
         "it": {
@@ -19957,6 +20885,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأسلوب، أعلى اليسار"
+          }
+        }
+      }
+    },
+    "The microphone didn't start: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il microfono non si è avviato: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يبدأ الميكروفون: %@"
           }
         }
       }
@@ -20261,6 +21205,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "قمة الرأس"
+          }
+        }
+      }
+    },
+    "The touched bone and everything below it hang loose: they trail when it moves and swing when it stops.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'osso toccato e tutto ciò che sta sotto ciondolano: restano indietro quando si muove e oscillano quando si ferma."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العظمة التي لمستها وكل ما تحتها تتدلّى: تتأخّر حين يتحرّك وتتأرجح حين يتوقّف."
           }
         }
       }
@@ -21029,6 +21989,22 @@
         }
       }
     },
+    "Tongue up (L)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lingua su (L)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللسان للأعلى (ل)"
+          }
+        }
+      }
+    },
     "Toon": {
       "localizations": {
         "it": {
@@ -21105,6 +22081,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "حلقة"
+          }
+        }
+      }
+    },
+    "Touch a joint on the stage to let it hang loose here: hair, ears, a tail.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca un'articolazione sul palco per lasciarla ciondolare qui: capelli, orecchie, una coda."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس مفصلًا على المسرح لتتركه يتدلّى من هنا: شعر، أذنان، ذيل."
           }
         }
       }
@@ -21393,6 +22385,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "مثلث"
+          }
+        }
+      }
+    },
+    "Trigger": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زرّ تشغيل"
+          }
+        }
+      }
+    },
+    "Trigger %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trigger %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زرّ التشغيل %@"
+          }
+        }
+      }
+    },
+    "Trigger key": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasto del trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتاح زرّ التشغيل"
+          }
+        }
+      }
+    },
+    "Trigger name": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome del trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم زرّ التشغيل"
+          }
+        }
+      }
+    },
+    "Triggers": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trigger"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزرار التشغيل"
           }
         }
       }
@@ -21861,6 +22933,38 @@
         }
       }
     },
+    "Use all of it": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usala tutta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدمها كلّها"
+          }
+        }
+      }
+    },
+    "Use it in the loop": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usala nel loop"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدمها في الحلقة"
+          }
+        }
+      }
+    },
     "Use the model's own colours": {
       "localizations": {
         "it": {
@@ -22309,6 +23413,22 @@
         }
       }
     },
+    "Wide open (AH)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spalancata (A)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتوح على آخره (آه)"
+          }
+        }
+      }
+    },
     "Width": {
       "localizations": {
         "it": {
@@ -22533,18 +23653,18 @@
         }
       }
     },
-    "Your face and hands drive the character live. Record in Perform to capture a take.": {
+    "Your face and hands drive the character live. Record in Perform to capture a take; every take is kept.": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo viso e le tue mani guidano il personaggio dal vivo. Registra in Esegui per catturare una ripresa."
+            "value": "Il tuo viso e le tue mani guidano il personaggio dal vivo. Registra in Esegui per catturare una ripresa; ogni ripresa viene conservata."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "وجهك ويداك يحرّكان الشخصية مباشرة. سجّل في الأداء لالتقاط لقطة."
+            "value": "وجهك ويداك يحرّكان الشخصية مباشرة. سجّل في «أداء» لتلتقط لقطة؛ كل لقطة تُحفظ."
           }
         }
       }

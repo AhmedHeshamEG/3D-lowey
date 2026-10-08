@@ -123,3 +123,28 @@ public struct VoiceSolver: Sendable {
         [.mouth: .enumeration(mouth.viseme.rawValue), .jawOpen: .float(mouth.jaw), .mouthWide: .float(mouth.wide)]
     }
 }
+
+/// The microphone's buffers, whatever their size, cut into the solver's blocks.
+public struct VoiceStream: Sendable {
+    public static let block = 1024
+
+    private var solver: VoiceSolver
+    private var pending: [Float] = []
+
+    public init(sampleRate: Double) {
+        solver = VoiceSolver(sampleRate: sampleRate)
+    }
+
+    /// Takes whatever arrived; returns the mouth after the last whole block (nil until one is full).
+    public mutating func hear(_ samples: [Float]) -> VoiceSolver.Mouth? {
+        pending.append(contentsOf: samples)
+        var mouth: VoiceSolver.Mouth?
+        var start = 0
+        while pending.count - start >= Self.block {
+            mouth = solver.process(Array(pending[start ..< start + Self.block]))
+            start += Self.block
+        }
+        if start > 0 { pending.removeFirst(start) }
+        return mouth
+    }
+}

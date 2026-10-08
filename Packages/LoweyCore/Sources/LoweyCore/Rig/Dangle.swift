@@ -55,7 +55,7 @@ public enum Dangle {
     }
 
     static let step = 1.0 / 30
-    static let longestWindow = 1.2
+    public static let longestWindow = 1.2
     static let widestSwing = 85.0 * Double.pi / 180
 
     /// Loose is slow and bouncy, tight is quick and nearly dead.
