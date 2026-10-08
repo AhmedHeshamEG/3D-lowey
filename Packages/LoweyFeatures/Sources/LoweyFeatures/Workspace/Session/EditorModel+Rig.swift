@@ -13,7 +13,9 @@ extension EditorModel {
 
     /// Why an object can't take a drawn skeleton (nil when it can).
     func rigBlocker(_ object: SceneObject) -> String? {
-        if let type = castType(of: object.id, object: object) {
+        // Something with a drawn rig is in the cast too, and is exactly what goes on being rigged: more bones, its
+        // skin, its pose.
+        if let type = castType(of: object.id, object: object), type != .drawn {
             return type == .rigged ? "This model has its own skeleton: drag its joints to pose it"
                 : "A \(type.title) has its skeleton built in: drag its hands and feet to pose it"
         }

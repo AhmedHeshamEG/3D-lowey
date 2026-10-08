@@ -1467,3 +1467,9 @@ weights have arrived; Pose opens once the skin fits. Nothing advances by itself:
 it. The bar under the stage shows the same three steps while the Rig tool is in the hand. *Rejected:* a wizard that
 moves on by itself (drawing a second bone would fight it); three separate sections (the old feeling, with headings).
 
+**D-188 — A rigged object goes on being rigged.** Found while testing the redraw: in 0.7, once an object had a drawn
+rig it counted as a cast member "with its skeleton built in", and `rigBlocker` refused it like a Blob. A second bone
+could never be drawn, and Cast ▸ Rig showed that sentence instead of Paint weights, Fit, Reset and Remove. Only Blobs,
+Puppets and imported rigged models are refused now; a drawn rig is what the three steps are for. A test draws a second
+bone and walks the steps on a rigged cube. *Rejected:* nothing; it was a bug.
+

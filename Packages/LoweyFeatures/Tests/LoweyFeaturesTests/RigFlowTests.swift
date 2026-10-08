@@ -63,6 +63,8 @@ final class RigFlowTests: XCTestCase {
         editor.drawBone(rays: stroke(across: cube.id, in: editor))
         _ = try await waitForRig(on: cube.id, in: editor)
         cube = try XCTUnwrap(editor.baseScene.objects[cube.id])
+        XCTAssertNil(editor.rigBlocker(cube), "a rigged object goes on being rigged")
+        XCTAssertEqual(editor.rigTarget?.id, cube.id)
         XCTAssertTrue(editor.rigStepIsOpen(.skin, for: cube), "the next step lights up")
         XCTAssertTrue(editor.rigStepIsOpen(.pose, for: cube))
         XCTAssertEqual(editor.rigStep(for: cube), .bones, "it stays on Bones until you move on")
