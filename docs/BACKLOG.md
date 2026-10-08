@@ -1,7 +1,32 @@
 # Backlog
 
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
-phase plan (M10 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
+phase plan (M11 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
+
+## Left from M10 (Maquette 0.10)
+
+- [ ] The device checklist in the "Maquette 0.10 — M10" PR (the front camera driving a drawn rig, a person rig and a
+      2D puppet; the iPhone as the face camera; the microphone's mouth in a quiet and a noisy room, in English, Italian
+      and Arabic, and beside playback and voiceover recording; hands on a humanoid; triggers under the fingers and
+      from a keyboard while recording; dragging a hand while recording; a dangling tail, ears and hair while moving,
+      live and in an export; breathing and blinking; a part with a face role; several takes and comping by dragging).
+- [ ] The voice's shapes are tuned on synthetic vowels (D-211): the thresholds in `VoiceSolver.shape` want a pass with
+      real voices on the device.
+- [ ] Draggers stay where they're left and one joint is dragged at a time: return-to-rest on release and two hands at
+      once need the stage's drag to be per touch (D-210).
+- [ ] The trigger keys come through the menu bar, which only hears a key go down: a held key can't let go by lifting
+      (a second press does). (D-209)
+- [ ] Dangle samples the pose thirty-six times a frame for the characters that dangle; many dangling characters in one
+      shot want a cache across consecutive frames (M15's smoothness pass, with the device's numbers).
+- [ ] Dangle has no gravity, wind or collisions (D-204); objects without bones can't dangle (draw a bone through one).
+- [ ] A part can't be chosen by tapping it on the stage while the character is selected; it's selected first, then
+      Cast ▸ Make it part of (D-207). Parts ride bones of drawn rigs; rigged models from the library take parts only
+      through Scene Scripts for now (no "Make it part of" for them in Cast).
+- [ ] Fingers aren't tracked (D-212).
+- [ ] The MCP bridge has no tools for takes, triggers or dangle (Scene Script v3 can set the properties with
+      `setProperties`).
+- [ ] Recording a take and recording a voiceover are two buttons (D-211): one "perform with sound" is a candidate for
+      M15.
 
 ## Left from M9 (Maquette 0.9)
 

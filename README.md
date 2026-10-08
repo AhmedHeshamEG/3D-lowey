@@ -4,6 +4,12 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.10** (phase M10): **live performance**. Your face, your voice and your hands drive any character live: Blobs,
+Puppets, drawn rigs (3D and 2D), person rigs and rigged models. The microphone gives the mouth its shape; characters
+breathe and blink on their own; loose bones (hair, ears, tails) dangle; triggers put a character in an expression or a
+pose or swap what it holds, by a tap or a key; a hand dragged while recording is performed. Every recording is kept as
+a take, and the comp is chosen by dragging across the one you want.
+
 **0.9** (phase M9): **the Schizzo board**. Every project has an endless 2D board for planning (Actions ▸ Board):
 sketch with the whole brush engine, drop pictures, write notes, draw arrows, frame what belongs together. Pin a frame
 or a pick to the project and it floats over the stage as a reference card; stand it in the scene and it's a plane like

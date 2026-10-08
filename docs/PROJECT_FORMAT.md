@@ -288,6 +288,36 @@ with `loop: true` (`duration` = 6 ÷ speed), `bounce` (`period` = 1 ÷ speed) an
 keyframes replaces the behaviours with ordinary tracks. Schema 10 only added the two kinds; files from schema 9 open
 unchanged, and Maquette 0.7 refuses schema 10.
 
+## Live performance (schema 11)
+
+A scene's timeline has `takes`: every Perform recording, kept whole.
+
+```json
+{"id": "…", "name": "Take 2", "range": {"start": 1.5, "end": 4.2},
+ "channels": [{"target": "<object id>", "property": "headYaw", "keyframes": [{"time": 1.5, "value": {"float": 0}, "easing": "linear"}]}],
+ "used": [{"start": 1.5, "end": 2.8}]}
+```
+
+The timeline's `tracks` are always what plays (the comp); a take is what a stretch of them can be taken from again.
+`used` lists where the comp plays this take, in order. One journal command changes takes: `setTakes`
+(`{"op": "setTakes", "takes": [{"id", "take"?, "index"?}]}`: insert, replace, or remove when `take` is absent).
+Recording and using a take are batches of `setTracks` and `setTakes`.
+
+Objects gain optional properties:
+
+| Property | On | Value |
+|---|---|---|
+| `dangle.<joint name>` | a character | 0…1, how loosely that joint hangs (absent: it doesn't) |
+| `breathe` | a character | 0…1, how deeply it breathes by itself |
+| `autoBlink` | a character with eye parts | `true`: it blinks by itself (a Blob does unless `false`) |
+| `liveHead` | a character whose skeleton isn't a person's | the joint that turns with the head channels |
+| `attachBone` | a child of a rigged object | the joint it rides |
+| `triggers` | a character | a JSON list (as a string, like `poseLibrary`) of `{id, name, kind, key?, holds?, expression?, pose?, show?, hide?}`; `kind` is `expression`, `pose` or `swap` |
+
+The head and hand channels (`headYaw`, `headPitch`, `headRoll`, `handLeftX/Y`, `handRightX/Y`) now also move drawn and
+imported skeletons; a child with `faceRole` under a rigged object is a face part. Schema 11 only added these; files
+from schema 10 open unchanged, and Maquette 0.9 refuses schema 11.
+
 ## workspace.json
 
 How the project shows when it opens. It isn't the project (it's never undone and isn't in the journal); it's

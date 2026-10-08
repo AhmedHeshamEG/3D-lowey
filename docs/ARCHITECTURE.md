@@ -307,6 +307,44 @@ flowchart LR
   cover over the stage and its chrome, under the sheets; the menu bar's Edit commands act on the board while it's
   open (D-193).
 
+## Live performance (0.10)
+
+```mermaid
+flowchart LR
+    Cam[FaceCapture / FaceLinkReceiver<br/>face + wrists] --> Ch[channels<br/>FacePerformer: rest pose, filter]
+    Mic[VoiceCapture<br/>AVAudioSinkNode] --> VS[VoiceStream → VoiceSolver<br/>Core] --> Ch
+    Deck[Trigger deck / keys] --> Ch
+    Drag[a joint dragged while recording] --> Ch
+    Ch --> Ov[propertyOverride<br/>+ takes while recording]
+    Ov --> An[Animator.evaluate<br/>overrides + LivePast]
+    An --> Posed[posed: keys, live, behaviours, clips, bone turns, LiveRig]
+    Posed --> Dangle[Dangle: the past, sampled] --> Idle[Idle.breathe] --> Parts[LiveRig.carryParts] --> Bend[RigPoses.bend] --> Face[Idle.blink · FaceRig · Blob]
+    Ov -. finishPerform .-> Take[TakeComp.recording<br/>setTracks + setTakes]
+```
+
+- **Core `Motion/Takes.swift`**: `Take` (channels of keys, its range, where the comp plays it), `TakeEdit`, the
+  `setTakes` command, and `TakeComp` (a recording as one command; using a take over a stretch; where each take plays).
+  `PerformTake.stepped` and `PerformBaker.held` keep a trigger's presses as held keys at their own moments.
+- **Core `Rig/Dangle.swift`**: `dangle.<joint>` properties; `Dangle.apply` samples `Animator.posed` over the last
+  1.2 s (30 a second, on a copy of the document cut down to the dangling characters), filters each loose bone's tip
+  with a damped spring's impulse response and turns the joint to it. `LivePast` carries the live values of those
+  moments.
+- **Core `Rig/LiveRig.swift`**: head and hand channels on skeletons (`CharacterRig`: bones in the pose, Puppets on
+  their joint objects), `carryParts` (`attachBone`), `nearestJoint`; `Idle` (breathing, blinking). `Animator.evaluate`
+  is now `posed` (everything that places a skeleton) followed by what follows through; a pose changed after the bone
+  turns is also written to the shown scene's `bone.` properties, so everything that reads the joints from the object
+  agrees with the pose.
+- **Core `Character/Triggers.swift`**: `Trigger`, `TriggerDeck` (the deck on the character, what a trigger sets, what
+  letting go restores, held keys at the playhead). **Core `Face/VoiceSolver.swift`**: `VoiceSolver` (level against a
+  learnt floor and ceiling, Goertzel band energies, the shape, two blocks to agree) and `VoiceStream` (any buffer size
+  into 1024-sample blocks).
+- **Engine `Face/VoiceCapture.swift`**: the microphone through an `AVAudioSinkNode`, measured on its own queue, the
+  mouth delivered on the main actor. `FaceLinkSender` also sends `eyeWide` and `browAngle`.
+- **Features**: `EditorModel+Live` (`LiveState`: the voice, the chosen joint, held triggers, the picked take, the live
+  past; draggers, dangle, life, parts), `EditorModel+Triggers`, `EditorModel+Takes`; `Cast/LiveSections` (`VoiceLevel`,
+  `TriggersSection`, `LifeSection`, `PartSection`, `DangleControl`, `TriggerDeckBar`), `Timeline/TakesStrip`. The
+  menu bar's Perform menu holds the microphone and the trigger keys.
+
 ## LoweyRender 2
 
 ```mermaid
