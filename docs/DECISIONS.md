@@ -1659,3 +1659,11 @@ takes. No new button in the clusters. *Rejected:* a Perform workspace of its own
 **D-215 — Schema 11.** Timelines gain `takes` and the journal the `setTakes` command; objects gain the optional
 properties `dangle.<joint>`, `breathe`, `attachBone`, `liveHead` and `triggers`. Files from schema 10 open unchanged;
 Maquette 0.9 refuses schema 11.
+
+**D-216 — The UI job boots its simulator first and may take two hours.** On the 0.10 merge the first UI test
+(`BoardTests`, first in the alphabet) twice hung on its first query against a cold simulator, past the five-minute
+allowance: that fails the whole first attempt, the second attempt passes, and the two together left the iPhone
+screenshot step past the job's 90 minutes, so `CI result` was red on a commit whose tests had passed. The job now
+boots the simulator and waits for it before testing, and has 120 minutes. *Rejected:* re-running main until an
+attempt passes first time (it was 88 minutes on the 0.9 merge already); dropping the second attempt (R33's flakes
+are real).
