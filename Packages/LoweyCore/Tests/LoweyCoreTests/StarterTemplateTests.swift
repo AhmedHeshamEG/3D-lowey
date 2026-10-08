@@ -46,6 +46,15 @@ final class StarterTemplateTests: XCTestCase {
         XCTAssertEqual(StarterTemplate.character.workspace.firstPanel, "cast")
         XCTAssertEqual(StarterTemplate.blank.workspace.timeline, .hidden, "the timeline is on call: hidden by default")
     }
+
+    func testSketchOpensOnTheBoard() throws {
+        XCTAssertEqual(StarterTemplate.sketch.workspace.firstPanel, ProjectWorkspace.boardPanel)
+        XCTAssertEqual(StarterTemplate.sketch.lookPresetID, LookPreset.sketch.id)
+        let store = try ProjectStore(root: temporaryDirectory())
+        let (url, document) = try store.createProject(name: "Tower", template: .sketch)
+        XCTAssertTrue(document.scene.objects.isEmpty)
+        XCTAssertEqual(store.loadWorkspace(at: url).firstPanel, "board")
+    }
 }
 
 final class ProjectWorkspaceTests: XCTestCase {
@@ -86,5 +95,27 @@ final class ProjectWorkspaceTests: XCTestCase {
         XCTAssertEqual(workspace.schemaVersion, 9)
         try Data("not json".utf8).write(to: ProjectStore.workspaceURL(in: url))
         XCTAssertEqual(store.loadWorkspace(at: url), ProjectWorkspace())
+    }
+
+    func testReferenceCardsStayWithTheWorkspace() throws {
+        let store = try ProjectStore(root: temporaryDirectory())
+        let (url, _) = try store.createProject(name: "Pinned")
+        var workspace = ProjectWorkspace()
+        let place = ReferenceCard.place(after: workspace.references)
+        workspace.references.append(ReferenceCard(id: "a", image: "references/1.png", title: "Shots", x: place.x, y: place.y, aspect: 0.75))
+        let next = ReferenceCard.place(after: workspace.references)
+        XCTAssertNotEqual(next.x, place.x, "the next card doesn't land on the last")
+        try store.saveWorkspace(workspace, at: url)
+        XCTAssertEqual(store.loadWorkspace(at: url).references, workspace.references)
+        // A card a file puts off the stage, or makes absurdly large, comes back somewhere a hand can reach.
+        let json = #"{"references": [{"id": "b", "image": "x.png", "title": "", "x": 7, "y": -2, "width": 99999, "aspect": 0}]}"#
+        try Data(json.utf8).write(to: ProjectStore.workspaceURL(in: url))
+        let card = try XCTUnwrap(store.loadWorkspace(at: url).references.first)
+        XCTAssertEqual(card.x, 1)
+        XCTAssertEqual(card.y, 0)
+        XCTAssertEqual(card.width, ReferenceCard.widthRange.upperBound)
+        XCTAssertEqual(card.aspect, 1)
+        XCTAssertEqual(ReferenceCard(id: "c", image: "y.png", x: .nan, width: .infinity).x, 0.5)
+        XCTAssertEqual(ReferenceCard(id: "c", image: "y.png", x: .nan, width: .infinity).width, ReferenceCard.defaultWidth)
     }
 }
