@@ -1,18 +1,9 @@
-# hmm. studio limits (STUDIO §3): files 500 lines, type bodies 350, functions 60, cyclomatic complexity 12. CI runs
-# `swiftlint --strict`, so reaching a warning threshold (the STUDIO limit) fails the build.
+# hmm. studio limits (STUDIO §3): files 500 lines, type bodies 350, functions 60, cyclomatic complexity 12, all errors.
 included:
-  - App
-  - AppUITests
-  - Packages/LoweyCore/Sources
-  - Packages/LoweyCore/Tests
-  - Packages/LoweyEngine/Sources
-  - Packages/LoweyEngine/Tests
-  - Packages/LoweyFeatures/Sources
-  - Packages/LoweyFeatures/Tests
+  - Sources
+  - Tests
 excluded:
-  - "**/.build"
-  - Packages/HmmKit # linted in its own repository
-  - DerivedData
+  - .build
 
 identifier_name:
   min_length: 1
@@ -22,24 +13,22 @@ type_name:
   min_length: 2
   max_length: 50
 line_length:
-  warning: 160
-  error: 200
+  warning: 150
+  error: 160
   ignores_comments: true
   ignores_urls: true
-  # Scene Script and JavaScript examples inside multi-line strings are data, not code.
-  ignores_multiline_strings: true
 file_length:
-  warning: 500
-  error: 600
+  warning: 450
+  error: 500
 type_body_length:
-  warning: 350
-  error: 450
+  warning: 300
+  error: 350
 function_body_length:
-  warning: 60
-  error: 80
+  warning: 50
+  error: 60
 cyclomatic_complexity:
-  warning: 12
-  error: 15
+  warning: 10
+  error: 12
   ignores_case_statements: true
 large_tuple:
   warning: 4

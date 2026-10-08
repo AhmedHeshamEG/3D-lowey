@@ -1,4 +1,0 @@
-# Tests may force-unwrap and force-try (STUDIO §3).
-disabled_rules:
-  - force_unwrapping
-  - force_try
