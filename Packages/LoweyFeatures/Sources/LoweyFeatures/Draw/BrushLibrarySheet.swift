@@ -79,6 +79,7 @@ struct BrushLibrarySheet: View {
         case .ink: "For ink"
         case .flipbook: "For flipbooks"
         case .paint: "For painting"
+        case .board: "For the board"
         }
     }
 

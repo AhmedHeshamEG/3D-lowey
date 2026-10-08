@@ -7709,6 +7709,22 @@
         }
       }
     },
+    "For the board": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per la lavagna"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للّوحة"
+          }
+        }
+      }
+    },
     "Forget": {
       "localizations": {
         "it": {
