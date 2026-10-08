@@ -125,20 +125,6 @@ public enum Axis: String, Codable, Sendable, CaseIterable {
     }
 }
 
-/// 2D vector, used for drawing outlines on a guide plane.
-public struct Vec2: Hashable, Sendable, Codable {
-    public var x: Double
-    public var y: Double
-
-    public init(_ x: Double, _ y: Double) {
-        self.x = x
-        self.y = y
-    }
-
-    public static func - (lhs: Vec2, rhs: Vec2) -> Vec2 { Vec2(lhs.x - rhs.x, lhs.y - rhs.y) }
-    public static func + (lhs: Vec2, rhs: Vec2) -> Vec2 { Vec2(lhs.x + rhs.x, lhs.y + rhs.y) }
-    public static func * (lhs: Vec2, rhs: Double) -> Vec2 { Vec2(lhs.x * rhs, lhs.y * rhs) }
-
-    public func cross(_ other: Vec2) -> Double { x * other.y - y * other.x }
-    public var length: Double { (x * x + y * y).squareRoot() }
+extension Vec3: BrushPoint {
+    public var brushCoordinates: SIMD3<Double> { SIMD3(x, y, z) }
 }

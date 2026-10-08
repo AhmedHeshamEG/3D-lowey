@@ -96,20 +96,3 @@ extension LoweyRenderer {
         return [a + side, a - side, b + side, b + side, a - side, b - side]
     }
 }
-
-extension BrushStamper {
-    /// Triangles (pixels, three corners each) in one premultiplied colour, with a fill pipeline set.
-    func encodeTriangles(_ corners: [Vec2], color: SIMD4<Float>, encoder: MTLRenderCommandEncoder, width: Int, height: Int) {
-        guard !corners.isEmpty else { return }
-        let points = corners.map { SIMD2<Float>(Float($0.x), Float($0.y)) }
-        guard let buffer = points.withUnsafeBytes({ bytes in
-            bytes.baseAddress.flatMap { device.makeBuffer(bytes: $0, length: bytes.count, options: .storageModeShared) }
-        }) else { return }
-        var uniforms = BrushFillUniforms(color: color, viewport: SIMD4<Float>(Float(width), Float(height), 1 / Float(max(width, 1)),
-                                                                              1 / Float(max(height, 1))))
-        encoder.setVertexBuffer(buffer, offset: 0, index: 0)
-        encoder.setVertexBytes(&uniforms, length: MemoryLayout<BrushFillUniforms>.stride, index: 1)
-        encoder.setFragmentBytes(&uniforms, length: MemoryLayout<BrushFillUniforms>.stride, index: 1)
-        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: points.count)
-    }
-}

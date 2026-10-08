@@ -24,6 +24,8 @@ public enum AppSettings {
     public static let storeInICloud = "storeInICloud"
     /// The 60-second tour was seen (it never comes back by itself; Settings replays it).
     public static let tourSeen = "tourSeen"
+    /// The Schizzo board (on by default). Off: no board in Actions, no Sketch template, pinned cards put away.
+    public static let boardEnabled = "boardEnabled"
 
     /// The navigation speed, clamped (read when a gesture starts).
     public static var navigationFactor: Double {

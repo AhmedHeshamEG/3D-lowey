@@ -35,6 +35,10 @@ public enum ProjectLayout {
     public static let assetsFolder = "assets"
     public static let audioFolder = "audio"
     public static let rendersFolder = "renders"
+    /// The Schizzo board (hmm-kit's `BoardStore`: `board.json`, its history, its pictures).
+    public static let boardFolder = "board"
+    /// Pictures pinned from the board, under `assets/`.
+    public static let referencesFolder = "references"
     public static let thumbnail = "thumbnail.png"
     public static let workspaceFile = "workspace.json"
 

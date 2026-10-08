@@ -21,7 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "App" / "Resources" / "Localizable.xcstrings"
 LANGUAGES = ["it", "ar"]
 SOURCES = [ROOT / "Packages" / "LoweyFeatures" / "Sources", ROOT / "App" / "Sources", ROOT / "Packages" / "HmmKit" / "Sources" / "HmmDesign",
-           ROOT / "Packages" / "HmmKit" / "Sources" / "HmmDocuments", ROOT / "Packages" / "HmmKit" / "Sources" / "HmmBridge"]
+           ROOT / "Packages" / "HmmKit" / "Sources" / "HmmDocuments", ROOT / "Packages" / "HmmKit" / "Sources" / "HmmBridge",
+           ROOT / "Packages" / "HmmKit" / "Sources" / "HmmBoardUI"]
 # Display names that live in Core (enum titles the app shows).
 CORE_TITLES = ROOT / "Packages" / "LoweyCore" / "Sources"
 

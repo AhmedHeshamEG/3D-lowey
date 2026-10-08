@@ -1,25 +1,26 @@
 // Brush.metal — the brush engine on the GPU: every stamp (dab) of a stroke is one instanced quad sampling the brush's
-// tip and grain. The same functions draw ink in the 3D scene (billboards turned to the camera, depth-tested in the
-// shading pass), the stroke being drawn on the stage, and flipbooks, Brush Studio and previews in 2D (pixels).
-// Output is premultiplied; the colour is in the target's space (linear in the scene, sRGB on layers and the stage).
+// tip and grain. The same functions draw ink in a 3D scene (billboards turned to the camera, depth-tested), the
+// stroke under the Pencil, and flat strokes in 2D (a board, flipbooks, Brush Studio, previews).
+// Output is premultiplied; the colour is in the target's space.
 
-#include "LoweyCommon.h"
+#include <metal_stdlib>
+using namespace metal;
 
 struct BrushUniforms {
     float4x4 viewProjection;  // 3D: the camera
-    float4x4 model;           // 3D: the drawing's world matrix (the dabs are in its space)
-    float4 eye;               // xyz camera position (world), w = mode (0 = 2D pixels, 1 = 3D)
-    float4 cameraRight;       // xyz (world), w = the model's scale (radius multiplier)
+    float4x4 model;           // 3D: the drawing's world matrix. 2D: where the stroke's units land in pixels
+    float4 eye;               // 3D: xyz camera position (world). 2D: xy = where a fixed grain starts (pixels). w = mode (0 = 2D, 1 = 3D)
+    float4 cameraRight;       // xyz (world), w = the model's scale (radius multiplier, 2D and 3D)
     float4 cameraUp;          // xyz (world), w = unused
     float4 color;             // rgb, a = the stroke's opacity
     float4 shape;             // x = roundness, y = angle (rad), z = follows the stroke, w = inverted
     float4 grain;             // x = present, y = scale, z = depth, w = rolling (1) or texturized (0)
-    float4 render;            // x = wet edges, y = softness, z = grain inverted, w = texturized tile (pixels)
+    float4 render;            // x = wet edges, y = softness, z = grain inverted, w = texturized tile (pixels at scale 1)
     float4 viewport;          // width, height, 1/width, 1/height (pixels)
 };
 
 struct BrushDabData {
-    float4 center;     // xyz (2D: xy in pixels from the top left), w = radius
+    float4 center;     // xyz (2D: xy in the stroke's units, y down), w = radius
     float4 direction;  // xyz unit (zero for a dot), w = sideways offset
     float4 params;     // x = opacity, y = rotation (rad), z = flips (1 = x, 2 = y), w = travel (diameters)
 };
@@ -32,22 +33,22 @@ struct BrushVaryings {
 };
 
 /// Where a corner of the tip lands on the brush's two axes, the tip squashed by its roundness and turned.
-static inline float2 lw_tipCorner(float2 corner, float roundness, float angle) {
+static inline float2 hmm_tipCorner(float2 corner, float roundness, float angle) {
     float2 squashed = float2(corner.x, corner.y * roundness);
     float c = cos(angle), s = sin(angle);
     return float2(squashed.x * c - squashed.y * s, squashed.x * s + squashed.y * c);
 }
 
-vertex BrushVaryings lw_brushVertex(uint vid [[vertex_id]], uint iid [[instance_id]],
-                                    const device BrushDabData *dabs [[buffer(0)]],
-                                    constant BrushUniforms &u [[buffer(1)]]) {
+vertex BrushVaryings hmm_brushVertex(uint vid [[vertex_id]], uint iid [[instance_id]],
+                                     const device BrushDabData *dabs [[buffer(0)]],
+                                     constant BrushUniforms &u [[buffer(1)]]) {
     BrushDabData dab = dabs[iid];
     float2 corner = float2((vid & 1u) != 0u ? 1.0 : -1.0, (vid & 2u) != 0u ? 1.0 : -1.0);
-    float2 local = lw_tipCorner(corner, u.shape.x, u.shape.y + dab.params.y);
+    float2 local = hmm_tipCorner(corner, u.shape.x, u.shape.y + dab.params.y);
     bool follows = u.shape.z > 0.5 && length(dab.direction.xyz) > 1e-6;
+    float scale = u.cameraRight.w;
     BrushVaryings out;
     if (u.eye.w > 0.5) {
-        float scale = u.cameraRight.w;
         float3 center = (u.model * float4(dab.center.xyz, 1.0)).xyz;
         float3 facing = normalize(u.eye.xyz - center);
         float3 along = u.cameraRight.xyz;
@@ -67,7 +68,8 @@ vertex BrushVaryings lw_brushVertex(uint vid [[vertex_id]], uint iid [[instance_
         float2 along = follows ? normalize(dab.direction.xy) : float2(1.0, 0.0);
         // Pixels run down: the side is a quarter turn anticlockwise as seen, so the tip's top stays up.
         float2 side = float2(along.y, -along.x);
-        float2 pixel = dab.center.xy + side * dab.direction.w + (along * local.x + side * local.y) * dab.center.w;
+        float2 center = (u.model * float4(dab.center.xy, 0.0, 1.0)).xy;
+        float2 pixel = center + side * (dab.direction.w * scale) + (along * local.x + side * local.y) * (dab.center.w * scale);
         out.position = float4(pixel.x * u.viewport.z * 2.0 - 1.0, 1.0 - pixel.y * u.viewport.w * 2.0, 0.0, 1.0);
     }
     uint flips = uint(dab.params.z + 0.5);
@@ -78,9 +80,9 @@ vertex BrushVaryings lw_brushVertex(uint vid [[vertex_id]], uint iid [[instance_
     return out;
 }
 
-fragment float4 lw_brushFragment(BrushVaryings in [[stage_in]], constant BrushUniforms &u [[buffer(1)]],
-                                 texture2d<float, access::sample> shape [[texture(0)]],
-                                 texture2d<float, access::sample> grain [[texture(1)]]) {
+fragment float4 hmm_brushFragment(BrushVaryings in [[stage_in]], constant BrushUniforms &u [[buffer(1)]],
+                                  texture2d<float, access::sample> shape [[texture(0)]],
+                                  texture2d<float, access::sample> grain [[texture(1)]]) {
     constexpr sampler tip(filter::linear, mip_filter::linear, address::clamp_to_zero);
     constexpr sampler tile(filter::linear, mip_filter::linear, address::repeat);
     float a = shape.sample(tip, in.uv * float2(0.5, -0.5) + 0.5).r;
@@ -89,7 +91,11 @@ fragment float4 lw_brushFragment(BrushVaryings in [[stage_in]], constant BrushUn
         a *= 1.0 - smoothstep(1.0 - u.render.y, 1.0, length(in.uv));
     }
     if (u.grain.x > 0.5) {
-        float2 coordinates = u.grain.w > 0.5 ? in.grainUV : in.position.xy / max(u.render.w, 1.0);
+        // A texturized grain is fixed to the paper: in 2D that is the stroke's own units, so it stays put when the
+        // view moves or zooms.
+        float2 paper = in.position.xy;
+        if (u.eye.w < 0.5) { paper = (paper - u.eye.xy) / max(u.model[0][0], 1e-6); }
+        float2 coordinates = u.grain.w > 0.5 ? in.grainUV : paper / max(u.render.w, 1.0);
         float value = grain.sample(tile, coordinates).r;
         if (u.render.z > 0.5) { value = 1.0 - value; }
         a *= mix(1.0, value, u.grain.z);
@@ -104,7 +110,8 @@ fragment float4 lw_brushFragment(BrushVaryings in [[stage_in]], constant BrushUn
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Filled shapes of a flipbook drawing (impact bursts, drops): triangles in pixels, one flat premultiplied colour.
+// Filled shapes (a flipbook's bursts and drops, a board's arrows and notes): triangles in pixels, one flat
+// premultiplied colour.
 
 struct BrushFillUniforms {
     float4 color;     // premultiplied
@@ -115,15 +122,15 @@ struct BrushFillVaryings {
     float4 position [[position]];
 };
 
-vertex BrushFillVaryings lw_brushFillVertex(uint vid [[vertex_id]], const device float2 *points [[buffer(0)]],
-                                            constant BrushFillUniforms &u [[buffer(1)]]) {
+vertex BrushFillVaryings hmm_brushFillVertex(uint vid [[vertex_id]], const device float2 *points [[buffer(0)]],
+                                             constant BrushFillUniforms &u [[buffer(1)]]) {
     float2 pixel = points[vid];
     BrushFillVaryings out;
     out.position = float4(pixel.x * u.viewport.z * 2.0 - 1.0, 1.0 - pixel.y * u.viewport.w * 2.0, 0.0, 1.0);
     return out;
 }
 
-fragment float4 lw_brushFillFragment(constant BrushFillUniforms &u [[buffer(1)]]) {
+fragment float4 hmm_brushFillFragment(constant BrushFillUniforms &u [[buffer(1)]]) {
     return u.color;
 }
 
@@ -136,7 +143,7 @@ struct BrushLayerVaryings {
     float2 uv;
 };
 
-vertex BrushLayerVaryings lw_brushLayerVertex(uint vid [[vertex_id]]) {
+vertex BrushLayerVaryings hmm_brushLayerVertex(uint vid [[vertex_id]]) {
     float2 corner = float2((vid << 1u) & 2u, vid & 2u);
     BrushLayerVaryings out;
     out.position = float4(corner * float2(2.0, -2.0) + float2(-1.0, 1.0), 0.0, 1.0);
@@ -144,8 +151,38 @@ vertex BrushLayerVaryings lw_brushLayerVertex(uint vid [[vertex_id]]) {
     return out;
 }
 
-fragment float4 lw_brushLayerFragment(BrushLayerVaryings in [[stage_in]], constant float4 &opacity [[buffer(1)]],
-                                      texture2d<float, access::sample> layer [[texture(0)]]) {
+fragment float4 hmm_brushLayerFragment(BrushLayerVaryings in [[stage_in]], constant float4 &opacity [[buffer(1)]],
+                                       texture2d<float, access::sample> layer [[texture(0)]]) {
     constexpr sampler exact(filter::nearest, address::clamp_to_edge);
     return layer.sample(exact, in.uv) * opacity.x;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// A picture in a rectangle (a board's pictures, its notes' and titles' words, the board's own cached layer): a quad
+// in pixels sampling a premultiplied texture, times an opacity.
+
+struct BrushImageVertex {
+    float2 pixel;
+    float2 uv;
+};
+
+struct BrushImageVaryings {
+    float4 position [[position]];
+    float2 uv;
+};
+
+vertex BrushImageVaryings hmm_brushImageVertex(uint vid [[vertex_id]], const device BrushImageVertex *corners [[buffer(0)]],
+                                               constant BrushFillUniforms &u [[buffer(1)]]) {
+    BrushImageVertex corner = corners[vid];
+    BrushImageVaryings out;
+    out.position = float4(corner.pixel.x * u.viewport.z * 2.0 - 1.0, 1.0 - corner.pixel.y * u.viewport.w * 2.0, 0.0, 1.0);
+    out.uv = corner.uv;
+    return out;
+}
+
+fragment float4 hmm_brushImageFragment(BrushImageVaryings in [[stage_in]], constant BrushFillUniforms &u [[buffer(1)]],
+                                       texture2d<float, access::sample> image [[texture(0)]]) {
+    constexpr sampler smooth(filter::linear, mip_filter::linear, address::clamp_to_edge);
+    // `color` tints the picture: white at full strength leaves it as it is, its alpha fades it.
+    return image.sample(smooth, in.uv) * u.color;
 }

@@ -1,4 +1,5 @@
 import Foundation
+import HmmBoardUI
 import HmmDesign
 import HmmDocuments
 import LoweyCore
@@ -205,6 +206,11 @@ final class EditorModel {
     var motionSpeed = 1.0
     /// The object a hold menu's Rename is about (`ObjectRenameAlert`).
     var renamingObject: ObjectID?
+    /// The project's Schizzo board, once it has been asked for, and whether it covers the stage.
+    var board: BoardModel?
+    var boardShown = false
+    /// Pictures pinned from the board, floating over the stage (`workspace.json`).
+    var references: [ReferenceCard] = []
     /// The history scrubber, while it's open (`EditorModel+HistoryScrubber`).
     var historyScrub: HistoryScrubState?
     var lastSaved: Date?
@@ -298,6 +304,7 @@ final class EditorModel {
     /// The project closes: stop everything that runs on its own.
     func tearDown() {
         pause()
+        board?.close()
         stopFaceCapture()
         stopVirtualCamera()
         clock.stop()

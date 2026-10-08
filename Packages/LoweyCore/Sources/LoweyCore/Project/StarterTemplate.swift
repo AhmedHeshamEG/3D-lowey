@@ -3,11 +3,9 @@ import Foundation
 /// A preset for the job, applied to an empty project (CONTEXT §10.1): the Look and Mood it suggests, where the camera
 /// starts, snapping and the grid, whether the timeline shows, and which tools open first. Nothing is placed in the
 /// scene; a template only gets the workspace ready.
-///
-/// Sketch arrives with the Schizzo board; a template that would promise a tool the app doesn't have yet isn't listed.
 public struct StarterTemplate: Hashable, Sendable, Identifiable {
     public enum Kind: String, Codable, Sendable, CaseIterable {
-        case blank, print, room, character, animation
+        case blank, print, room, character, animation, sketch
 
         public var title: String {
             switch self {
@@ -16,6 +14,7 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
             case .room: "Room or building"
             case .character: "Character"
             case .animation: "Animation"
+            case .sketch: "Sketch"
             }
         }
 
@@ -26,6 +25,7 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
             case .room: "Metres, a 25 cm grid, the view from above."
             case .character: "Cast open, the camera at eye level."
             case .animation: "The timeline open from the start."
+            case .sketch: "The board first: plan it, then build it."
             }
         }
 
@@ -36,6 +36,7 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
             case .room: "house"
             case .character: "figure.wave"
             case .animation: "film"
+            case .sketch: "scribble.variable"
             }
         }
     }
@@ -52,7 +53,7 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
     public var systemImage: String { kind.systemImage }
 
     /// In the order New project shows them.
-    public static let all: [StarterTemplate] = [.blank, .print, .room, .character, .animation]
+    public static let all: [StarterTemplate] = [.blank, .print, .room, .character, .animation, .sketch]
 
     public static func template(_ kind: Kind) -> StarterTemplate {
         all.first { $0.kind == kind } ?? .blank
@@ -90,5 +91,11 @@ public struct StarterTemplate: Hashable, Sendable, Identifiable {
     public static let animation = StarterTemplate(
         kind: .animation, lookPresetID: LookPreset.ink.id, mood: .day, viewpoint: .default,
         workspace: ProjectWorkspace(template: .animation, timeline: .full, showsGrid: true)
+    )
+
+    /// Planning first: the project opens on its Schizzo board.
+    public static let sketch = StarterTemplate(
+        kind: .sketch, lookPresetID: LookPreset.sketch.id, mood: .day, viewpoint: .default,
+        workspace: ProjectWorkspace(template: .sketch, firstPanel: ProjectWorkspace.boardPanel)
     )
 }

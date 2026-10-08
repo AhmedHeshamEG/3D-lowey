@@ -21,6 +21,7 @@ let package = Package(
             name: "LoweyEngine",
             dependencies: [
                 "LoweyCore",
+                .product(name: "HmmBrushRender", package: "HmmKit"),
                 .product(name: "HmmMedia", package: "HmmKit"),
                 .product(name: "HmmDiagnostics", package: "HmmKit"),
                 .product(name: "HmmPerception", package: "HmmKit"),

@@ -331,13 +331,14 @@ public struct BrushCurve: Codable, Hashable, Sendable {
     }
 
     /// Sorted, inside the unit square, at least the two ends.
-    var clamped: BrushCurve {
+    public var clamped: BrushCurve {
         let kept = points.map { Vec2($0.x.clamped(0, 1), $0.y.clamped(0, 1)) }.sorted { $0.x < $1.x }
         return kept.count >= 2 ? BrushCurve(kept) : .linear
     }
 }
 
-extension Double {
+public extension Double {
+    /// Inside `lower…upper` (the lower bound for anything that isn't a number).
     func clamped(_ lower: Double, _ upper: Double) -> Double {
         guard isFinite else { return lower }
         return Swift.min(Swift.max(self, lower), upper)

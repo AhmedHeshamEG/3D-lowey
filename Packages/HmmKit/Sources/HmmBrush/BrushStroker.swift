@@ -1,23 +1,19 @@
 import Foundation
 
-/// A point a brush can walk along: a flipbook's 2D units or an ink drawing's 3D metres.
+/// A point a brush can walk along: a board's or a flipbook's 2D units, an ink drawing's 3D metres.
 public protocol BrushPoint: Hashable, Sendable {
     static func + (lhs: Self, rhs: Self) -> Self
     static func - (lhs: Self, rhs: Self) -> Self
     static func * (lhs: Self, rhs: Double) -> Self
     func distance(to other: Self) -> Double
+    /// x, y and z (0 in 2D), for whoever draws the stamps.
+    var brushCoordinates: SIMD3<Double> { get }
 }
 
 extension BrushPoint {
     static func += (lhs: inout Self, rhs: Self) {
         lhs = lhs + rhs
     }
-}
-
-extension Vec3: BrushPoint {}
-
-extension Vec2: BrushPoint {
-    public func distance(to other: Vec2) -> Double { (self - other).length }
 }
 
 /// One Pencil (or finger) sample on its way into a stroke.

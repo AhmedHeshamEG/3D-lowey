@@ -11,6 +11,54 @@ public enum TimelinePresence: String, Codable, Sendable, CaseIterable {
     case full
 }
 
+/// A picture pinned from the Schizzo board, floating over the stage beside the model: something to look at while
+/// making. It is how the project is seen, not what it is (the same picture as a plane in the scene is an object).
+public struct ReferenceCard: Codable, Hashable, Sendable, Identifiable {
+    public var id: String
+    /// The picture's file in the project's assets (`references/<name>.png`), like any media file.
+    public var image: String
+    /// The frame's name or the first words of what was pinned.
+    public var title: String
+    /// The card's middle, as fractions of the stage's width and height.
+    public var x: Double
+    public var y: Double
+    /// Its width in points; the height follows the picture's shape.
+    public var width: Double
+    /// The picture's height over its width.
+    public var aspect: Double
+
+    public static let widthRange = 120.0 ... 900.0
+    public static let defaultWidth = 260.0
+
+    public init(id: String, image: String, title: String = "", x: Double = 0.78, y: Double = 0.3, width: Double = Self.defaultWidth,
+                aspect: Double = 1) {
+        self.id = id
+        self.image = image
+        self.title = title
+        self.x = x
+        self.y = y
+        self.width = width
+        self.aspect = aspect
+        self = clamped
+    }
+
+    /// Inside the stage and a size a hand can hold, whatever a file says.
+    public var clamped: ReferenceCard {
+        var card = self
+        card.x = x.isFinite ? min(max(x, 0), 1) : 0.5
+        card.y = y.isFinite ? min(max(y, 0), 1) : 0.5
+        card.width = width.isFinite ? min(max(width, Self.widthRange.lowerBound), Self.widthRange.upperBound) : Self.defaultWidth
+        card.aspect = aspect.isFinite && aspect > 0 ? min(max(aspect, 0.1), 10) : 1
+        return card
+    }
+
+    /// Where the next card goes so it doesn't hide the ones already there: a step down and left from the last.
+    public static func place(after cards: [ReferenceCard]) -> (x: Double, y: Double) {
+        let step = Double(cards.count % 5)
+        return (0.78 - step * 0.04, 0.3 + step * 0.06)
+    }
+}
+
 /// How a project is shown when it opens: the timeline, snapping and the grid, the starter template it came from.
 /// It's how you see the project, not what the project is, so it lives in `workspace.json` beside `project.json`,
 /// outside the history journal and undo, written whenever it changes.
@@ -41,14 +89,18 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
     public var frameGuide: DrawingGuide?
     /// The drawing guide on the 3D guide plane for ink and solid shapes (grid, isometric, symmetry), nil when off.
     public var planeGuide: DrawingGuide?
+    /// Pictures pinned from the Schizzo board, floating over the stage.
+    public var references: [ReferenceCard]
 
+    /// `firstPanel` for a project that opens on its Schizzo board.
+    public static let boardPanel = "board"
     public static let defaultTimelineHeight = 260.0
     public static let timelineHeightRange = 150.0 ... 900.0
 
     public init(template: StarterTemplate.Kind? = nil, timeline: TimelinePresence = .hidden, timelineHeight: Double = Self.defaultTimelineHeight,
                 snap: SnapSettings = SnapSettings(), showsGrid: Bool = true, shapeSize: Double = 1, firstPanel: String? = nil,
                 units: LengthUnit = .centimetre, printBed: String? = nil, section: SectionPlane? = nil, showsDimensions: Bool = true,
-                frameGuide: DrawingGuide? = nil, planeGuide: DrawingGuide? = nil) {
+                frameGuide: DrawingGuide? = nil, planeGuide: DrawingGuide? = nil, references: [ReferenceCard] = []) {
         schemaVersion = Self.schemaVersion
         self.template = template
         self.timeline = timeline
@@ -63,11 +115,12 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         self.showsDimensions = showsDimensions
         self.frameGuide = frameGuide
         self.planeGuide = planeGuide
+        self.references = references
     }
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, template, timeline, timelineHeight, snap, showsGrid, shapeSize, firstPanel, units, printBed, section, showsDimensions
-        case frameGuide, planeGuide
+        case frameGuide, planeGuide, references
     }
 
     /// Unknown or missing values fall back to the defaults: a damaged or future workspace never stops a project opening.
@@ -90,6 +143,7 @@ public struct ProjectWorkspace: Codable, Hashable, Sendable {
         showsDimensions = (try? container.decodeIfPresent(Bool.self, forKey: .showsDimensions)) ?? defaults.showsDimensions
         frameGuide = try? container.decodeIfPresent(DrawingGuide.self, forKey: .frameGuide)
         planeGuide = try? container.decodeIfPresent(DrawingGuide.self, forKey: .planeGuide)
+        references = ((try? container.decodeIfPresent([ReferenceCard].self, forKey: .references)) ?? []).map(\.clamped)
     }
 }
 

@@ -43,9 +43,10 @@ public struct RootView: View {
             .hmmThemed(.lowey, mode: HmmThemeMode(rawValue: themeMode) ?? .dark)
             .hmmToast($app.toast)
             .hmmUniversalGestures(HmmGestureActions(
-                undo: { app.editor?.undo() },
-                redo: { app.editor?.redo() },
-                toggleChrome: { app.editor?.chromeHidden.toggle() }
+                // While the board covers the stage, two fingers undo on the board (its own gestures), not under it.
+                undo: { if app.editor?.boardShown != true { app.editor?.undo() } },
+                redo: { if app.editor?.boardShown != true { app.editor?.redo() } },
+                toggleChrome: { if app.editor?.boardShown != true { app.editor?.chromeHidden.toggle() } }
             ))
             // Pinching and dragging belong to the stage: the project closes from Home in the corner, never by a swipe.
             .interactiveDismissDisabled()

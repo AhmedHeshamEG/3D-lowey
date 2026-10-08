@@ -1,3 +1,4 @@
+import HmmBoardUI
 import HmmCommands
 import LoweyCore
 import LoweyEngine
@@ -13,26 +14,28 @@ public struct LoweyMenuCommands: Commands {
     }
 
     private var editor: EditorModel? { app.editor }
+    /// The board, while it covers the stage: the Edit menu acts on it then.
+    private var board: BoardModel? { editor?.boardShown == true ? editor?.board : nil }
 
     public var body: some Commands {
         CommandGroup(replacing: .undoRedo) {
-            Button(editor?.canUndo == true ? editor?.undoTitle ?? "Undo" : "Undo") { editor?.undo() }
+            Button(editor?.canUndo == true && board == nil ? editor?.undoTitle ?? "Undo" : "Undo") { undo() }
                 .keyboardShortcut("z", modifiers: .command)
-                .disabled(editor?.canUndo != true)
-            Button(editor?.canRedo == true ? editor?.redoTitle ?? "Redo" : "Redo") { editor?.redo() }
+                .disabled(board.map { !$0.session.canUndo } ?? (editor?.canUndo != true))
+            Button(editor?.canRedo == true && board == nil ? editor?.redoTitle ?? "Redo" : "Redo") { redo() }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
-                .disabled(editor?.canRedo != true)
+                .disabled(board.map { !$0.session.canRedo } ?? (editor?.canRedo != true))
         }
         CommandGroup(replacing: .pasteboard) {
-            Button("Copy") { editor?.copySelection() }.keyboardShortcut("c", modifiers: .command)
-            Button("Paste") { editor?.paste() }.keyboardShortcut("v", modifiers: .command)
-            Button("Duplicate") { editor?.duplicateSelection() }.keyboardShortcut("d", modifiers: .command)
-            Button("Delete") { editor?.deleteSelection() }.keyboardShortcut(.delete, modifiers: .command)
+            Button("Copy") { copy() }.keyboardShortcut("c", modifiers: .command)
+            Button("Paste") { paste() }.keyboardShortcut("v", modifiers: .command)
+            Button("Duplicate") { duplicate() }.keyboardShortcut("d", modifiers: .command)
+            Button("Delete") { delete() }.keyboardShortcut(.delete, modifiers: .command)
             Divider()
-            Button("Select All") { editor?.selectAll() }.keyboardShortcut("a", modifiers: .command)
-            Button("Select Similar") { editor?.selectSimilar() }.keyboardShortcut("a", modifiers: [.command, .shift])
-            Button("Group") { editor?.groupSelection() }.keyboardShortcut("g", modifiers: .command)
-            Button("Ungroup") { editor?.ungroupSelection() }.keyboardShortcut("g", modifiers: [.command, .shift])
+            Button("Select All") { selectAll() }.keyboardShortcut("a", modifiers: .command)
+            Button("Select Similar") { editor?.selectSimilar() }.keyboardShortcut("a", modifiers: [.command, .shift]).disabled(board != nil)
+            Button("Group") { editor?.groupSelection() }.keyboardShortcut("g", modifiers: .command).disabled(board != nil)
+            Button("Ungroup") { editor?.ungroupSelection() }.keyboardShortcut("g", modifiers: [.command, .shift]).disabled(board != nil)
         }
         // The making tools in the order of the top-right cluster, then the document's panels.
         CommandMenu("Tools") {
@@ -89,25 +92,63 @@ public struct LoweyMenuCommands: Commands {
         }
     }
 
+    private func undo() {
+        if let board { board.undo() } else { editor?.undo() }
+    }
+
+    private func redo() {
+        if let board { board.redo() } else { editor?.redo() }
+    }
+
+    private func copy() {
+        if let board { board.copySelection() } else { editor?.copySelection() }
+    }
+
+    private func paste() {
+        if let board { board.paste() } else { editor?.paste() }
+    }
+
+    private func duplicate() {
+        if let board { board.duplicateSelection() } else { editor?.duplicateSelection() }
+    }
+
+    private func delete() {
+        if let board { board.deleteSelection() } else { editor?.deleteSelection() }
+    }
+
+    private func selectAll() {
+        if let board {
+            board.mutate { session in
+                session.tool = .select
+                session.selectAll()
+            }
+        } else {
+            editor?.selectAll()
+        }
+    }
+
+    /// The stage under an open board, for the menus that only make sense on the stage.
+    private var stageEditor: EditorModel? { editor?.boardShown == true ? nil : editor }
+
     private func panel(_ panel: ClusterPanel) {
-        guard let editor else { return }
+        guard let editor = stageEditor else { return }
         editor.openPanel = editor.openPanel == panel ? nil : panel
     }
 
     private func tool(_ tool: StageTool, panel: ClusterPanel?) {
-        guard let editor else { return }
+        guard let editor = stageEditor else { return }
         editor.tool = tool
         if let panel { editor.openPanel = panel }
     }
 
     private func modelPage(_ page: ModelPage) {
-        guard let editor else { return }
+        guard let editor = stageEditor else { return }
         editor.modelPage = page
         editor.openPanel = .model
     }
 
     private func gizmo(_ mode: GizmoMode) {
-        guard let editor else { return }
+        guard let editor = stageEditor else { return }
         editor.tool = .select
         editor.gizmoMode = mode
     }

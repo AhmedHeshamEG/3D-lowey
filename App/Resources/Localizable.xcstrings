@@ -689,6 +689,22 @@
         }
       }
     },
+    "A sheet for planning in every project. Off: it leaves Actions and pinned pictures are put away. Nothing is deleted.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un foglio per pianificare in ogni progetto. Spenta: sparisce da Azioni e le immagini appuntate vengono messe via. Non viene eliminato nulla."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لوحة للتخطيط في كل مشروع. عند الإيقاف: تختفي من الإجراءات وتُخبّأ الصور المثبّتة. لا يُحذف شيء."
+          }
+        }
+      }
+    },
     "a shoulder": {
       "localizations": {
         "it": {
@@ -1049,6 +1065,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "أضف طبقة"
+          }
+        }
+      }
+    },
+    "Add a picture": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi un'immagine"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة صورة"
           }
         }
       }
@@ -1625,6 +1657,22 @@
         }
       }
     },
+    "Any colour": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualsiasi colore"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي لون"
+          }
+        }
+      }
+    },
     "Aperture": {
       "localizations": {
         "it": {
@@ -1961,6 +2009,22 @@
         }
       }
     },
+    "Back": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indietro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجوع"
+          }
+        }
+      }
+    },
     "Back %lld steps. Redo goes forward again until you change something.": {
       "localizations": {
         "it": {
@@ -2249,6 +2313,22 @@
         }
       }
     },
+    "Board": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lavagna"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللوحة"
+          }
+        }
+      }
+    },
     "Bob on water": {
       "localizations": {
         "it": {
@@ -2389,6 +2469,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الجسر مفعّل (هذه الشبكة المحلية فقط)"
+          }
+        }
+      }
+    },
+    "Bring to the front": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta in primo piano"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إحضار إلى الأمام"
           }
         }
       }
@@ -3925,6 +4021,22 @@
         }
       }
     },
+    "Couldn't pin that: %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile appuntarlo: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر التثبيت: %@"
+          }
+        }
+      }
+    },
     "Couldn't prepare the project: %@": {
       "localizations": {
         "it": {
@@ -4385,6 +4497,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "داكن"
+          }
+        }
+      }
+    },
+    "Dark paper": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carta scura"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورق داكن"
           }
         }
       }
@@ -4973,6 +5101,22 @@
         }
       }
     },
+    "Dots": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punti"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقاط"
+          }
+        }
+      }
+    },
     "Double-tap for the original size": {
       "localizations": {
         "it": {
@@ -5229,6 +5373,22 @@
         }
       }
     },
+    "Draw a frame": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna un riquadro"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسم إطار"
+          }
+        }
+      }
+    },
     "Draw a line or a curve with Model ▸ Edit ▸ Sketch first": {
       "localizations": {
         "it": {
@@ -5385,6 +5545,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ارسم بالإصبع أيضًا"
+          }
+        }
+      }
+    },
+    "Draw, drop a picture or add a note.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna, trascina un'immagine o aggiungi una nota."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم، أو أفلت صورة، أو أضف ملاحظة."
           }
         }
       }
@@ -7533,6 +7709,22 @@
         }
       }
     },
+    "For the board": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per la lavagna"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للّوحة"
+          }
+        }
+      }
+    },
     "Forget": {
       "localizations": {
         "it": {
@@ -8117,6 +8309,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "محرر المنحنيات…"
+          }
+        }
+      }
+    },
+    "Grid": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Griglia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبكة"
           }
         }
       }
@@ -9865,6 +10073,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إخراج الضوء"
+          }
+        }
+      }
+    },
+    "Light paper": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carta chiara"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورق فاتح"
           }
         }
       }
@@ -11825,6 +12049,22 @@
         }
       }
     },
+    "Note": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملاحظة"
+          }
+        }
+      }
+    },
     "Nothing": {
       "localizations": {
         "it": {
@@ -12449,6 +12689,22 @@
         }
       }
     },
+    "Open the board": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri la lavagna"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح اللوحة"
+          }
+        }
+      }
+    },
     "Open the library": {
       "localizations": {
         "it": {
@@ -12897,6 +13153,22 @@
         }
       }
     },
+    "Paper colour": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colore della carta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لون الورق"
+          }
+        }
+      }
+    },
     "Paper grain": {
       "localizations": {
         "it": {
@@ -12957,6 +13229,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "لصق نص برمجي"
+          }
+        }
+      }
+    },
+    "Pattern": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النقش"
           }
         }
       }
@@ -13365,6 +13653,38 @@
         }
       }
     },
+    "Pin to the project": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appunta al progetto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تثبيت في المشروع"
+          }
+        }
+      }
+    },
+    "Pinned to the project": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuntato al progetto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التثبيت في المشروع"
+          }
+        }
+      }
+    },
     "Place every dot first": {
       "localizations": {
         "it": {
@@ -13405,6 +13725,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ضعها فوق النموذج بأصابعك ثم اضغط إسقاط: تقع على ما تراه الكاميرا."
+          }
+        }
+      }
+    },
+    "Plain": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liscia"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سادة"
           }
         }
       }
@@ -14457,6 +14793,22 @@
         }
       }
     },
+    "Reference": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرجع"
+          }
+        }
+      }
+    },
     "Remove": {
       "localizations": {
         "it": {
@@ -14797,6 +15149,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إعادة ضبط الوضعية"
+          }
+        }
+      }
+    },
+    "Resize": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridimensiona"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيير الحجم"
           }
         }
       }
@@ -15665,6 +16033,22 @@
         }
       }
     },
+    "Schizzo board": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lavagna Schizzo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لوحة Schizzo"
+          }
+        }
+      }
+    },
     "Screen": {
       "localizations": {
         "it": {
@@ -15890,6 +16274,22 @@
       }
     },
     "Select All": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleziona tutto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد الكل"
+          }
+        }
+      }
+    },
+    "Select all": {
       "localizations": {
         "it": {
           "stringUnit": {
@@ -16225,6 +16625,22 @@
         }
       }
     },
+    "Send to the back": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta in fondo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال إلى الخلف"
+          }
+        }
+      }
+    },
     "Sensitivity": {
       "localizations": {
         "it": {
@@ -16513,6 +16929,22 @@
         }
       }
     },
+    "Share a picture": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi un'immagine"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشاركة صورة"
+          }
+        }
+      }
+    },
     "Share as one file (.maquettepack)": {
       "localizations": {
         "it": {
@@ -16701,6 +17133,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "عرض كل %lld"
+          }
+        }
+      }
+    },
+    "Show everything": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra tutto"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار الكل"
           }
         }
       }
@@ -17897,6 +18345,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "البصمات في كل خطوة: %lld"
+          }
+        }
+      }
+    },
+    "Stand it in the scene": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettilo nella scena"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعه في المشهد"
           }
         }
       }
@@ -19273,6 +19737,38 @@
         }
       }
     },
+    "That picture couldn't be read.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile leggere quell'immagine."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت قراءة تلك الصورة."
+          }
+        }
+      }
+    },
+    "That picture couldn't be saved.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare quell'immagine."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ تلك الصورة."
+          }
+        }
+      }
+    },
     "That recording was too short": {
       "localizations": {
         "it": {
@@ -19317,6 +19813,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر تشغيل اختبار الأداء"
+          }
+        }
+      }
+    },
+    "The board first: plan it, then build it.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima la lavagna: pianifica, poi costruisci."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللوحة أولًا: خطّط ثم ابنِ."
           }
         }
       }
@@ -19941,6 +20453,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأثلاث"
+          }
+        }
+      }
+    },
+    "This board couldn't be opened.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile aprire questa lavagna."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر فتح هذه اللوحة."
           }
         }
       }

@@ -20,7 +20,7 @@ struct NewProjectSheet: View {
                 .accessibilityIdentifier("project-name")
             HmmSectionHeader("Start from")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: HmmSpacing.s)], spacing: HmmSpacing.s) {
-                ForEach(StarterTemplate.all) { item in
+                ForEach(StarterTemplate.all.filter { $0.kind != .sketch || EditorModel.boardEnabled }) { item in
                     TemplateCard(template: item, selected: item.kind == template.kind) { choose(item) }
                 }
             }

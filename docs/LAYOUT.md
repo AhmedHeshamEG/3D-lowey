@@ -30,7 +30,8 @@ Where everything in Maquette lives. This is the map of CONTEXT §4.1 and §10.1:
    Paint, Animate, Cast), in the order a thing gets made. A tool with nothing in it yet isn't shown (no stubs).
 3. **Time lives in the timeline**, and the timeline comes when called: the corner control (⏱) or Animate. Sound,
    words and the timeline's own settings are there.
-4. **Actions holds the long tail**: sharing, scenes, history, scripts, the AI bridge, help, diagnostics, settings.
+4. **Actions holds the long tail**: sharing, scenes, the Schizzo board, history, scripts, the AI bridge, help,
+   diagnostics, settings.
 5. **The inspector belongs to the selection.** It floats beside it, flips sides at the screen's edge, glides over
    when the view settles, and hides while a making tool's panel is open.
 6. **Every panel resizes** from the grip in its corner (double-tap the grip for the original size); each remembers
@@ -76,6 +77,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Monitor window (Stage Manager, external display) | `Actions › open-monitor` |
 | Scenes: switch, new, duplicate, rename | `Actions › Rename` |
 | Copy a scene to another project | `Actions` (shown when there is another project) |
+| The Schizzo board: plan before building (below) | `Actions › open-board` |
 | History scrubber, versions | `Actions › open-history` |
 | Scripts | `Actions › open-scripts` |
 | AI & laptop bridge | `Actions › open-bridge` |
@@ -265,6 +267,27 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Back to the whole timeline | `[transport] Show the timeline` |
 | Send the timeline away | `[transport] hide-timeline` |
 
+## The Schizzo board
+
+A 2D sheet for planning, one in every project (CONTEXT §10.7). It covers the stage while it's open and has the same
+grammar: the board itself top left, the making tools top right, the sidebar, the hold menu. It is hmm-kit's
+`HmmBoardScreen`, so Cutaway's board will be the same board.
+
+| Control | Where |
+|---|---|
+| Back to the stage | top left, first |
+| Actions: add a picture (Photos), paste (what was copied on a board, or a picture copied anywhere), select all, the paper (dots, grid, plain; dark or light), share a picture, pin the whole board | top left |
+| Select: tap to pick, drag to move, the handles to size, a box from empty space to pick several; tap a picked note again to type on it | top left |
+| Draw (the brush engine: pressure, tilt, every brush), Erase (cuts strokes where it touches), Note, Arrow (its ends follow the notes and pictures they point at), Frame (a named area that carries what's in it) | top right |
+| Size, opacity, the colour in the hand (the Look's palette, any colour), undo, redo | the sidebar |
+| The brush the board draws with (opens the brush library) | under the board while Draw is on |
+| Pin to the project, duplicate, delete | under the board while something is picked |
+| The zoom (tap: show everything) | bottom right |
+| Move the view: two fingers (one, once a Pencil has touched) pan, pinch zooms, double-tap fills the view with the frame under the finger or with everything | on the board |
+| A thing's hold menu: duplicate, rename (frames), copy, paste; pin to the project, bring to the front, send to the back; delete | touch and hold a thing with Select |
+| Pictures: drop them on the board from any app | on the board |
+| Pinned pictures (reference cards): drag to move, the corner to size; their hold menu: open the board, stand it in the scene (a plane, an object like any other); delete | floating over the stage |
+
 ## The hold menu
 
 Touch and hold any thing and the same menu opens in the same order (CONTEXT §4.1): **Duplicate · Rename · Copy ·
@@ -273,7 +296,7 @@ the same places; a row a thing can't do is dimmed. On the stage (Select tool) a 
 its menu (Hide, Lock, Group; **Add to the selection** when other things are selected); a finger that moves is a drag.
 The same object has the same menu in the outliner and on its timeline row. Also on: keys, clips, flipbook drawings and
 tracks, cuts, screen effects, paint layers, brushes, Looks, library items, poses, palette colours, Home's cards and
-stacks.
+stacks, and the things on the Schizzo board.
 
 ## Settings
 
@@ -284,6 +307,7 @@ stacks.
 | Pencil hover preview, always full resolution, moving-around speed | Settings ▸ Stage |
 | Dock the inspector at the side (off: it floats beside the selection) | Settings ▸ Stage |
 | Joystick under a selection and its speed | Settings ▸ Stage |
+| The Schizzo board on or off (off: it leaves Actions and New project, and pinned pictures are put away) | Settings ▸ Board |
 | iCloud Drive | Settings ▸ Storage |
 | How full this iPad's frame is and what the preview is doing about it; benchmarks; Pencil latency; logs | Settings ▸ Diagnostics (and Actions) |
 

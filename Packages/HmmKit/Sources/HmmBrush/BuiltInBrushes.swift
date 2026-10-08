@@ -1,6 +1,22 @@
 import Foundation
 
-/// The brushes Maquette comes with, in three sets. Every one is built from the built-in tips and grains, so nothing
+/// A named, ordered group of brushes (Procreate's brush sets).
+public struct BrushSet: Codable, Hashable, Sendable, Identifiable {
+    public var id: String
+    public var name: String
+    public var brushes: [String]
+    /// The app's own sets: they can't be deleted, and their brushes can be edited and reset but not deleted.
+    public var builtIn: Bool
+
+    public init(id: String, name: String, brushes: [String] = [], builtIn: Bool = false) {
+        self.id = id
+        self.name = name
+        self.brushes = brushes
+        self.builtIn = builtIn
+    }
+}
+
+/// The brushes the apps come with, in three sets. Every one is built from the built-in tips and grains, so nothing
 /// of anyone else's ships. Ink Pen is the default for ink and flipbooks and draws the line 2.0 drew.
 public enum BuiltInBrushes {
     public static let inkPenID = "builtin.ink-pen"

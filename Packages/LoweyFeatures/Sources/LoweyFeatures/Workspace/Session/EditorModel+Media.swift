@@ -53,9 +53,11 @@ extension EditorModel {
         return addMediaOverlay(OverlayRecipe(shape: .image, video: file, videoStart: start, videoDuration: duration))
     }
 
-    /// A card where you're looking, turned to face you, about 1.2 m tall.
-    private func addMediaCard(_ recipe: CardRecipe) -> ObjectID? {
-        let name = recipe.video ?? recipe.image ?? "Picture"
+    /// A card where you're looking, turned to face you, about 1.2 m tall. `named` replaces the file's name (a pinned
+    /// reference is called what its frame was).
+    @discardableResult
+    func addMediaCard(_ recipe: CardRecipe, named: String? = nil) -> ObjectID? {
+        let name = named ?? recipe.video ?? recipe.image ?? "Picture"
         var object = SceneObject(id: .make(), name: ObjectFactory.uniqueName((name as NSString).deletingPathExtension, in: scene), kind: .card(recipe))
         let ground = dropPoint()
         let yaw = stage.map { atan2($0.viewpoint.eye.x - ground.x, $0.viewpoint.eye.z - ground.z) } ?? 0

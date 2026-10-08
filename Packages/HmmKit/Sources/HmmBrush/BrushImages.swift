@@ -223,7 +223,7 @@ public enum GreyPNG {
         return data
     }
 
-    static func chunk(_ type: String, _ body: Data) -> Data {
+    public static func chunk(_ type: String, _ body: Data) -> Data {
         var data = Data()
         data.appendBigEndian(UInt32(body.count))
         let typed = Data(type.utf8) + body
@@ -232,7 +232,7 @@ public enum GreyPNG {
         return data
     }
 
-    static func zlibStored(_ bytes: [UInt8]) -> Data {
+    public static func zlibStored(_ bytes: [UInt8]) -> Data {
         var data = Data([0x78, 0x01])
         var offset = 0
         repeat {
@@ -256,8 +256,27 @@ public enum GreyPNG {
     }
 }
 
-extension Data {
+public extension Data {
     mutating func appendBigEndian(_ value: UInt32) {
         append(contentsOf: [UInt8(value >> 24), UInt8((value >> 16) & 0xFF), UInt8((value >> 8) & 0xFF), UInt8(value & 0xFF)])
+    }
+}
+
+/// The checksum PNG and zip files carry.
+public enum CRC32 {
+    private static let table: [UInt32] = (0 ..< 256).map { index -> UInt32 in
+        var c = UInt32(index)
+        for _ in 0 ..< 8 {
+            c = c & 1 != 0 ? 0xEDB8_8320 ^ (c >> 1) : c >> 1
+        }
+        return c
+    }
+
+    public static func checksum(_ data: Data) -> UInt32 {
+        var crc: UInt32 = 0xFFFF_FFFF
+        for byte in data {
+            crc = table[Int((crc ^ UInt32(byte)) & 0xFF)] ^ (crc >> 8)
+        }
+        return crc ^ 0xFFFF_FFFF
     }
 }
