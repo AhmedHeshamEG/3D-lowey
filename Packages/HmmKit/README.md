@@ -19,6 +19,10 @@ it in place: changes land here first, then `Tools/sync-hmmkit.sh` in the app pul
 | `HmmPerception` | The AI's eyes: contact-sheet layout and drawing, set-of-marks markers, the value (squint) view in CIE L*, safe zones for 16:9 / 9:16 / 1:1, reports with a plain-English summary | layout everywhere; drawing on Apple |
 | `HmmDiagnostics` | Frame statistics (p50/p95/p99, dropped frames, hitches), the Performance HUD, the benchmark recorder and report, a rotating log with export, signposts, MetricKit | everywhere |
 | `HmmStore` | StoreKit 2 app-transaction check for paid-upfront apps | Apple |
+| `HmmBrush` | The brush engine's arithmetic: `Brush` (shape, grain, stroke, dynamics, rendering), `BrushStroker` (samples into a stored path, a path into stamps, the same for the live stroke and the kept one), the built-in tips, grains and brushes drawn by code, content keys, `Vec2`, `SeededRandom` | everywhere |
+| `HmmBrushRender` | The brush engine on the GPU: `Brush.metal` (one instanced quad per stamp, in a 3D scene or flat), `BrushStamper` (stamp buffers cached per stroke), tip and grain textures, pipelines for stamps, flat fills and pictures | Apple (Metal) |
+| `HmmBoard` | The Schizzo board, pure: brush strokes, pictures, notes, arrows and frames on an endless sheet; every change a command with its exact inverse; `BoardSession` (tools, selection, drags, the stroke in progress); the view; the draw list every picture of a board comes from; `BoardStore` (the board, its history journal and pictures in a folder any document can hold) | everywhere |
+| `HmmBoardUI` | The board on screen: `BoardRenderer` (Metal: the board kept in one layer, strokes by the brush engine), `BoardCanvasView` (Pencil or hand, pan, pinch, hover, the hold menu, drops), `BoardModel`, and `HmmBoardScreen` in the studio's layout | iOS |
 
 ## Using it
 

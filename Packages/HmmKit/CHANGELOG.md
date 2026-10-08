@@ -3,6 +3,31 @@
 All notable changes to hmm-kit. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-10-08
+
+Built with Maquette 0.9.
+
+### Added
+- **HmmBrush**: the brush engine's arithmetic, moved here from Maquette so every app draws with the same brushes.
+  `Brush` and its settings, `BrushStroker` (Pencil samples into a stored path, a path into stamps, seeded so a stroke
+  is the same in every render), the built-in tips, grains and ten brushes (all drawn by code), `BrushKey` content keys,
+  `Vec2` and `SeededRandom`. A point a brush walks along says its coordinates (`BrushPoint.brushCoordinates`), so one
+  renderer draws 2D and 3D strokes.
+- **HmmBrushRender**: the brush engine's Metal half. `Brush.metal` stamps strokes in a 3D scene or flat; flat strokes
+  can stay in their own units and be placed by the shader (`BrushBatch.Placement`), with a texturized grain fixed to
+  those units and hairlines kept visible far out. `BrushStamper`, `BrushTextureCache`, and `BrushShaders` (the
+  library and pipelines for stamps, flat fills, layers and pictures).
+- **HmmBoard**: the Schizzo board. An endless sheet of brush strokes, pictures, notes, arrows (their ends follow what
+  they point at) and frames (they carry what lies in them). `BoardCommand` with exact inverses, `BoardOperations`,
+  `BoardSession` (the six tools, selection, moving and resizing, an eraser that cuts strokes where it touched, copy
+  and paste between boards), `BoardViewport`, `BoardDrawList` and `BoardLayerPlan` (what a board looks like and when
+  its cached picture must be redrawn), `BoardStore` (`board.json`, the history journal, pictures by content).
+- **HmmBoardUI**: the board on screen. `BoardRenderer` keeps the board in one layer a little larger than the screen and
+  draws only what moves over it; `BoardCanvasView` takes the Pencil (pressure, tilt, coalesced and predicted touches),
+  fingers that pan and pinch, hover, the hold menu and dropped pictures; `BoardModel` journals every change and can
+  hand the app a picture of a frame or a selection as a pin; `HmmBoardScreen` is the whole screen in the studio's
+  layout, with the app's own brush row and colour chooser plugged in.
+
 ## [0.4.0] - 2026-10-07
 
 Built with Maquette 0.8.
