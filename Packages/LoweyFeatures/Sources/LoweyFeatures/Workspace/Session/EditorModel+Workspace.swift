@@ -17,7 +17,13 @@ extension EditorModel {
         precision.showsDimensions = workspace.showsDimensions
         frameGuide = workspace.frameGuide
         planeGuide = workspace.planeGuide
-        if let first = workspace.firstPanel.flatMap(ClusterPanel.init(rawValue:)) {
+        references = workspace.references
+        if workspace.firstPanel == ProjectWorkspace.boardPanel {
+            // A Sketch project opens on its board, once.
+            workspace.firstPanel = nil
+            saveWorkspace()
+            openBoard()
+        } else if let first = workspace.firstPanel.flatMap(ClusterPanel.init(rawValue:)) {
             openPanel = first
             workspace.firstPanel = nil
             saveWorkspace()
@@ -46,6 +52,7 @@ extension EditorModel {
         workspace.showsDimensions = precision.showsDimensions
         workspace.frameGuide = frameGuide
         workspace.planeGuide = planeGuide
+        workspace.references = references
         do {
             try store.saveWorkspace(workspace, at: projectURL)
         } catch {

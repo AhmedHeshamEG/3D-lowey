@@ -12,6 +12,7 @@ struct ActionsPanel: View {
     @State private var renamingScene = false
     @State private var sceneName = ""
     @State private var sharing: URL?
+    @AppStorage(AppSettings.boardEnabled) private var boardEnabled = true
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -30,6 +31,9 @@ struct ActionsPanel: View {
                 scenes
                 PanelSection("Project") {
                     TileGrid {
+                        if boardEnabled {
+                            TileButton(title: "Board", systemName: "scribble.variable", identifier: "open-board") { editor.openBoard() }
+                        }
                         TileButton(title: "History", systemName: "clock.arrow.circlepath", identifier: "open-history") { editor.openHistory() }
                         TileButton(title: "Scripts", systemName: "curlybraces", identifier: "open-scripts") { editor.openScript(nil) }
                         if FeatureFlags.aiBridge {

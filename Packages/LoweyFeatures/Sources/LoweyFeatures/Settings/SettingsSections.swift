@@ -16,6 +16,7 @@ struct PreferencesForm: View {
     @AppStorage(AppSettings.showsJoystick) private var showsJoystick = true
     @AppStorage(AppSettings.joystickSpeed) private var joystickSpeed = 1.0
     @AppStorage(AppSettings.storeInICloud) private var iCloud = true
+    @AppStorage(AppSettings.boardEnabled) private var boardEnabled = true
 
     var body: some View {
         Section("Appearance") {
@@ -46,6 +47,14 @@ struct PreferencesForm: View {
                 LabeledSlider(title: "Joystick speed", value: joystickSpeed, range: AppSettings.joystickSpeedRange,
                               format: { String(format: "%.2g×", $0) }) { joystickSpeed = $0 }
             }
+        }
+        Section {
+            Toggle("Schizzo board", isOn: $boardEnabled)
+                .accessibilityIdentifier("settings-board")
+        } header: {
+            Text("Board")
+        } footer: {
+            Text("A sheet for planning in every project. Off: it leaves Actions and pinned pictures are put away. Nothing is deleted.")
         }
         Section {
             Toggle("Keep projects in iCloud Drive", isOn: Binding(get: { iCloud }, set: { value in

@@ -27,6 +27,8 @@ let package = Package(
                 "LoweyEngine",
                 "LoweyCore",
                 .product(name: "HmmDesign", package: "HmmKit"),
+                .product(name: "HmmBoard", package: "HmmKit"),
+                .product(name: "HmmBoardUI", package: "HmmKit"),
                 .product(name: "HmmCommands", package: "HmmKit"),
                 .product(name: "HmmDocuments", package: "HmmKit"),
                 .product(name: "HmmBridge", package: "HmmKit"),

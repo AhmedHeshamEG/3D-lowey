@@ -13,6 +13,7 @@ struct EditorScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.preferredPencilSqueezeAction) private var squeezeAction
     @AppStorage(AppSettings.showsPerformanceHUD) private var showsHUD = false
+    @AppStorage(AppSettings.boardEnabled) private var boardEnabled = true
 
     var body: some View {
         GeometryReader { geometry in
@@ -43,9 +44,21 @@ struct EditorScreen: View {
         .overlay(alignment: .bottom) {
             if let state = editor.historyScrub { HistoryScrubberBar(editor: editor, state: state) }
         }
+        // What the board covers isn't there for VoiceOver either.
+        .accessibilityHidden(editor.boardShown)
+        .overlay {
+            // The Schizzo board covers the stage (and its chrome) while it's open; sheets still come over it.
+            if editor.boardShown, let board = editor.board {
+                BoardCover(editor: editor, board: board)
+                    .transition(.opacity)
+            }
+        }
         .modifier(EditorSheets(editor: editor))
         .modifier(ObjectRenameAlert(editor: editor))
-        .background(EditorKeyboardShortcuts(editor: editor))
+        .background {
+            // The stage's keys (space, delete, arrows) rest while the board has the screen.
+            if !editor.boardShown { EditorKeyboardShortcuts(editor: editor) }
+        }
         .onPencilSqueeze { phase in
             guard case .ended = phase, squeezeAction != .ignore else { return }
             editor.togglePlay()
@@ -56,6 +69,7 @@ struct EditorScreen: View {
         }
         .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.chromeHidden)
         .animation(HmmMotion.standard.animation(reduceMotion: reduceMotion), value: editor.timelinePresence)
+        .animation(HmmMotion.gentle.animation(reduceMotion: reduceMotion), value: editor.boardShown)
         .onAppear { editor.loadWaveforms() }
     }
 
@@ -87,6 +101,11 @@ struct EditorScreen: View {
             if editor.chromeHidden {
                 ChromeRestoreButton(editor: editor)
             } else {
+                // Pictures pinned from the board float under the chrome: a panel always opens over them.
+                if boardEnabled, !editor.references.isEmpty {
+                    ReferenceCards(editor: editor)
+                        .opacity(editor.chromeFaded ? 0 : 1)
+                }
                 StageChrome(editor: editor)
                     .opacity(editor.chromeFaded ? 0 : 1)
                     .animation(HmmMotion.gentle.animation(reduceMotion: reduceMotion), value: editor.chromeFaded)
