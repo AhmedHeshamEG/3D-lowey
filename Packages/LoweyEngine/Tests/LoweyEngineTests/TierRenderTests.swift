@@ -50,6 +50,36 @@ final class TierRenderTests: XCTestCase {
         XCTAssertLessThan(MarketBenchmark.target(tier: .b, budget: 1.0 / 60.0).minimumRenderScale, 0.85)
     }
 
+    func testThePreviewLightensUnderLoadAndComesBack() {
+        var preview = AdaptivePreview(home: .a, recoverAfter: 20)
+        XCTAssertNil(preview.update(level: .comfortable, at: 0))
+        XCTAssertEqual(preview.update(level: .approaching, at: 1), .b)
+        XCTAssertTrue(preview.lightened)
+        XCTAssertEqual(preview.update(level: .over, at: 2), .c)
+        XCTAssertNil(preview.update(level: .over, at: 3), "there's nothing lighter than tier C")
+        XCTAssertNil(preview.update(level: .comfortable, at: 4))
+        XCTAssertNil(preview.update(level: .comfortable, at: 23), "not calm for long enough yet")
+        XCTAssertEqual(preview.update(level: .comfortable, at: 24), .b)
+        XCTAssertNil(preview.update(level: .comfortable, at: 25))
+        XCTAssertEqual(preview.update(level: .comfortable, at: 45), .a)
+        XCTAssertFalse(preview.lightened)
+        XCTAssertNil(preview.update(level: .comfortable, at: 400), "never better than the device's own tier")
+    }
+
+    func testARecoveryThatDoesNotHoldWaitsLonger() {
+        var preview = AdaptivePreview(home: .b, recoverAfter: 20)
+        XCTAssertEqual(preview.update(level: .approaching, at: 0), .c)
+        XCTAssertNil(preview.update(level: .comfortable, at: 1))
+        XCTAssertEqual(preview.update(level: .comfortable, at: 21), .b)
+        XCTAssertEqual(preview.update(level: .approaching, at: 23), .c, "the load came straight back")
+        XCTAssertEqual(preview.recoverAfter, 40)
+        XCTAssertNil(preview.update(level: .comfortable, at: 24))
+        XCTAssertNil(preview.update(level: .comfortable, at: 50))
+        XCTAssertEqual(preview.update(level: .comfortable, at: 64), .b)
+        XCTAssertNil(preview.update(level: .comfortable, at: 90), "it held: the wait goes back to normal")
+        XCTAssertEqual(preview.recoverAfter, 20)
+    }
+
     func testTheDynamicScaleStaysInTheTiersRange() {
         var scale = DynamicScale(budget: 1.0 / 60.0, range: PreviewQuality(tier: .b).renderScale)
         XCTAssertEqual(scale.scale, 0.85)

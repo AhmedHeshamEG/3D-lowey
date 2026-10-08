@@ -12,7 +12,7 @@ public enum Shell {
 
         public var description: String {
             switch self {
-            case .notSolid: "Only closed solids can be hollowed. Repair it first (Model ▸ Shape ▸ Check for printing)."
+            case .notSolid: "Only closed solids can be hollowed. Repair it first (Model ▸ Edit ▸ Check for printing)."
             case .tooThick: "The walls would meet inside: try a thinner wall."
             case let .boolean(failure): failure.description
             }

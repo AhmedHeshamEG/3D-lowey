@@ -91,9 +91,15 @@ private struct ObjectLabel: View {
         .contentShape(Rectangle())
         .onTapGesture { editor.select(id) }
         .accessibilityAddTraits(.isButton)
-        .contextMenu {
-            if isGroup { Button("Select everything inside", systemImage: "square.stack.3d.up") { editor.setSelection(editor.baseScene.subtree(of: id)) } }
-        }
+        .hmmHoldMenu(menu(isGroup: isGroup))
+    }
+
+    /// The object's menu; a group's extras are about what's inside it.
+    private func menu(isGroup: Bool) -> HmmHoldMenu {
+        guard isGroup else { return editor.holdMenu(for: [id]) }
+        return editor.holdMenu(for: [id], extras: [
+            HmmHoldMenu.Item("Select everything inside", systemName: "square.stack.3d.up") { editor.setSelection(editor.baseScene.subtree(of: id)) }
+        ])
     }
 }
 
@@ -233,7 +239,7 @@ struct CutRow: View {
                             editor.selectCamera(cut.camera)
                         }
                         .accessibilityAddTraits(.isButton)
-                        .contextMenu { Button("Remove this cut", systemImage: "scissors", role: .destructive) { editor.removeCut(at: cut.time) } }
+                        .hmmHoldMenu(HmmHoldMenu(delete: { editor.removeCut(at: cut.time) }))
                 }
                 if cuts.isEmpty { Text("Select a camera and tap Cut here").font(.hmm(.caption)).foregroundStyle(theme.text3).padding(.leading, 8) }
             }

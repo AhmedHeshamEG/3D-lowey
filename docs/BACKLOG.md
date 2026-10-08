@@ -1,7 +1,26 @@
 # Backlog
 
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
-phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
+phase plan (M9 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
+
+## Left from M8 (Maquette 0.8)
+
+- [ ] The device checklist in the "Maquette 0.8 — M8" PR (the hold menu on the stage and the timeline, Pencil or hand
+      with and without a Pencil, the Motion row, the colour well, the sphere, the panels above the sidebar, the
+      preview lightening without a word, a bone drawn through a tail and through an arm in front of a body, the
+      three rig steps).
+- [ ] The preview lightens by its render scale only; lines and shadows keep their quality (D-176). M15's smoothness
+      pass decides with the device's numbers.
+- [ ] A finger that may make can't orbit with one finger where the guide fills the screen (a plane facing the view,
+      the flipbook's page): two fingers pan and pinch, and a twist turns the view (D-183).
+- [ ] Keys have no Duplicate and clips no Duplicate, Rename, Copy or Paste in the hold menu (dimmed rows, D-180,
+      D-182).
+- [ ] The hold menu over the timeline's lanes listens from the window: a panel floating over the lanes would open the
+      lanes' menu under it. Nothing floats there today.
+- [ ] Bounce and Swing aren't in Scene Script (the MCP's sixteen tools, D-184).
+- [ ] A chain drawn again replaces the whole chain; redrawing just a part of one isn't offered (D-186).
+- [ ] Hold-menu rows chosen in code (Hide / Show, Lock / Unlock, Loop / Play once) are in the String Catalog by hand:
+      `Tools/strings.py` only sees a literal that follows the call's opening bracket.
 
 ## Left from M7 (Maquette 0.7)
 
@@ -17,6 +36,7 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 - [ ] Weights update when a weight stroke ends, not under the brush as it moves. (D-172)
 - [ ] Onion-skin ghosts of a rigged solid show it unposed.
 - [ ] A drawn bone can't be removed on its own yet (Remove the rig takes them all; undo takes back the last one).
+      Drawing along it again replaces it (0.8).
 - [ ] The MCP bridge can't draw bones or rig a person yet (Scene Script v3 knows Puppets and clips).
 - [ ] The layout walk's Model (and now and then Home) rows time out a UI query on CI's simulator: M5, M6 and M7's
       merges needed re-runs. (PR #22 looked at the stall in the New project sheet.)
@@ -106,6 +126,8 @@ phase plan (M2 … M8, then 1.0) lives in studio-h's `PHASES.md`; ideas go to it
 - **The renderer's mesh cache keys editable meshes by a 64-bit fingerprint.** Two different meshes with the same
   fingerprint would share a GPU mesh; with FNV-1a over every coordinate that's vanishingly unlikely. (D-116)
 
+- **The Model tool's and the painting tools' touch-and-hold still adds to the selection** (or picks a face); the
+  hold menu on the stage is the Select tool's. (D-181)
 - **The inspector moves after things stop.** While you orbit or drag, it stays where it was and glides beside the
   selection once the view or the object rests (measuring every frame would cost the stage frames). (D-105)
 - **A card shows its still until the project is opened and closed once in 0.2.** Turntables are drawn when a

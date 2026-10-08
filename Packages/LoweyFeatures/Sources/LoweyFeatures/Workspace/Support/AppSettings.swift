@@ -6,6 +6,8 @@ public enum AppSettings {
     public static let pencilHoverPreview = "pencilHoverPreview"
     /// Draw the stage at the screen's full pixel density and never lower the render scale (off: dynamic scale).
     public static let fullResolutionStage = "fullResolutionStage"
+    /// Off: the inspector floats beside the selection (the default). On: it stays docked at the side.
+    public static let inspectorDocked = "inspectorDocked"
     /// How fast the joystick moves, turns and sizes things (1 = normal).
     public static let joystickSpeed = "joystickSpeed"
     public static let joystickSpeedRange = 0.25 ... 3.0
@@ -16,9 +18,6 @@ public enum AppSettings {
     public static let navigationSpeedRange = 0.25 ... 3.0
     /// The left sidebar on the right edge (left-handed use).
     public static let sidebarOnRight = "sidebarOnRight"
-    /// The load chip that says a scene is close to what this iPad keeps smooth (off: it nagged more than it helped;
-    /// Settings ▸ Stage brings it back).
-    public static let showsLoadChip = "showsLoadChip"
     /// The Performance HUD over the stage.
     public static let showsPerformanceHUD = "showsPerformanceHUD"
     /// Projects in iCloud Drive (when the build is entitled and the user is signed in) or on this iPad.

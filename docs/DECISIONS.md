@@ -380,7 +380,6 @@ overlays stay for graphics that belong to the frame (transparent Manim). Card te
 **D85 — Timeline rows scroll under our own gesture.** A SwiftUI `ScrollView` loses its pan to a `DragGesture` on its
 content (iPadOS 18+), and the lanes need that drag. The lanes decide once per drag: keys, box, time or rows.
 
-
 **D86 — The bridge keeps the app alive with silent audio.** iOS suspends a background app within seconds; a VPN-style
 status icon needs a Network Extension (paid developer account), and Live Activities don't show on iPad. The app is
 sideloaded, so it uses the audio background mode: while the bridge is on and the app is away it plays silence mixed with
@@ -1337,3 +1336,140 @@ PRs. The test still times only the taps and attaches the number to every run; it
 slowdown (an extra step, a stalled command), and the 30 s goes on the device checklist. *Rejected:* re-running main
 until a fast runner comes along (it hides real slowdowns the same way); dropping the timing (it's the point of the
 test).
+
+## Maquette 0.8 — M8, fixes & touch
+
+**D-176 — The load meter is silent: the preview lightens by itself.** Device note: the "close to what this iPad keeps
+smooth" chip *"is what makes me feel it's not smooth"*, even off by default (D-151). The chip, its two buttons, its
+toasts and Settings ▸ Smoothness warnings are gone. The meter still measures; when it says near or over, the stage's
+render-scale range drops one tier (A → B → C), and after twenty calm seconds it goes one tier back. A recovery the load
+undoes within twenty seconds doubles the next wait (up to about five minutes), so a scene on the edge stays light
+instead of flickering between two previews. Only the render scale moves: the shadow map belongs to the renderer and
+rebuilding it mid-session would cost the hitch this is meant to avoid. *Always full resolution* is respected: someone
+who asked for it gets it. Diagnostics ▸ Smoothness has the percentage and the current scale. *Rejected:* a quieter
+chip (any message is the problem); lightening lines and shadows too (a visible pop; M15's smoothness pass can revisit
+with device numbers); overriding Always full resolution (it's the user's switch, law 7).
+
+**D-177 — Panels sit above all chrome.** Device note: Settings, reached through Actions, showed up beneath the
+brush-size sidebar. The sheet itself is the system's and can't be covered; what was covered is the panel that leads to
+it: `StageChrome` drew the clusters and their panels first and the sidebar and bottom row over them, so a tall panel
+(Actions, Look, Select, on the sidebar's side) had the sliders drawn through it. The order is now sidebar, bottom
+row, then clusters and panels. The panel's empty surroundings take no touches, so the sidebar works as before
+wherever no panel covers it. *Rejected:* moving the sidebar down or the panel sideways while a panel is open (things
+that move when you open something else; law 2); narrowing the panels.
+
+**D-178 — A colour well on the sidebar, for every tool that puts colour down.** Device note: colour couldn't be chosen
+while drawing (it lived in Look ▸ Palette and Paint ▸ Colour). The sidebar now shows the colour in the hand as a round
+well under the two sliders while Ink, Flipbook, Draw (solid shapes) or Paint ▸ Colour is the tool; a tap opens the same
+chooser Paint uses (the Look's palette + any colour), one `ColourChooser` for both. The kit's `HmmSidebar` gained an
+`accessory` slot for it (hmm-kit 0.4.0). The Shadow Brush has no well: it has no colour of its own, it pushes the
+Look's shadow in or out, and a well that changed nothing would be a stub (law 8). *Rejected:* a colour button in the
+tool's options bar (the bar is different per tool; the sidebar is the same place for all of them); a well that's always
+there (with Select in the hand it would look like it recolours the selection).
+
+**D-179 — The sphere: Model's second page is called Edit, and the tile is a ball.** Device note: "Sphere missing on
+Shapes". It is where it has always been (Model ▸ Add ▸ Shapes, second tile) and the panel doesn't clip it at any size
+(the grid reflows; the new UI test checks all seven tiles are whole and tappable). What the code does show: the panel
+remembers its page, the page next to Add was called **Shape**, and it lists Line, Rectangle, Circle, Arc: someone
+looking for a sphere "under Shapes" lands there, finds a circle and no sphere. And on Add the sphere's tile was a flat
+disc (SF Symbols has no sphere) beside a cube, a cylinder and a cone drawn in 3D. So the page is now **Edit** (it
+sketches on, pushes, pulls, combines, mirrors and checks what's already there; nothing moved, its place and contents
+are the same) and the sphere tile is a shaded ball. *Rejected:* moving the solids onto that page (it moves things
+Hesham knows; the smoke tests and LAYOUT.md say where they are); listing them on both pages (one home each, M2's rule);
+always opening Model on Add (remembering the page is right when you're modelling).
+
+**D-180 — One hold menu, built in one place.** Touch and hold any thing and the menu is `HmmHoldMenu` (hmm-kit 0.4.0):
+Duplicate · Rename · Copy · Paste, then one to three extras, then Delete in red. The four first rows and Delete are
+*always* there in the same places; a row the thing can't do is dimmed (a key can't be renamed, a card can't be copied).
+That keeps the hand's memory true (law 2) and is honest: a dimmed row promises nothing. Every menu the app had moved
+onto it (poses, brushes, Looks, library items, paint layers, the outliner, flipbook tracks, screen effects, timeline
+rows, cuts, palette swatches, Home's cards and stacks), and four new ones use it: objects on the stage, keys, clips and
+flipbook drawings. Scene things get theirs from one file (`Workspace/UI/HoldMenus.swift`), so an object has the same
+menu on the stage, in the outliner and on its timeline row. Where a menu had more than three extras they were folded:
+a card's are *Add to stack ▸*, *Share ▸*, *Archive* (Open went: a tap opens). *Rejected:* leaving out rows that don't
+apply (every menu a different shape); a fourth and fifth extra (it stops being a menu under a finger).
+
+**D-181 — On the stage a still finger opens the menu; a moving one drags.** With the Select tool, holding a finger (or
+the Pencil) still on an object opens its menu at the finger: a `UIContextMenuInteraction` on the stage view hung from
+an invisible point, so the stage doesn't lift or dim. If the finger moves first, the stage's own drag takes it. The
+held object becomes the selection unless it is already part of it (then the menu is about the whole selection).
+Touch-and-hold used to add to the selection; that is now the menu's first extra, **Add to the selection**, shown when
+other things were selected. The other tools keep hold-to-add and the Model tool's hold-to-pick, where a menu would be
+in the way. Keys and clips are drawn into one picture, so the timeline asks what is under the finger
+(`hmmHoldMenu(at:)`, listening from the window; the lanes' own taps, drags and box-select are untouched).
+*Rejected:* a "several" switch in Select (a mode to remember); a second finger to add (two fingers already navigate
+and undo).
+
+**D-182 — Clips split at the playhead.** The clip menu's extras are *Split at the playhead* and *Loop / Play once*.
+Splitting makes two segments from one: the second starts in the clip where the first stops (offset + elapsed × speed),
+with no crossfade between them, in one undo step. Duplicate, Rename, Copy and Paste are dimmed on a clip: a clip is
+placed from Cast, where its name comes from. *Rejected:* Reverse (the clip player has no negative speed; a stub
+otherwise).
+
+**D-183 — Pencil or hand is automatic.** Until an Apple Pencil has touched (or hovered over) the stage, a finger makes
+with every making tool: Ink, Draw, Flipbook, Paint ▸ Colour, the Shadow Brush, Rig. From the first Pencil
+touch (remembered on the device, `HmmPencilOrHand`) the Pencil makes and fingers only move the view. Settings ▸ Pencil
+or hand ▸ *Draw with a finger too* is the one switch; nothing is asked at first launch and Draw's own toggle is gone
+(no switch on the canvas). The Shadow Brush and the erasers used to be Pencil-only; they follow the same rule now, or
+someone without a Pencil could never use them. A finger that may make still has to move the view, so each touch is
+decided where it lands: on something the tool can make on (an object to paint, the guide to draw on) it makes;
+anywhere else it orbits, as it always has. Two fingers pan and pinch as before. Where the guide fills the screen (a
+plane facing the view, the flipbook's page) there is nowhere else, so while a finger makes a two-finger twist also
+turns the view. *Rejected:* asking at first launch (a decision wall, law 4); a Pencil/finger toggle on the stage; making
+two fingers orbit instead of pan for hand people (the same two fingers would do different things with and without a
+Pencil in the drawer).
+
+**D-184 — The Motion row: six looping motions are behaviours with one speed.** Tap a thing, tap Spin, Float, Bounce,
+Wiggle, Swing or Follow a path at the top of the inspector, and it moves on the stage straight away (playback starts;
+the timeline stays closed). A second tap stops it; several can run together. Each is a `Behavior` Core already
+evaluates deterministically (Float = bob, Wiggle = noise, Follow a path = followPath looping), plus two new kinds,
+`bounce` (a parabola per hop) and `swing` (a pendulum about the object's own pivot). Core's `LoopMotion` gives each
+its numbers and reads a behaviour back as (motion, speed), so one slider (0.25× to 4×) retimes whatever runs and nothing
+else is stored. **Make keyframes** bakes everything running on the selection in one step (`Simulation.bake` for several
+behaviours at once: baking one by one would bake the others into each). Follow a path takes the scene's drawn line
+(with several, the tile asks which); with none it says to draw one. Float, Spin, Wobble and the looping follow left
+the inspector's *Add a behaviour* menu (one home each); Sway, Orbit, Look at and a path followed once stay there.
+*Rejected:* writing keys at the tap (the loop would end at the timeline's end and couldn't be retimed with one slider);
+a new motion system beside behaviours (two ways to move a thing); adding the new kinds to Scene Script now (backlog:
+the MCP's sixteen tools are counted, R49).
+
+**D-185 — The inspector can be docked.** Beside the selection stays the default (D-105). Settings ▸ Stage ▸ *Dock the
+inspector at the side* keeps it at the trailing side whatever is selected, for people who'd rather it never moved.
+*Rejected:* a pin on the inspector itself (a control on every panel for something set once).
+
+**D-186 — Draw a bone, redone: one depth through the part, joints at the bends, shown as it's drawn.** Device note
+on 0.7: *"it's not drawn correctly"*. Three things in D-166's centreline could put a chain where nobody drew it, and
+all three are replaced. (1) **Depth comes from the mesh, per stroke, not per sample.** Each sample's ray is cut into
+the stretches it spends inside the object (pieces pushed into each other count as one stretch; faces that don't say in
+and out consistently fall back to pairing hits). The stroke then takes one stretch per ray so that their middles make
+the shortest path in space, starting with the part in front (`CrossingPath`): a stroke along an arm stays in the arm
+even where the body is behind it. Where the part runs into something much thicker (more than 2.5× the stroke's usual
+thickness: a tail into a body), the point keeps the depth of the nearest sample where the part was on its own, so the
+chain runs straight in instead of rising to the body's skin or diving to its middle. (2) **Joints land where the stroke
+bends.** The centreline's corners are found by Ramer–Douglas–Peucker (tolerance: half the part's thickness, so a
+wobbly hand isn't a bend), and the usual number of bones (two to eight, about 1.4 thicknesses long) is shared between
+the stretches by length. A straight stroke is cut exactly as in 0.7. (3) **A live preview**: while the Pencil is down
+the stage shows the joints and bones the stroke would make, inside the object, every few samples (the surface's BVH is
+built once per stroke). **Drawing along a chain again replaces it** (`BoneStroke.redrawn`: bones within three quarters
+of a thickness of the stroke and pointing its way, and the unbranched run that carries straight on from them, when the
+stroke covers at least half): what hung from the old chain hangs from the nearest joint of the new one, keeping its
+names and places; the replaced joints' poses and keys go with them, in the same undo step. A person's skeleton is
+never taken for a redrawn chain. *Rejected:* the surface point under the tip pushed in by a fixed amount (wrong on
+every part that isn't that thick); asking "replace or add?" (a decision wall; the stroke already says which);
+replacing the whole rig on every stroke (a creature needs a tail and two arms).
+
+**D-187 — Rig is one place with three steps: Bones → Skin → Pose.** Device note: the rig tools felt unorganised (six
+buttons at once: draw, person, paint weights, reset pose, fit, remove). Cast ▸ Rig is now a row of three steps and,
+under it, only the step's own tools. **Bones**: Draw a bone, Rig as a person, Remove the rig. **Skin**: says the skin
+follows by itself, offers Paint weights (and Fit the weights when the shape changed). **Pose**: drag the joints (the
+Select tool), Reset the pose; saved poses stay in the Poses section below. Skin opens once bones exist and their
+weights have arrived; Pose opens once the skin fits. Nothing advances by itself: the next step lights up and you tap
+it. The bar under the stage shows the same three steps while the Rig tool is in the hand. *Rejected:* a wizard that
+moves on by itself (drawing a second bone would fight it); three separate sections (the old feeling, with headings).
+
+**D-188 — A rigged object goes on being rigged.** Found while testing the redraw: in 0.7, once an object had a drawn
+rig it counted as a cast member "with its skeleton built in", and `rigBlocker` refused it like a Blob. A second bone
+could never be drawn, and Cast ▸ Rig showed that sentence instead of Paint weights, Fit, Reset and Remove. Only Blobs,
+Puppets and imported rigged models are refused now; a drawn rig is what the three steps are for. A test draws a second
+bone and walks the steps on a rigged cube. *Rejected:* nothing; it was a bug.
+

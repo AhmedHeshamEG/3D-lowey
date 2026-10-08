@@ -22,6 +22,21 @@ struct DiagnosticsSheet: View {
         HmmSheet("Diagnostics") {
             Toggle("Performance HUD over the stage", isOn: $showsHUD).font(.hmm(.headline, weight: .semibold))
             Hint("Frame times against this screen's budget, p50 / p95 / p99 over the last five seconds, dropped frames, heat and memory.")
+            if let load = editor?.loadSummary {
+                let percent = "\(load.percent) %"
+                let scale = "\(load.scale) %"
+                HmmSectionHeader("Smoothness")
+                Group {
+                    if load.lightened {
+                        Text("This scene uses \(percent) of what this iPad keeps smooth. The preview is lighter for now, at \(scale).")
+                    } else {
+                        Text("This scene uses \(percent) of what this iPad keeps smooth. The preview is at \(scale).")
+                    }
+                }
+                .font(.hmm(.footnote)).foregroundStyle(theme.text2)
+                .accessibilityIdentifier(load.lightened ? "load-summary-lighter" : "load-summary")
+                Hint("Near the limit the preview lightens by itself and comes back when there's room. Exports always render at full quality.")
+            }
             HmmSectionHeader("Benchmark")
             Hint(
                 "Night Market, 20 s: 400 objects, walkers, Blobs, a dolly. Pass: no dropped frame in 19 of 20, near full preview, no hitch over 33 ms."

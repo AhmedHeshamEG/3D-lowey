@@ -60,7 +60,7 @@ struct LibraryBrowser: View {
                             }
                             .accessibilityAddTraits(.isButton)
                             .draggable(item.id)
-                            .contextMenu { menu(for: item) }
+                            .hmmHoldMenu(menu(for: item))
                     }
                 }
             }
@@ -105,20 +105,18 @@ struct LibraryBrowser: View {
         }
     }
 
-    @ViewBuilder
-    private func menu(for item: LibraryItem) -> some View {
-        Button(item.favorite ? "Unfavourite" : "Favourite", systemImage: item.favorite ? "star.slash" : "star") { library.toggleFavorite(item) }
-        Button("Rename & tags", systemImage: "tag") {
+    private func menu(for item: LibraryItem) -> HmmHoldMenu {
+        var extras = [HmmHoldMenu.Item(item.favorite ? "Unfavourite" : "Favourite", systemName: item.favorite ? "star.slash" : "star") {
+            library.toggleFavorite(item)
+        }]
+        if case let .prefab(prefab) = item, !editor.selection.isEmpty, editor.singleSelection?.kind.prefabID != prefab.id {
+            extras.append(HmmHoldMenu.Item("Replace with the selection", systemName: "arrow.triangle.2.circlepath") { editor.updatePrefab(prefab.id) })
+        }
+        return HmmHoldMenu(rename: {
             editName = item.name
             editTags = item.tags.joined(separator: ", ")
             editingItem = item
-        }
-        if case let .prefab(prefab) = item, !editor.selection.isEmpty, editor.singleSelection?.kind.prefabID != prefab.id {
-            Button("Replace with the selection", systemImage: "arrow.triangle.2.circlepath") { editor.updatePrefab(prefab.id) }
-        }
-        if !item.isKit {
-            Button("Remove from library", systemImage: "trash", role: .destructive) { library.remove(item) }
-        }
+        }, extras: extras, delete: holdAction(if: !item.isKit) { library.remove(item) })
     }
 }
 

@@ -61,7 +61,41 @@
         }
     }
 
-    /// The Procreate sidebar: two context sliders with the Pick button between them, undo and redo below.
+    /// The colour well: the colour in use as a round button that opens the app's picker. On the sidebar it sits
+    /// under the two sliders while a tool that puts colour down is in the hand.
+    public struct HmmColourWell: View {
+        private let color: Color
+        private let label: String
+        private let action: () -> Void
+        @Environment(\.hmmTheme) private var theme
+
+        public init(_ color: Color, label: String = "Colour", action: @escaping () -> Void) {
+            self.color = color
+            self.label = label
+            self.action = action
+        }
+
+        public var body: some View {
+            Button {
+                HmmHaptics.play(.selection)
+                action()
+            } label: {
+                Circle()
+                    .fill(color)
+                    .frame(width: 30, height: 30)
+                    .overlay(Circle().strokeBorder(theme.text.opacity(0.85), lineWidth: 2))
+                    .frame(width: HmmTarget.minimum, height: HmmTarget.minimum)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .hmmGlass(in: Circle(), interactive: false)
+            .accessibilityLabel(Text(LocalizedStringKey(label)))
+            .accessibilityIdentifier("colour-well")
+        }
+    }
+
+    /// The Procreate sidebar: two context sliders with the Pick button between them, then whatever the tool in the
+    /// hand adds (`accessory`: the colour well), undo and redo below.
     /// It sits on the left edge, or on the right for left-handed use (`mirrored`).
     public struct HmmSidebar: View {
         private let top: HmmSidebarSlider?
@@ -71,13 +105,15 @@
         private let undoState: (canUndo: Bool, canRedo: Bool)
         private let undo: () -> Void
         private let redo: () -> Void
+        private let accessory: AnyView?
 
         public init(top: HmmSidebarSlider?, bottom: HmmSidebarSlider?, pickActive: Bool = false, pick: (() -> Void)? = nil,
-                    canUndo: Bool, canRedo: Bool, undo: @escaping () -> Void, redo: @escaping () -> Void) {
+                    accessory: AnyView? = nil, canUndo: Bool, canRedo: Bool, undo: @escaping () -> Void, redo: @escaping () -> Void) {
             self.top = top
             self.bottom = bottom
             self.pickActive = pickActive
             self.pick = pick
+            self.accessory = accessory
             undoState = (canUndo, canRedo)
             self.undo = undo
             self.redo = redo
@@ -96,6 +132,7 @@
                     HmmSlider(bottom.title, value: bottom.value, in: bottom.range, length: 150, format: bottom.format,
                               onEditingChanged: bottom.onEditingChanged)
                 }
+                if let accessory { accessory }
                 HmmButton("arrow.uturn.backward", label: "Undo", action: undo)
                     .disabled(!undoState.canUndo)
                 HmmButton("arrow.uturn.forward", label: "Redo", action: redo)

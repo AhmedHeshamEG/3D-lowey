@@ -93,7 +93,7 @@ extension EditorModel {
 
     func sectionAlongPickedFace() {
         guard let (id, face) = pickedFace, let (mesh, world) = modelMesh(of: id), mesh.faces.indices.contains(face) else {
-            app.show("Pick a face first (Model ▸ Shape ▸ Face)")
+            app.show("Pick a face first (Model ▸ Edit ▸ Face)")
             return
         }
         HmmHaptics.play(.selection)

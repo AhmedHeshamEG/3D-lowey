@@ -109,29 +109,34 @@ private struct ProjectMenu: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        HmmHoldMenuContent(menu)
+    }
+
+    /// A tap opens a card, so the menu doesn't: its extras are the stack it's in, sharing, and the archive.
+    private var menu: HmmHoldMenu {
         let id = project.id.raw
-        Button("Open", systemImage: "arrow.up.forward.app") { app.open(url: project.url) }
-        Button("Rename", systemImage: "pencil") {
-            state.nameText = project.info.name
-            state.renaming = project
-        }
-        Button("Duplicate", systemImage: "plus.square.on.square") { app.duplicate(project) }
-        Menu("Add to stack", systemImage: "square.stack") {
-            Button("New stack…", systemImage: "plus") {
-                state.nameText = ""
-                state.naming = [id]
-            }
-            ForEach(app.gallery.stacks.filter { !$0.members.contains(id) }) { stack in
-                Button(stack.name) { app.addToStack([id], stack: stack.id) }
-            }
+        var stacking = [HmmHoldMenu.Item("New stack…", systemName: "plus") {
+            state.nameText = ""
+            state.naming = [id]
+        }]
+        stacking += app.gallery.stacks.filter { !$0.members.contains(id) }.map { stack in
+            HmmHoldMenu.Item(stack.name, id: stack.id, isVerbatim: true) { app.addToStack([id], stack: stack.id) }
         }
         if app.gallery.stack(containing: id) != nil {
-            Button("Move out of the stack", systemImage: "arrow.up.square") { app.moveOutOfStacks([id]) }
+            stacking.append(HmmHoldMenu.Item("Move out of the stack", systemName: "arrow.up.square") { app.moveOutOfStacks([id]) })
         }
-        Button("Share as one file (.maquettepack)", systemImage: "square.and.arrow.up") { state.sharing = app.package(project) }
-        Button("Export folder (with library items)", systemImage: "folder") { state.sharing = app.exportFolder(project) }
-        Button("Archive", systemImage: "archivebox") { app.archive(project) }
-        Button("Delete", systemImage: "trash", role: .destructive) { state.deleting = [id] }
+        let sharing = [
+            HmmHoldMenu.Item("Share as one file (.maquettepack)", systemName: "square.and.arrow.up") { state.sharing = app.package(project) },
+            HmmHoldMenu.Item("Export folder (with library items)", systemName: "folder") { state.sharing = app.exportFolder(project) }
+        ]
+        return HmmHoldMenu(duplicate: { app.duplicate(project) }, rename: {
+            state.nameText = project.info.name
+            state.renaming = project
+        }, extras: [
+            HmmHoldMenu.Item("Add to stack", systemName: "square.stack", children: stacking),
+            HmmHoldMenu.Item("Share", systemName: "square.and.arrow.up", children: sharing),
+            HmmHoldMenu.Item("Archive", systemName: "archivebox") { app.archive(project) }
+        ], delete: { state.deleting = [id] })
     }
 }
 
@@ -142,11 +147,11 @@ private struct StackMenu: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        Button("Open", systemImage: "square.stack") { state.openStack = stack.id }
-        Button("Rename", systemImage: "pencil") {
+        HmmHoldMenuContent(HmmHoldMenu(rename: {
             state.nameText = stack.name
             state.renamingStack = stack
-        }
-        Button("Unstack", systemImage: "square.stack.3d.down.right") { withHmmAnimation(.standard) { app.unstack(stack.id) } }
+        }, extras: [
+            HmmHoldMenu.Item("Unstack", systemName: "square.stack.3d.down.right") { withHmmAnimation(.standard) { app.unstack(stack.id) } }
+        ]))
     }
 }

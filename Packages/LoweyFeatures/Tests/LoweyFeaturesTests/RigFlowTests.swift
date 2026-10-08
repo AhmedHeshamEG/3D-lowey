@@ -48,6 +48,69 @@ final class RigFlowTests: XCTestCase {
         XCTAssertNil(editor.baseScene.objects[cube.id]?.rig, "one undo step")
     }
 
+    func testRiggingGoesBonesThenSkinThenPose() async throws {
+        let editor = try makeEditor()
+        editor.addPrimitive(.cube)
+        var cube = try XCTUnwrap(editor.singleSelection)
+        XCTAssertEqual(editor.rigStep(for: cube), .bones)
+        XCTAssertTrue(editor.rigStepIsOpen(.bones, for: cube))
+        XCTAssertFalse(editor.rigStepIsOpen(.skin, for: cube), "no bones yet")
+        XCTAssertFalse(editor.rigStepIsOpen(.pose, for: cube))
+        editor.setRigStep(.pose, on: cube.id)
+        XCTAssertEqual(editor.rigStep(for: cube), .bones, "a step that isn't open can't be entered")
+
+        editor.startRigging(cube.id)
+        editor.drawBone(rays: stroke(across: cube.id, in: editor))
+        _ = try await waitForRig(on: cube.id, in: editor)
+        cube = try XCTUnwrap(editor.baseScene.objects[cube.id])
+        XCTAssertNil(editor.rigBlocker(cube), "a rigged object goes on being rigged")
+        XCTAssertEqual(editor.rigTarget?.id, cube.id)
+        XCTAssertTrue(editor.rigStepIsOpen(.skin, for: cube), "the next step lights up")
+        XCTAssertTrue(editor.rigStepIsOpen(.pose, for: cube))
+        XCTAssertEqual(editor.rigStep(for: cube), .bones, "it stays on Bones until you move on")
+
+        editor.setRigStep(.skin, on: cube.id)
+        XCTAssertEqual(editor.rigging.mode, .weights)
+        XCTAssertEqual(editor.tool, .rig)
+        XCTAssertNotNil(editor.rigging.joint, "a bone is chosen to paint")
+
+        editor.setRigStep(.pose, on: cube.id)
+        XCTAssertEqual(editor.tool, .select, "joints are dragged with the Select tool")
+        XCTAssertEqual(editor.selection, [cube.id])
+        XCTAssertEqual(editor.rigStep(for: cube), .pose)
+
+        editor.setRigStep(.bones, on: cube.id)
+        XCTAssertEqual(editor.rigging.mode, .bone)
+    }
+
+    func testDrawingABoneAgainReplacesItAndForgetsItsPose() async throws {
+        let editor = try makeEditor()
+        editor.addPrimitive(.cube)
+        let cube = try XCTUnwrap(editor.singleSelection)
+        editor.startRigging(cube.id)
+        editor.drawBone(rays: stroke(across: cube.id, in: editor))
+        let first = try await waitForRig(on: cube.id, in: editor)
+        let turned = try XCTUnwrap(first.skeleton.names.last)
+        editor.setProperty(.boneTurn(turned), .quat(Quat(angle: 0.4, axis: .unitZ)))
+        XCTAssertNotNil(editor.baseScene.objects[cube.id]?[.boneTurn(turned)])
+
+        // The same stroke a little to one side: the chain is replaced, not doubled.
+        let again = stroke(across: cube.id, in: editor).map { Ray(origin: $0.origin + Vec3(0, 0, 0.04), direction: $0.direction) }
+        editor.drawBone(rays: again)
+        // Bone heat on CI's simulator takes several seconds each time.
+        for _ in 0 ..< 900 where editor.baseScene.objects[cube.id]?.rig == first {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        let second = try XCTUnwrap(editor.baseScene.objects[cube.id]?.rig)
+        XCTAssertEqual(second.skeleton.joints.count, first.skeleton.joints.count, "one chain, as before")
+        XCTAssertNotEqual(second.restPositions, first.restPositions, "where it was drawn this time")
+        XCTAssertNil(editor.baseScene.objects[cube.id]?[.boneTurn(turned)], "the old joint's turn went with it")
+        XCTAssertTrue(editor.rigging.preview.isEmpty)
+        editor.undo()
+        XCTAssertEqual(editor.baseScene.objects[cube.id]?.rig, first, "one undo step")
+        XCTAssertNotNil(editor.baseScene.objects[cube.id]?[.boneTurn(turned)])
+    }
+
     func testJointsTurnedInKeyframeModeAreKeyedAndGoWithTheRig() async throws {
         let editor = try makeEditor()
         editor.addPrimitive(.cube)

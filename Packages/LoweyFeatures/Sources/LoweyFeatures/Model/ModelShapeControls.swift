@@ -46,7 +46,7 @@ struct ModelToolExtras: View {
     }
 }
 
-/// Model ▸ Shape ▸ Mirror & symmetry.
+/// Model ▸ Edit ▸ Mirror & symmetry.
 struct MirrorControls: View {
     let editor: EditorModel
 
@@ -89,7 +89,7 @@ struct MirrorControls: View {
     }
 }
 
-/// Model ▸ Shape ▸ 3D print: the printer, the check and the repair.
+/// Model ▸ Edit ▸ 3D print: the printer, the check and the repair.
 struct PrintCheckControls: View {
     @Bindable var editor: EditorModel
     @Environment(\.hmmTheme) private var theme

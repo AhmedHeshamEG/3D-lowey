@@ -16,8 +16,12 @@ final class PerformanceMonitor {
     @ObservationIgnored private var lastPublish: CFTimeInterval = 0
     /// Extra listeners (the benchmark runner) get every frame.
     @ObservationIgnored var onFrame: ((_ total: Double, _ gpu: Double, _ scale: Float) -> Void)?
-    /// The hidden load meter (CONTEXT §6): silent until the scene nears what this iPad keeps smooth.
+    /// The silent load meter (CONTEXT §6): how near the scene is to what this iPad keeps smooth.
     private(set) var load: LoadMeter.Level = .comfortable
+    /// The meter's pressure: 1 = exactly what this iPad keeps smooth.
+    var pressure: Double { forcedLoad == nil ? meter.pressure : 1.2 }
+    /// UI tests put the stage under load with `-load-level over`.
+    @ObservationIgnored private let forcedLoad = PerformanceMonitor.forcedLoad()
     @ObservationIgnored private var meter = LoadMeter()
     @ObservationIgnored private var lastSceneCost: CFTimeInterval = 0
 
@@ -31,7 +35,7 @@ final class PerformanceMonitor {
             meter.budget = budget
         }
         meter.record(frame: work ?? gpu, at: now)
-        if meter.level != load { load = meter.level }
+        publishLoad()
         stats.record(duration: frameTime, at: now)
         renderScale = scale
         onFrame?(total, gpu, scale)
@@ -47,12 +51,28 @@ final class PerformanceMonitor {
         guard let report, now - lastSceneCost > 0.5 else { return }
         lastSceneCost = now
         meter.setSceneCost(SceneCost.estimate(report, tier: tier), at: now)
-        if meter.level != load { load = meter.level }
+        publishLoad()
+    }
+
+    /// The preview just changed: what was measured before says nothing about it.
+    func settle() {
+        meter.reset()
+        publishLoad()
+    }
+
+    private func publishLoad() {
+        let level = forcedLoad ?? meter.level
+        if level != load { load = level }
+    }
+
+    private static func forcedLoad(arguments: [String] = ProcessInfo.processInfo.arguments) -> LoadMeter.Level? {
+        guard let index = arguments.firstIndex(of: "-load-level"), index + 1 < arguments.count else { return nil }
+        return LoadMeter.Level(rawValue: arguments[index + 1])
     }
 
     func reset() {
         stats.reset()
         meter.reset()
-        load = .comfortable
+        publishLoad()
     }
 }

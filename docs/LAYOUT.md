@@ -11,7 +11,8 @@ Where everything in Maquette lives. This is the map of CONTEXT §4.1 and §10.1:
 │ ┃                         the stage (≥ 85 % of the screen at rest)          ┌──────┐ │
 │ ◉ Pick                                                                      │inspec│ │  the inspector floats
 │ ┃ slider                         [ selection ]                              │ -tor │ │  beside the selection
-│ ↶ ↷                                                                         └──────┘ │
+│ ● colour (drawing tools)                                                    └──────┘ │
+│ ↶ ↷                                                                                  │
 │                                                                                      │
 │ (joystick)                    (tool options)          ⏱ Timeline · Views · ⌖ · 🎥    │  bottom row
 ├──────────────────────────────────────────────────────────────────────────────────────┤
@@ -54,8 +55,8 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Import a project, the archive, the tour | `[home] theater-menu` |
 | Settings | `[home] Settings` |
 | Samples (Welcome island, the Enigma story) | `[home] Welcome island` |
-| A project's menu: open, rename, duplicate, add to stack, move out, share, export folder, archive, delete | touch and hold a card |
-| A stack's menu: open, rename, unstack | touch and hold a stack |
+| A project's menu (the hold menu): duplicate, rename; add to stack (and move out), share (one file, a folder), archive; delete | touch and hold a card |
+| A stack's menu: rename, unstack | touch and hold a stack |
 | Make a stack | drag a card onto another |
 
 ## Top left
@@ -104,7 +105,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Tap to select | `Select › Tap` |
 | Lasso | `Select › tool-lasso` |
 | Select similar, all, none | `Select › All` |
-| The outliner: select, eye, lock, rename, move into a group, frame, delete | `Select › outliner` |
+| The outliner: select, eye, lock; touch and hold a row for the object's menu (with move to top level, move into a group, frame) | `Select › outliner` |
 
 ## Top right
 
@@ -159,7 +160,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | The brush flipbooks draw with (opens the brush library) | `Draw › tool-flipbook › brush-flipbook` |
 | The frame's drawing guide: 2D grid, isometric, 1-, 2- and 3-point perspective, symmetry; Drawing assist | `Draw › tool-flipbook › drawing-guide` |
 | Brush library: sets, choose a brush, new set, share a set, import Procreate (.brushset, .brush) and Photoshop (.abr) brushes | the brush row's sheet |
-| A brush's menu: Brush Studio, duplicate, reset, rename, move to a set, delete | touch and hold a brush in the library |
+| A brush's menu (the hold menu): duplicate, rename; Brush Studio, reset, move to a set; delete | touch and hold a brush in the library |
 | Brush Studio: stroke, shape, grain, dynamics, Pencil, rendering, about; the pad to try it | a brush's menu ▸ Edit in Brush Studio |
 
 ### Paint
@@ -171,6 +172,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Paint the chosen object (it's laid flat for painting first; a stroke on it does the same) | `[cube] Paint › tool-paint › paint-start` |
 | Layers: show or hide, the one the Pencil paints on, its opacity and blend, add a layer | `[cube] Paint › tool-paint › paint-start › paint-layer-add` |
 | A layer's menu: duplicate, merge down, move up or down, clear, rename, delete; remove all paint | `[cube] Paint › tool-paint › paint-layer-menu` |
+| A layer's hold menu: duplicate, rename; merge down, clear; delete | touch and hold a layer |
 | Project a picture: from Photos or Files, placed with the fingers, Project from the options bar | Paint ▸ Colour on a painted object |
 | Paint, erase, fill, eyedropper, the layer painted on, done (options bar) | shown under the stage while Colour is on |
 | Size and opacity of the paint brush | the sidebar's two sliders while Colour is on |
@@ -195,10 +197,12 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Clips | `[blob] Cast › section-Clips` |
 | Lip sync | `[blob] Cast › lip-sync` |
 | Face capture (front camera, iPhone) | `[blob] Cast › face-camera` |
-| Rig: draw a bone through a limb, tail or rope with the Pencil (anything: shapes, modelled parts, drawings, placed models) | `[cube] Cast › rig-draw-bone` |
-| Rig as a person: the front view, tap eight dots (or drag them), Rig | `[cube] Cast › rig-person` |
-| A rig's paint weights, fit the weights to a new shape, reset the pose, remove the rig | in Cast ▸ Rig once rigged |
-| The Rig tool's bar: draw a bone, paint weights (the bone, erase), done; the person rig's Rig and cancel | shown under the stage while Rig is on |
+| Rig, in three steps: Bones, Skin, Pose (each shows only its tools; a step opens when the one before is done) | `[cube] Cast › rig-step-bones` |
+| Bones: draw a bone through a limb, tail or rope of anything with a surface; draw along one again to replace it | `[cube] Cast › rig-draw-bone` |
+| Bones: rig as a person (the front view, tap eight dots or drag them, Rig); remove the rig | `[cube] Cast › rig-person` |
+| Skin: the weights come by themselves; paint weights, fit the weights to a new shape | Cast ▸ Rig ▸ Skin once there are bones |
+| Pose: drag the joints (the Select tool), reset the pose | Cast ▸ Rig ▸ Pose once the skin fits |
+| The Rig tool's bar: the three steps, the bone whose weight is painted and erase (Skin), done; the person rig's Rig and cancel | shown under the stage while Rig is on |
 | The weight brush's size and strength | the sidebar's two sliders while painting weights |
 | Pose any character by dragging its joints (IK); poses, mirror | the joints on the stage when a character is selected; Cast ▸ Poses |
 
@@ -208,6 +212,8 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 |---|---|
 | Name | `[cube] inspector-name` |
 | Move, turn, size (the gizmo and the joystick) | `[cube] gizmo-rotate` |
+| Move it: spin, float, bounce, wiggle, swing, follow a path (one tap each, they loop; a second tap stops) | `[cube] motion-bounce` |
+| The speed of what's moving, Make keyframes | under the six motions while one is running |
 | Position, rotation, size as numbers | `[cube] transform-toggle` |
 | Its size in the project's units, and what the Model tool picked | `[cube] selection-size` |
 | Look override, lines, accents | `[cube] look-override` |
@@ -226,6 +232,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 |---|---|
 | Two sliders that follow the tool (snapping and speed at rest) | `Snapping` |
 | Pick a colour from the stage | `Pick` |
+| The colour in the hand (the Look's palette, any colour), for Ink, solid shapes, Flipbook and Paint ▸ Colour | `Draw › tool-ink › colour-well` |
 | Undo, redo | `Undo` |
 
 ## The bottom row
@@ -250,15 +257,41 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Sound and words: voiceover, music, effects, transcript | `[timeline] Sound and words` |
 | Loop, fit, snap to words, timeline settings | `[timeline] timeline-menu` |
 | Resize, or switch to the transport | `[timeline] timeline-divider` |
+| A key's hold menu: copy, paste; easing, reverse, mirror; delete | touch and hold a key |
+| A clip's hold menu: split at the playhead, loop or play once; delete | touch and hold a clip |
+| A flipbook drawing's hold menu: duplicate; hold longer, hold shorter; delete (the track's is on its name) | touch and hold a drawing |
 | To the slim transport | `[timeline] Collapse the timeline` |
 | The slim transport: play, the time | `[transport] Play` |
 | Back to the whole timeline | `[transport] Show the timeline` |
 | Send the timeline away | `[transport] hide-timeline` |
 
+## The hold menu
+
+Touch and hold any thing and the same menu opens in the same order (CONTEXT §4.1): **Duplicate · Rename · Copy ·
+Paste**, then one to three extras that fit the thing, then **Delete** in red. The first four and Delete are always in
+the same places; a row a thing can't do is dimmed. On the stage (Select tool) a finger held still on an object opens
+its menu (Hide, Lock, Group; **Add to the selection** when other things are selected); a finger that moves is a drag.
+The same object has the same menu in the outliner and on its timeline row. Also on: keys, clips, flipbook drawings and
+tracks, cuts, screen effects, paint layers, brushes, Looks, library items, poses, palette colours, Home's cards and
+stacks.
+
+## Settings
+
+| Control | Where |
+|---|---|
+| Theme, sidebar on the right, haptics | Settings ▸ Appearance |
+| Pencil or hand: draw with a finger too (automatic otherwise: a finger makes until an Apple Pencil has touched) | Settings ▸ Pencil or hand |
+| Pencil hover preview, always full resolution, moving-around speed | Settings ▸ Stage |
+| Dock the inspector at the side (off: it floats beside the selection) | Settings ▸ Stage |
+| Joystick under a selection and its speed | Settings ▸ Stage |
+| iCloud Drive | Settings ▸ Storage |
+| How full this iPad's frame is and what the preview is doing about it; benchmarks; Pencil latency; logs | Settings ▸ Diagnostics (and Actions) |
+
 ## Elsewhere, on purpose
 
 - **Gestures** (CONTEXT §4.1): two-finger tap undo, three-finger tap redo, two-finger hold rapid undo, four-finger
-  tap hides everything but the stage, pinch, double-tap to frame, touch and hold for options.
+  tap hides everything but the stage, pinch, double-tap to frame, touch and hold for the hold menu.
+- **Under load nothing is said on the stage** (CONTEXT §6): the preview lightens by itself and comes back.
 - **The menu bar and keyboard** reach the same controls: ⌘1–⌘5 the making tools, ⌘6–⌘8 Actions, Look, Select, ⌘L the
   library, ⌥⌘1–3 move, turn, size, ⌘T the timeline, Space/J/K/L and ⌥←→ the transport. Holding ⌘ lists them.
 - **Proposals** from the AI bridge appear at the bottom of the stage while one is waiting.
@@ -282,3 +315,14 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Actions ▸ Project ▸ Timeline | the timeline's menu | It was in both |
 | The palette's own Pick | the sidebar's Pick | It was in both |
 | The timeline under the stage | on call, hidden by default | The canvas owns the screen |
+
+## What moved in 0.8
+
+| 0.7 | Now | Why |
+|---|---|---|
+| The load chip and Settings ▸ Smoothness warnings | gone; the numbers are in Diagnostics ▸ Smoothness | A message is what makes it feel not smooth (D-176) |
+| Model ▸ Shape (the page) | Model ▸ Edit, same place and contents | "Shape" beside Add's "Shapes" hid the sphere (D-179) |
+| Draw ▸ Draw with a finger too | Settings ▸ Pencil or hand | Automatic now; one switch, none on the canvas (D-183) |
+| Touch and hold on the stage adds to the selection | the hold menu's Add to the selection | Hold is the menu everywhere (D-181) |
+| Float, Wobble, Spin in the inspector's Add a behaviour | the Motion row at the top of the inspector | One tap, one home (D-184) |
+| Cast ▸ Rig's six buttons | Bones → Skin → Pose | Only the step's own tools (D-187) |

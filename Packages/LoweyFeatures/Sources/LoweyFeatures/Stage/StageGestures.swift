@@ -5,8 +5,10 @@ import UIKit.UIGestureRecognizerSubclass
 
 /// Turns touches on the stage into camera moves and edits. Fingers navigate (one finger orbits, two pan and pinch),
 /// taps select, a drag on the selection moves it, the gizmo's handles move / turn / size, two fingers on the
-/// selection twist and pinch it, the Pencil paints with a painting tool. The universal taps (undo, redo, hide the
-/// chrome) belong to the window's gesture layer, not to the stage.
+/// selection twist and pinch it. With a making tool, Pencil or hand is automatic (CONTEXT §4.4): the Pencil makes;
+/// a finger makes too until a Pencil has touched this iPad (or when Settings says so), and then only where there is
+/// something to make on, so it still orbits everywhere else. The universal taps (undo, redo, hide the chrome)
+/// belong to the window's gesture layer, not to the stage.
 @MainActor
 final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     weak var editor: EditorModel?
@@ -22,6 +24,9 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     let twist = UIRotationGestureRecognizer()
     let pencilRoll = PencilRollRecognizer()
     let hover = UIHoverGestureRecognizer()
+
+    /// A finger held still on an object with the Select tool: its menu (CONTEXT §4.1). A finger that moves is a drag.
+    private lazy var holdMenu = HmmHoldMenuInteraction { [weak self] point in self?.editor?.stageHoldMenu(at: point) }
 
     /// What the current one-finger drag does.
     enum DragKind {
@@ -127,22 +132,24 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
             recognizer.delegate = self
             stage.addGestureRecognizer(recognizer)
         }
+        holdMenu.install(on: stage)
         updateTouchTypes()
     }
 
-    /// The Pencil paints with a painting tool; fingers keep navigating (unless "draw with a finger" is on).
+    /// With a making tool both the Pencil and fingers may reach the stroke; `shouldReceive` decides touch by touch
+    /// (Pencil or hand). Otherwise one finger or the Pencil drags.
     func updateTouchTypes() {
         guard let editor else { return }
         let painting = editor.tool.paints
         let pencil = NSNumber(value: UITouch.TouchType.pencil.rawValue)
         let finger = NSNumber(value: UITouch.TouchType.direct.rawValue)
+        // With the Select tool a hold is the object's menu; the other tools keep hold-to-add.
+        longPress.isEnabled = editor.tool != .select
         stroke.isEnabled = painting
         if painting {
-            let erasing = (editor.tool == .ink && editor.ink.mode != .draw) || (editor.tool == .flipbook && editor.flipbook.mode == .erase)
-            let pencilOnly = editor.tool == .shadowBrush || erasing || editor.draw.pencilOnly
-            stroke.allowedTouchTypes = pencilOnly ? [pencil] : [pencil, finger]
-            oneFingerPan.allowedTouchTypes = pencilOnly ? [finger] : []
-            oneFingerPan.isEnabled = pencilOnly
+            stroke.allowedTouchTypes = [pencil, finger]
+            oneFingerPan.allowedTouchTypes = [finger]
+            oneFingerPan.isEnabled = true
         } else {
             oneFingerPan.isEnabled = true
             oneFingerPan.allowedTouchTypes = [finger, pencil]
@@ -152,8 +159,43 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
     // MARK: Delegate
 
     func gestureRecognizer(_ recognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.type == .pencil { notePencil() }
         if recognizer === oneFingerPan { panTouchIsPencil = touch.type == .pencil }
-        return true
+        guard let editor, editor.tool.paints, touch.type == .direct, recognizer === stroke || recognizer === oneFingerPan else { return true }
+        // A finger with a making tool: it makes, or it orbits. Never both.
+        let makes = fingerMakes(at: touch.location(in: stage))
+        return recognizer === stroke ? makes : !makes
+    }
+
+    // MARK: Pencil or hand
+
+    /// Who makes right now (read fresh: Settings can change it while the stage is up).
+    var pencilOrHand: HmmPencilOrHand { HmmPencilOrHand(defaults: .standard) }
+
+    /// A Pencil touched (or hovered over) the stage: from now on fingers move the view.
+    func notePencil() {
+        var input = pencilOrHand
+        if input.pencilTouched() { input.save(to: .standard) }
+    }
+
+    /// A finger landing here would make something with the tool in the hand: fingers may make, and there is something
+    /// under it to make on (an object to paint or rig, the guide to draw on). Anywhere else it orbits.
+    func fingerMakes(at point: CGPoint) -> Bool {
+        guard let editor, let stage, pencilOrHand.fingerMakes else { return false }
+        switch editor.tool {
+        case .paint, .shadowBrush, .rig:
+            return stage.pickObject(at: point) != nil
+        case .ink where editor.ink.mode != .draw:
+            // Erasing and picking strokes: they can be anywhere.
+            return true
+        case .ink, .draw:
+            if editor.draw.guide == .object { return stage.pickObject(at: point) != nil }
+            guard let ray = stage.worldRay(at: point), let guide = editor.currentGuide else { return false }
+            return guide.intersect(ray) != nil
+        default:
+            // The flipbook's page is the whole frame.
+            return true
+        }
     }
 
     func gestureRecognizer(_ first: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith second: UIGestureRecognizer) -> Bool {
@@ -186,6 +228,7 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
             return
         }
         let hovering = (recognizer.state == .began || recognizer.state == .changed) && recognizer.zOffset > 0
+        if hovering { notePencil() }
         editor.setHover(hovering ? recognizer.location(in: stage) : nil)
     }
 
@@ -224,7 +267,7 @@ final class StageGestures: NSObject, UIGestureRecognizerDelegate {
         editor?.frameSelection()
     }
 
-    /// Touch and hold: add to (or take out of) the selection.
+    /// Touch and hold with a tool other than Select: add to (or take out of) the selection, or the Model tool's pick.
     @objc private func handleLongPress(_ recognizer: UILongPressGestureRecognizer) {
         guard recognizer.state == .began, let editor, let stage else { return }
         if editor.tool == .model, editor.modeling.mode.pickMode != nil {

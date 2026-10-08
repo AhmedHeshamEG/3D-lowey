@@ -241,6 +241,22 @@
         }
       }
     },
+    "%lld joints. Draw another bone to add one; draw along a bone again to replace it.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld articolazioni. Disegna un altro osso per aggiungerne uno; ridisegna lungo un osso per sostituirlo."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مفصل. ارسم عظمة أخرى لإضافتها؛ وارسم على طول عظمة مرة أخرى لاستبدالها."
+          }
+        }
+      }
+    },
     "%lld joints. Select it and drag its joints on the stage to pose it; keys land at the playhead in Keyframe.": {
       "localizations": {
         "it": {
@@ -1097,6 +1113,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة إلى المشهد"
+          }
+        }
+      }
+    },
+    "Add to the selection": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi alla selezione"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضِف إلى التحديد"
           }
         }
       }
@@ -2261,6 +2293,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "عريض"
+          }
+        }
+      }
+    },
+    "Bones": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ossa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العظام"
           }
         }
       }
@@ -4737,6 +4785,22 @@
         }
       }
     },
+    "Dock the inspector at the side": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggancia l'ispettore al lato"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثبّت المراقب على الجانب"
+          }
+        }
+      }
+    },
     "Dolly": {
       "localizations": {
         "it": {
@@ -5021,6 +5085,22 @@
         }
       }
     },
+    "Drag its joints on the stage. In Keyframe, keys land at the playhead. Saved poses are below.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trascina le articolazioni sul palco. In Keyframe le chiavi cadono sulla testina. Le pose salvate sono qui sotto."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب مفاصله على المسرح. في وضع الإطارات المفتاحية تُضاف المفاتيح عند رأس التشغيل. الوضعيات المحفوظة في الأسفل."
+          }
+        }
+      }
+    },
     "Drag keys in time and value; drag the handles to shape the move between two keys.": {
       "localizations": {
         "it": {
@@ -5085,6 +5165,22 @@
         }
       }
     },
+    "Draw a bone through the part that should bend": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna un osso attraverso la parte che deve piegarsi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم عظمة عبر الجزء الذي يجب أن ينثني"
+          }
+        }
+      }
+    },
     "Draw a bone with the Pencil, through the part that should bend": {
       "localizations": {
         "it": {
@@ -5133,6 +5229,22 @@
         }
       }
     },
+    "Draw a line or a curve with Model ▸ Edit ▸ Sketch first": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima disegna una linea o una curva con Modello ▸ Modifica ▸ Schizzo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم خطًا أو منحنى أولًا من نموذج ▸ تعديل ▸ رسم"
+          }
+        }
+      }
+    },
     "Draw a line or a curve with Model ▸ Shape ▸ Sketch first": {
       "localizations": {
         "it": {
@@ -5145,6 +5257,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ارسم خطًا أو منحنى أولًا من نموذج ▸ شكل ▸ رسم"
+          }
+        }
+      }
+    },
+    "Draw a line with Draw first: that's the path to follow": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima disegna una linea con Disegna: è il percorso da seguire"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم خطًا أولًا بأداة الرسم: هو المسار الذي سيُتَّبع"
           }
         }
       }
@@ -5225,6 +5353,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ارسم بالقلم عبر طرف أو ذيل أو حبل: سينثني هناك. ويمكن تركيب هيكل شخص لنموذج يشبه الإنسان."
+          }
+        }
+      }
+    },
+    "Draw through a limb, tail or rope: it bends where the stroke bends. A human-like model can be rigged as a person.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disegna attraverso un arto, una coda o una corda: si piega dove si piega il tratto. Un modello simile a una persona si può armare come persona."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسم عبر طرف أو ذيل أو حبل: ينثني حيث ينثني الخط. ويمكن تركيب هيكل شخص لنموذج يشبه الإنسان."
           }
         }
       }
@@ -6617,6 +6761,22 @@
         }
       }
     },
+    "Favourite": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferito"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفضّلة"
+          }
+        }
+      }
+    },
     "Feet": {
       "localizations": {
         "it": {
@@ -7229,6 +7389,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتباع مسار مرسوم"
+          }
+        }
+      }
+    },
+    "Follow a drawn path once": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segui un percorso disegnato una volta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتباع مسار مرسوم مرة واحدة"
+          }
+        }
+      }
+    },
+    "Follow a path": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segui un percorso"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتباع مسار"
           }
         }
       }
@@ -8169,6 +8361,22 @@
         }
       }
     },
+    "Hide": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascondi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إخفاء"
+          }
+        }
+      }
+    },
     "Hide Interface": {
       "localizations": {
         "it": {
@@ -8277,6 +8485,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "السجلّ"
+          }
+        }
+      }
+    },
+    "Hold longer": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni più a lungo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إبقاء أطول"
+          }
+        }
+      }
+    },
+    "Hold shorter": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni meno a lungo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إبقاء أقصر"
           }
         }
       }
@@ -9853,6 +10093,22 @@
         }
       }
     },
+    "Lock": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocca"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قفل"
+          }
+        }
+      }
+    },
     "Locked": {
       "localizations": {
         "it": {
@@ -10169,6 +10425,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اجعله قابلًا للتعديل"
+          }
+        }
+      }
+    },
+    "Make keyframes": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea le chiavi"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء إطارات مفتاحية"
           }
         }
       }
@@ -10805,6 +11077,22 @@
         }
       }
     },
+    "Move it": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fallo muovere"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حرِّكه"
+          }
+        }
+      }
+    },
     "Move out": {
       "localizations": {
         "it": {
@@ -11133,6 +11421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "سمِّ هذه النسخة"
+          }
+        }
+      }
+    },
+    "Near the limit the preview lightens by itself and comes back when there's room. Exports always render at full quality.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vicino al limite l'anteprima si alleggerisce da sola e torna com'era quando c'è margine. Le esportazioni sono sempre alla massima qualità."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرب الحد الأقصى تصبح المعاينة أخفّ تلقائيًا وتعود عندما يتوفر مجال. التصدير دائمًا بأعلى جودة."
           }
         }
       }
@@ -11885,6 +12189,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "واحدًا تلو الآخر"
+          }
+        }
+      }
+    },
+    "One finger draws until an Apple Pencil touches the screen. Then the Pencil draws and fingers move the view, unless this is on.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dito disegna finché una Apple Pencil non tocca lo schermo. Poi disegna la Pencil e le dita muovono la vista, a meno che questo non sia attivo."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إصبع واحد يرسم إلى أن يلمس قلم Apple الشاشة. بعدها يرسم القلم وتحرّك الأصابع المشهد، ما لم يكن هذا الخيار مفعّلًا."
           }
         }
       }
@@ -12705,6 +13025,22 @@
         }
       }
     },
+    "Pencil or hand": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencil o mano"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القلم أو اليد"
+          }
+        }
+      }
+    },
     "Pencil roll": {
       "localizations": {
         "it": {
@@ -12873,6 +13209,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر لونًا"
+          }
+        }
+      }
+    },
+    "Pick a face first (Model ▸ Edit ▸ Face)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima scegli una faccia (Modello ▸ Modifica ▸ Faccia)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر وجهًا أولًا (نموذج ▸ تعديل ▸ وجه)"
           }
         }
       }
@@ -13137,6 +13489,22 @@
         }
       }
     },
+    "Play once": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riproduci una volta"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل مرة واحدة"
+          }
+        }
+      }
+    },
     "Playhead": {
       "localizations": {
         "it": {
@@ -13245,6 +13613,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختفاء مفاجئ"
+          }
+        }
+      }
+    },
+    "Pose": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posa"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوضعية"
           }
         }
       }
@@ -16273,6 +16657,22 @@
         }
       }
     },
+    "Show": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار"
+          }
+        }
+      }
+    },
     "Show a pairing code": {
       "localizations": {
         "it": {
@@ -16605,6 +17005,22 @@
         }
       }
     },
+    "Skin": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pelle"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجلد"
+          }
+        }
+      }
+    },
     "Skip the tour": {
       "localizations": {
         "it": {
@@ -16745,6 +17161,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "التنعيم"
+          }
+        }
+      }
+    },
+    "Smoothness": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fluidità"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السلاسة"
           }
         }
       }
@@ -17353,6 +17785,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تقسيم"
+          }
+        }
+      }
+    },
+    "Split at the playhead": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dividi alla testina"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قسّم عند رأس التشغيل"
           }
         }
       }
@@ -18041,6 +18489,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تصاعد"
+          }
+        }
+      }
+    },
+    "Swing": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dondola"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأرجح"
           }
         }
       }
@@ -19145,6 +19609,22 @@
         }
       }
     },
+    "The shape changed since it was rigged.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La forma è cambiata da quando è stato armato."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر الشكل منذ تركيب الهيكل."
+          }
+        }
+      }
+    },
     "The sidebar's sliders change with what you're doing. Two-finger tap undoes, three redoes.": {
       "localizations": {
         "it": {
@@ -19157,6 +19637,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "تتغيّر منزلقات الشريط الجانبي حسب ما تفعل. النقر بإصبعين يتراجع، وبثلاثة يعيد."
+          }
+        }
+      }
+    },
+    "The skin follows the bones by itself. Paint a bone's weight only where a bend looks wrong.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La pelle segue le ossa da sola. Dipingi il peso di un osso solo dove una piega non convince."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجلد يتبع العظام تلقائيًا. ارسم وزن عظمة فقط حيث يبدو الانثناء خاطئًا."
           }
         }
       }
@@ -19705,6 +20201,38 @@
         }
       }
     },
+    "This scene uses %@ of what this iPad keeps smooth. The preview is at %@.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa scena usa il %@ di ciò che questo iPad mantiene fluido. L'anteprima è al %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم هذا المشهد %@ مما يحافظ هذا الـ iPad على سلاسته. المعاينة عند %@."
+          }
+        }
+      }
+    },
+    "This scene uses %@ of what this iPad keeps smooth. The preview is lighter for now, at %@.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa scena usa il %@ di ciò che questo iPad mantiene fluido. Per ora l'anteprima è più leggera, al %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم هذا المشهد %@ مما يحافظ هذا الـ iPad على سلاسته. المعاينة أخفّ حاليًا، عند %@."
+          }
+        }
+      }
+    },
     "This shape couldn't be laid flat for painting": {
       "localizations": {
         "paint-it": {
@@ -20065,6 +20593,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "المس مطولًا أسلوبًا لخياراته. تبقى الأساليب المضمّنة كما هي؛ كرّر واحدًا لتغييره."
+          }
+        }
+      }
+    },
+    "Touch and hold an object for its menu. With something selected, Add to the selection is in it.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca e tieni premuto un oggetto per il suo menu. Con qualcosa di selezionato, lì trovi Aggiungi alla selezione."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس مطولًا أي عنصر لفتح قائمته. عند وجود تحديد، تجد فيها «أضِف إلى التحديد»."
           }
         }
       }
@@ -20613,6 +21157,22 @@
         }
       }
     },
+    "Unfavourite": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Togli dai preferiti"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة من المفضّلة"
+          }
+        }
+      }
+    },
     "Ungroup": {
       "localizations": {
         "it": {
@@ -20657,6 +21217,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوحدات"
+          }
+        }
+      }
+    },
+    "Unlock": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sblocca"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء القفل"
           }
         }
       }

@@ -194,7 +194,7 @@ extension EditorModel {
             }
         } ?? false }),
             let path = arrayPath(for: source) else {
-            app.show("Draw a line or a curve with Model ▸ Shape ▸ Sketch first")
+            app.show("Draw a line or a curve with Model ▸ Edit ▸ Sketch first")
             return
         }
         let length = zip(path.points, path.points.dropFirst()).reduce(0) { $0 + $1.0.distance(to: $1.1) }

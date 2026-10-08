@@ -32,6 +32,7 @@ struct TimelineLanes: View {
         .clipped()
         .contentShape(Rectangle())
         .coordinateSpace(name: TimelineLayout.lanesSpace)
+        .hmmHoldMenu(at: { point in holdMenu(at: point) })
         .simultaneousGesture(laneTap, including: editor.timelineMode == .compose ? .subviews : .all)
         .simultaneousGesture(laneDrag)
         .simultaneousGesture(marqueePress, including: editor.timelineMode == .compose ? .subviews : .all)
@@ -86,6 +87,18 @@ struct TimelineLanes: View {
         default:
             layout.lasso = []
         }
+    }
+
+    /// A finger held still on a key or a clip: its menu. (Keys and clips are drawn, so where the finger is says which.)
+    private func holdMenu(at point: CGPoint) -> HmmHoldMenu? {
+        let location = layout.toContent(point)
+        guard location.x >= TimelineLayout.labelWidth, !layout.isOwnGestureRow(at: location.y) else { return nil }
+        if let key = layout.key(at: location) {
+            editor.setTime(key.time)
+            return editor.holdMenu(forKey: key)
+        }
+        if editor.timelineMode != .compose, let clip = layout.clip(at: location) { return editor.holdMenu(forClip: clip) }
+        return nil
     }
 
     @ViewBuilder private var scrollIndicator: some View {

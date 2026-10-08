@@ -3,7 +3,7 @@ import LoweyCore
 import SwiftUI
 
 /// Motion: one-tap presets at the playhead (one after another for many objects), behaviours, simulations, puppet
-/// joints, the object's frame rate, clearing animation.
+/// joints, the object's frame rate, clearing animation. (The looping motions are the Motion row, at the top.)
 struct MotionSection: View {
     @Bindable var editor: EditorModel
 
@@ -107,12 +107,7 @@ private struct BehaviorList: View {
         VStack(alignment: .leading, spacing: HmmSpacing.xs) {
             Menu {
                 Section("Motion") {
-                    Button("Float", systemImage: "water.waves") { editor.addBehavior(.bob(height: 0.12, period: 3, tilt: 4)) }
                     Button("Sway in the wind", systemImage: "wind") { editor.addBehavior(.windSway(angle: 5, frequency: 0.4, direction: 30)) }
-                    Button("Wobble", systemImage: "waveform.path") {
-                        editor.addBehavior(.noise(position: Vec3(0.05, 0.05, 0.05), rotation: Vec3(4, 4, 4), frequency: 1.2))
-                    }
-                    Button("Spin", systemImage: "arrow.clockwise") { editor.addBehavior(.spin(degreesPerSecond: 90, axis: .y)) }
                     Button("Orbit the centre", systemImage: "circle.dashed") { editor.addBehavior(.orbit(
                         center: .zero,
                         around: nil,
@@ -120,8 +115,8 @@ private struct BehaviorList: View {
                         faceCenter: false
                     )) }
                 }
-                Section("Follow a drawn path") {
-                    ForEach(paths, id: \.self) { id in
+                Section("Follow a drawn path once") {
+                    ForEach(editor.followablePaths, id: \.self) { id in
                         Button(editor.baseScene.objects[id]?.name ?? "Path") {
                             editor.addBehavior(.followPath(.object(id), duration: max(editor.timeline.duration - 1, 2), loop: false, orient: true))
                         }
@@ -155,13 +150,6 @@ private struct BehaviorList: View {
                     .accessibilityLabel("\(behavior.kind.title) options")
                 }
             }
-        }
-    }
-
-    private var paths: [ObjectID] {
-        editor.baseScene.orderedIDs().filter { id in
-            guard !editor.selection.contains(id), case .drawing = editor.baseScene.objects[id]?.kind else { return false }
-            return true
         }
     }
 }

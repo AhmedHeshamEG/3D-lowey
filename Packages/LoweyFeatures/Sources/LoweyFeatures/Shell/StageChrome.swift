@@ -16,6 +16,16 @@ struct StageChrome: View {
     var body: some View {
         ZStack {
             if editor.tool == .model || editor.precision.showsDimensions { ModelDimensions(editor: editor) }
+            HStack {
+                if !sidebarOnRight { EditorSidebar(editor: editor) }
+                Spacer()
+                if sidebarOnRight { EditorSidebar(editor: editor) }
+            }
+            .padding(.horizontal, HmmSpacing.xs)
+            .frame(maxHeight: .infinity, alignment: .center)
+            bottomRow
+            // Last, so above everything: a panel opened from a cluster covers the sidebar and the bottom row, never
+            // the other way round.
             VStack(spacing: HmmSpacing.s) {
                 HStack(alignment: .top) {
                     leadingCluster
@@ -37,14 +47,6 @@ struct StageChrome: View {
                 Spacer(minLength: 0)
             }
             .padding(HmmSpacing.m)
-            HStack {
-                if !sidebarOnRight { EditorSidebar(editor: editor) }
-                Spacer()
-                if sidebarOnRight { EditorSidebar(editor: editor) }
-            }
-            .padding(.horizontal, HmmSpacing.xs)
-            .frame(maxHeight: .infinity, alignment: .center)
-            bottomRow
         }
         .overlay {
             if showsInspector {

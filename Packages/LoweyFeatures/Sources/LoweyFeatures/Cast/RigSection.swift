@@ -2,32 +2,40 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Cast ▸ Rig: give anything a skeleton. Draw a bone through a limb, tail or rope with the Pencil (its weights are
-/// worked out by bone heat), rig a human-like model as a person, paint the weights by hand if wanted.
+/// Cast ▸ Rig: give anything a skeleton, in three steps in order. **Bones**: draw a bone through a limb, tail or rope
+/// (or rig a human-like model as a person). **Skin**: the weights are worked out by themselves; paint them only if you
+/// want to. **Pose**: drag the joints. Each step shows only its own tools, and the next one lights up when this one is
+/// done.
 struct RigSection: View {
     @Bindable var editor: EditorModel
 
     var body: some View {
         if let object = editor.singleSelection, editor.castType(of: object.id) == nil || object.rig != nil {
             PanelSection("Rig") {
-                if editor.rigging.busy.contains(object.id) {
-                    HStack(spacing: HmmSpacing.xs) {
-                        ProgressView()
-                        Text("Working out how it bends…").font(.hmm(.body))
-                    }
-                } else if let blocker = editor.rigBlocker(object) {
+                if let blocker = editor.rigBlocker(object) {
                     Hint(blocker)
                 } else {
-                    actions(object)
+                    RigStepRow(editor: editor, object: object)
+                    if editor.rigging.busy.contains(object.id) {
+                        HStack(spacing: HmmSpacing.xs) {
+                            ProgressView()
+                            Text("Working out how it bends…").font(.hmm(.body))
+                        }
+                    } else {
+                        switch editor.rigStep(for: object) {
+                        case .bones: bones(object)
+                        case .skin: skin(object)
+                        case .pose: pose(object)
+                        }
+                    }
                 }
             }
         }
     }
 
-    @ViewBuilder private func actions(_ object: SceneObject) -> some View {
+    @ViewBuilder private func bones(_ object: SceneObject) -> some View {
         HStack(spacing: HmmSpacing.xs) {
             HmmPillButton("Draw a bone", systemName: RigSettings.Mode.bone.systemImage, prominent: object.rig == nil) {
-                editor.rigging.mode = .bone
                 editor.startRigging(object.id)
             }
             .accessibilityIdentifier("rig-draw-bone")
@@ -37,31 +45,54 @@ struct RigSection: View {
             }
         }
         if let rig = object.rig {
-            Hint("\(rig.skeleton.joints.count) joints. Select it and drag its joints on the stage to pose it; keys land at the playhead in Keyframe.")
-            if !editor.rigFits(object) {
-                HmmPillButton("Fit the weights to the new shape", systemName: "arrow.triangle.2.circlepath", prominent: true) {
-                    editor.refitRig(object.id)
-                }
-            }
-            HStack(spacing: HmmSpacing.xs) {
-                HmmPillButton("Paint weights", systemName: RigSettings.Mode.weights.systemImage) {
-                    editor.startRigging(object.id)
-                    editor.rigging.mode = .weights
-                    if editor.rigging.joint.map({ $0 >= rig.skeleton.joints.count }) ?? true { editor.rigging.joint = rig.skeleton.joints.count - 1 }
-                }
-                .accessibilityIdentifier("rig-weights")
-                HmmPillButton("Reset the pose", systemName: "arrow.uturn.backward") { editor.resetPose(object.id) }
-            }
+            Hint("\(rig.skeleton.joints.count) joints. Draw another bone to add one; draw along a bone again to replace it.")
             HmmPillButton("Remove the rig", systemName: "trash", role: .destructive) { editor.removeRig(object.id) }
                 .accessibilityIdentifier("rig-remove")
         } else {
-            Hint("Draw through a limb, tail or rope with the Pencil: it bends there. A human-like model can be rigged as a person.")
+            Hint("Draw through a limb, tail or rope: it bends where the stroke bends. A human-like model can be rigged as a person.")
+        }
+    }
+
+    @ViewBuilder private func skin(_ object: SceneObject) -> some View {
+        if editor.rigFits(object) {
+            Hint("The skin follows the bones by itself. Paint a bone's weight only where a bend looks wrong.")
+        } else {
+            Hint("The shape changed since it was rigged.")
+            HmmPillButton("Fit the weights to the new shape", systemName: "arrow.triangle.2.circlepath", prominent: true) {
+                editor.refitRig(object.id)
+            }
+            .accessibilityIdentifier("rig-refit")
+        }
+        HmmPillButton("Paint weights", systemName: RigSettings.Mode.weights.systemImage) { editor.startPaintingWeights(object.id) }
+            .accessibilityIdentifier("rig-weights")
+    }
+
+    @ViewBuilder private func pose(_ object: SceneObject) -> some View {
+        Hint("Drag its joints on the stage. In Keyframe, keys land at the playhead. Saved poses are below.")
+        HmmPillButton("Reset the pose", systemName: "arrow.uturn.backward") { editor.resetPose(object.id) }
+            .accessibilityIdentifier("rig-reset-pose")
+    }
+}
+
+/// Bones → Skin → Pose. The step you're on is marked; a step that can't be entered yet is dimmed.
+struct RigStepRow: View {
+    let editor: EditorModel
+    let object: SceneObject
+
+    var body: some View {
+        let current = editor.rigStep(for: object)
+        HStack(spacing: HmmSpacing.xs) {
+            ForEach(RigSettings.Step.allCases) { step in
+                ChoiceChip(title: step.title, systemName: step.systemImage, isOn: step == current) { editor.setRigStep(step, on: object.id) }
+                    .disabled(!editor.rigStepIsOpen(step, for: object))
+                    .accessibilityIdentifier("rig-step-\(step.rawValue)")
+            }
         }
     }
 }
 
-/// Under the stage while Cast ▸ Rig is on: what the Pencil does, the bone whose weight is painted, and the person rig's
-/// Rig button.
+/// Under the stage while Cast ▸ Rig is on: the three steps, the bone whose weight is painted (Skin), and the person
+/// rig's Rig button.
 struct RigOptionsBar: View {
     @Bindable var editor: EditorModel
     @Environment(\.hmmTheme) private var theme
@@ -82,10 +113,7 @@ struct RigOptionsBar: View {
                     editor.tool = .select
                 }
             } else {
-                ForEach(RigSettings.Mode.allCases) { mode in
-                    ChoiceChip(title: mode.title, systemName: mode.systemImage, isOn: editor.rigging.mode == mode) { editor.rigging.mode = mode }
-                        .disabled(mode == .weights && editor.rigTarget?.rig == nil)
-                }
+                if let object = editor.rigTarget { RigStepRow(editor: editor, object: object) }
                 if editor.rigging.mode == .weights, let rig = editor.rigTarget?.rig {
                     jointMenu(rig)
                     ChoiceChip(title: "Erase", systemName: "eraser", isOn: editor.rigging.erase) { editor.rigging.erase.toggle() }

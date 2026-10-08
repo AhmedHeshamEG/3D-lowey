@@ -18,7 +18,7 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     case flipbook
     /// Drag on the ground to scatter copies of the selection.
     case scatter
-    /// Model ▸ Shape: pick faces, edges and corners, push/pull, sketch on surfaces (`ModelingState`).
+    /// Model ▸ Edit: pick faces, edges and corners, push/pull, sketch on surfaces (`ModelingState`).
     case model
     /// Paint ▸ Colour: colour painted on models with the brush engine (`ColourPaintSettings`).
     case paint
@@ -66,6 +66,10 @@ public enum StageTool: String, CaseIterable, Identifiable, Sendable {
     /// The Paint tools (top right: Paint): on objects and over the ground.
     public var paintsSurfaces: Bool { self == .shadowBrush || self == .scatter || self == .paint }
 
+    /// Tools whose strokes take the colour in the hand (the sidebar shows its colour well for them). The Shadow
+    /// Brush isn't one: it moves the Look's own shadow.
+    public var putsColourDown: Bool { self == .ink || self == .draw || self == .flipbook || self == .paint }
+
     /// Tools that draw on a guide surface.
     public var usesGuide: Bool { self == .ink || self == .draw }
 }
@@ -97,7 +101,7 @@ public enum ModelPage: String, CaseIterable, Identifiable, Sendable {
     public var title: String {
         switch self {
         case .add: "Add"
-        case .shape: "Shape"
+        case .shape: "Edit"
         case .library: "Library"
         case .precision: "Precision"
         }
@@ -178,8 +182,6 @@ public struct DrawSettings: Equatable, Sendable {
     /// The guide moved along its normal.
     public var planeOffset: Double = 0
     public var guideSize: Double = 1.5
-    /// The Pencil draws and fingers navigate (off: a finger draws too).
-    public var pencilOnly = true
 
     public init() {}
 }

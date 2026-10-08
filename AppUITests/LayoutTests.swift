@@ -51,6 +51,86 @@ final class LayoutTests: XCTestCase {
         XCTAssertTrue(app.otherElements["stage"].waitForExistence(timeout: 15))
     }
 
+    /// Model ▸ Add ▸ Shapes shows all seven shapes, each one whole inside the panel and tappable (device note: the
+    /// sphere couldn't be found).
+    func testAllSevenShapesAreVisible() throws {
+        newProject("Shapes")
+        XCTAssertTrue(tap("Model"))
+        settle(2)
+        XCTAssertTrue(tap("model-add"))
+        settle(1)
+        // One snapshot of the screen instead of a query per tile: the Model panel is slow to query on CI's simulator.
+        let screen = try app.snapshot()
+        var tiles: [String: XCUIElementSnapshot] = [:]
+        func collect(_ element: XCUIElementSnapshot) {
+            if element.identifier.hasPrefix("add-") { tiles[element.identifier] = element }
+            element.children.forEach(collect)
+        }
+        collect(screen)
+        for shape in ["cube", "sphere", "cylinder", "cone", "plane", "torus", "ramp"] {
+            let tile = try XCTUnwrap(tiles["add-\(shape)"], "\(shape) is missing from Model ▸ Add")
+            XCTAssertTrue(screen.frame.contains(tile.frame), "\(shape) is cut off")
+            XCTAssertGreaterThan(tile.frame.width, 60, "\(shape) is squeezed")
+            XCTAssertGreaterThan(tile.frame.height, 40, "\(shape) is squeezed")
+        }
+        XCTAssertEqual(tiles["add-sphere"]?.label, "Sphere")
+        shot("Shapes")
+        XCTAssertTrue(tap("add-sphere"))
+        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5), "a sphere landed on the stage")
+    }
+
+    // MARK: One hold menu everywhere
+
+    /// The rows of the menu that's open, top to bottom.
+    private func openMenuRows() -> [String] {
+        let names = ["Duplicate", "Rename", "Copy", "Paste", "Delete"]
+        // Paste is only ever in the menu; the others are also buttons elsewhere (the inspector's Duplicate), so take
+        // the ones in Paste's column.
+        let paste = app.buttons["Paste"].firstMatch
+        guard paste.waitForExistence(timeout: 5) else { return [] }
+        let column = paste.frame.minX
+        let rows = names.flatMap { app.buttons.matching(identifier: $0).allElementsBoundByIndex }.filter { abs($0.frame.minX - column) < 2 }
+        return rows.sorted { $0.frame.minY < $1.frame.minY }.map(\.label)
+    }
+
+    private func closeMenu() {
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.97)).tap()
+        settle(1)
+    }
+
+    /// Touch and hold opens the same menu on every kind of thing: Duplicate, Rename, Copy, Paste first, Delete last
+    /// (CONTEXT §4.1). Walks an object on the stage, a Look and a project's card; keys, clips, drawings: `HoldMenuFlowTests`.
+    func testTheHoldMenuStartsTheSameOnEveryKindOfThing() {
+        let expected = ["Duplicate", "Rename", "Copy", "Paste", "Delete"]
+        newProject("Holding")
+        XCTAssertTrue(tap("Model"))
+        XCTAssertTrue(tap("add-cube"))
+        XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5))
+        settle(1)
+
+        let stage = app.otherElements["stage"]
+        stage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "an object on the stage")
+        shot("Hold menu on the stage")
+        closeMenu()
+
+        XCTAssertTrue(tap("Look"))
+        let look = element("look-clay")
+        XCTAssertTrue(look.waitForExistence(timeout: 5))
+        look.press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "a Look")
+        closeMenu()
+        tap("Look")
+
+        XCTAssertTrue(tap("Home"))
+        let card = element("project-Holding")
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        card.press(forDuration: 1.2)
+        XCTAssertEqual(openMenuRows(), expected, "a project's card")
+        shot("Hold menu on a card")
+        closeMenu()
+    }
+
     // MARK: Every control has a home
 
     func testHomeControlsAreReachable() {

@@ -23,10 +23,7 @@ struct ColourPaintSection: View {
             }
             BrushRow(editor: editor, tool: .paint)
             PanelSection("Colour") {
-                HStack(spacing: HmmSpacing.s) {
-                    PaletteRow(palette: editor.look.palette, selected: editor.currentColor.paletteSlot) { editor.currentColor = .palette($0) }
-                    ColorPicker("Any colour", selection: anyColour, supportsOpacity: false).labelsHidden()
-                }
+                ColourChooser(editor: editor)
             }
             target
             Hint("Size and opacity are the sidebar's sliders. Fingers move around; the Pencil paints.")
@@ -38,15 +35,6 @@ struct ColourPaintSection: View {
             defer { if access { url.stopAccessingSecurityScopedResource() } }
             if let image = UIImage(contentsOfFile: url.path)?.cgImage { place(image) }
         }
-    }
-
-    private var anyColour: Binding<Color> {
-        Binding(get: { editor.paintColor.color }, set: { value in
-            let resolved = UIColor(value).resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-            resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-            editor.currentColor = .rgba(RGBA(Double(red), Double(green), Double(blue)))
-        })
     }
 
     @ViewBuilder private var target: some View {
@@ -162,12 +150,20 @@ struct PaintLayersSection: View {
             editor.choosePaintLayer(layer.id, on: object.id)
             gesture = UUID().uuidString
         }
-        .contextMenu {
-            Button("Rename", systemImage: "pencil") { renaming = (layer.id, layer.name) }
-        }
+        .hmmHoldMenu(menu(for: layer))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
         .accessibilityIdentifier("paint-layer-\(layer.id)")
+    }
+
+    private func menu(for layer: PaintLayer) -> HmmHoldMenu {
+        let isLowest = (object.paint?.layerIndex(layer.id) ?? 0) == 0
+        return HmmHoldMenu(duplicate: { editor.duplicatePaintLayer(layer.id, of: object.id) }, rename: { renaming = (layer.id, layer.name) }, extras: [
+            HmmHoldMenu.Item("Merge down", systemName: "square.3.layers.3d.down.right", isEnabled: !isLowest) {
+                editor.mergePaintLayerDown(layer.id, of: object.id)
+            },
+            HmmHoldMenu.Item("Clear", systemName: "eraser") { editor.clearPaintLayer(layer.id, of: object.id) }
+        ], delete: { editor.deletePaintLayer(layer.id, of: object.id) })
     }
 
     private func actions(_ layer: PaintLayer, paint: ObjectPaint?) -> some View {

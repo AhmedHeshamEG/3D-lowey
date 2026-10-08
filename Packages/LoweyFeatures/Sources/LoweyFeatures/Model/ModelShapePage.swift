@@ -2,7 +2,7 @@ import HmmDesign
 import LoweyCore
 import SwiftUI
 
-/// Model ▸ Shape: sketch on any surface, pick faces / edges / corners to push and pull, combine solids, mirror and
+/// Model ▸ Edit: sketch on any surface, pick faces / edges / corners to push and pull, combine solids, mirror and
 /// symmetry, and get a part ready to print. Choosing a sketch shape or a pick mode closes the panel so the stage is
 /// free; the bar at the bottom holds what the pick can do (bevel, round, inset, shell).
 struct ModelShapePage: View {

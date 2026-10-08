@@ -341,34 +341,51 @@ public enum Simulation {
 
     /// Samples a behaviour at `fps` and replaces it with keys (editable, like a Perform take).
     public static func bake(_ behaviorID: String, in document: Document, rigs: [AssetID: RigAsset] = [:], ids: inout IDFactory) -> EditCommand? {
+        guard let behavior = document.scene.timeline.behaviors.first(where: { $0.id == behaviorID }) else { return nil }
+        return bake([behaviorID], label: "Bake \(behavior.kind.title)", in: document, rigs: rigs, ids: &ids)
+    }
+
+    /// Bakes several behaviours in one step: what the objects do with all of them running becomes keys, and all of
+    /// them leave. (Baking them one by one would bake the others into each.)
+    public static func bake(
+        _ behaviorIDs: [String], label: String, in document: Document, rigs: [AssetID: RigAsset] = [:], ids: inout IDFactory
+    ) -> EditCommand? {
         let timeline = document.scene.timeline
-        guard let behavior = timeline.behaviors.first(where: { $0.id == behaviorID }) else { return nil }
-        let end = behavior.end ?? max(timeline.duration, behavior.start)
+        let baked = timeline.behaviors.filter { behaviorIDs.contains($0.id) }
+        guard let start = baked.map(\.start).min() else { return nil }
+        let end = baked.map { $0.end ?? max(timeline.duration, $0.start) }.max() ?? start
+        var drives: [ObjectID: Set<PropertyKey>] = [:]
+        for behavior in baked {
+            drives[behavior.target, default: []].formUnion(behavior.kind.drives)
+        }
         let step = 1 / Double(max(timeline.fps, 1))
-        var samples: [PropertyKey: [Keyframe]] = [:]
-        var time = behavior.start
+        var samples: [ObjectID: [PropertyKey: [Keyframe]]] = [:]
+        var time = start
         while time <= end + 1e-9 {
             let animated = Animator.evaluate(document, at: time, rigs: rigs)
-            if let object = animated.scene.objects[behavior.target] {
-                for key in behavior.kind.drives {
+            for (target, properties) in drives {
+                guard let object = animated.scene.objects[target] else { continue }
+                for key in properties {
                     if let value = object.properties[key] ?? PropertyDefaults.value(for: key) {
-                        samples[key, default: []].append(Keyframe(time: time, value: value, easing: .linear))
+                        samples[target, default: [:]][key, default: []].append(Keyframe(time: time, value: value, easing: .linear))
                     }
                 }
             }
             time += step
         }
         var newTimeline = timeline
-        newTimeline.behaviors.removeAll { $0.id == behaviorID }
-        for (property, keys) in samples {
-            let simplified = PerformBaker.simplify(keys, tolerance: property == .rotation ? 0.002 : 0.001)
-            let track = bake(behavior.target, property, simplified, timeline: newTimeline, ids: &ids)
-            if let index = newTimeline.tracks.firstIndex(where: { $0.id == track.id }) {
-                newTimeline.tracks[index] = track
-            } else {
-                newTimeline.tracks.append(track)
+        newTimeline.behaviors.removeAll { behaviorIDs.contains($0.id) }
+        for target in samples.keys.sorted(by: { $0.raw < $1.raw }) {
+            for (property, keys) in samples[target] ?? [:] {
+                let simplified = PerformBaker.simplify(keys, tolerance: property == .rotation ? 0.002 : 0.001)
+                let track = bake(target, property, simplified, timeline: newTimeline, ids: &ids)
+                if let index = newTimeline.tracks.firstIndex(where: { $0.id == track.id }) {
+                    newTimeline.tracks[index] = track
+                } else {
+                    newTimeline.tracks.append(track)
+                }
             }
         }
-        return .batch("Bake \(behavior.kind.title)", [.setTimeline(newTimeline)])
+        return .batch(label, [.setTimeline(newTimeline)])
     }
 }

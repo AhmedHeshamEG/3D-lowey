@@ -1,6 +1,6 @@
 import Foundation
 
-/// A library model taken apart into objects you can model: Model ▸ Shape ▸ Make editable on a placed model.
+/// A library model taken apart into objects you can model: Model ▸ Edit ▸ Make editable on a placed model.
 public extension ModelingOperations {
     enum ImportFailure: Error, Equatable, CustomStringConvertible {
         case tooBig(Int)
