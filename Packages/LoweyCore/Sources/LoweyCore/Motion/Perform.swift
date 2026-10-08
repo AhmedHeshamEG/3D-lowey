@@ -16,11 +16,27 @@ public struct PerformTake: Hashable, Sendable {
     public var object: ObjectID
     public var property: PropertyKey
     public var segments: [[Sample]]
+    /// A trigger's channel: each sample is a switch, kept as a held key at its own moment (never smoothed or resampled).
+    public var stepped: Bool
 
-    public init(object: ObjectID, property: PropertyKey, segments: [[Sample]] = []) {
+    public init(object: ObjectID, property: PropertyKey, segments: [[Sample]] = [], stepped: Bool = false) {
         self.object = object
         self.property = property
         self.segments = segments
+        self.stepped = stepped
+    }
+
+    /// Switches, and values that can't be blended (a mouth shape, shown or hidden), are held keys.
+    public var isStepped: Bool {
+        if stepped { return true }
+        for segment in segments {
+            guard let value = segment.first?.value else { continue }
+            switch value {
+            case .float, .vec3, .quat, .color: return false
+            default: return true
+            }
+        }
+        return false
     }
 
     public mutating func begin() {
@@ -39,9 +55,10 @@ public struct PerformTake: Hashable, Sendable {
 public enum PerformBaker {
     /// Resamples a segment at `fps`, smooths it (`smoothing` 0…1, zero-phase so it doesn't lag behind
     /// the finger) and — when smoothing > 0 — drops keys the curve doesn't need. 0 % keeps every frame.
-    public static func keys(from samples: [PerformTake.Sample], fps: Int, smoothing: Double) -> [Keyframe] {
+    public static func keys(from samples: [PerformTake.Sample], fps: Int, smoothing: Double, stepped: Bool = false) -> [Keyframe] {
         let sorted = samples.sorted { $0.time < $1.time }
         guard let first = sorted.first, let last = sorted.last else { return [] }
+        if stepped { return held(sorted) }
         guard sorted.count > 1, last.time > first.time else {
             return [Keyframe(time: first.time, value: first.value, easing: .linear)]
         }
@@ -67,11 +84,27 @@ public enum PerformBaker {
         return keys
     }
 
+    /// Held keys: one where the value changes, and one at the end so the stretch's length is known.
+    static func held(_ sorted: [PerformTake.Sample]) -> [Keyframe] {
+        var keys: [Keyframe] = []
+        for sample in sorted where keys.last?.value != sample.value {
+            if let last = keys.last, abs(last.time - sample.time) < 0.0005 {
+                keys[keys.count - 1] = Keyframe(time: last.time, value: sample.value, easing: .step)
+            } else {
+                keys.append(Keyframe(time: sample.time, value: sample.value, easing: .step))
+            }
+        }
+        if let last = sorted.last, let key = keys.last, last.time > key.time + 0.0005 {
+            keys.append(Keyframe(time: last.time, value: last.value, easing: .step))
+        }
+        return keys
+    }
+
     /// Replaces the recorded ranges of `track` with the take (other keys stay).
     public static func apply(_ take: PerformTake, to track: Track, fps: Int, smoothing: Double) -> Track {
         var result = track
         for segment in take.segments where !segment.isEmpty {
-            let keys = keys(from: segment, fps: fps, smoothing: smoothing)
+            let keys = keys(from: segment, fps: fps, smoothing: smoothing, stepped: take.isStepped)
             guard let first = keys.first, let last = keys.last else { continue }
             result.removeKeys(in: TimeRange(start: first.time, end: last.time))
             for key in keys {

@@ -125,6 +125,8 @@ public indirect enum EditCommand: Hashable, Sendable {
     case setBrushes([String: Brush])
     /// Insert, replace or remove flipbook tracks.
     case setFlipbooks([FlipbookEdit])
+    /// Insert, replace or remove recorded takes (`Timeline.takes`).
+    case setTakes([TakeEdit])
     /// Replace the whole scene with another state of it (restoring a version; the scene keeps its id).
     case replaceScene(Scene)
     /// Several commands as one undo step.
@@ -162,6 +164,7 @@ public indirect enum EditCommand: Hashable, Sendable {
         case .setCustomLooks: return "Edit looks"
         case .setBrushes: return "Draw"
         case let .setFlipbooks(edits): return edits.allSatisfy { $0.track == nil } ? "Delete flipbook" : "Draw"
+        case .setTakes: return "Takes"
         case .replaceScene: return "Restore version"
         case let .batch(label, _): return label
         }

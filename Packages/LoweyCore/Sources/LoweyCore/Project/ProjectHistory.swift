@@ -35,7 +35,9 @@ public enum ProjectHistory {
         // 8 → 9 only adds the optional rig field and the `setRig` command.
         8: { $0 },
         // 9 → 10 only adds the `bounce` and `swing` behaviours (inside `setTimeline`).
-        9: { $0 }
+        9: { $0 },
+        // 10 → 11 only adds the optional takes field and the `setTakes` command.
+        10: { $0 }
     ]
     /// The first schema journals were written with (Maquette 0.1).
     public static let firstJournalSchema = 4
