@@ -28,6 +28,9 @@ phase plan (M11 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to 
 - [ ] Recording a take and recording a voiceover are two buttons (D-211): one "perform with sound" is a candidate for
       M15.
 
+- [ ] The UI job on main ran 77 to 80 minutes on the 0.10 merge (a first attempt lost to a cold simulator, D-216);
+      watch whether booting first brings it back under an hour.
+
 ## Left from M9 (Maquette 0.9)
 
 - [ ] The device checklist in the "Maquette 0.9 — M9" PR (drawing on the board with the Pencil: feel, pressure, tilt,
