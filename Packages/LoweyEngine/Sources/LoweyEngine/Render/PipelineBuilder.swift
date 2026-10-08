@@ -4,6 +4,8 @@ import Metal
 struct PipelineBuilder {
     let device: MTLDevice
     let library: MTLLibrary
+    /// hmm-kit's brush shaders (stamps, flat fills, layers).
+    let brushLibrary: MTLLibrary
     let samples: Int
 
     /// Interleaved vertices: position, normal, uv, shadow bias (36 bytes); skinned meshes add joints + weights in a
@@ -116,11 +118,15 @@ struct PipelineBuilder {
         case scene, editor, layer
     }
 
-    /// Premultiplied stamps (`lw_brushVertex` / `lw_brushFragment`), or a layer's other passes by name.
-    func brush(_ target: BrushTarget, vertex: String = "lw_brushVertex", fragment: String = "lw_brushFragment") throws -> MTLRenderPipelineState {
-        let descriptor = MTLRenderPipelineDescriptor()
-        descriptor.vertexFunction = try function(vertex)
-        descriptor.fragmentFunction = try function(fragment)
+    /// Premultiplied stamps, or one of the brush shaders' other passes (flat fills, a layer laid over).
+    func brush(_ target: BrushTarget, pass: BrushShaders.Pass = .stamp) throws -> MTLRenderPipelineState {
+        let descriptor: MTLRenderPipelineDescriptor
+        do {
+            // The kit sets the functions and premultiplied source-over blending.
+            descriptor = try BrushShaders.descriptor(pass, library: brushLibrary)
+        } catch {
+            throw RenderError.pipeline("brush \(pass)")
+        }
         let color = descriptor.colorAttachments[0]
         switch target {
         case .scene:
@@ -135,12 +141,7 @@ struct PipelineBuilder {
         case .layer:
             color?.pixelFormat = RenderDevice.layerFormat
         }
-        color?.isBlendingEnabled = true
-        color?.sourceRGBBlendFactor = .one
-        color?.destinationRGBBlendFactor = .oneMinusSourceAlpha
-        color?.sourceAlphaBlendFactor = .one
-        color?.destinationAlphaBlendFactor = .oneMinusSourceAlpha
-        return try render(descriptor, name: "\(fragment) (\(target))")
+        return try render(descriptor, name: "brush \(pass) (\(target))")
     }
 
     /// How a paint pass writes: laying paint on (premultiplied source-over), wiping it off, or replacing.

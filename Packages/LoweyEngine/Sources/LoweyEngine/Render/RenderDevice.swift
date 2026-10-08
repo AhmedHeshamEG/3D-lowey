@@ -153,7 +153,8 @@ struct Pipelines {
     let shadowDepth: MTLDepthStencilState
 
     init(device: MTLDevice, library: MTLLibrary, samples: Int) throws {
-        let builder = PipelineBuilder(device: device, library: library, samples: samples)
+        guard let brushLibrary = try? BrushShaders.library(device: device) else { throw RenderError.missingShaders }
+        let builder = PipelineBuilder(device: device, library: library, brushLibrary: brushLibrary, samples: samples)
         shadowStatic = try builder.shadow(vertex: "lw_shadowStatic", skinned: false)
         shadowSkinned = try builder.shadow(vertex: "lw_shadowSkinned", skinned: true)
         prepassStatic = try builder.prepass(vertex: "lw_vertexStatic", fragment: "lw_prepass", skinned: false)
@@ -172,9 +173,9 @@ struct Pipelines {
         brushScene = try builder.brush(.scene)
         brushEditor = try builder.brush(.editor)
         brushLayer = try builder.brush(.layer)
-        brushFill = try builder.brush(.layer, vertex: "lw_brushFillVertex", fragment: "lw_brushFillFragment")
-        brushFillEditor = try builder.brush(.editor, vertex: "lw_brushFillVertex", fragment: "lw_brushFillFragment")
-        brushCompose = try builder.brush(.layer, vertex: "lw_brushLayerVertex", fragment: "lw_brushLayerFragment")
+        brushFill = try builder.brush(.layer, pass: .fill)
+        brushFillEditor = try builder.brush(.editor, pass: .fill)
+        brushCompose = try builder.brush(.layer, pass: .layer)
         paint = try PaintPipelines(builder)
         ssao = try builder.compute("lw_ssao")
         lines = try builder.compute("lw_lines")

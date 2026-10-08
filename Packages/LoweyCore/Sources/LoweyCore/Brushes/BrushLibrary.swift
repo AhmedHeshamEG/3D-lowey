@@ -1,22 +1,6 @@
 import Foundation
 import HmmDocuments
 
-/// A named, ordered group of brushes (Procreate's brush sets).
-public struct BrushSet: Codable, Hashable, Sendable, Identifiable {
-    public var id: String
-    public var name: String
-    public var brushes: [String]
-    /// The app's own sets: they can't be deleted, and their brushes can be edited and reset but not deleted.
-    public var builtIn: Bool
-
-    public init(id: String, name: String, brushes: [String] = [], builtIn: Bool = false) {
-        self.id = id
-        self.name = name
-        self.brushes = brushes
-        self.builtIn = builtIn
-    }
-}
-
 /// Everyone's brushes on this device: the built-in sets (with any edits), made and imported brushes, and how they're
 /// organised. Edits to a brush never reach strokes already drawn: a project keeps its own copy of each brush it used
 /// (`BrushKey`). Every change returns what it changed, so the view can select it.
@@ -215,7 +199,7 @@ public struct BrushLibrary: Codable, Hashable, Sendable {
 public struct BrushLibraryStore: Sendable {
     public let root: URL
     public static let file = "brushes.json"
-    public static let imagesFolder = "brushes"
+    public static let imagesFolder = BrushKey.imagesFolder
 
     public init(root: URL) {
         self.root = root
@@ -248,42 +232,5 @@ public struct BrushLibraryStore: Sendable {
             try data.write(to: url, options: .atomic)
         }
         return key
-    }
-}
-
-/// Content keys: the same brush or picture always gets the same key, so a project stores each brush once however many
-/// strokes use it, and an edited brush is a new key (old strokes keep the old one).
-public enum BrushKey {
-    public static func imageKey(for data: Data) -> String {
-        "\(BrushLibraryStore.imagesFolder)/\(hex(fnv(data))).png"
-    }
-
-    /// The key a project stores a brush under (its settings and pictures, not its place in the library).
-    public static func key(for brush: Brush) -> String {
-        var frozen = brush.clamped
-        frozen.id = ""
-        let data = (try? HmmJSON.encode(frozen)) ?? Data(brush.id.utf8)
-        return "b-" + hex(fnv(data))
-    }
-
-    static func fnv(_ data: Data) -> UInt64 {
-        var hash: UInt64 = 0xCBF2_9CE4_8422_2325
-        for byte in data {
-            hash ^= UInt64(byte)
-            hash = hash &* 0x0000_0100_0000_01B3
-        }
-        return hash
-    }
-
-    static func hex(_ value: UInt64) -> String {
-        let digits = String(value, radix: 16)
-        return String(repeating: "0", count: max(16 - digits.count, 0)) + digits
-    }
-}
-
-/// The brush a stroke names, from the project's frozen copies (Ink Pen when it names none, or one that's missing).
-public enum BrushResolver {
-    public static func brush(_ key: String?, in brushes: [String: Brush]) -> Brush {
-        key.flatMap { brushes[$0] } ?? BuiltInBrushes.inkPen
     }
 }
