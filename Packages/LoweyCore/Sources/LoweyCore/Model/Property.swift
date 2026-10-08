@@ -247,8 +247,9 @@ public struct PropertyKey: RawRepresentable, Hashable, Sendable, Codable, Compar
     /// Type and animatability of well-known keys.
     public var spec: PropertySpec? {
         if let spec = PropertySpec.known[self] { return spec }
-        // A joint's turn (`bone.<joint>`): keyed like any rotation.
-        return boneJoint != nil ? PropertySpec(type: .quat, animatable: true, label: "Bone turn") : nil
+        // A joint's turn (`bone.<joint>`): keyed like any rotation. How loosely it dangles (`dangle.<joint>`): a setting.
+        if boneJoint != nil { return PropertySpec(type: .quat, animatable: true, label: "Bone turn") }
+        return dangleJoint != nil ? PropertySpec(type: .float, animatable: false, label: "Dangle") : nil
     }
 }
 
@@ -308,6 +309,7 @@ public struct PropertySpec: Sendable, Hashable {
         .squash: PropertySpec(type: .float, animatable: true, label: "Squash & stretch"),
         .cartoon: PropertySpec(type: .float, animatable: false, label: "Cartoon springiness"),
         .autoBlink: PropertySpec(type: .bool, animatable: false, label: "Blink on its own"),
+        .breathe: PropertySpec(type: .float, animatable: false, label: "Breathe"),
         .lookPreset: PropertySpec(type: .enumeration, animatable: false, label: "Look"),
         .lineWeight: PropertySpec(type: .float, animatable: true, label: "Line weight"),
         .smoothing: PropertySpec(type: .float, animatable: false, label: "Shape smoothing"),

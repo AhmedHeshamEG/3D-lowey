@@ -212,8 +212,10 @@ public enum FaceRig {
     /// Characters (objects carrying face channels) in `scene`.
     static func faces(in scene: Scene) -> [ObjectID] {
         scene.objects.values.filter { object in
-            // Blobs have their own, cartoon rig (BlobRig).
-            object[.rigStandard] != nil && object[.rigStandard]?.stringValue != "blob" && channelKeys.contains { object[$0] != nil }
+            // Blobs have their own, cartoon rig (BlobRig). Drawn rigs and rigged models carry face parts as children.
+            let standard = object[.rigStandard]?.stringValue
+            guard standard != "blob", standard != nil || object.rig != nil || object.kind.assetID != nil else { return false }
+            return channelKeys.contains { object[$0] != nil }
         }.map(\.id)
     }
 
@@ -234,20 +236,20 @@ public enum FaceRig {
                 case "pupil.L", "pupil.R":
                     // A part's scale is its size for built puppets; true-size parts (blobs) say how far with `faceRange`.
                     let size = part[.faceRange]?.floatValue ?? rest.scale.x
-                    transform.position = rest.position + Vec3(value(.lookX) * 0.35, value(.lookY) * 0.25, 0) * size
+                    transform.position += transform.rotation.act(rest.rotation.inverse.act(Vec3(value(.lookX) * 0.35, value(.lookY) * 0.25, 0) * size))
                 case "brow.L", "brow.R":
                     let brows = value(.brows)
                     let sign: Double = role == "brow.L" ? 1 : -1
                     let size = part[.faceRange]?.floatValue ?? rest.scale.y
-                    transform.position = rest.position + Vec3(0, brows * 0.6, 0) * size
-                    transform.rotation = (rest.rotation * Quat(angle: -brows * 0.18 * sign, axis: .unitZ)).normalized
+                    transform.position += transform.rotation.act(rest.rotation.inverse.act(Vec3(0, brows * 0.6, 0) * size))
+                    transform.rotation = (transform.rotation * Quat(angle: -brows * 0.18 * sign, axis: .unitZ)).normalized
                 case "mouth":
                     // Without a shape set the mouth itself opens and widens.
                     let jaw = value(.jawOpen)
                     let wide = value(.mouthWide) + value(.smile) * 0.4
                     transform.scale = Vec3(rest.scale.x * (1 + wide * 0.25), rest.scale.y * (hasShapes ? 1 : 1 + jaw * 2.2), rest.scale.z)
                 case "jaw":
-                    transform.rotation = (rest.rotation * Quat(angle: value(.jawOpen) * 0.35, axis: .unitX)).normalized
+                    transform.rotation = (transform.rotation * Quat(angle: value(.jawOpen) * 0.35, axis: .unitX)).normalized
                 case "head":
                     let turn = Quat(eulerDegrees: Vec3(-value(.headPitch), value(.headYaw), value(.headRoll)))
                     transform.rotation = (transform.rotation * turn).normalized

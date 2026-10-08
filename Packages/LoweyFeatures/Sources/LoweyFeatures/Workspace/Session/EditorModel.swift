@@ -200,6 +200,8 @@ final class EditorModel {
     var faceActive = false
     var faceStatus: String?
     let faceMonitor = FaceMonitor()
+    /// The voice, triggers, the chosen joint and the picked take (`EditorModel+Live`).
+    let live = LiveState()
     let performance = PerformanceMonitor()
     private(set) var displayRevision = 0
     /// The Motion row's speed for the next motion tapped (`EditorModel+LoopMotion`).
@@ -306,6 +308,7 @@ final class EditorModel {
         pause()
         board?.close()
         stopFaceCapture()
+        stopVoice()
         stopVirtualCamera()
         clock.stop()
         chromeFadeTask?.cancel()

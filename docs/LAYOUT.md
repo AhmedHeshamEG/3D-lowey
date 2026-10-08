@@ -199,11 +199,15 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Clips | `[blob] Cast › section-Clips` |
 | Lip sync | `[blob] Cast › lip-sync` |
 | Face capture (front camera, iPhone) | `[blob] Cast › face-camera` |
+| The microphone drives the mouth (live voice), with its level | Cast ▸ Voice & face, beside the face capture buttons |
+| Triggers: one tap for an expression, a saved pose or a swap, a key each (hold one for its menu) | `[blob] Cast › add-trigger` |
+| Life: breathes; blinks on its own (with eyes); the head bone of a skeleton that isn't a person's | `[blob] Cast › life-breathe` |
+| Make a loose object a part of a drawn rig (it rides the nearest bone); a part's face role, its bone, take it off | Cast ▸ Make it part of / Part, with that object selected |
 | Rig, in three steps: Bones, Skin, Pose (each shows only its tools; a step opens when the one before is done) | `[cube] Cast › rig-step-bones` |
 | Bones: draw a bone through a limb, tail or rope of anything with a surface; draw along one again to replace it | `[cube] Cast › rig-draw-bone` |
 | Bones: rig as a person (the front view, tap eight dots or drag them, Rig); remove the rig | `[cube] Cast › rig-person` |
 | Skin: the weights come by themselves; paint weights, fit the weights to a new shape | Cast ▸ Rig ▸ Skin once there are bones |
-| Pose: drag the joints (the Select tool), reset the pose | Cast ▸ Rig ▸ Pose once the skin fits |
+| Pose: drag the joints (the Select tool), reset the pose; Dangle for the joint last touched (and everything below it) | Cast ▸ Rig ▸ Pose once the skin fits |
 | The Rig tool's bar: the three steps, the bone whose weight is painted and erase (Skin), done; the person rig's Rig and cancel | shown under the stage while Rig is on |
 | The weight brush's size and strength | the sidebar's two sliders while painting weights |
 | Pose any character by dragging its joints (IK); poses, mirror | the joints on the stage when a character is selected; Cast ▸ Poses |
@@ -247,6 +251,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Director view | `director-view` |
 | Joystick (on by default; its × hides it, Settings ▸ Stage brings it back) | `[cube] hide-joystick` |
 | Tool options (ink, solid shape, flipbook, Shadow Brush, scatter) | below the stage while that tool is on |
+| The trigger deck: the selected character's triggers under the fingers (press and hold, or tap one that stays) | below the stage with Select in the hand while the timeline is in Perform |
 
 ## The timeline
 
@@ -255,6 +260,8 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Compose | `[timeline] timeline-mode-compose` |
 | Keyframe: key, auto-key, pick keys, easing, graph editor | `[timeline] timeline-mode-keyframe › auto-key` |
 | Perform: record, Pencil roll | `[timeline] timeline-mode-perform › perform-record` |
+| Takes: every recording, newest on top, bright where it plays; drag across one to use it from there to there; its hold menu (rename, use all of it, use it in the loop, go to its start, delete) | above the lanes in Perform once something was recorded |
+| Draggers: a joint dragged while a take records is performed | the joints on the stage while recording |
 | Markers | `[timeline] Add marker` |
 | Sound and words: voiceover, music, effects, transcript | `[timeline] Sound and words` |
 | Loop, fit, snap to words, timeline settings | `[timeline] timeline-menu` |

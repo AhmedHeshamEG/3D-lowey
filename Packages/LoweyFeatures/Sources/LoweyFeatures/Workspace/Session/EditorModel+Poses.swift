@@ -67,7 +67,7 @@ extension EditorModel {
     /// Keyframe and Perform modes (in Compose a drag moves the whole character); drawn rigs and rigged models show
     /// theirs in every mode, since their joints are the only way to pose them.
     func ikHandlesOnScreen() -> [(handle: IKHandle, point: CGPoint)] {
-        guard let stage, tool == .select, !isPlaying, let character = poseCharacter else { return [] }
+        guard let stage, tool == .select, !isPlaying || performPhase == .recording, let character = poseCharacter else { return [] }
         let rigs = libraryRigs()
         if timelineMode == .compose, CharacterRig.of(character, in: displayed.scene, rigs: rigs)?.body != .bones { return [] }
         let pose = displayed.poses[character]
@@ -91,7 +91,11 @@ extension EditorModel {
         guard let target = GuideSurface.plane(origin: end, normal: normal).intersect(ray)?.point, target.distance(to: end) < 20 else { return }
         let changes = IKHandles.solve(handle, to: target, in: displayed.scene, pose: pose, rest: baseScene, rigs: rigs)
         guard !changes.isEmpty else { return }
-        perform(.setProperties(changes), coalesceKey: gesture)
+        if performPhase == .recording {
+            performIK(changes)
+        } else {
+            perform(.setProperties(changes), coalesceKey: gesture)
+        }
     }
 }
 

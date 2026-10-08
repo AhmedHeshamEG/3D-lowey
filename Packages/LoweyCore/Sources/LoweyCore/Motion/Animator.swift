@@ -15,14 +15,53 @@ public struct AnimatedScene: Sendable {
 /// Evaluates timelines. Pure and deterministic: the same document and time always give the same
 /// result, which is what makes preview and export identical and makes everything unit-testable.
 public enum Animator {
+    /// The scene with its keys, live values, behaviours, clips and hand-turned joints applied: everything that places
+    /// a skeleton, before anything follows through.
+    struct Posed {
+        var scene: Scene
+        var poses: [ObjectID: [Transform]]
+        var animated: Set<ObjectID>
+    }
+
     /// Evaluates `document` at `time`. `rigs` supplies skeletons and clips for characters.
     /// `overrides` are live values (a slider or your face being performed) applied on top of the keys, before
     /// behaviours, clips and faces — so a performed face moves the character's eyes and mouth like keyed values do.
+    /// `live` is what those values were a moment ago, for things that follow through (dangling bones).
     public static func evaluate(_ document: Document, at time: Double, rigs libraryRigs: [AssetID: RigAsset] = [:],
-                                overrides: [ObjectID: [PropertyKey: PropertyValue]] = [:]) -> AnimatedScene {
+                                overrides: [ObjectID: [PropertyKey: PropertyValue]] = [:], live: LivePast? = nil) -> AnimatedScene {
         let timeline = document.scene.timeline
         // Built-in humanoid clips play on any humanoid (built characters and imported rigs).
         let rigs = timeline.clipTracks.isEmpty ? libraryRigs : libraryRigs.merging(BuiltinClips.rigs) { library, _ in library }
+        var state = posed(document, at: time, rigs: rigs, overrides: overrides)
+        // Loose bones swing behind the pose; then the character breathes.
+        Dangle.apply(to: &state, document: document, time: time, rigs: rigs, overrides: overrides, live: live)
+        Idle.breathe(in: &state, time: time, rigs: rigs)
+        // Parts ride their bones; drawn puppets bend their strokes.
+        LiveRig.carryParts(in: &state, rigs: rigs)
+        RigPoses.bend(&state.scene, poses: state.poses, animated: &state.animated)
+        // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
+        Idle.blink(in: &state, timeline: timeline, time: time, overrides: overrides)
+        var scene = state.scene
+        var animated = state.animated
+        FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
+        // Blobs: their clips (dials, lift, lean), then the cartoon face (springy, squash & stretch, auto blink).
+        var blobLive = overrides
+        let rates = FrameRates(document)
+        let current = scene
+        BlobClips.apply(to: &scene, document: document, sampleTime: { rates.sampleTime(time, for: $0, in: current) }, overrides: &blobLive,
+                        animated: &animated)
+        BlobRig.apply(to: &scene, document: document, time: time, overrides: blobLive, animated: &animated)
+        // Rubber-hose limbs follow wherever their hands went.
+        RubberHose.apply(to: &scene, animated: &animated)
+        let camera = timeline.cutCamera(at: time).flatMap { scene.objects[$0] != nil ? $0 : nil }
+            ?? scene.activeCamera.flatMap { scene.objects[$0] != nil ? $0 : nil }
+        return AnimatedScene(time: time, scene: scene, animated: animated, camera: camera, poses: state.poses)
+    }
+
+    /// Keys, live values, behaviours, clips, joints turned by hand, then the head and hand channels on skeletons.
+    static func posed(_ document: Document, at time: Double, rigs: [AssetID: RigAsset],
+                      overrides: [ObjectID: [PropertyKey: PropertyValue]]) -> Posed {
+        let timeline = document.scene.timeline
         var scene = document.scene
         let palette = document.palette
         var animated = Set<ObjectID>()
@@ -72,21 +111,11 @@ public enum Animator {
                 animated.insert(track.target)
             }
         }
-        // Skeletons posed by hand (`bone.<joint>`) over their clips; drawn puppets bend their strokes.
-        RigPoses.apply(to: &scene, poses: &poses, rigs: rigs, animated: &animated)
-        // Faces: blink, brows, look, mouth shapes (lip sync), head turns.
-        FaceRig.apply(to: &scene, base: document.scene, animated: &animated)
-        // Blobs: their clips (dials, lift, lean), then the cartoon face (springy, squash & stretch, auto blink).
-        var blobLive = overrides
-        let current = scene
-        BlobClips.apply(to: &scene, document: document, sampleTime: { rates.sampleTime(time, for: $0, in: current) }, overrides: &blobLive,
-                        animated: &animated)
-        BlobRig.apply(to: &scene, document: document, time: time, overrides: blobLive, animated: &animated)
-        // Rubber-hose limbs follow wherever their hands went.
-        RubberHose.apply(to: &scene, animated: &animated)
-        let camera = timeline.cutCamera(at: time).flatMap { scene.objects[$0] != nil ? $0 : nil }
-            ?? scene.activeCamera.flatMap { scene.objects[$0] != nil ? $0 : nil }
-        return AnimatedScene(time: time, scene: scene, animated: animated, camera: camera, poses: poses)
+        // Skeletons posed by hand (`bone.<joint>`) over their clips.
+        RigPoses.resolve(scene, poses: &poses, rigs: rigs, animated: &animated)
+        var state = Posed(scene: scene, poses: poses, animated: animated)
+        LiveRig.apply(to: &state, rigs: rigs)
+        return state
     }
 
     /// Keyed values only (no behaviours, no clips) — cheap, used for lag history and key editing.

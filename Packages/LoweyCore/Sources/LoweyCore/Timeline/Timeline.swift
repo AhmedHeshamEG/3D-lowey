@@ -323,6 +323,8 @@ public struct Timeline: Hashable, Sendable {
     public var captions: CaptionSettings?
     /// Frame-by-frame drawings over the shot.
     public var flipbooks: [FlipbookTrack] = []
+    /// Recorded performances, kept whole so the comp can be chosen again (`TakeComp`).
+    public var takes: [Take] = []
 
     public init(
         fps: Int = 30, duration: Double = 10, stepping: Stepping = .onOnes, tracks: [Track] = [],
@@ -425,7 +427,7 @@ public struct Timeline: Hashable, Sendable {
 
 extension Timeline: Codable {
     private enum CodingKeys: String, CodingKey {
-        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts, effects, captions, flipbooks
+        case fps, duration, stepping, tracks, markers, loop, cuts, behaviors, clipTracks, audio, transcripts, effects, captions, flipbooks, takes
     }
 
     public init(from decoder: Decoder) throws {
@@ -444,6 +446,7 @@ extension Timeline: Codable {
         effects = try c.decodeIfPresent([ScreenEffect].self, forKey: .effects) ?? []
         captions = try c.decodeIfPresent(CaptionSettings.self, forKey: .captions)
         flipbooks = try c.decodeIfPresent([FlipbookTrack].self, forKey: .flipbooks) ?? []
+        takes = try c.decodeIfPresent([Take].self, forKey: .takes) ?? []
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -462,5 +465,6 @@ extension Timeline: Codable {
         if !effects.isEmpty { try c.encode(effects, forKey: .effects) }
         try c.encodeIfPresent(captions, forKey: .captions)
         if !flipbooks.isEmpty { try c.encode(flipbooks, forKey: .flipbooks) }
+        if !takes.isEmpty { try c.encode(takes, forKey: .takes) }
     }
 }

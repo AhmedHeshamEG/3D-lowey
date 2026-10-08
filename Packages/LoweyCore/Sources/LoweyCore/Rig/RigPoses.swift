@@ -4,20 +4,25 @@ import Foundation
 /// the clip's pose (or the rest pose), then every joint turned by hand (`bone.<joint>`) on top. Drawn 2D puppets bend
 /// their strokes here, so the renderer, picking and every export see the bent drawing.
 public enum RigPoses {
-    static func apply(to scene: inout Scene, poses: inout [ObjectID: [Transform]], rigs: [AssetID: RigAsset], animated: inout Set<ObjectID>) {
+    /// Every skeleton's pose: its clip (or its rest), then the joints turned by hand.
+    static func resolve(_ scene: Scene, poses: inout [ObjectID: [Transform]], rigs: [AssetID: RigAsset], animated: inout Set<ObjectID>) {
         for (id, object) in scene.objects {
             if let rig = object.rig {
-                let pose = posed(poses[id] ?? rig.skeleton.restPose, skeleton: rig.skeleton, by: object)
-                poses[id] = pose
-                if case let .drawing(recipe) = object.kind, let weights = rig.points,
-                   let bent = bend(recipe, weights: weights, bind: rig.skeleton.modelRest, pose: rig.skeleton.modelSpace(pose)) {
-                    scene.objects[id]?.kind = .drawing(bent)
-                    animated.insert(id)
-                }
+                poses[id] = posed(poses[id] ?? rig.skeleton.restPose, skeleton: rig.skeleton, by: object)
             } else if let asset = object.kind.assetID, let rig = rigs[asset], object.properties.keys.contains(where: { $0.boneJoint != nil }) {
                 poses[id] = posed(poses[id] ?? rig.skeleton.restPose, skeleton: rig.skeleton, by: object)
                 animated.insert(id)
             }
+        }
+    }
+
+    /// Drawn puppets bend their strokes to their final pose.
+    static func bend(_ scene: inout Scene, poses: [ObjectID: [Transform]], animated: inout Set<ObjectID>) {
+        for (id, object) in scene.objects {
+            guard let rig = object.rig, let pose = poses[id], case let .drawing(recipe) = object.kind, let weights = rig.points,
+                  let bent = bend(recipe, weights: weights, bind: rig.skeleton.modelRest, pose: rig.skeleton.modelSpace(pose)) else { continue }
+            scene.objects[id]?.kind = .drawing(bent)
+            animated.insert(id)
         }
     }
 

@@ -1556,3 +1556,106 @@ target to host it (a stub).
 **D-201 — What the board doesn't do yet.** Strokes blend normally (a brush's other blend modes need board layers);
 the MCP bridge has no board tools; pictures decode on the main thread the first time they show. All three are in the
 backlogs, none is offered in the UI.
+
+## Maquette 0.10 — M10, live performance
+
+**D-202 — Every recording is a take, kept whole; the tracks are the comp.** A Perform recording used to write its keys
+over whatever was there: the second try destroyed the first. Now a recording is stored as a `Take` in the timeline
+(the keys every performed channel got, its range, its name) *and* written into the tracks where it was performed. The
+tracks stay what plays, so the animator, exports, the graph editor and every key tool see an ordinary timeline and
+nothing about playback changed. Each take remembers where the comp plays it (`used`), kept true by the commands that
+change the comp. Deleting a take leaves what plays. *Rejected:* takes as layers the animator mixes at playback (a
+second evaluation path, and every key tool would need to know which take a key belongs to); keeping only the last N
+takes (law 5).
+
+**D-203 — Comping is dragging across the take you want.** The takes sit above the lanes in Perform, newest on top,
+bright where they play. Drag across one and that stretch of the timeline plays it; touch and hold for *Use all of it*,
+*Use it in the loop*, *Go to its start*, Rename and Delete. Using a take over a stretch replaces the keys of its
+channels there, puts the take's value on both ends, and holds what played before one frame outside each end, so the
+neighbours don't bend toward the new stretch. One undo step. *Rejected:* a take picker per range with split points to
+place first (a decision wall: the drag says both things at once); crossfades at the joins (a performance cut on a
+frame reads as intended; a blend of two smiles doesn't).
+
+**D-204 — Dangle is a spring's answer to the past, not a simulation.** A loose bone's tip is where a damped spring
+would be after following, for the last second or so, where the rest pose put that tip (a convolution, the way the
+Blob's face springs work). The bone then points at it: it trails when the body moves, swings past when
+it stops, and settles exactly as drawn. The same time always gives the same picture, whatever was played before, so a
+scrubbed frame, the stage and an export agree, and nothing is stored or stepped. One slider (how loose: slow and
+bouncy to quick and nearly stiff); a joint is loosened with everything below it, and what hangs further down lags
+more by itself because it travels further. No gravity: the pose you drew is the pose it rests in. Swings are capped
+at 85°. *Rejected:* a stepped rigid-body chain (its state depends on where playback started, so preview and export
+drift apart, and scrubbing needs a re-simulation from zero); gravity and wind sliders (three more numbers before a
+tail wags; they can come if someone asks); dangle on objects without bones (where is its pivot? draw a bone through
+it: that question is answered by the stroke).
+
+**D-205 — What was live a moment ago is part of the past.** A head turned by the camera isn't keyed yet, so the keyed
+past doesn't know it moved. The editor keeps the last 1.4 s of live values (`LivePast`) and hands them to the animator
+while a face, a voice or a recording is on; a dangling ear then follows a live nod. With nothing live the past is the
+timeline alone, which is all an export ever sees. *Rejected:* dangle only after recording (the performer couldn't
+see their own follow-through).
+
+**D-206 — The face and hand channels drive any skeleton.** The channels a Blob and a built Puppet answered to
+(`headYaw/Pitch/Roll`, `handLeft/Right X/Y`) now also turn the head and move the hands of drawn rigs, "Rig as a
+person" rigs and rigged models (`LiveRig`): a humanoid's neck takes a third of a head turn and its head the rest; a
+skeleton that isn't a person's turns the joint the character names as its head (Cast ▸ Life); a drawing tilts in its
+own plane (roll, and half the yaw), since turning a flat puppet out of its plane only squashes it. Hands go where the
+channels say by IK from the shoulder, elbows back, eased in from the rest pose. The channels use the picture's sides
+(`FaceSolver`), so `handLeft` is the arm on the model's −x. Built Puppets' arms follow the hand channels too now (in 2.0 only
+a Blob's did). Performed or keyed, it is the same path. *Rejected:* a second set of "live" properties per skeleton
+type (a take recorded on one character couldn't be pasted onto another).
+
+**D-207 — Parts ride a bone, and can be parts of a face.** Select a loose object, Cast ▸ *Make it part of* a drawn
+rig: it goes inside the character, stays where it is, and rides the bone nearest to it (`attachBone`). Give it a face
+role (an eye, a pupil, a brow, the mouth, the jaw, or one mouth of a set that takes turns) and it answers to the face
+channels exactly as a built Puppet's parts do: that is how a drawn 2D puppet gets eyes that blink and a mouth that
+talks, and how a prop sits in a hand. `FaceRig` now moves parts from where their bone carried them. *Rejected:* a
+part picker on the stage (another gesture mode; the selection already says which object); attaching by a "socket"
+object per bone (more things in the outliner than there are things).
+
+**D-208 — Breathing and blinking are functions of time.** *Breathes* (a slider, off by default) fills a humanoid's
+chest and, for anything else, lifts and narrows the whole body by about a percent, every 3.6 s, each character
+starting somewhere else in its breath. *Blinks on its own* is the Blob's own blink for anything with eye parts; a
+Blob has it by default, others once asked (so 0.9 projects look as they did). Keyed or performed blinks win. Both are
+computed from the time and the character's id: no state, the same in every export.
+
+**D-209 — Triggers live on the character.** A trigger is an expression, one of the character's saved poses, or a swap
+(show one thing, hide the others it takes turns with), kept on the character like its poses, so it travels with it. A
+new trigger takes the first free key of 1…0. While a take records, a trigger is performed: down is the state, up is
+back to what was there (*Only while held*) or it stays until pressed again (*Stay on when let go*); it becomes held
+keys at exactly those moments, never smoothed. One trigger of a kind is on at a time. Outside a recording a trigger is
+an edit at the playhead like any other (keyed in Keyframe mode). The deck sits under the stage while the timeline is
+in Perform, under the fingers; the keys work through the menu bar, so they show in the ⌘-hold overlay, and since a
+menu command only hears a key go down, a second press lets go. *Rejected:* triggers in the project rather than on the
+character (duplicate the character and its deck is gone); recording triggers as markers that fire at playback (a
+second kind of animation data).
+
+**D-210 — Draggers: a joint dragged while a take records is performed.** The joints stay on the stage during a
+recording; drag a hand and it follows the finger (IK, as when posing), and the take keeps the turns of that chain.
+Lift and it stays where it was left. One joint at a time. *Rejected for now:* return-to-rest on release and two hands
+at once (backlog: both need the stage's drag to become per-touch).
+
+**D-211 — The voice gives the mouth its shape, live, from the sound alone.** Cast ▸ *Mouth from the microphone*: the
+mouth opens with loudness (measured against the room's quiet and this voice's loud, learnt as it listens) and takes a
+shape from where the sound's energy sits: open vowels, "ee", "oo/oh", hisses; two blocks must agree before the shape
+changes. It is the shape of the sound, not of the words: lip sync from the transcript (2.0) stays the exact one and
+can replace a performed mouth afterwards. Nothing is recorded, recognised or sent. While the microphone is on it owns
+the mouth and the camera keeps the rest of the face. Recording a voiceover is still its own button: the two use the
+microphone differently, and a take of mouth shapes shouldn't silently add a sound file. *Rejected:* on-device speech
+recognition for live visemes (a second or more behind the voice); a learnt viseme model (a model file to ship and to
+be wrong in three languages).
+
+**D-212 — Hand tracking is the wrists.** The hands come from the body tracker's shoulders and wrists (front camera or
+iPhone), as in 2.0, now on every humanoid. Fingers aren't tracked: no character here has fingers to move.
+
+**D-213 — The iPhone companion stays what it is.** The companion screen (2.0) already makes an iPhone with Face ID the
+face camera over the local network. It now also sends eyes-wide and the brows' angle, which the Blob has dials for.
+
+**D-214 — Homes for live performance (LAYOUT.md).** Everything lives where characters already do. Cast: the microphone
+beside the face buttons, then *Triggers* and *Life* for the selected character, and *Make it part of* / *Part* for a
+selected object. Cast ▸ Rig ▸ Pose: *Dangle* for the joint last touched on the stage. Under the stage (the tool
+options' place) with Select in the hand and the timeline in Perform: the trigger deck. Above the lanes in Perform: the
+takes. No new button in the clusters. *Rejected:* a Perform workspace of its own (law 2).
+
+**D-215 — Schema 11.** Timelines gain `takes` and the journal the `setTakes` command; objects gain the optional
+properties `dangle.<joint>`, `breathe`, `attachBone`, `liveHead` and `triggers`. Files from schema 10 open unchanged;
+Maquette 0.9 refuses schema 11.

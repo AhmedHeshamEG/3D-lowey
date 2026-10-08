@@ -33,7 +33,10 @@ struct TimelinePane: View {
                             }
                         }
                         .frame(height: TimelineLayout.rulerHeight)
-                        TimelineLanes(editor: editor, layout: layout, width: width, height: max(geometry.size.height - TimelineLayout.rulerHeight, 0))
+                        let takes = TakesStrip.height(for: editor)
+                        if takes > 0 { TakesStrip(editor: editor, width: width).frame(height: takes) }
+                        TimelineLanes(editor: editor, layout: layout, width: width,
+                                      height: max(geometry.size.height - TimelineLayout.rulerHeight - takes, 0))
                     }
                     .overlay(alignment: .topLeading) {
                         PlayheadLine(editor: editor, width: width, height: geometry.size.height)

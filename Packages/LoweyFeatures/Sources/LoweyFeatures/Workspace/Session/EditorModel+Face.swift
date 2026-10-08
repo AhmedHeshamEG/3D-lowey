@@ -8,10 +8,12 @@ import QuartzCore
 /// while a Perform take records, the values are captured like any performed value.
 extension EditorModel {
     /// The character whose face is performed.
-    var faceTarget: ObjectID? { selectedPuppet ?? selectedCharacter?.object.id ?? selection.first.flatMap { isBlob($0) ? $0 : nil } }
+    var faceTarget: ObjectID? { selectedPuppet ?? selectedCharacter?.object.id ?? poseCharacter }
 
     func performFace(_ values: [PropertyKey: Double], detected: Bool) {
         guard let target = faceTarget else { return }
+        // While the microphone drives the mouth, the camera leaves it alone.
+        let values = live.voiceOn ? values.filter { $0.key != .jawOpen && $0.key != .mouthWide } : values
         for (key, value) in values {
             propertyOverride[target, default: [:]][key] = .float(value)
         }
@@ -41,12 +43,7 @@ extension EditorModel {
         facePerformer.recalibrate()
         faceMonitor.clear()
         faceMonitor.source = useIPhone ? "iPhone" : "Camera"
-        faceClock.onTick = { [weak self] _ in
-            guard let self, faceDirty else { return }
-            faceDirty = false
-            if !isPlaying { refreshDisplay() }
-        }
-        faceClock.start()
+        startLiveClock()
         if useIPhone { startFaceLink() } else { startFrontCamera() }
         faceActive = true
         updateStageClock()
@@ -131,14 +128,14 @@ extension EditorModel {
         faceCapture = nil
         faceLink?.stop()
         faceLink = nil
-        faceClock.stop()
+        if !live.voiceOn { faceClock.stop() }
         faceDirty = false
         faceMonitor.clear()
         guard faceActive else { return }
         faceActive = false
         faceStatus = nil
         if let target = faceTarget {
-            for key in PropertyKey.faceChannels {
+            for key in PropertyKey.faceChannels + [.eyeWide, .browAngle] where !live.voiceOn || (key != .jawOpen && key != .mouthWide) {
                 propertyOverride[target]?[key] = nil
             }
         }

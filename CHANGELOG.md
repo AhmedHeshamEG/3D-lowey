@@ -3,6 +3,25 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.10] — Maquette — live performance (phase M10)
+
+- **Your face drives any character.** Front camera or iPhone: drawn rigs, person rigs, 2D drawn puppets and rigged
+  models turn their head with yours now, not only Blobs and Puppets. A skeleton that isn't a person's can name the
+  bone that is its head (Cast ▸ Life).
+- **Your hands move its hands**: on every humanoid, by IK.
+- **Your voice shapes its mouth**, live (Cast ▸ Mouth from the microphone). Nothing is recorded or sent.
+- **Parts**: make a loose object part of a drawn rig and it rides the nearest bone; give it a face role and it
+  blinks, looks and talks with the face. A drawn puppet gets its face this way; a prop sits in a hand.
+- **Life**: characters breathe (a slider) and blink on their own.
+- **Triggers**: one tap or the keys 1…0 for an expression, a saved pose or a swap of what it holds. While a take
+  records they're performed, held or switched; the deck sits under the stage in Perform.
+- **Draggers**: while a take records, drag a hand and it follows; the take keeps it.
+- **Dangle** (Cast ▸ Rig ▸ Pose): touch a joint, slide Dangle. Hair, ears and tails trail and swing, and settle as
+  drawn. The same on the stage and in every export.
+- **Takes**: every recording is kept. They're listed above the lanes in Perform; drag across one to use it from there
+  to there.
+- The iPhone companion also sends eyes-wide and the brows' angle. Project files are schema 11.
+
 ## [0.9] — Maquette — the Schizzo board (phase M9)
 
 - **A board in every project** (Actions ▸ Board): an endless 2D sheet for planning before you build. Sketch on it with

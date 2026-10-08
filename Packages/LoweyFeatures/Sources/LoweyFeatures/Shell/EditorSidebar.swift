@@ -89,7 +89,8 @@ struct ToolOptionsBar: View {
         case .scatter: ScatterOptionsBar(editor: editor)
         case .model: ModelOptionsBar(editor: editor)
         case .rig: RigOptionsBar(editor: editor)
-        case .select, .lasso: EmptyView()
+        case .select: TriggerDeckBar(editor: editor)
+        case .lasso: EmptyView()
         }
     }
 }

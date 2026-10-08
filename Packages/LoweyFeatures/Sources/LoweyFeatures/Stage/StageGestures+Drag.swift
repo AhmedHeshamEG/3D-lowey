@@ -34,6 +34,10 @@ extension StageGestures {
     }
 
     private func beginDrag(at point: CGPoint, editor: EditorModel, stage: StageView) -> DragKind {
+        if editor.performPhase == .recording, editor.tool == .select, !operatesCamera, let handle = editor.ikHandle(at: point) {
+            editor.chooseJoint(of: handle)
+            return .ik(handle)
+        }
         if isRecordingPerform {
             let planeY = editor.selectionPivot?.y ?? 0
             editor.performTouchBegan([.position])
@@ -60,7 +64,10 @@ extension StageGestures {
 
     private func beginSelectDrag(at point: CGPoint, editor: EditorModel, stage: StageView) -> DragKind {
         guard !editor.directorView else { return .orbit }
-        if let handle = editor.ikHandle(at: point) { return .ik(handle) }
+        if let handle = editor.ikHandle(at: point) {
+            editor.chooseJoint(of: handle)
+            return .ik(handle)
+        }
         if let time = editor.motionPathKey(at: point) {
             editor.setTime(time)
             return .pathKey(time: time)
@@ -199,12 +206,14 @@ extension StageGestures {
             scatterRadius = 0
         case .perform:
             editor.performTouchEnded()
+        case .ik:
+            if editor.performPhase == .recording { editor.performTouchEnded() }
         case .pushPull:
             editor.endPull(commit: !cancelled)
         case .modelLasso:
             if !cancelled { editor.pickElements(inLoop: editor.lassoPoints) }
             editor.lassoPoints = []
-        case .turn, .orbit, .aimCamera, .moveOverlay, .pathKey, .ik, .none:
+        case .turn, .orbit, .aimCamera, .moveOverlay, .pathKey, .none:
             break
         }
         editor.endGesture()

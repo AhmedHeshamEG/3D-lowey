@@ -91,6 +91,9 @@ public extension EditCommand {
         case let .setFlipbooks(edits):
             return Self.applySetFlipbooks(edits, in: &document)
 
+        case let .setTakes(edits):
+            return Self.applySetTakes(edits, in: &document)
+
         case let .replaceScene(scene):
             return Self.applyReplaceScene(scene, in: &document)
 
@@ -266,6 +269,24 @@ public extension EditCommand {
             document.scene.timeline.flipbooks = flipbooks
         }
         return (.setFlipbooks(inverse.reversed()), ChangeSet(scene: true))
+    }
+
+    private static func applySetTakes(_ edits: [TakeEdit], in document: inout Document) -> Applied {
+        var inverse: [TakeEdit] = []
+        for edit in edits {
+            var takes = document.scene.timeline.takes
+            if let existing = takes.firstIndex(where: { $0.id == edit.id }) {
+                inverse.append(TakeEdit(id: edit.id, take: takes[existing], index: existing))
+                if let take = edit.take { takes[existing] = take } else { takes.remove(at: existing) }
+            } else if let take = edit.take {
+                takes.insert(take, at: min(max(edit.index ?? takes.count, 0), takes.count))
+                inverse.append(TakeEdit(id: edit.id, take: nil))
+            } else {
+                continue
+            }
+            document.scene.timeline.takes = takes
+        }
+        return (.setTakes(inverse.reversed()), ChangeSet(scene: true))
     }
 
     // MARK: Hierarchy primitives

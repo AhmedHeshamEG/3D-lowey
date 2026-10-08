@@ -20,9 +20,40 @@ reference and stays.
 | One skeleton system, draw a bone (bone-heat weights, weight painting), rig as a person, 2D drawn puppets, pose by dragging with IK, pose library, built-in clips on any humanoid | **0.7.** The person rig is placed by eight taps: Apple's body-pose model can't be checked on CI (D-168). |
 | Fixes and touch: the silent load meter, one hold menu everywhere, Pencil or hand, the Motion row, the colour well, rigging in three steps with the bone redrawn | **0.8** |
 | The Schizzo board: brush strokes, pictures, notes, arrows and frames on an endless sheet in every project; pins as reference cards and scene planes; the Sketch template | **0.9.** In hmm-kit (`HmmBoard`, `HmmBoardUI`), so Cutaway mounts the same board (D-200). Strokes blend normally; no MCP tools yet (D-201). |
-| Live performance, sculpting, mechanisms + AR, web layer, house kit | M10–M14: all in 1.0 (CONTEXT §10.10) |
+| Live performance: the face, the voice and the hands driving any puppet (3D and 2D), blinking and breathing, triggers, draggers, dangling bones, takes and comping, the iPhone as the face camera | **0.10.** The voice gives the mouth the shape of the sound, not of the words (D-211); hands are the wrists (D-212); draggers stay where they're left (D-210). |
+| Sculpting, mechanisms + AR, web layer, house kit | M11–M14: all in 1.0 (CONTEXT §10.10) |
 | The Pencil page, sketching that talks back, the flipbook's experience, waiting, the smoothness pass | M15 |
 | Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, Report a problem | M16 |
+
+### Live performance (0.10)
+
+Adobe Character Animator's killer features, on any character in the scene (CONTEXT §10.6).
+
+- **Your face drives any puppet.** Cast ▸ Voice & face, *Front camera* or *My iPhone* (the companion screen: an
+  iPhone with Face ID as the face camera, over the local network). Blobs and built Puppets answered already; now
+  drawn rigs, "Rig as a person" rigs and rigged models turn their head with yours (a neck takes a third of it), and a
+  skeleton that isn't a person's turns the bone Cast ▸ Life names as its head. A 2D drawn puppet tilts in its own
+  plane (D-206).
+- **Your hands move its hands.** The body tracker's wrists bring a humanoid's hands out and up by IK, elbows back;
+  Blobs as before. Fingers aren't tracked (D-212).
+- **Your voice shapes its mouth.** *Mouth from the microphone*: loudness opens the jaw, the sound picks the shape
+  (open, "ee", "oo", a hiss), a few dozen times a second, with nothing recorded or sent. It's the shape of the sound;
+  lip sync from the transcript is still the exact one (D-211).
+- **Parts.** Select a loose object, Cast ▸ *Make it part of* a drawn rig: it rides the nearest bone. Give it a face
+  role (eye, pupil, brow, mouth, jaw, or one mouth of a set) and it blinks, looks and talks with the face: this is how
+  a drawn puppet gets a face, and how a prop sits in a hand (D-207).
+- **Life.** *Breathes* (a slider) and *Blinks on its own*: both come from the time alone, so they're the same in every
+  export (D-208).
+- **Triggers.** One tap, or the keys 1…0: an expression, a saved pose, or a swap of what it holds. Performed while a
+  take records (*Only while held*, or *Stay on when let go*); an edit at the playhead otherwise. The deck sits under
+  the stage while the timeline is in Perform (D-209).
+- **Draggers.** While a take records, drag a joint and it follows the finger; the take keeps it (D-210).
+- **Dangle.** Cast ▸ Rig ▸ Pose: touch a joint, slide *Dangle*. That bone and everything below it hang loose: they
+  trail when the character moves and swing when it stops, with your live head and hands too. No simulation: the same
+  time always gives the same picture (D-204, D-205).
+- **Takes and comping.** Every recording is kept as a take, above the lanes in Perform. The newest plays where it was
+  performed; drag across any take to use it from there to there, one undo step. Rename, delete, use all of it or just
+  the loop from its hold menu (D-202, D-203).
 
 ### The Schizzo board (0.9)
 
@@ -376,7 +407,8 @@ One **Cast** panel and one set of verbs for every kind of character:
   mirror; IK handles (two-bone limbs, blob hands). Maquette 0.7 puts all of them, and drawn rigs, on one skeleton
   system (Rigging, above).
 - Lip sync from word timings (English dictionary plus rules, Arabic, Italian), face capture with the front camera or
-  an iPhone companion, rest pose, hands through body tracking.
+  an iPhone companion, rest pose, hands through body tracking. Maquette 0.10 puts the face, the voice and the hands on
+  every character, with triggers, draggers, dangle and takes (Live performance, above).
 
 ## 6. Animation
 

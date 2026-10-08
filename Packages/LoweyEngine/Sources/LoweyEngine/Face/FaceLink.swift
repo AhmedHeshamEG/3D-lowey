@@ -343,6 +343,9 @@ public final class FaceLinkSender: NSObject, ARSessionDelegate {
             PropertyKey.mouthWide.rawValue: max(-1, min(1, wide)),
             PropertyKey.lookX.rawValue: lookX,
             PropertyKey.lookY.rawValue: lookY,
+            // The Blob's cartoon dials: eyes popping wide, brows knitting (angry) or lifting in the middle (worried).
+            PropertyKey.eyeWide.rawValue: (shape(.eyeWideLeft) + shape(.eyeWideRight)) / 2,
+            PropertyKey.browAngle.rawValue: max(-1, min(1, (shape(.browDownLeft) + shape(.browDownRight)) / 2 - shape(.browInnerUp))),
             // The face's +x is your left: turning to your left is a positive turn about y, which on the mirror is to
             // the left (negative for the character). Tilts likewise.
             PropertyKey.headYaw.rawValue: -euler.y,
