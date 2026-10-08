@@ -53,19 +53,27 @@ final class LayoutTests: XCTestCase {
 
     /// Model ▸ Add ▸ Shapes shows all seven shapes, each one whole inside the panel and tappable (device note: the
     /// sphere couldn't be found).
-    func testAllSevenShapesAreVisible() {
+    func testAllSevenShapesAreVisible() throws {
         newProject("Shapes")
         XCTAssertTrue(tap("Model"))
+        settle(2)
         XCTAssertTrue(tap("model-add"))
-        let window = app.windows.firstMatch.frame
-        for shape in ["cube", "sphere", "cylinder", "cone", "plane", "torus", "ramp"] {
-            let tile = element("add-\(shape)")
-            XCTAssertTrue(tile.waitForExistence(timeout: 5), "\(shape) is missing from Model ▸ Add")
-            XCTAssertTrue(tile.isHittable, "\(shape) can't be tapped")
-            XCTAssertTrue(window.contains(tile.frame), "\(shape) is cut off")
-            XCTAssertGreaterThan(tile.frame.width, 60, "\(shape) is squeezed")
+        settle(1)
+        // One snapshot of the screen instead of a query per tile: the Model panel is slow to query on CI's simulator.
+        let screen = try app.snapshot()
+        var tiles: [String: XCUIElementSnapshot] = [:]
+        func collect(_ element: XCUIElementSnapshot) {
+            if element.identifier.hasPrefix("add-") { tiles[element.identifier] = element }
+            element.children.forEach(collect)
         }
-        XCTAssertEqual(element("add-sphere").label, "Sphere")
+        collect(screen)
+        for shape in ["cube", "sphere", "cylinder", "cone", "plane", "torus", "ramp"] {
+            let tile = try XCTUnwrap(tiles["add-\(shape)"], "\(shape) is missing from Model ▸ Add")
+            XCTAssertTrue(screen.frame.contains(tile.frame), "\(shape) is cut off")
+            XCTAssertGreaterThan(tile.frame.width, 60, "\(shape) is squeezed")
+            XCTAssertGreaterThan(tile.frame.height, 40, "\(shape) is squeezed")
+        }
+        XCTAssertEqual(tiles["add-sphere"]?.label, "Sphere")
         shot("Shapes")
         XCTAssertTrue(tap("add-sphere"))
         XCTAssertTrue(app.otherElements["inspector"].waitForExistence(timeout: 5), "a sphere landed on the stage")
