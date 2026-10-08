@@ -19,6 +19,7 @@ continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the m
 - **Rigging in three steps**: Bones → Skin → Pose, each with only its own tools. A drawn bone runs through the middle
   of the part it's drawn on (also where an arm lies in front of the body, or a tail goes into it), bends where the
   stroke bends, shows as you draw it, and replaces a bone you draw again.
+- Fixed: an object that already had drawn bones refused more of them, and its Rig tools were replaced by a sentence.
 - The sphere is findable: Model's second page is called **Edit**, and the sphere's tile looks like a ball.
 - Panels opened from the corners sit above the sidebar.
 - The inspector can be docked at the side (Settings ▸ Stage).
