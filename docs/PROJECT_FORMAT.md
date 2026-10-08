@@ -16,11 +16,14 @@ My film.maquette/                 (3D-lowey's .lowey packages open too, and are 
   assets/                         library models the project carries (written by "Share as one file"), media,
                                   brushes/<hash>.png: the pictures of the brushes its strokes use, and
                                   paint/<hash>.png, paint/<hash>.uv: painted objects' tiles and unwraps,
-                                  rigs/<hash>.skin: rigged objects' weights
+                                  rigs/<hash>.skin: rigged objects' weights,
+                                  references/<hash>.png: pictures pinned from the board
   audio/                          voiceovers and sounds
   renders/                        exports kept with the project
   thumbnail.png, thumbnail-loop.gif   the Home card (a still, and the model turning once in its Look)
-  workspace.json                  how the project shows: the timeline, snapping, the grid, the section view (not part of undo)
+  workspace.json                  how the project shows: the timeline, snapping, the grid, the section view, pinned
+                                  reference cards (not part of undo)
+  board/                          the Schizzo board, once it has been opened (below)
 ```
 
 Beside the packages, the projects folder holds `gallery.json`: Home's stacks and sort order (below).
@@ -294,19 +297,48 @@ falls back to its default; unknown keys are ignored. Plain JSON, no envelope.
 | Key | Type | Meaning |
 |---|---|---|
 | `schemaVersion` | number | 1. |
-| `template` | string? | The starter template it began from: `blank`, `print`, `room`, `character`, `animation`. |
+| `template` | string? | The starter template it began from: `blank`, `print`, `room`, `character`, `animation`, `sketch` (0.9). |
 | `timeline` | string | `hidden` (the default), `transport` (the slim transport) or `full`. |
 | `timelineHeight` | number | The whole timeline's height in points, 150–900 (260 by default). |
 | `snap` | object | `grid`, `gridSize` (m), `rotation`, `rotationStep` (degrees), `ground`, `objects`, `objectThreshold` (m), and since 0.4 `corners`, `edges`, `faces` (points snap to corners and edge middles, edges, faces; on when missing). |
 | `showsGrid` | bool | The grid on the ground. |
 | `shapeSize` | number | New shapes' size in metres (1; `print` uses 0.05). |
-| `firstPanel` | string? | A tool panel to open the first time the project opens (then removed): `model`, `cast`. |
+| `firstPanel` | string? | A tool panel to open the first time the project opens (then removed): `model`, `cast`, or `board` (0.9: the project opens on its Schizzo board). |
 | `units` | string | The unit lengths are shown and typed in: `mm`, `cm` (the default), `m`, `in`, `ft`. `print` uses `mm`, `room` `m`. |
 | `printBed` | string? | The 3D printer whose build volume the stage outlines (`PrintBed.presets`: `filament-220`, `filament-256`, `filament-180`, `prusa-mk4`, `bambu-x1`, `bambu-a1-mini`, `ender-3-v3`, `resin-218`, `form-4`); `print` starts with `filament-220`. An unknown id is dropped. |
 | `section` | object? | The section view: `{"normal": [x, y, z], "offset": d}`; what's beyond the plane (`normal · p > offset`) is cut away on the stage. Missing: off. |
 | `showsDimensions` | bool | Kept dimensions show on the stage (true). |
 | `frameGuide` | object? | Since 0.5: the drawing guide over the frame for flipbooks. `kind` (`grid`, `isometric`, `perspective`, `symmetry`), `assisted`, `spacing` (frame heights), `origin` (`{"x","y"}`, frame heights from the centre, y up), `angle` (degrees), `vanishingPoints` (1–3, same units), `symmetry` (`vertical`, `horizontal`, `quadrant`, `radial`), `segments`, `mirrorRadial`. Missing: off. |
 | `planeGuide` | object? | Since 0.5: the same, laid on the guide plane for ink (`grid`, `isometric`, `symmetry`; `spacing` in metres). Missing: off. |
+
+| `references` | array | Since 0.9: pictures pinned from the board, floating over the stage. Each: `id`, `image` (a file under `assets/`, `references/<hash>.png`), `title`, `x` and `y` (the card's middle as fractions of the stage, 0–1), `width` (points, 120–900), `aspect` (height ÷ width). Values out of range are brought back in; missing: none. |
+
+## board/ (the Schizzo board)
+
+Since 0.9. The folder is hmm-kit's `BoardStore`; it appears the first time the board is opened.
+
+```
+board/
+  board.json        the board: a versioned envelope {schemaVersion: 1, kind: "board", payload}
+  view.json         where the person was looking: {"center": {"x", "y"}, "scale"} (not part of undo)
+  history/          the board's own history journal (the same format as a scene's, below)
+  assets/           pictures on the board, named by their content
+```
+
+`payload` is `{"items": […], "brushes": {…}, "paper": {"pattern": "dots" | "grid" | "plain", "color": "#16171A"}}`.
+Lengths are board units (one unit is one point at 100 %), y runs down. `brushes` holds the frozen copies of the
+brushes the strokes name, by content key, exactly like `project.json`'s. Items are back to front; each has an `id`
+and a `kind`:
+
+| `kind` | Fields |
+|---|---|
+| `stroke` | `points` (flat: x0, y0, x1, y1…), `widths` (a radius per point), `alphas` (0–1 per point), `color` (`#RRGGBB`), `brush` (a key of `brushes`; missing: Ink Pen), `seed`. |
+| `picture` | `asset` (a file in `board/assets/`), `rect` (`{"x","y","width","height"}`). |
+| `note` | `text`, `rect`, `color`. |
+| `arrow` | `from`, `to` (`{"x","y"}`), `color`, `width`, and `fromItem` / `toItem`: the ids of the note or picture an end is tied to. |
+| `frame` | `title`, `rect`. A frame carries the items whose middle lies inside it. |
+
+Like `project.json`, the board is for reading: change it through the app so undo and the journal stay true.
 
 ## gallery.json (in the projects folder)
 

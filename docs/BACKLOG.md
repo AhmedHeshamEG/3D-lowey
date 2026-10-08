@@ -1,7 +1,25 @@
 # Backlog
 
 What's known and not done yet, so nothing lives only in someone's head. What Maquette is: [SPEC.md](SPEC.md). The
-phase plan (M9 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
+phase plan (M10 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to its `IDEAS.md`.
+
+## Left from M9 (Maquette 0.9)
+
+- [ ] The device checklist in the "Maquette 0.9 — M9" PR (drawing on the board with the Pencil: feel, pressure, tilt,
+      latency; one finger pans once the Pencil has touched; pinch and pan on a full board; the eraser; notes and the
+      keyboard; arrows and frames; pictures from Photos, the clipboard and a drop; pinning, the card over the stage,
+      standing it in the scene; the board after a force-quit; Settings ▸ Board off and on).
+- [ ] Strokes on the board blend normally: a brush's other blend modes need board layers (D-201; hmm-kit's backlog).
+- [ ] The MCP bridge has no board tools (read the board, add notes and arrows as a proposal). (D-201)
+- [ ] A pin is a picture taken when it was pinned; it doesn't follow the board afterwards (pin again). (D-194)
+- [ ] Reference cards are the same in every scene of a project (they belong to the workspace, not a scene).
+- [ ] A pinned picture taken off the stage stays in `assets/references/` (a plane in a scene may show it); a cleanup
+      when nothing refers to it any more.
+- [ ] The board's Pencil has no hold-to-clean-shape, no squeeze menu and no latency numbers of its own yet: M15's
+      Pencil work covers the stage and the board together.
+- [ ] Cutaway mounts `HmmBoardScreen` next to the script in C2 (D-200).
+- [ ] The brush library, imports and Brush Studio still live in Maquette; they move to hmm-kit when Cutaway's board
+      needs them (D-189).
 
 ## Left from M8 (Maquette 0.8)
 
@@ -98,7 +116,7 @@ phase plan (M9 … M16, then 1.0) lives in studio-h's `PHASES.md`; ideas go to i
       selection, time on call, panel resizing, Home's turning cards and the zoom into the stage, stacks, the
       templates, the Home benchmark at Tier A).
 - [x] The print-bed outline in *Model to print* and the walls tool (Model ▸ Add ▸ Building) arrived in 0.4. (D-111)
-- [ ] *Sketch* in New project when the Schizzo board exists (M9). (D-111)
+- [x] *Sketch* in New project arrived with the Schizzo board in 0.9. (D-199)
 
 ## Left from M1 (Maquette 0.1)
 

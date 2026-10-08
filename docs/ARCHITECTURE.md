@@ -22,25 +22,28 @@ flowchart TD
         Transcript[HmmTranscript]
         Media[HmmMedia]
         Perception[HmmPerception]
+        Brush[HmmBrush · HmmBrushRender]
+        Board[HmmBoard · HmmBoardUI]
     end
     App --> Features
     Features --> Engine
     Features --> Core
     Engine --> Core
     Core --> Manifold
-    Features --> Design & Bridge & Diagnostics & Documents & Perception
-    Engine --> Media & Diagnostics & Transcript & Perception
-    Core --> Commands & Documents & Transcript
+    Features --> Design & Bridge & Diagnostics & Documents & Perception & Board
+    Engine --> Media & Diagnostics & Transcript & Perception & Brush
+    Core --> Commands & Documents & Transcript & Brush
+    Board --> Brush
 ```
 
 | Module | Imports | What it holds | Tests |
 |---|---|---|---|
-| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript, Manifold, XAtlas | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush engine's arithmetic and brush import, paint (layers, tiles, unwraps, compositing, carrying paint to a new shape, painted exports), the glTF reader, rigs and retargeting, the one skeleton system (drawn
+| **LoweyCore** | Foundation, hmm-kit's Commands / Documents / Transcript / Brush (re-exported), Manifold, XAtlas | The document model, commands with exact inverses, the session (undo, coalescing), timeline and easing, animator and behaviours, geometry and meshers, modelling (editable meshes, sketches, push/pull, booleans), the brush library and brush import (the engine's arithmetic is hmm-kit's `HmmBrush` since 0.9), paint (layers, tiles, unwraps, compositing, carrying paint to a new shape, painted exports), the glTF reader, rigs and retargeting, the one skeleton system (drawn
 rigs, bone heat, IK chains, the person rig), blob and puppet characters, Scene Script compiler, Looks as data, samples (Enigma, Welcome island, Night Market) | Linux (`swift:6.1`), coverage gate |
 | **Manifold** (`Packages/Manifold`) | the C++ standard library | Manifold 3.5.4 (Apache-2.0) as a C++17 target, single-threaded, and `ManifoldBridge.h`: boolean and validate in plain C, so Swift needs no C++ interop. `VENDORED.md` says how to update it | Linux and the iPad simulator (its own tests; LoweyCore's boolean tests) |
 | **XAtlas** (`Packages/XAtlas`) | the C++ standard library | xatlas (MIT) as a single-threaded C++ target and `XAtlasBridge.h`: unwrap in plain C (`VENDORED.md`) | Linux (its own tests; LoweyCore's paint tests) |
-| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript | LoweyRender 2 (with the brush engine's stamps, painted layers and drawn rigs skinned on the GPU), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
-| **LoweyFeatures** | Core, Engine, SwiftUI, hmm-kit's Design / Bridge / Documents / Diagnostics | The editor. `Workspace/` is shared by every feature (app and editor models, the session API, controls); each other folder is one feature's views; `Shell/` composes them | iPad simulator: bridge security, editor flows |
+| **LoweyEngine** | Core, Metal, AVFoundation, Vision, ARKit, JavaScriptCore, hmm-kit's Media / Diagnostics / Perception / Transcript / BrushRender (re-exported) | LoweyRender 2 (with the brush engine's stamps, painted layers and drawn rigs skinned on the GPU), the shot builder, the stage view (`StageView`), model loading and caching, export sessions and presets, overlays and captions, the Night Market benchmark, face capture, the JavaScript runner | iPad simulator: golden images, export, picking, skinning |
+| **LoweyFeatures** | Core, Engine, SwiftUI, hmm-kit's Design / Bridge / Documents / Diagnostics / Board / BoardUI | The editor. `Workspace/` is shared by every feature (app and editor models, the session API, controls); each other folder is one feature's views; `Shell/` composes them | iPad simulator: bridge security, editor flows |
 | **App** | Features, ActivityKit, BackgroundTasks | `LoweyApp`, the export Live Activity, the widget extension | UI smoke tests |
 
 **Rules** (enforced in CI): LoweyCore imports no Apple UI or 3D framework; features never reference each other's
@@ -155,15 +158,19 @@ flowchart LR
     Ink & Flip & Live --> Stamper[BrushStamper<br/>Brush.metal: one instanced quad per stamp]
 ```
 
-- **Core `Brushes/`**: `Brush` (shape, grain, stroke, dynamics, rendering, about) and `BrushCurve`; `BrushStroker` (the
-  path and the stamps, generic over `Vec2` and `Vec3`); `BrushImages` (the built-in tips and grains, drawn by code) and
-  `GreyPNG`; `BuiltInBrushes` (ten brushes, three sets); `BrushLibrary` + `BrushLibraryStore` (the device's library) and
-  `BrushKey` (content keys for brushes and pictures); `BrushResolver` (a stroke's brush from the project's copies);
-  `DrawingGuide`, `GuideAssist`, `GuideLines`; `StrokeLatency`. `Import/`: `BinaryPlist` + `KeyedArchive`,
+- **hmm-kit `HmmBrush`** (since 0.9, D-189; LoweyCore re-exports it): `Brush` (shape, grain, stroke, dynamics,
+  rendering, about) and `BrushCurve`; `BrushStroker` (the path and the stamps, generic over `Vec2` and `Vec3`);
+  `BrushImages` (the built-in tips and grains, drawn by code) and `GreyPNG`; `BuiltInBrushes` (ten brushes, three
+  sets); `BrushKey` (content keys for brushes and pictures); `BrushResolver` (a stroke's brush from a document's
+  copies); `StrokeLatency`; `Vec2`, `SeededRandom`.
+- **Core `Brushes/`**: `BrushLibrary` + `BrushLibraryStore` (the device's library); `DrawingGuide`, `GuideAssist`,
+  `GuideLines`. `Import/`: `BinaryPlist` + `KeyedArchive`,
   `ProcreateBrushImport`, `ABRBrushImport`, `BrushSetFile` (`.maquettebrushes`) and `BrushFileImport` (by extension).
-- **Engine `Render/Brushes/`**: `BrushStamper` (stamp buffers cached per path, brush and seed; `encode` with whatever
-  pipeline is set), `BrushTextureCache` (grey textures with a CPU mip chain; imported pictures come through the frame's
-  `mediaImage` as `brushes/<hash>.png`), `BrushPreviewRenderer` (offscreen pictures: the library's previews, Brush
+- **hmm-kit `HmmBrushRender`** (since 0.9; LoweyEngine re-exports it): `Brush.metal`, `BrushStamper` (stamp buffers
+  cached per path, brush and seed; `encode` with whatever pipeline is set), `BrushTextureCache` (grey textures with a
+  CPU mip chain; imported pictures come through the frame's `mediaImage` as `brushes/<hash>.png`), `BrushShaders` (the
+  library and the pipeline descriptors `PipelineBuilder.brush` finishes for the engine's targets).
+- **Engine `Render/Brushes/`**: `BrushStamper.encodeFill` (a flipbook's filled shapes), `BrushPreviewRenderer` (offscreen pictures: the library's previews, Brush
   Studio's pad, the goldens). Pipelines: `brushScene` (the shading pass, MSAA, depth-tested), `brushEditor` (the editor
   layer), `brushLayer`, `brushFill`, `brushCompose` (flipbook layers). Ink keeps its ribbon in the prepass and shadows
   (`DrawItem.brushDrawn`); its stamps are `RenderScene.brushes`, drawn at the end of the shading pass. Flipbooks reach
@@ -264,6 +271,41 @@ flowchart LR
   Core's `LoopMotion` (which motion a behaviour is and at what speed) and `Simulation.bake` for several at once.
 - **The colour well** is `SidebarColourWell` in the kit's `HmmSidebar(accessory:)`; `ColourChooser` is the one
   palette-and-any-colour picker (also Paint ▸ Colour).
+
+## The Schizzo board (0.9)
+
+```mermaid
+flowchart LR
+    Touch[BoardCanvasView<br/>Pencil or hand · pan · pinch · hover · hold · drops] --> Model[BoardModel<br/>mutate]
+    Model --> Session[BoardSession<br/>tools · pick · drag · stroke]
+    Session --> Cmd[BoardCommand<br/>exact inverses]
+    Cmd --> Journal[HistoryJournal<br/>board/history]
+    Session --> List[BoardDrawList<br/>items · paper · overlay]
+    List --> R[BoardRenderer<br/>one cached layer + what moves]
+    R --> Stamps[BrushStamper<br/>the same stamps as ink]
+    Model -. pin .-> Editor[EditorModel+Board<br/>assets/references · workspace.json]
+    Editor --> Cards[ReferenceCards over the stage]
+    Editor --> Plane[a card object in the scene]
+```
+
+- **hmm-kit `HmmBoard`** (pure Swift, Linux-tested): `Board` (items back to front, the frozen brushes, the paper);
+  `BoardItem` (stroke, picture, note, arrow, frame); `BoardCommand` / `BoardEdit` (insert, remove, replace, order,
+  brushes, paper, each with its exact inverse) and `BoardOperations`; `BoardSession` (the six tools, the selection, the
+  drag or stroke in progress, undo: touches in board points come in, one command per gesture goes out);
+  `BoardViewport`; `BoardDrawList` (what a board looks like, as draws in pixels) and `BoardShapes`; `BoardLayerPlan`
+  (when the cached layer still serves); `BoardStore` (`board/`: `board.json`, `view.json`, `history/`, `assets/`).
+- **hmm-kit `HmmBoardUI`**: `BoardRenderer` (Metal: executes a draw list with the brush pipelines; the board in one
+  layer a quarter-screen larger than the screen, redrawn only when the view leaves it or the board changes under it,
+  new strokes laid on top; `snapshot` for pins and shared pictures), `BoardTextures` (pictures through Image I/O,
+  words through Core Text), `BoardCanvasView` (a `CAMetalLayer` that draws on demand; the making touch with coalesced
+  and predicted samples; `HmmPencilOrHand`; `HmmHoldMenuInteraction`), `BoardModel` (the session observed, every
+  change to the journal, a checkpoint and `board.json` at quiet moments), `HmmBoardScreen` (the layout).
+- **Features**: `EditorModel+Board` (`projectBoard()` makes the model the first time; `openBoard` / `closeBoard`;
+  `pinReference` writes the PNG under `assets/references/` and adds a `ReferenceCard` to the workspace;
+  `standReferenceInScene` adds a card object), `Shell/BoardCover` (the kit's screen with Maquette's `BrushRow` for
+  `BrushTool.board` and the Look's palette), `Board/ReferenceCards` (the cards over the stage). `EditorScreen` lays the
+  cover over the stage and its chrome, under the sheets; the menu bar's Edit commands act on the board while it's
+  open (D-193).
 
 ## LoweyRender 2
 

@@ -1473,3 +1473,86 @@ could never be drawn, and Cast ▸ Rig showed that sentence instead of Paint wei
 Puppets and imported rigged models are refused now; a drawn rig is what the three steps are for. A test draws a second
 bone and walks the steps on a rigged cube. *Rejected:* nothing; it was a bug.
 
+## Maquette 0.9 — M9, the Schizzo board
+
+**D-189 — The brush engine moves into hmm-kit.** The board lives in the kit so Cutaway gets it, and it draws with the
+full brush engine, so the engine goes first: `HmmBrush` (brushes, `BrushStroker`, the built-in tips, grains and
+brushes, content keys, `Vec2`, `SeededRandom`) and `HmmBrushRender` (the stamp shader, `BrushStamper`, tip and grain
+textures). LoweyCore re-exports the first and LoweyEngine the second, so ink, flipbooks, paint and Brush Studio read
+as before and draw through the same code as the board. The brush *library* (sets, Procreate and Photoshop import,
+`.maquettebrushes`, Brush Studio) stays in Maquette until a second app needs it. *Rejected:* the board in the kit with
+a "stroke drawer" each app plugs in (two engines the moment Cutaway writes its own); a second copy of the shader in
+the kit (the copies drift).
+
+**D-190 — Flat strokes are placed by the shader.** A board's strokes keep their own units; the stamp shader takes
+where a unit lands in pixels (`BrushBatch.Placement`), so a stroke's stamps are built once and serve every zoom. A
+texturized grain is fixed to those units (it used to be fixed to the screen, which on a board would slide under the
+strokes with every pan), and far out a stroke's widest part is never drawn thinner than 0.45 px. With no placement the
+shader does exactly what it did (flipbooks, previews, Brush Studio: the goldens don't move). *Rejected:* re-stamping
+in pixels at every zoom (thousands of buffers rebuilt per pinch).
+
+**D-191 — The board is pure state; the screen is thin.** `BoardSession` (hmm-kit, pure Swift) takes touches as board
+points and turns every finished gesture into one command: the six tools, picking, moving and resizing, the eraser,
+notes, arrows, frames, copy and paste. What a board looks like is a list of draws (`BoardDrawList`) made by pure code
+too. The Metal renderer, the UIKit canvas and the SwiftUI screen only carry touches in and draws out. Why: the
+studio has no Mac, so everything that can be wrong should be wrong in a Linux test in seconds, not on a simulator in
+CI an hour later. *Rejected:* the logic in the view (the usual place), tested only through the UI.
+
+**D-192 — One layer, drawn again only when it must be.** The canvas keeps the whole board in one picture a quarter
+of a screen larger than the screen on every side (`BoardLayerPlan`). A frame is that picture plus what moves: the
+stroke under the Pencil, what a drag carries, the selection's marks. Panning shows the same picture shifted; pinching
+shows it stretched (up to 2×, down to half) and it is drawn sharp again when the fingers lift or the view leaves it.
+A new stroke is laid on top of the picture, nothing under it redrawn. So a board of thousands of strokes pans as
+smoothly as an empty one (CONTEXT §3.3). The canvas draws only when something changed. *Rejected:* stamping every
+stroke every frame (fine at a hundred strokes, not at five thousand); a tile pyramid (the right answer for boards
+far larger than anyone has drawn yet; the layer is the first tile of it).
+
+**D-193 — A board per project, in the project, opened from Actions.** The board is the project's (`board/` in the
+package: `board.json`, its own history journal, its pictures), so it travels, duplicates and syncs with it, and its
+undo survives relaunch like the scene's. It opens from Actions (the long tail's first Project tile, `open-board`) and
+covers the stage; the top-left cluster stays Home · Actions · Look · Select (CONTEXT §4.1). It covers the stage as a
+layer of the editor, not as a second full-screen cover, so the brush library and every other sheet open over it as
+they do over the stage; the stage under it is hidden from VoiceOver and its keys rest. *Rejected:* a fifth button in
+a cluster (the grammar is four and five); boards as their own documents on Home (planning is part of the project;
+a loose board would need its own gallery, sharing and pin targets).
+
+**D-194 — A pin is a picture, a card first.** Pin to the project (the hold menu, the bar under a pick, or Actions for
+the whole board) renders the frame or the pick on the board's paper at two pixels a unit, keeps the PNG in
+`assets/references/` and floats it over the stage as a reference card (`workspace.json`: how the project is seen,
+never undone, outside the scene). The card's hold menu has *Stand it in the scene*: the same picture as a card object
+where you're looking, in every camera and export. Nobody is asked "card or plane?" at the moment of pinning (CONTEXT
+§3.4); the card is the default because a reference is usually for the maker, not the film. A frame's pin shows
+everything in its area; a pick's shows only the pick. *Rejected:* a choice sheet on every pin; pins that stay linked
+and redraw when the board changes (a reference that changes behind your back; pin again when you want the new one).
+
+**D-195 — The board's sizes are the board's.** Brush size, the eraser's reach and an arrow's thickness are in board
+units, so zooming in draws finer and a stroke is the same stroke at every zoom (Procreate's canvas, not a
+screen-space marker). The eraser cuts strokes where it touched and erases ink only; pictures, notes, arrows and
+frames are deleted whole, by choice. Arrows tie their ends to the note or picture they start or end on and follow
+it; frames carry what lies in them (by each thing's middle) when moved, copied or deleted.
+
+**D-196 — The paper is the board's own.** Dark (the studio's surface) by default, light by choice, with dots, a grid
+or nothing; it doesn't follow the app's theme, because ink is drawn in a colour and a white sketch on a board that
+turned white overnight is gone. Ink that was the paper's own default follows the paper when it is changed.
+
+**D-197 — Hold is the Select tool's; a bar under the pick.** With Select, a still finger on a thing opens the one
+hold menu (Duplicate · Rename, for frames · Copy · Paste │ Pin to the project, Bring to the front, Send to the back │
+Delete); on empty space it offers Paste once something was copied. The same three most-used actions (Pin, Duplicate,
+Delete) sit in a small bar under the board while something is picked: the board's inspector. With the drawing tools,
+holding still is left free for M15's hold-to-clean-shape.
+
+**D-198 — Switched off in Settings ▸ Board.** Off: the Board tile leaves Actions, Sketch leaves New project, and
+pinned cards are put away. Nothing is deleted; on again and everything is where it was.
+
+**D-199 — Sketch is a starter template now.** It opens the project on its board, once (`firstPanel: "board"`), in the
+Sketch Look. (D-111 held it back until the board existed.)
+
+**D-200 — Cutaway mounts the same screen when it exists.** PHASES said "integrated into Cutaway next to the script in
+the same phase"; Cutaway starts after Maquette's launch (CONTEXT §10.10), so there is nothing to integrate into yet.
+What is done is the half that can be: `HmmBoardScreen` is self-sufficient (its own brush menu and colour chooser when
+an app brings none), and C2 (Record, where the script lives) now carries the step. *Rejected:* a placeholder Cutaway
+target to host it (a stub).
+
+**D-201 — What the board doesn't do yet.** Strokes blend normally (a brush's other blend modes need board layers);
+the MCP bridge has no board tools; pictures decode on the main thread the first time they show. All three are in the
+backlogs, none is offered in the UI.

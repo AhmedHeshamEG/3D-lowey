@@ -15,13 +15,45 @@ reference and stays.
 | The layout of §10.1 (the canvas owns the screen, timeline on call, floating inspector, living gallery, starter templates) | **0.2.** [LAYOUT.md](LAYOUT.md) |
 | Modelling I (select, push/pull with numbers, sketch on surfaces, booleans) | **0.3** |
 | Modelling II (bevel, round, inset, shell, mirror and live symmetry, array along a path, corner/edge/midpoint/face snapping, measure, section view, kept dimensions, 3D printing, architecture) and interop (glTF, USDZ, OBJ, STL, 3MF, the Blender package) | **0.4.** FBX isn't offered (D-133). |
-| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink, flipbooks and painting on models draw with it; the Schizzo board (M9) will. |
+| One brush engine, Brush Studio, Procreate/Photoshop brush import, drawing guides | **0.5.** Ink, flipbooks, painting on models and the Schizzo board draw with it; since 0.9 the engine is hmm-kit's (D-189). |
 | Painting on models: xatlas unwrap, Paint ▸ Colour (paint, erase, fill, eyedropper), layers, projection from the camera, textures in exports | **0.6.** Roughness, metal and glow painting come later; objects with drawn skeletons are painted in their rest pose, imported skins not yet (D-171). |
 | One skeleton system, draw a bone (bone-heat weights, weight painting), rig as a person, 2D drawn puppets, pose by dragging with IK, pose library, built-in clips on any humanoid | **0.7.** The person rig is placed by eight taps: Apple's body-pose model can't be checked on CI (D-168). |
 | Fixes and touch: the silent load meter, one hold menu everywhere, Pencil or hand, the Motion row, the colour well, rigging in three steps with the bone redrawn | **0.8** |
-| Schizzo board, live performance, sculpting, mechanisms + AR, web layer, house kit | M9–M14: all in 1.0 (CONTEXT §10.10) |
+| The Schizzo board: brush strokes, pictures, notes, arrows and frames on an endless sheet in every project; pins as reference cards and scene planes; the Sketch template | **0.9.** In hmm-kit (`HmmBoard`, `HmmBoardUI`), so Cutaway mounts the same board (D-200). Strokes blend normally; no MCP tools yet (D-201). |
+| Live performance, sculpting, mechanisms + AR, web layer, house kit | M10–M14: all in 1.0 (CONTEXT §10.10) |
 | The Pencil page, sketching that talks back, the flipbook's experience, waiting, the smoothness pass | M15 |
 | Tutorials in Hesham's voice, artist info, Content Credentials, Time-lapse, Report a problem | M16 |
+
+### The Schizzo board (0.9)
+
+A place to think before building, in the project itself (CONTEXT §10.7).
+
+- **Actions ▸ Board** covers the stage with the project's board: an endless sheet, dark by default (light by choice;
+  dots, a grid or plain). It is laid out like the stage: back, Actions and Select top left; Draw, Erase, Note, Arrow
+  and Frame top right; size, opacity, the colour in the hand and undo / redo on the sidebar (D-193).
+- **Draw** with the brush engine: every brush of the library (built in, made, imported), pressure, tilt, coalesced
+  and predicted Pencil samples. The stroke on screen while you draw is the stroke that is kept. Sizes are in the
+  board's own units, so zooming in draws finer (D-195).
+- **Erase** cuts strokes where it touches; the pieces stay strokes. It erases ink only.
+- **Notes** are slips you type on (tap a picked note again to edit it; an empty one isn't kept). **Arrows** tie their
+  ends to the note or picture they start or end on and follow it. **Frames** are named areas: moving, copying or
+  deleting a frame takes what lies in it; a double-tap fills the view with the frame under the finger.
+- **Pictures** come from Photos (Actions ▸ Add a picture), from the clipboard (Paste) or dropped from another app;
+  they are kept in the board's own folder.
+- **Select**: tap to pick, drag to move, the eight handles to size (corners keep the shape), a box from empty space
+  to pick several. Touch and hold a thing for the hold menu; the bar under the board has Pin, Duplicate and Delete
+  (D-197). Copy and paste work between boards.
+- **Pin to the project**: the frame or the pick becomes a picture (on the board's paper, two pixels a unit) that
+  floats over the stage as a **reference card**: drag it, size it from its corner. Its hold menu opens the board,
+  **stands it in the scene** (a card object where you're looking, in every camera and export) or takes it off
+  (D-194). Pinning with nothing picked pins the whole board.
+- **Share a picture** of the frame, the pick or the whole board (PNG).
+- **Moving around**: pinch to zoom (5 % to 3200 %), two fingers to pan (one, once a Pencil has touched), the zoom
+  button to show everything. The board is kept in one cached layer, so it pans and zooms the same however much is
+  on it (D-192).
+- **Nothing is lost**: every change is one journal line within 50 ms, like the scene; undo survives closing the app.
+- **Sketch** in New project opens the project on its board (D-199). **Settings ▸ Board** switches the board off
+  (D-198).
 
 ### Fixes and touch (0.8)
 
@@ -177,8 +209,8 @@ At rest the stage holds at least 85% of the screen.
   created; Select acts on several (stack, move out, duplicate, archive, delete).
 - **Starter templates** in New project: Blank, Model to print (millimetres, a 1 cm grid, 5 cm shapes, close up,
   Clay), Room or building (metres, a 25 cm grid, the view from above), Character (Cast open, eye level), Animation
-  (the timeline open). Each suggests a Look and a Mood, both changeable there and later. Sketch arrives with the
-  Schizzo board (M9); the print-bed outline and the walls tool with M4.
+  (the timeline open), Sketch (the Schizzo board first, since 0.9). Each suggests a Look and a Mood, both
+  changeable there and later. The print-bed outline and the walls tool arrived with M4.
 - **Keyboard**: ⌘1–⌘5 Model, Draw, Paint, Animate, Cast; ⌘6–⌘8 Actions, Look, Select; ⌘L the library; ⌥⌘1–3 move,
   turn, size; ⌘T the timeline.
 - Diagnostics also runs the **Home benchmark**: a hundred projects turning while the gallery scrolls for 20 seconds.

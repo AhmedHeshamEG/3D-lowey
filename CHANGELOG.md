@@ -3,6 +3,26 @@
 All notable changes. 1.x grew in four phases (v0.1 → v1.4); 2.0 is the remaster, released as betas first. Maquette
 continues from 2.0 and numbers its phases again from 0.1 (each phase bumps the minor version until 1.0).
 
+## [0.9] — Maquette — the Schizzo board (phase M9)
+
+- **A board in every project** (Actions ▸ Board): an endless 2D sheet for planning before you build. Sketch on it with
+  the whole brush engine (every brush, pressure, tilt), drop pictures on it, write notes, draw arrows between them,
+  and put frames around what belongs together.
+- **Pin anything to the project.** Pick a frame, a note or a sketch and pin it: it floats over the stage as a
+  reference card you can move and size. From the card's menu, **Stand it in the scene** makes it a plane in the 3D
+  scene, an object like any other.
+- The board works like the stage: Select top left; Draw, Erase, Note, Arrow, Frame top right; size, opacity, the
+  colour and undo on the sidebar; touch and hold a thing for the same menu as everywhere. Two fingers move the view
+  (one, once a Pencil has touched), pinch zooms, double-tap fills the view with a frame.
+- The eraser cuts strokes where it touches. Arrows follow the notes and pictures they point at. Moving a frame moves
+  what's in it.
+- Nothing on the board is ever lost: every stroke is written as it's drawn, and undo is still there after closing the
+  app.
+- **Sketch** is a starter template in New project: it opens on the board.
+- The paper is dark or light, with dots, a grid or nothing. Share a picture of a frame, a pick or the whole board.
+- Don't want it? Settings ▸ Board switches it off (nothing is deleted).
+- Under the hood the brush engine moved into hmm-kit, so Cutaway will draw with the same brushes on the same board.
+
 ## [0.8] — Maquette — fixes and touch (phase M8)
 
 - **Nothing is said on the stage under load.** The "close to what this iPad keeps smooth" chip and its setting are

@@ -4,6 +4,12 @@ Shapr3D's ease, Procreate's feel, Dreams' animation and ToonSquid's rigging, in 
 or art degree. Build a set like Lego, drop in characters, direct them with a camera, sync them to your voice, and
 export the video. By **studio h.**; the continuation of 3D-lowey 2.0. All rights reserved (see [LICENSE](LICENSE)).
 
+**0.9** (phase M9): **the Schizzo board**. Every project has an endless 2D board for planning (Actions ▸ Board):
+sketch with the whole brush engine, drop pictures, write notes, draw arrows, frame what belongs together. Pin a frame
+or a pick to the project and it floats over the stage as a reference card; stand it in the scene and it's a plane like
+any other object. The board is written as you draw and comes back with its undo. Sketch is a starter template that
+opens on it. The brush engine and the board live in hmm-kit now, so Cutaway gets the same ones.
+
 **0.8** (phase M8): **fixes and touch**. Touch and hold anything (an object on the stage, a key, a clip, a layer, a
 brush, a card) and the same menu opens in the same order. Pencil or hand is automatic: a finger draws until an Apple
 Pencil has touched. Tap a thing, tap Spin, Float, Bounce, Wiggle, Swing or Follow a path, and it moves, no timeline
