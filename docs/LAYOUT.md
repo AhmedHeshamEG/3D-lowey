@@ -200,7 +200,7 @@ is open, `[transport]` the slim transport is showing, `[home]` the steps start o
 | Lip sync | `[blob] Cast › lip-sync` |
 | Face capture (front camera, iPhone) | `[blob] Cast › face-camera` |
 | The microphone drives the mouth (live voice), with its level | Cast ▸ Voice & face, beside the face capture buttons |
-| Triggers: one tap for an expression, a saved pose or a swap; a key each; its hold menu (rename, keyboard key, stay on or only while held, delete) | `[blob] Cast › add-trigger` |
+| Triggers: one tap for an expression, a saved pose or a swap, a key each (hold one for its menu) | `[blob] Cast › add-trigger` |
 | Life: breathes; blinks on its own (with eyes); the head bone of a skeleton that isn't a person's | `[blob] Cast › life-breathe` |
 | Make a loose object a part of a drawn rig (it rides the nearest bone); a part's face role, its bone, take it off | Cast ▸ Make it part of / Part, with that object selected |
 | Rig, in three steps: Bones, Skin, Pose (each shows only its tools; a step opens when the one before is done) | `[cube] Cast › rig-step-bones` |
