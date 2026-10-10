@@ -1,0 +1,77 @@
+# The atlas: a picture of every screen, panel and page (AppUITests/AtlasTests.swift), for reviewing the layout as a
+# whole. Run by hand, or by pushing a branch named atlas/…; it checks nothing and never blocks a merge.
+name: Atlas
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['atlas/**']
+
+concurrency:
+  group: atlas-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
+
+jobs:
+  atlas:
+    name: Every screen, in landscape
+    runs-on: xcode-27
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with:
+          path: DerivedData
+          key: app-dd-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}-${{ github.sha }}
+          restore-keys: app-dd-${{ hashFiles('project.yml', 'Packages/*/Package.swift') }}-
+      - name: Install XcodeGen and the Metal toolchain
+        run: |
+          brew install xcodegen
+          xcodebuild -downloadComponent MetalToolchain
+      - name: Generate project
+        run: xcodegen generate
+      - name: Pick an iPad simulator
+        id: sim
+        run: echo "udid=$(python3 Tools/pick-simulator.py)" >> "$GITHUB_OUTPUT"
+      - name: Boot the simulator
+        run: |
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+      - name: Take the pictures
+        run: |
+          set -o pipefail
+          TEST_RUNNER_ATLAS=1 xcodebuild test -project Lowey.xcodeproj -scheme Lowey \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath DerivedData \
+            -resultBundlePath Atlas.xcresult -skipPackagePluginValidation -only-testing:LoweyUITests/AtlasTests \
+            -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 1200 \
+            CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log | grep -E "error:|Test Case|Executed|\*\* " || true
+      - name: Export the pictures under their names
+        if: always()
+        run: |
+          mkdir -p attachments atlas
+          xcrun xcresulttool export attachments --path Atlas.xcresult --output-path attachments || true
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          for manifest in pathlib.Path("attachments").glob("**/manifest.json"):
+              for test in json.loads(manifest.read_text()):
+                  for item in test["attachments"]:
+                      name = item["suggestedHumanReadableName"]
+                      if name.startswith("Atlas "):
+                          source = manifest.parent / item["exportedFileName"]
+                          shutil.copy(source, pathlib.Path("atlas") / (name.split("_0_")[0] + source.suffix))
+          PY
+          ls atlas | wc -l
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlas
+          path: atlas
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlas-log
+          path: xcodebuild.log
+          retention-days: 7
